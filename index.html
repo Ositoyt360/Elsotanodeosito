@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Sótano de Osito</title>
+    <link rel="preconnect" href="https://i.ytimg.com">
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://www.google.com">
+    <style>
+        :root {
+            --bg-color: #02040a;
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface-card: rgba(10, 14, 28, 0.7);
+            
+            /* Colores dinámicos por defecto */
+            --primary-color: #00f2fe;
+            --secondary-color: #9d00ff;
+            
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --glow-color-1: #00f2fe;
+            --glow-color-2: #9d00ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        #space-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
+        
+        .ambient-glow { position: fixed; width: 400px; height: 400px; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.10; pointer-events: none; transition: background 0.5s ease; will-change: transform; }
+        #glow-1 { background: var(--glow-color-1); top: -20%; left: -10%; animation: floatGlow 15s infinite alternate ease-in-out; }
+        #glow-2 { background: var(--glow-color-2); bottom: -20%; right: -10%; animation: floatGlow 18s infinite alternate-reverse ease-in-out; }
+
+        @keyframes floatGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(60px, 30px) scale(1.1); } }
+
+        /* --- INTRO Y FONDO GAMER ANIMADO --- */
+        #welcome-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #04060c;
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            perspective: 1000px;
+            overflow: hidden;
+        }
+        
+        .gamer-grid {
+            position: absolute; bottom: -60%; left: -50%; width: 200%; height: 160%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 254, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.1) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: rotateX(75deg);
+            animation: grid-scroll 2s linear infinite;
+            opacity: 0.25; z-index: 0;
+            transition: background-image 0.5s ease;
+        }
+        .welcome-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, #04060c 20%, transparent 100%);
+            z-index: 1; pointer-events: none;
+        }
+        @keyframes grid-scroll {
+            0% { transform: rotateX(75deg) translateY(0); }
+            100% { transform: rotateX(75deg) translateY(60px); }
+        }
+
+        .welcome-panel { text-align: center; width: 90%; max-width: 450px; z-index: 2; position: relative; }
+        .welcome-title { font-size: 3rem; font-weight: 900; margin: 0 0 10px 0; background: linear-gradient(180deg, #ffffff 18%, color-mix(in srgb, var(--primary-color) 62%, #ffffff)); background-size: 100% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: none; text-shadow: 0 10px 28px rgba(0,0,0,0.55); }
+        @keyframes textShimmer { to { background-position: 200% center; } }
+        .loading-container { width: 100%; background: rgba(255,255,255,0.03); height: 6px; border-radius: 10px; overflow: hidden; margin: 20px 0 10px 0; border: 1px solid rgba(255,255,255,0.05); }
+        .loading-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--secondary-color), var(--primary-color)); border-radius: 10px; transition: width 0.2s ease; }
+        .loading-text { font-size: 11px; color: var(--primary-color); font-family: monospace; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .btn-enter-hub { background: #fff; color: #04060c; border: none; padding: 14px 35px; font-size: 13px; font-weight: 800; border-radius: 10px; cursor: pointer; text-transform: uppercase; margin: 20px auto 0; transition: all 0.3s; display: inline-block; letter-spacing: 1px; }
+        .btn-enter-hub:hover { background: var(--primary-color); box-shadow: 0 0 35px var(--primary-color); transform: translateY(-2px); }
+        .welcome-fade-out { opacity: 0; transform: scale(1.05); pointer-events: none; }
+
+        /* --- SECCIÓN PUBLICITARIA PROFESIONAL --- */
+        .promo-container {
+            background: linear-gradient(165deg, rgba(13, 17, 33, 0.5) 0%, rgba(5, 7, 15, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 35px 30px;
+            position: relative;
+            overflow: hidden;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255,255,255,0.05);
+            will-change: transform;
+            backdrop-filter: blur(20px);
+        }
+
+        .promo-bg-fx {
+            position: absolute;
+            width: 180px; height: 180px;
+            background: var(--secondary-color);
+            filter: blur(90px);
+            opacity: 0.25;
+            border-radius: 50%;
+            top: 15%; left: 35%;
+            pointer-events: none;
+            animation: pulseGlowArt 4s infinite alternate ease-in-out;
+        }
+        @keyframes pulseGlowArt { 0% { transform: scale(0.8); opacity: 0.15; } 100% { transform: scale(1.4); opacity: 0.35; } }
+
+        .promo-slide {
+            display: none;
+            width: 100%;
+            animation: slideInEpic 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            z-index: 2;
+        }
+        .promo-slide.active { display: block; }
+
+        @keyframes slideInEpic {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .promo-tag {
+            font-family: monospace;
+            font-size: 11px;
+            background: var(--primary-color);
+            color: #04060c;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .promo-title-main {
+            font-size: 2.4rem;
+            font-weight: 900;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            background: linear-gradient(180deg, #fff 30%, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .promo-desc {
+            font-size: 15px;
+            color: var(--text-muted);
+            max-width: 550px;
+            margin: 0 auto 20px auto;
+            line-height: 1.4;
+        }
+
+        .promo-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            z-index: 3;
+        }
+        .promo-dot-nav {
+            width: 8px; height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .promo-dot-nav.active {
+            background: var(--primary-color);
+            width: 24px;
+            border-radius: 10px;
+        }
+
+        /* --- NOTIFICACIONES --- */
+        .toast-notification { position: fixed; bottom: 20px; right: 20px; background: #0c101f; padding: 15px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; gap: 15px; transform: translateY(100px); opacity: 1; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); border: 1px solid rgba(255,255,255,0.05); border-left: 4px solid var(--primary-color); display: none; }
+        .toast-notification.show { display: flex; transform: translateY(0); }
+
+        /* --- INTERFAZ PRINCIPAL --- */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(4, 6, 12, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.03); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 15px; }
+        .logo { font-size: 24px; font-weight: 900; letter-spacing: 2px; background: linear-gradient(45deg, var(--primary-color), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        
+        .btn-action { background: rgba(255, 255, 255, 0.03); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 16px; font-size: 12px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-action:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .btn-alertas.active { border-color: var(--secondary-color); color: var(--secondary-color); }
+        .btn-anim.active { border-color: #ff3333; color: #ff3333; }
+        
+        .btn-directos-nav { 
+            background: var(--primary-color); 
+            border: none; 
+            color: #04060c; 
+            padding: 14px 0; 
+            font-size: 12px; 
+            font-weight: 800; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            position: relative; 
+            overflow: hidden; 
+            width: 100%; 
+            display: block; 
+            text-align: center;
+            margin-bottom: 25px;
+            box-sizing: border-box; 
+            text-decoration: none;
+        }
+        .btn-directos-nav:hover { 
+            background: #fff;
+            color: #04060c;
+            transform: translateY(-2px); 
+        }
+
+        .theme-selector { background: rgba(12, 16, 31, 0.8); padding: 8px 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+        .theme-label { font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .theme-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s, border 0.2s; }
+        .theme-dot:hover { transform: scale(1.2); border-color: #fff; }
+        .color-picker-container { display: flex; gap: 5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 10px; align-items: center; }
+        .color-picker { -webkit-appearance: none; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; padding: 0; background: none; }
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+
+        /* --- LAYOUT PRINCIPAL --- */
+        .page-layout { display: flex; gap: 30px; padding: 40px 5%; max-width: 1440px; margin: 0 auto; box-sizing: border-box; }
+        .sidebar-subscribe { width: 320px; min-width: 320px; background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 20px; padding: 25px; box-sizing: border-box; height: fit-content; position: sticky; top: 100px; backdrop-filter: blur(20px); transform: translateX(-30px); opacity: 0; transition: all 0.6s ease; }
+        .sidebar-show { transform: translateX(0); opacity: 1; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+
+        .countdown-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
+        .cd-text { font-size: 11px; font-weight: 800; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; opacity: 0; transform: translateY(15px); }
+        .countdown-timer { font-family: monospace; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 8px; opacity: 0; transform: translateY(15px); }
+        .cd-date { font-size: 11px; color: var(--text-muted); opacity: 0; transform: translateY(15px); }
+
+        .sidebar-show .cd-text { animation: slideUpFade 0.5s 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .sidebar-show .countdown-timer { animation: slideUpFade 0.5s 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .sidebar-show .cd-date { animation: slideUpFade 0.5s 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .sidebar-show .btn-directos-nav { opacity: 0; animation: slideUpFade 0.5s 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes slideUpFade { to { opacity: 1; transform: translateY(0); } }
+
+        /* --- ANIMACIONES EXTRA LIGERAS (solo transform/opacity = GPU) --- */
+        @keyframes pulseBorder {
+            0%, 100% { border-color: rgba(255,255,255,0.04); box-shadow: 0 0 8px rgba(0,242,254,0.05); }
+            50% { border-color: var(--primary-color); box-shadow: 0 0 20px rgba(0,242,254,0.2); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scanline {
+            0%   { transform: translateY(-100%); }
+            100% { transform: translateY(400%); }
+        }
+
+        /* Borde pulsante en sección IA */
+        .ia-section {
+            animation: pulseBorder 4s ease-in-out infinite;
+        }
+
+        /* Scanline decorativo en el banner promo (solo visual, no bloquea nada) */
+        .promo-container::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 18%;
+            background: linear-gradient(transparent, rgba(0,242,254,0.04), transparent);
+            animation: scanline 5s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Entrada suave de mensajes del chat */
+        .msg {
+            animation: fadeInUp 0.25s ease forwards;
+        }
+
+        /* --- RENDIMIENTO MÓVIL / GAMA BAJA --- */
+        @media (max-width: 768px) {
+            .ambient-glow { width: 220px; height: 220px; filter: blur(50px); opacity: 0.08; }
+            #space-canvas { display: none; }
+            .promo-container::after { display: none; }
+            .ia-section { animation: none; }
+        }
+
+        /* Advanced animations only when body.advanced-anim is present */
+        body.advanced-anim .ambient-glow { opacity: 0.12; filter: blur(90px); }
+        body.advanced-anim .promo-bg-fx { opacity: 0.35; transform: scale(1); }
+
+        /* Ensure low-end mobile doesn't get heavy effects */
+        @media (max-width: 480px) {
+            body.advanced-anim .ambient-glow { display: none; }
+            body.advanced-anim .promo-bg-fx { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .updates-strip {
+            background: linear-gradient(135deg, rgba(20, 26, 47, 0.95), rgba(4, 6, 12, 0.95));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 18px;
+            padding: 22px 24px;
+            margin: 18px auto;
+            max-width: 1400px;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            align-items: stretch;
+        }
+        .updates-strip .update-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+        .updates-strip .update-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0,242,254,0.4);
+            background: rgba(255,255,255,0.08);
+        }
+        .updates-strip .update-title {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        .updates-strip .update-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+        .updates-strip .update-meta {
+            font-size: 12px;
+            color: #8b94a1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .updates-strip .update-badge {
+            display: inline-flex;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(0,242,254,0.12);
+            color: #00f2fe;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .social-links { display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap: wrap; }
+        .social-links a {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            padding: 12px 18px;
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            overflow: hidden;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+            animation: socialFloat 8s ease-in-out infinite;
+        }
+        .social-links a::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(0,242,254,0.22), transparent 28%),
+                        radial-gradient(circle at 85% 80%, rgba(157,0,255,0.18), transparent 25%);
+            opacity: 0.45;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            filter: blur(10px);
+        }
+        .social-links a:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.25);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+        }
+        .social-links a:hover::before {
+            opacity: 0.65;
+        }
+        .social-links a:nth-child(1) { background: linear-gradient(135deg, rgba(255,0,0,0.18), rgba(255,255,255,0.04)); }
+        .social-links a:nth-child(2) { background: linear-gradient(135deg, rgba(29,155,240,0.18), rgba(255,255,255,0.04)); }
+        .social-links a:nth-child(3) { background: linear-gradient(135deg, rgba(114,137,218,0.18), rgba(255,255,255,0.04)); }
+        .social-links a::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.4), transparent 40%, transparent 60%, rgba(255,255,255,0.25));
+            transform: translateX(-100%);
+            transition: transform 0.8s ease, opacity 0.4s ease;
+        }
+        .social-links a:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .social-links a span {
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes socialFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        /* Compact layout adjustments */
+        .compact-layout .page-layout { gap: 12px; padding: 20px 5%; }
+        .compact-layout .sidebar-subscribe { padding: 12px; min-width: 240px; }
+        .compact-layout .promo-container { padding: 18px; }
+        .compact-layout .video-card { transform: none; }
+        .compact-layout .promo-title-main { font-size: 1.6rem; }
+
+
+        .content-right { flex: 1; width: 100%; display: flex; flex-direction: column; gap: 35px; }
+
+        /* PESTAÑAS */
+        .tabs-container { display: flex; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { background: transparent; border: none; color: var(--text-muted); font-size: 15px; font-weight: 700; padding: 10px 20px; cursor: pointer; transition: all 0.3s; border-radius: 8px; text-decoration: none; }
+        .tab-btn.active { color: #fff; background: rgba(255,255,255,0.05); box-shadow: inset 0 -2px 0 var(--primary-color); }
+        .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.02); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 25px; }
+        .video-card { 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 16px; 
+            overflow: hidden; 
+            position: relative; 
+            transform: translateY(20px); 
+            opacity: 0; 
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
+            will-change: transform, opacity;
+        }
+        .video-card.ready { opacity: 1; transform: translateY(0); }
+        .video-card:hover { border-color: var(--primary-color); transform: translateY(-10px) scale(1.02) !important; background: rgba(255, 255, 255, 0.05); box-shadow: 0 30px 40px -10px rgba(0, 0, 0, 0.7); }
+        .video-thumbnail { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background-color: #000; border-radius: 16px 16px 0 0; }
+        .video-thumbnail iframe,
+        .video-thumbnail img,
+        .video-play-btn,
+        .video-loading-label { position: absolute; }
+        .video-thumbnail iframe,
+        .video-thumbnail img { top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .video-thumbnail img { object-fit: cover; transition: transform 0.35s ease, filter 0.35s ease; }
+        .video-card:hover .video-thumbnail img { transform: scale(1.04); filter: brightness(0.72); }
+        .video-play-btn { inset: 0; display: flex; align-items: center; justify-content: center; border: 0; background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.54)); color: #fff; cursor: pointer; }
+        .video-play-btn::after { content: ""; width: 58px; height: 58px; border-radius: 999px; background: color-mix(in srgb, var(--primary-color) 82%, #ffffff); box-shadow: 0 12px 30px rgba(0,0,0,0.42); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .video-play-btn::before { content: ""; z-index: 1; margin-right: -42px; transform: translateX(3px); border-top: 13px solid transparent; border-bottom: 13px solid transparent; border-left: 20px solid #061018; transition: transform 0.2s ease; }
+        .video-play-btn:hover::after { transform: scale(1.08); box-shadow: 0 16px 36px color-mix(in srgb, var(--primary-color) 34%, rgba(0,0,0,0.46)); }
+        .video-play-btn:hover::before { transform: translateX(3px) scale(1.08); }
+        .video-loading-label { z-index: 2; left: 12px; bottom: 10px; padding: 5px 8px; border-radius: 999px; background: rgba(0,0,0,0.66); color: #fff; font-size: 11px; font-weight: 800; opacity: 0; transform: translateY(4px); transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; }
+        .video-thumbnail.is-loading .video-loading-label { opacity: 1; transform: translateY(0); }
+        
+        .fav-badge { position: absolute; top: 12px; right: 12px; background: rgba(4,6,12,0.8); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; z-index: 10; font-size: 14px; }
+        .fav-badge:hover { transform: scale(1.1); border-color: #ffd700; color: #ffd700; }
+        .fav-badge.active { color: #ffd700; border-color: #ffd700; background: rgba(255, 215, 0, 0.2); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+        .input-gamer { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; color: #fff; padding: 14px; font-size: 14px; outline: none; box-sizing: border-box; flex: 1; min-width: 200px; transition: all 0.3s; }
+        .input-gamer:focus { border-color: var(--primary-color); }
+        
+        .btn-premium { 
+            background: var(--primary-color); 
+            color: #04060c; 
+            border: none; 
+            padding: 12px 0; 
+            border-radius: 12px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-size: 12px; 
+            transition: all 0.3s; 
+            width: 100%; 
+            display: block; 
+            text-align: center;
+            box-sizing: border-box; 
+            text-decoration: none;
+        }
+        .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-color); }
+
+        /* --- SECCIÓN ASISTENTE IA --- */
+        .ia-section { background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 20px; padding: 25px; margin-top: 20px; backdrop-filter: blur(20px); }
+        .ia-setup { text-align: center; padding: 20px 0; }
+        .gender-container { display: flex; justify-content: center; gap: 20px; margin-top: 15px; }
+        .btn-gender { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .btn-gender:hover { border-color: var(--primary-color); }
+        
+        .ia-chat-box { display: none; flex-direction: column; gap: 15px; }
+        .ia-messages { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; min-height: 200px; max-height: 300px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 10px; max-width: 80%; font-size: 14px; line-height: 1.4; }
+        .msg.bot { background: rgba(157, 0, 255, 0.15); border: 1px solid rgba(157, 0, 255, 0.3); align-self: flex-start; color: #fff; }
+        .msg.user { background: rgba(0, 242, 254, 0.15); border: 1px solid rgba(0, 242, 254, 0.3); align-self: flex-end; color: #fff; }
+        .ia-input-row { display: flex; gap: 10px; }
+
+        body.no-animations * { animation: none !important; transition: none !important; box-shadow: none !important; backdrop-filter: none !important; }
+        body.no-animations #space-canvas, body.no-animations .ambient-glow, body.no-animations .promo-bg-fx { display: none !important; }
+        body.no-animations .sidebar-subscribe,
+        body.no-animations .cd-text,
+        body.no-animations .countdown-timer,
+        body.no-animations .cd-date,
+        body.no-animations .btn-directos-nav {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        body.no-animations .video-card { opacity: 1 !important; transform: none !important; }
+        body.no-animations .promo-container { background: #0c101f !important; border-color: var(--primary-color) !important; }
+
+        @media (max-width: 980px) {
+            .updates-strip { grid-template-columns: 1fr; padding: 18px; }
+            .page-layout { flex-direction: column; }
+            .sidebar-subscribe { width: 100%; min-width: 100%; position: static; }
+            .header-actions { justify-content: center; width: 100%; }
+        }
+
+        /* --- REDISEÑO EXPERTO: mismo HTML y mismas funciones, solo experiencia visual --- */
+        :root {
+            --bg-color: #06070b;
+            --panel: rgba(14, 18, 29, 0.78);
+            --panel-strong: rgba(18, 23, 36, 0.92);
+            --panel-soft: rgba(255, 255, 255, 0.055);
+            --line: rgba(255, 255, 255, 0.12);
+            --line-strong: rgba(255, 255, 255, 0.2);
+            --shadow-deep: 0 18px 48px rgba(0, 0, 0, 0.44);
+            --shadow-soft: 0 10px 26px rgba(0, 0, 0, 0.26);
+            --radius-card: 8px;
+            --ease-pro: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--primary-color) 18%, transparent), transparent 30%),
+                radial-gradient(circle at 82% 22%, color-mix(in srgb, var(--secondary-color) 14%, transparent), transparent 34%),
+                linear-gradient(180deg, #080a10 0%, #05070b 48%, #090b10 100%);
+            font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 78%);
+        }
+
+        header {
+            padding: 14px clamp(16px, 4vw, 58px);
+            background: rgba(7, 9, 15, 0.86);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+        }
+
+        .logo {
+            position: relative;
+            font-size: clamp(20px, 2.5vw, 28px);
+            letter-spacing: 0.08em;
+            text-shadow: 0 0 22px color-mix(in srgb, var(--primary-color) 36%, transparent);
+        }
+
+        .logo::after {
+            content: "";
+            display: block;
+            width: 72%;
+            height: 2px;
+            margin-top: 5px;
+            background: linear-gradient(90deg, var(--primary-color), transparent);
+            transform-origin: left;
+            animation: expertLine 3.5s var(--ease-pro) infinite;
+        }
+
+        .page-layout {
+            gap: 24px;
+            padding: 28px clamp(14px, 4vw, 58px) 40px;
+        }
+
+        .content-right { gap: 24px; }
+
+        .sidebar-subscribe,
+        .promo-container,
+        .updates-strip,
+        .ia-section,
+        .tabs-container {
+            background: linear-gradient(180deg, var(--panel-strong), rgba(10, 13, 22, 0.74));
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-deep);
+            backdrop-filter: blur(16px);
+        }
+
+        .sidebar-subscribe {
+            width: 310px;
+            min-width: 310px;
+            padding: 20px;
+            top: 92px;
+        }
+
+        .countdown-box {
+            border-radius: var(--radius-card);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025)),
+                radial-gradient(circle at top, color-mix(in srgb, var(--primary-color) 18%, transparent), transparent 55%);
+            border-color: color-mix(in srgb, var(--primary-color) 32%, rgba(255,255,255,0.1));
+        }
+
+        .countdown-timer {
+            letter-spacing: 0.04em;
+            text-shadow: 0 0 18px color-mix(in srgb, var(--primary-color) 46%, transparent);
+        }
+
+        .updates-strip {
+            margin: 18px clamp(14px, 4vw, 58px) 0;
+            padding: 16px;
+            gap: 14px;
+        }
+
+        .updates-strip .update-card,
+        .video-card,
+        .msg,
+        .ia-messages {
+            border-radius: var(--radius-card);
+        }
+
+        .updates-strip .update-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255,255,255,0.045);
+            border-color: rgba(255,255,255,0.09);
+        }
+
+        .updates-strip .update-card::before,
+        .video-card::before,
+        .promo-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.12), transparent 42%);
+            transform: translateX(-120%);
+            transition: transform 0.7s var(--ease-pro);
+        }
+
+        .updates-strip .update-card:hover::before,
+        .video-card:hover::before,
+        .promo-container:hover::before {
+            transform: translateX(120%);
+        }
+
+        .promo-container {
+            min-height: 260px;
+            isolation: isolate;
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.025)),
+                radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--primary-color) 24%, transparent), transparent 34%),
+                radial-gradient(circle at 82% 80%, color-mix(in srgb, var(--secondary-color) 18%, transparent), transparent 32%),
+                rgba(8, 11, 19, 0.86);
+        }
+
+        .promo-bg-fx {
+            width: 220px;
+            height: 220px;
+            filter: blur(74px);
+            opacity: 0.28;
+            animation: expertGlow 6s var(--ease-pro) infinite alternate;
+        }
+
+        .promo-tag,
+        .update-badge {
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--primary-color) 16%, transparent);
+            border: 1px solid color-mix(in srgb, var(--primary-color) 36%, transparent);
+            color: #ffffff;
+            box-shadow: inset 0 0 18px color-mix(in srgb, var(--primary-color) 16%, transparent);
+        }
+
+        .promo-title-main {
+            letter-spacing: 0;
+            background: linear-gradient(90deg, #ffffff, color-mix(in srgb, var(--primary-color) 72%, #ffffff), #ffffff);
+            background-size: 220% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleFlow 5s linear infinite;
+        }
+
+        .promo-updates {
+            width: min(760px, 100%);
+            margin: 18px auto 0;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .promo-update-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 92px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: left;
+            background: rgba(255,255,255,0.055);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .promo-update-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, color-mix(in srgb, var(--primary-color) 18%, transparent), transparent 42%);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .promo-update-title,
+        .promo-update-time,
+        .promo-update-badge {
+            position: relative;
+            z-index: 1;
+        }
+
+        .promo-update-badge {
+            display: inline-flex;
+            margin-bottom: 8px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: var(--primary-color);
+            background: rgba(0,0,0,0.22);
+            border: 1px solid color-mix(in srgb, var(--primary-color) 34%, transparent);
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .promo-update-title {
+            margin: 0 0 8px;
+            color: #fff;
+            font-size: 13px;
+            line-height: 1.28;
+            font-weight: 800;
+        }
+
+        .promo-update-time {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .promo-live-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: var(--primary-color);
+            background: rgba(0,0,0,0.22);
+            border: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .tabs-container {
+            padding: 8px;
+            border-bottom: 1px solid var(--line);
+            gap: 8px;
+        }
+
+        .tab-btn {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            padding: 12px 18px;
+            min-height: 44px;
+            color: #cbd5e1;
+            background: transparent;
+        }
+
+        .tab-btn.active {
+            color: #061018;
+            background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 52%, #ffffff));
+            box-shadow: 0 10px 24px color-mix(in srgb, var(--primary-color) 24%, transparent);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #fff;
+            background: rgba(255,255,255,0.07);
+        }
+
+        .video-grid {
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
+            gap: 18px;
+        }
+
+        .video-card {
+            background: rgba(255,255,255,0.045);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .video-card.ready { animation: cardRise 0.46s var(--ease-pro) both; }
+
+        .video-card:hover {
+            border-color: color-mix(in srgb, var(--primary-color) 62%, #ffffff);
+            transform: translateY(-7px) !important;
+            box-shadow: 0 18px 38px rgba(0,0,0,0.42), 0 0 0 1px color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
+
+        .video-thumbnail,
+        .video-thumbnail iframe,
+        .video-thumbnail img {
+            border-radius: var(--radius-card);
+        }
+
+        .fav-badge {
+            border-radius: 999px;
+            background: rgba(4, 7, 12, 0.78);
+            backdrop-filter: blur(12px);
+        }
+
+        .btn-action,
+        .btn-premium,
+        .btn-directos-nav,
+        .btn-enter-hub,
+        .btn-gender {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            isolation: isolate;
+            transform: translateZ(0);
+            transition: transform 0.22s var(--ease-pro), box-shadow 0.22s var(--ease-pro), border-color 0.22s var(--ease-pro), background 0.22s var(--ease-pro);
+        }
+
+        .btn-action,
+        .btn-gender {
+            background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));
+            border: 1px solid var(--line);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(0,0,0,0.18);
+        }
+
+        .btn-premium,
+        .btn-directos-nav,
+        .btn-enter-hub {
+            color: #05070b;
+            background: linear-gradient(180deg, color-mix(in srgb, var(--primary-color) 72%, #ffffff), var(--primary-color));
+            box-shadow: 0 10px 22px color-mix(in srgb, var(--primary-color) 18%, transparent);
+        }
+
+        .btn-action::after,
+        .btn-premium::after,
+        .btn-directos-nav::after,
+        .btn-enter-hub::after,
+        .btn-gender::after {
+            content: "";
+            position: absolute;
+            top: -40%;
+            bottom: -40%;
+            width: 34%;
+            left: -48%;
+            z-index: -1;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.58), transparent);
+            transform: skewX(-18deg);
+            transition: left 0.62s var(--ease-pro);
+        }
+
+        .btn-action:hover,
+        .btn-premium:hover,
+        .btn-directos-nav:hover,
+        .btn-enter-hub:hover,
+        .btn-gender:hover {
+            transform: translateY(-2px);
+            border-color: color-mix(in srgb, var(--primary-color) 58%, #ffffff);
+            box-shadow: 0 12px 26px color-mix(in srgb, var(--primary-color) 18%, transparent), inset 0 1px 0 rgba(255,255,255,0.14);
+        }
+
+        .btn-premium::after,
+        .btn-directos-nav::after,
+        .btn-enter-hub::after {
+            display: none;
+        }
+
+        .btn-action:hover::after,
+        .btn-premium:hover::after,
+        .btn-directos-nav:hover::after,
+        .btn-enter-hub:hover::after,
+        .btn-gender:hover::after {
+            left: 116%;
+        }
+
+        .btn-action:active,
+        .btn-premium:active,
+        .btn-directos-nav:active,
+        .btn-enter-hub:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .btn-alertas.active,
+        .btn-anim.active {
+            box-shadow: 0 0 0 1px currentColor, 0 12px 28px color-mix(in srgb, currentColor 18%, transparent);
+        }
+
+        .theme-selector {
+            border-radius: 10px;
+            background: rgba(255,255,255,0.045);
+            border-color: var(--line);
+        }
+
+        .theme-dot,
+        .color-picker {
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.18), 0 8px 18px rgba(0,0,0,0.22);
+        }
+
+        .theme-dot:hover,
+        .color-picker:hover {
+            transform: translateY(-2px) scale(1.08);
+        }
+
+        .social-links a {
+            border-radius: 10px;
+            min-height: 42px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            border-color: var(--line);
+        }
+
+        .input-gamer {
+            border-radius: 10px;
+            background: rgba(3, 6, 12, 0.72);
+            border-color: var(--line);
+        }
+
+        .input-gamer:focus {
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
+        }
+
+        .ai-assistant-section {
+            width: min(1120px, calc(100% - 28px));
+            margin: 32px auto 26px;
+        }
+
+        .ai-chat-shell {
+            display: grid;
+            gap: 14px;
+        }
+
+        .ai-messages {
+            min-height: 260px;
+            max-height: 420px;
+        }
+
+        .ai-input-row {
+            display: grid;
+            grid-template-columns: 1fr 150px;
+            gap: 10px;
+        }
+
+        .ai-suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ai-suggestion {
+            width: auto;
+            padding: 9px 12px;
+            font-size: 11px;
+        }
+
+        .ai-profile-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .ai-profile-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ai-voice-toggle.active {
+            color: #061018;
+            background: linear-gradient(135deg, var(--primary-color), #fff);
+        }
+
+        .ai-gender-btn.active {
+            color: #061018;
+            background: linear-gradient(135deg, var(--primary-color), #fff);
+            box-shadow: 0 12px 28px color-mix(in srgb, var(--primary-color) 28%, transparent);
+        }
+
+        #faq-section {
+            display: none;
+        }
+
+        footer {
+            border-radius: var(--radius-card);
+            border: 1px solid var(--line) !important;
+        }
+
+        @keyframes expertLine {
+            0%, 100% { transform: scaleX(0.45); opacity: 0.52; }
+            50% { transform: scaleX(1); opacity: 1; }
+        }
+
+        @keyframes expertGlow {
+            from { transform: translate3d(-12px, 6px, 0) scale(0.92); }
+            to { transform: translate3d(18px, -10px, 0) scale(1.12); }
+        }
+
+        @keyframes titleFlow {
+            to { background-position: 220% center; }
+        }
+
+        @keyframes cardRise {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body.advanced-anim .promo-container,
+        body.advanced-anim .sidebar-subscribe,
+        body.advanced-anim .updates-strip {
+            animation: subtlePanelFloat 7s var(--ease-pro) infinite alternate;
+        }
+
+        @keyframes subtlePanelFloat {
+            from { transform: translateY(0); }
+            to { transform: translateY(-3px); }
+        }
+
+        @media (max-width: 768px) {
+            body::before { background-size: 56px 56px; opacity: 0.45; }
+            header { position: relative; }
+            .page-layout { padding: 18px 12px 28px; }
+            .updates-strip { margin: 12px; }
+            .promo-container { min-height: 220px; padding: 24px 16px; }
+            .promo-updates { grid-template-columns: 1fr; }
+            .sidebar-subscribe { padding: 16px; }
+            .tab-btn { flex: 1 1 100%; }
+            .ai-input-row { grid-template-columns: 1fr; }
+            .btn-action,
+            .btn-premium,
+            .btn-directos-nav { min-height: 44px; }
+        }
+
+        @media (max-width: 480px) {
+            .header-actions { gap: 8px; }
+            .btn-action { flex: 1 1 calc(50% - 8px); justify-content: center; padding-inline: 10px; }
+            .theme-selector { width: 100%; justify-content: center; }
+            .promo-title-main { font-size: 1.65rem; }
+            .social-links a { flex: 1 1 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.advanced-anim .promo-container,
+            body.advanced-anim .sidebar-subscribe,
+            body.advanced-anim .updates-strip {
+                animation: none;
+            }
+        }
+
+        /* --- NUEVO DISENO: cabina gamer / mismas funciones --- */
+        :root {
+            --bg-color: #07090d;
+            --surface-card: rgba(16, 20, 29, 0.88);
+            --text-muted: #aab4c2;
+            --panel: rgba(17, 22, 32, 0.84);
+            --panel-strong: rgba(23, 28, 39, 0.94);
+            --panel-soft: rgba(255, 255, 255, 0.065);
+            --line: rgba(255, 255, 255, 0.14);
+            --line-strong: rgba(255, 255, 255, 0.22);
+            --radius-card: 8px;
+        }
+
+        body {
+            background:
+                linear-gradient(115deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 16px),
+                linear-gradient(180deg, #0b0d12 0%, #06080d 48%, #101015 100%);
+        }
+
+        body::before {
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.58), transparent 82%);
+        }
+
+        .ambient-glow {
+            width: 52vw;
+            height: 180px;
+            border-radius: 0;
+            filter: blur(70px);
+            opacity: 0.09;
+            transform: rotate(-8deg);
+        }
+
+        #glow-1 { top: 9%; left: -18%; }
+        #glow-2 { bottom: 6%; right: -18%; transform: rotate(8deg); }
+
+        header {
+            display: grid;
+            grid-template-columns: minmax(190px, 0.7fr) minmax(0, 2.4fr);
+            align-items: center;
+            gap: 18px;
+            padding: 12px clamp(14px, 4vw, 56px);
+        }
+
+        .logo {
+            -webkit-text-fill-color: initial;
+            background: none;
+            color: #fff;
+            font-size: clamp(18px, 2vw, 24px);
+            letter-spacing: 0.12em;
+        }
+
+        .logo::after {
+            width: 100%;
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), transparent);
+        }
+
+        .header-actions {
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-action,
+        .btn-premium,
+        .btn-directos-nav,
+        .btn-enter-hub,
+        .btn-gender,
+        .tab-btn,
+        .input-gamer {
+            border-radius: 8px;
+        }
+
+        .updates-strip {
+            margin: 14px clamp(14px, 4vw, 56px) 0;
+            padding: 10px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            background: rgba(11, 14, 21, 0.88);
+        }
+
+        .updates-strip .update-card {
+            min-height: 118px;
+            padding: 14px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025)),
+                rgba(12, 16, 24, 0.72);
+        }
+
+        .updates-strip .update-title {
+            margin-bottom: 8px;
+            font-size: 0.93rem;
+        }
+
+        .updates-strip .update-text {
+            margin-bottom: 12px;
+            font-size: 0.86rem;
+            line-height: 1.45;
+        }
+
+        .page-layout {
+            flex-direction: row-reverse;
+            align-items: flex-start;
+            gap: 22px;
+            max-width: 1500px;
+            padding-top: 22px;
+        }
+
+        .sidebar-subscribe {
+            width: 300px;
+            min-width: 300px;
+            padding: 16px;
+            top: 86px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028)),
+                rgba(14, 18, 27, 0.9);
+        }
+
+        .countdown-box {
+            margin-bottom: 14px;
+            padding: 16px;
+        }
+
+        .countdown-timer {
+            font-size: 20px;
+        }
+
+        .promo-container {
+            align-items: flex-start;
+            text-align: left;
+            min-height: 250px;
+            padding: clamp(24px, 4vw, 42px);
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.09), rgba(255,255,255,0.025)),
+                linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 18%, transparent), transparent 36%),
+                rgba(12, 16, 25, 0.9);
+        }
+
+        .promo-container::after {
+            display: none;
+        }
+
+        .promo-slide {
+            max-width: 780px;
+        }
+
+        .promo-desc {
+            margin-left: 0;
+            max-width: 680px;
+        }
+
+        .promo-controls {
+            align-self: flex-start;
+        }
+
+        .promo-dot-nav {
+            width: 28px;
+            height: 5px;
+            border-radius: 999px;
+        }
+
+        .promo-dot-nav.active {
+            width: 52px;
+        }
+
+        .tabs-container {
+            position: sticky;
+            top: 74px;
+            z-index: 80;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            padding: 7px;
+            background: rgba(8, 11, 17, 0.9);
+        }
+
+        .tab-btn {
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 12px;
+        }
+
+        .video-grid {
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+            gap: 16px;
+        }
+
+        .video-card {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.028)),
+                rgba(13, 17, 25, 0.86);
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px) !important;
+        }
+
+        .social-links {
+            justify-content: flex-start;
+            margin-top: 2px;
+        }
+
+        .social-links a {
+            min-width: 108px;
+            padding: 10px 14px;
+        }
+
+        .ai-assistant-section {
+            width: 100%;
+            margin: 18px 0 26px;
+        }
+
+        .ai-chat-shell {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .ai-profile-row {
+            align-items: stretch;
+        }
+
+        .ai-profile-actions {
+            justify-content: flex-end;
+        }
+
+        .ai-messages {
+            min-height: 230px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                rgba(3, 5, 9, 0.5);
+        }
+
+        .msg.bot {
+            background: color-mix(in srgb, var(--secondary-color) 18%, rgba(255,255,255,0.04));
+        }
+
+        .msg.user {
+            background: color-mix(in srgb, var(--primary-color) 18%, rgba(255,255,255,0.04));
+        }
+
+        .welcome-panel {
+            max-width: 560px;
+            padding: 0 16px;
+        }
+
+        .welcome-title {
+            font-size: clamp(2.15rem, 8vw, 4.2rem);
+        }
+
+        @media (max-width: 1100px) {
+            header {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                justify-content: flex-start;
+            }
+
+            .page-layout {
+                flex-direction: column;
+            }
+
+            .sidebar-subscribe {
+                width: 100%;
+                min-width: 100%;
+                position: static;
+            }
+
+            .tabs-container {
+                top: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .updates-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .promo-container {
+                text-align: center;
+                align-items: center;
+            }
+
+            .promo-desc {
+                margin-inline: auto;
+            }
+
+            .promo-controls {
+                align-self: center;
+            }
+
+            .tabs-container {
+                grid-template-columns: 1fr;
+                position: static;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                width: 100%;
+            }
+
+            .theme-selector {
+                grid-column: 1 / -1;
+            }
+
+            .ai-profile-actions,
+            .ai-suggestions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5WI_hxT6U0YKbQqK-4DYpS6UibnPscho",
+            authDomain: "panelwed.firebaseapp.com",
+            projectId: "panelwed",
+            storageBucket: "panelwed.firebasestorage.app",
+            messagingSenderId: "138095012886",
+            appId: "1:138095012886:web:e0c1643308656f7e9dd937",
+            measurementId: "G-NNX37YHZ1T"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.dbFirebase = db;
+        window.collectionFirebase = collection;
+        window.onSnapshotFirebase = onSnapshot;
+    </script>
+
+    <script src="actualizaciones-helper.js"></script>
+</head>
+<body>
+
+    <canvas id="space-canvas"></canvas>
+    <div class="ambient-glow" id="glow-1"></div>
+    <div class="ambient-glow" id="glow-2"></div>
+
+    <div class="toast-notification" id="toast">
+        <span style="font-size: 20px;">🔔</span>
+        <div id="toast-text">Alertas configuradas con éxito.</div>
+    </div>
+
+    <div id="welcome-screen">
+        <div class="welcome-overlay"></div>
+        <div class="gamer-grid"></div>
+        <div class="welcome-panel">
+            <h1 class="welcome-title">El Sótano de Osito</h1>
+            <button class="btn-enter-hub" id="btn-ready" onclick="iniciarCarga()">Entrar al sótano</button>
+            <div class="loading-container" id="loading-container" style="display: none;">
+                <div class="loading-bar" id="progress-bar"></div>
+            </div>
+            <div class="loading-text" id="progress-text" style="display: none;">Iniciando módulos...</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo">EL_SÓTANO</div>
+        <div class="header-actions">
+            <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
+                <span>🎬</span> Quitar Animaciones
+            </button>
+
+            <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
+                <span>🔔</span> Recibir Alertas
+            </button>
+            
+            <div class="theme-selector">
+                <span class="theme-label">Tema:</span>
+                <div class="theme-dot" style="background: linear-gradient(45deg, #00f2fe, #9d00ff);" title="Cyberpunk" onclick="cambiarFondo('#00f2fe', '#9d00ff')"></div>
+                <div class="theme-dot" style="background: linear-gradient(45deg, #ff007f, #00f2fe);" title="Synthwave" onclick="cambiarFondo('#ff007f', '#00f2fe')"></div>
+                <div class="theme-dot" style="background: linear-gradient(45deg, #00ff66, #025921);" title="Matrix" onclick="cambiarFondo('#00ff66', '#025921')"></div>
+                <div class="theme-dot" style="background: linear-gradient(45deg, #ff3333, #ffaa00);" title="Fuego" onclick="cambiarFondo('#ffaa00', '#ff3333')"></div>
+                
+                <div class="color-picker-container">
+                    <span style="font-size: 18px;" title="Personaliza tus propios colores">🎨</span>
+                    <input type="color" id="picker-primario" class="color-picker" title="Color Principal" onchange="aplicarColoresPersonalizados()">
+                    <input type="color" id="picker-secundario" class="color-picker" title="Color Secundario" onchange="aplicarColoresPersonalizados()">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-layout">
+        <aside class="sidebar-subscribe" id="sidebar-panel">
+            <div class="countdown-box">
+                <div class="cd-text">&#128293; OsitoExpo2026 &#128293;</div>
+                <div class="countdown-timer" id="countdown-timer">-- : -- : -- : --</div>
+                <div class="cd-date">2 de Agosto 2026 - 10:30 AM, hora de El Salvador (UTC-6)</div>
+            </div>
+
+            <a href="https://horarioositoexpo2026.netlify.app" target="_blank" class="btn-directos-nav">
+                <span>&#127757;</span> Horarios
+            </a>
+
+            <div class="countdown-box">
+                <div class="cd-text">4 años en YouTube</div>
+                <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
+                <div class="cd-date">2 de Junio 2026</div>
+            </div>
+
+            <h3 style="margin-top: 0;">&Uacute;nete al Canal &#128308;</h3>
+            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">P&aacute;sate por el canal de YouTube de OsitoYT360 para interactuar en los streams en vivo.</p>
+            <br>
+            <a href="https://www.youtube.com/@OsitoYT360/videos" target="_blank" class="btn-premium">&iexcl;Ir al Canal!</a>
+
+            <div style="margin-top:16px;"> 
+                <div style="font-weight:800; color:var(--text-muted); margin-bottom:8px;">Diseños personalizables</div>
+                <div style="display:flex; gap:8px; flex-direction:column;">
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn-action design-preset" data-p1="#00f2fe" data-p2="#9d00ff">Cyberpunk</button>
+                        <button class="btn-action design-preset" data-p1="#ff007f" data-p2="#00f2fe">Synthwave</button>
+                        <button class="btn-action design-preset" data-p1="#00ff66" data-p2="#025921">Matrix</button>
+                        <button class="btn-action design-preset" data-p1="#ffaa00" data-p2="#ff3333">Fuego</button>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+                        <label style="color:var(--text-muted); font-weight:700; width:90px;">Tamaño fuente</label>
+                        <input id="font-size-range" type="range" min="12" max="20" value="14">
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+                        <label style="color:var(--text-muted); font-weight:700;">Compacto</label>
+                        <input id="layout-compact" type="checkbox">
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="content-right">
+            
+            <section class="promo-container">
+                <div class="promo-bg-fx"></div>
+                
+                <div class="promo-slide active" id="slide-0">
+                    <span class="promo-tag">INFO &bull; COMUNIDAD</span>
+                    <h2 class="promo-title-main">EL S&Oacute;TANO DE OSITO</h2>
+                    <p class="promo-desc">Esta p&aacute;gina es el centro oficial automatizado de la comunidad. Aqu&iacute; se sincronizan todos los videos recientes, transmisiones en vivo de respaldo, eventos mundiales y cuentas regresivas interactivas en tiempo real.</p>
+                </div>
+
+                <div class="promo-slide" id="slide-1">
+                    <span class="promo-tag">ALERTA &bull; Imperdible</span>
+                    <h2 class="promo-title-main">OsitoExpo 2026</h2>
+                    <p class="promo-desc">El evento gamer del a&ntilde;o llega este pr&oacute;ximo 2 de agosto. &Uacute;nete para sorpresas exclusivas, anuncios masivos en directo e interacciones &uacute;nicas.</p>
+                    <a href="https://horarioositoexpo2026.netlify.app" target="_blank" class="btn-premium" style="max-width:200px; margin:0 auto;">Ver Horarios Locales</a>
+                </div>
+
+                <div class="promo-slide" id="slide-2">
+                    <span class="promo-tag">LIVE &bull; UPDATES</span>
+                    <h2 class="promo-title-main">&Uacute;LTIMAS ACTUALIZACIONES</h2>
+                    <p class="promo-desc">Cambios recientes del sitio con tiempo actualizado autom&aacute;ticamente.</p>
+                    <div class="promo-live-counter" id="updates-live-counter">Actualizando en vivo</div>
+                    <div class="promo-updates" id="promo-updates-container">
+                        <div class="promo-update-card">
+                            <span class="promo-update-badge">Nuevo</span>
+                            <h3 class="promo-update-title">Cargando actualizaciones...</h3>
+                            <div class="promo-update-time update-timestamp" data-timestamp="">Actualizando...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="promo-controls" id="promo-dots-container">
+                    <div class="promo-dot-nav active" onclick="saltarAnuncio(0)"></div>
+                    <div class="promo-dot-nav" onclick="saltarAnuncio(1)"></div>
+                    <div class="promo-dot-nav" onclick="saltarAnuncio(2)"></div>
+                </div>
+            </section>
+
+            <!-- FAQ moved to the end of the page -->
+
+            <div class="tabs-container">
+                <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaña('videos')">Videos recientes</button>
+                <button class="tab-btn" id="tab-btn-directos" onclick="cambiarPestaña('directos')">Directos 🔴</button>
+                <button class="tab-btn" id="tab-btn-favs" onclick="cambiarPestaña('favs')">Mis Favoritos ⭐</button>
+            </div>
+
+            <div id="tab-videos" class="tab-content active">
+                <div class="video-grid" id="main-video-grid">
+                    <p style="color: var(--text-muted); padding: 20px;">Sincronizando con YouTube...</p>
+                </div>
+            </div>
+
+            <div id="tab-directos" class="tab-content">
+                <div class="video-grid" id="main-directos-grid">
+                    <p style="color: var(--text-muted); padding: 20px;">Sincronizando transmisiones de respaldo...</p>
+                </div>
+            </div>
+
+            <div id="tab-favs" class="tab-content">
+                <div class="video-grid" id="fav-video-grid">
+                    <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>
+                </div>
+            </div>
+
+            <footer style="text-align:center; padding:18px 10px; color:var(--text-muted); font-size:14px; background: rgba(4,6,12,0.6); border-top:1px solid rgba(255,255,255,0.03); margin-top:20px;">
+                © 2026 OsitoYT360. Todos los derechos reservados.
+            </footer>
+            <div class="social-links" id="social-links">
+                <a href="https://www.youtube.com/@OsitoYT360" target="_blank">YouTube</a>
+                <a href="https://x.com/Ositogamer360yt" target="_blank">Twitter</a>
+            </div>
+        </main>
+    </div>
+
+            <section class="ia-section ai-assistant-section" id="ai-section">
+                <div class="ia-setup" style="max-width:1100px; margin:0 auto;">
+                    <span class="promo-tag">IA • ASISTENTE</span>
+                    <h3 class="promo-title-main" style="font-size:1.45rem; margin:10px 0 6px;">Pregúntale a la IA</h3>
+                    <p class="promo-desc">Responde sobre el canal, eventos, videos, directos, juegos, series, privacidad y preguntas generales.</p>
+                    <div class="ai-chat-shell">
+                        <div class="ai-profile-row">
+                            <span style="color:var(--text-muted); font-weight:800;">Primero elige cómo quieres que te hable:</span>
+                            <div class="ai-profile-actions">
+                                <button class="btn-action ai-gender-btn" data-gender="male" type="button">Soy hombre</button>
+                                <button class="btn-action ai-gender-btn" data-gender="female" type="button">Soy mujer</button>
+                                <button class="btn-action ai-voice-toggle active" id="ai-voice-toggle" type="button">Voz activada</button>
+                            </div>
+                        </div>
+                        <div class="ia-messages ai-messages" id="ai-messages" role="log" aria-live="polite">
+                            <div class="msg bot">¡Qué onda! 😄 Antes de empezar: ¿eres hombre o mujer? Así te digo osito u osita.</div>
+                        </div>
+                        <div class="ai-suggestions" aria-label="Preguntas rápidas">
+                            <button class="btn-action ai-suggestion" data-question="¿Qué puedo hacer en esta página?">¿Qué puedo hacer?</button>
+                            <button class="btn-action ai-suggestion" data-question="¿Cómo agrego favoritos?">Favoritos</button>
+                            <button class="btn-action ai-suggestion" data-question="Cuando es OsitoExpo 2026?">OsitoExpo</button>
+                            <button class="btn-action ai-suggestion" data-question="Como mejoro el rendimiento?">Rendimiento</button>
+                        </div>
+                        <form class="ai-input-row" id="ai-form">
+                            <input id="ai-input" class="input-gamer" autocomplete="off" placeholder="Escribe cualquier pregunta..." aria-label="Pregunta para la IA">
+                            <button class="btn-premium" type="submit">Preguntar</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+    <script>
+        const GOOGLE_API_KEY = "AIzaSyC6xRVfY4z4ZyD9gr5z4J6GpUNjtCEl8LI"; 
+        const PLAYLIST_ID = "PLe_gf6mBCqGhNbo0kXQqXe_WfnLvsqaOx";
+
+        let idsVideos = [];
+        let idsDirectos = ["PMJQH8iWcEA", "b9y8iEaglkI", "MzHeUQofzp0"]; 
+        let listaFavoritos = JSON.parse(localStorage.getItem('osito_favs')) || [];
+        let apodoUsuario = ""; 
+        let animacionesActivas = true;
+        let animationFrameId = null;
+        let indicePromoActual = 0;
+        let intervaloPromo = null;
+        let promoIntervalMs = 6000;
+        let advancedAnimacionesEnabled = true;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const c1 = localStorage.getItem('theme_primary') || '#00f2fe';
+            const c2 = localStorage.getItem('theme_secondary') || '#9d00ff';
+            cambiarFondo(c1, c2);
+            iniciarContador();
+            iniciarContadorYouTube();
+            
+            // detect low-end devices and user preferences
+            detectDeviceAndPreferences();
+
+            if(localStorage.getItem('osito_no_anim') === 'true') {
+                toggleAnimaciones();
+            } else {
+                iniciarSecuenciaPublicitaria();
+            }
+
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    cargarVideosDesdePlaylist();
+                    conectarFirebaseEnVivo();
+                    conectarActualizacionesEnVivo();
+                }, { timeout: 2000 });
+            } else {
+                cargarVideosDesdePlaylist();
+                setTimeout(conectarFirebaseEnVivo, 600);
+                setTimeout(conectarActualizacionesEnVivo, 800);
+            }
+        });
+
+        function detectDeviceAndPreferences() {
+            try {
+                const deviceMemory = navigator.deviceMemory || 4; // in GB
+                const hwThreads = navigator.hardwareConcurrency || 4;
+                const ua = navigator.userAgent || '';
+                const isMobile = /Mobi|Android/i.test(ua);
+
+                const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2) || isMobile && deviceMemory <= 2;
+
+                // Default advanced animations enabled unless low-end
+                advancedAnimacionesEnabled = localStorage.getItem('osito_advanced_anim') !== null
+                    ? localStorage.getItem('osito_advanced_anim') === 'true'
+                    : !lowEnd;
+
+                // Set promo interval longer for low-end devices
+                promoIntervalMs = lowEnd ? 9000 : 6000;
+
+                // Reflect UI
+                const btnAdv = document.getElementById('btn-toggle-advanced');
+                if (btnAdv) {
+                    btnAdv.classList.toggle('active', advancedAnimacionesEnabled);
+                }
+
+                // Add body class to enable advanced animations in CSS
+                document.body.classList.toggle('advanced-anim', advancedAnimacionesEnabled);
+            } catch (e) {
+                console.warn('Device detection failed', e);
+            }
+        }
+
+        function toggleAdvancedAnimaciones() {
+            advancedAnimacionesEnabled = !advancedAnimacionesEnabled;
+            localStorage.setItem('osito_advanced_anim', advancedAnimacionesEnabled ? 'true' : 'false');
+            document.body.classList.toggle('advanced-anim', advancedAnimacionesEnabled);
+            const btn = document.getElementById('btn-toggle-advanced');
+            if (btn) btn.classList.toggle('active', advancedAnimacionesEnabled);
+            // restart space effect with new settings
+            if (animacionesActivas) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                iniciarEspacio();
+            }
+        }
+
+        function iniciarSecuenciaPublicitaria() {
+            if(intervaloPromo) clearInterval(intervaloPromo);
+            intervaloPromo = setInterval(() => {
+                if(animacionesActivas) {
+                    let siguienteIdx = (indicePromoActual + 1) % 3;
+                    saltarAnuncio(siguienteIdx);
+                }
+            }, promoIntervalMs);
+        }
+
+        function saltarAnuncio(indice) {
+            document.querySelectorAll('.promo-slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelectorAll('.promo-dot-nav').forEach(dot => dot.classList.remove('active'));
+            
+            const slideObj = document.getElementById(`slide-${indice}`);
+            const dotsContainer = document.getElementById('promo-dots-container');
+            
+            if(slideObj && dotsContainer) {
+                slideObj.classList.add('active');
+                dotsContainer.children[indice].classList.add('active');
+                indicePromoActual = indice;
+            }
+        }
+
+        function toggleAnimaciones() {
+            animacionesActivas = !animacionesActivas;
+            const btn = document.getElementById('btn-toggle-anim');
+            
+            if (!animacionesActivas) {
+                document.body.classList.add('no-animations');
+                btn.classList.add('active');
+                btn.innerHTML = "<span>🎬</span> Activar Animaciones";
+                localStorage.setItem('osito_no_anim', 'true');
+                if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                if(intervaloPromo) clearInterval(intervaloPromo);
+            } else {
+                document.body.classList.remove('no-animations');
+                btn.classList.remove('active');
+                btn.innerHTML = "<span>🎬</span> Quitar Animaciones";
+                localStorage.setItem('osito_no_anim', 'false');
+                iniciarEspacio();
+                iniciarSecuenciaPublicitaria();
+            }
+        }
+
+        async function cargarVideosDesdePlaylist() {
+            const grid = document.getElementById('main-video-grid');
+            let arrayVideosAcumulados = [];
+            let nextPageToken = "";
+            let primerRenderHecho = false;
+            
+            try {
+                do {
+                    let tokenQuery = nextPageToken ? `&pageToken=${nextPageToken}` : "";
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${PLAYLIST_ID}&key=${GOOGLE_API_KEY}${tokenQuery}`;
+                    
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            if(item.contentDetails && item.contentDetails.videoId) {
+                                arrayVideosAcumulados.push(item.contentDetails.videoId);
+                            }
+                        });
+                        idsVideos = arrayVideosAcumulados;
+                        if(!primerRenderHecho) {
+                            renderizarVideos();
+                            primerRenderHecho = true;
+                        }
+                    }
+                    nextPageToken = data.nextPageToken || "";
+                } while (nextPageToken);
+
+                renderizarVideos();
+                if (idsVideos.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción está vacía.</p>';
+                }
+            } catch (error) {
+                console.error("Error al conectar con YouTube API:", error);
+                if(idsVideos.length === 0) {
+                    grid.innerHTML = '<p style="color: #ff3333; padding: 20px;">Error al conectar con YouTube.</p>';
+                }
+            }
+        }
+
+        function conectarFirebaseEnVivo() {
+            if (!window.dbFirebase) {
+                renderizarDirectos();
+                return;
+            }
+            window.onSnapshotFirebase(window.collectionFirebase(window.dbFirebase, "directos"), (snapshot) => {
+                let directosNube = [];
+                snapshot.forEach(doc => { if(doc.data().youtubeId) directosNube.push(doc.data().youtubeId); });
+                if(directosNube.length > 0) idsDirectos = directosNube;
+                renderizarDirectos();
+            });
+        }
+
+        // Sistema de actualización de timestamps en tiempo real
+        function formatearTiempoRelativo(timestamp) {
+            if (!timestamp) return "Hace poco";
+            
+            const ahora = new Date().getTime();
+            const diferencia = Math.max(0, Math.floor((ahora - timestamp) / 1000)); // segundos
+            const segundos = diferencia % 60;
+            const minutos = Math.floor(diferencia / 60);
+            
+            if (diferencia < 60) return `Hace ${diferencia} s`;
+            if (diferencia < 3600) return `Hace ${minutos} min ${segundos} s`;
+            if (diferencia < 86400) return `Hace ${Math.floor(diferencia / 3600)} h`;
+            if (diferencia < 604800) return `Hace ${Math.floor(diferencia / 86400)} d`;
+            if (diferencia < 2592000) return `Hace ${Math.floor(diferencia / 604800)} sem`;
+            return `Hace ${Math.floor(diferencia / 2592000)} mes`;
+        }
+
+        function actualizarTimestamps() {
+            const timestampsElements = document.querySelectorAll('.update-timestamp');
+            timestampsElements.forEach(el => {
+                const timestamp = Number(el.getAttribute('data-timestamp'));
+                if (Number.isFinite(timestamp) && timestamp > 0) {
+                    el.textContent = `Actualizado ${formatearTiempoRelativo(timestamp)}`;
+                }
+            });
+
+            const liveCounter = document.getElementById('updates-live-counter');
+            const firstTimestamp = document.querySelector('.promo-update-time.update-timestamp');
+            if (liveCounter && firstTimestamp) {
+                const timestamp = Number(firstTimestamp.getAttribute('data-timestamp'));
+                if (Number.isFinite(timestamp) && timestamp > 0) {
+                    liveCounter.textContent = `Ultima actualizacion: ${formatearTiempoRelativo(timestamp)}`;
+                }
+            }
+        }
+
+        function normalizarTimestamp(timestamp) {
+            if (!timestamp) return new Date().getTime();
+            if (typeof timestamp === 'number') return timestamp;
+            if (timestamp.seconds) return timestamp.seconds * 1000;
+            const parsed = Date.parse(timestamp);
+            return Number.isNaN(parsed) ? new Date().getTime() : parsed;
+        }
+
+        function actualizacionesDemo() {
+            const ahora = new Date().getTime();
+            return [
+                {
+                    badge: 'Nuevo',
+                    titulo: 'Contador de 4 años en YouTube agregado',
+                    descripcion: 'La barra lateral ahora muestra el contador del aniversario junto al evento OsitoExpo.',
+                    timestamp: ahora - 1 * 60 * 1000
+                },
+                {
+                    badge: 'Videos',
+                    titulo: 'Reproduccion dentro de la pagina',
+                    descripcion: 'Los videos cargan con miniaturas ligeras y se abren dentro de cada tarjeta al tocar reproducir.',
+                    timestamp: ahora - 12 * 60 * 1000
+                },
+                {
+                    badge: 'Correccion',
+                    titulo: 'Modo sin animaciones corregido',
+                    timestamp: ahora - 25 * 60 * 1000
+                }
+            ];
+        }
+
+        function renderizarActualizaciones(datos) {
+            // Acepta tanto un array directo como un objeto con la propiedad actualizaciones
+            const arr = Array.isArray(datos) ? datos : (datos && datos.actualizaciones ? datos.actualizaciones : []);
+            const lista = (arr.length ? arr : actualizacionesDemo())
+                .map(act => ({
+                    badge: act.badge || 'Nuevo',
+                    titulo: act.titulo || 'Actualización',
+                    descripcion: act.descripcion || '',
+                    timestamp: normalizarTimestamp(act.timestamp)
+                }))
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 3);
+
+            const promoContainer = document.getElementById('promo-updates-container');
+            if (promoContainer) {
+                promoContainer.innerHTML = lista.map(act => `
+                    <div class="promo-update-card">
+                        <span class="promo-update-badge">${act.badge}</span>
+                        <h3 class="promo-update-title">${act.titulo}</h3>
+                        <div class="promo-update-time update-timestamp" data-timestamp="${act.timestamp}">
+                            Actualizado ${formatearTiempoRelativo(act.timestamp)}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            actualizarTimestamps();
+        }
+
+        function conectarActualizacionesEnVivo() {
+            fetch('/api/actualizaciones')
+                .then(res => {
+                    if (!res.ok) throw new Error('Endpoint no disponible');
+                    return res.json();
+                })
+                .then(actualizaciones => {
+                    renderizarActualizaciones(actualizaciones);
+                })
+                .catch(err => {
+                    console.warn('Usando actualizaciones alternativas', err);
+
+                    if (!window.dbFirebase) {
+                        renderizarActualizaciones(actualizacionesDemo());
+                        return;
+                    }
+
+                    try {
+                        window.onSnapshotFirebase(
+                            window.collectionFirebase(window.dbFirebase, 'actualizaciones'),
+                            (snapshot) => {
+                                const actualizacionesFB = [];
+                                snapshot.forEach(doc => {
+                                    const data = doc.data();
+                                    actualizacionesFB.push({
+                                        badge: data.badge || 'Nuevo',
+                                        titulo: data.titulo || 'Actualizacion',
+                                        descripcion: data.descripcion || '',
+                                        timestamp: normalizarTimestamp(data.timestamp)
+                                    });
+                                });
+                                renderizarActualizaciones(actualizacionesFB);
+                            }
+                        );
+                    } catch (e) {
+                        console.warn('No se pudo conectar a actualizaciones en Firebase', e);
+                        renderizarActualizaciones(actualizacionesDemo());
+                    }
+                });
+        }
+
+        function iniciarContador() {
+            // 10:30 AM en El Salvador equivale a 16:30 UTC porque El Salvador usa UTC-6.
+            const fechaOsitoExpoElSalvadorUTC = Date.UTC(2026, 7, 2, 16, 30, 0); 
+            setInterval(() => {
+                const ahoraUTC = new Date().getTime(); 
+                const distancia = fechaOsitoExpoElSalvadorUTC - ahoraUTC;
+                if (distancia < 0) {
+                    document.getElementById("countdown-timer").innerHTML = "¡EN DIRECTO!";
+                    return;
+                }
+                const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
+                const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
+
+                document.getElementById("countdown-timer").innerHTML = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
+            }, 1000);
+        }
+
+        function iniciarContadorYouTube() {
+            // 12:00 AM en El Salvador equivale a 06:00 UTC porque El Salvador usa UTC-6.
+            const fechaAniversarioYouTubeUTC = Date.UTC(2026, 5, 2, 6, 0, 0);
+            const timer = document.getElementById("youtube-anniversary-timer");
+            if (!timer) return;
+
+            setInterval(() => {
+                const ahoraUTC = new Date().getTime();
+                const distancia = fechaAniversarioYouTubeUTC - ahoraUTC;
+
+                if (distancia < 0) {
+                    timer.innerHTML = "&iexcl;4 A&Ntilde;OS EN YOUTUBE!";
+                    return;
+                }
+
+                const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
+                const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
+
+                timer.innerHTML = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
+            }, 1000);
+        }
+
+        function iniciarCarga() {
+            document.getElementById('btn-ready').style.display = "none";
+            document.getElementById('loading-container').style.display = "block";
+            document.getElementById('progress-text').style.display = "block";
+            
+            setTimeout(() => {
+                document.getElementById('progress-bar').style.width = "100%";
+                document.getElementById('progress-text').innerText = "¡Sótano Desbloqueado!";
+                setTimeout(entrarAlSitio, 200);
+            }, 300);
+        }
+
+        function entrarAlSitio() {
+            document.getElementById('welcome-screen').classList.add('welcome-fade-out');
+            setTimeout(() => { document.getElementById('welcome-screen').remove(); }, 400);
+            setTimeout(() => { document.getElementById('sidebar-panel').classList.add('sidebar-show'); }, 100);
+            if(animacionesActivas) iniciarEspacio();
+        }
+
+        // Actualizar timestamps cada segundo
+        setInterval(actualizarTimestamps, 1000);
+
+        function cambiarPestaña(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if(document.getElementById('tab-btn-' + tabName)) document.getElementById('tab-btn-' + tabName).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if(tabName === 'favs') renderizarFavoritos();
+        }
+
+        function cambiarFondo(c1, c2) {
+            document.documentElement.style.setProperty('--primary-color', c1);
+            document.documentElement.style.setProperty('--secondary-color', c2);
+            document.getElementById('picker-primario').value = c1;
+            document.getElementById('picker-secundario').value = c2;
+            localStorage.setItem('theme_primary', c1);
+            localStorage.setItem('theme_secondary', c2);
+        }
+
+        function aplicarColoresPersonalizados() {
+            cambiarFondo(document.getElementById('picker-primario').value, document.getElementById('picker-secundario').value);
+        }
+
+        function mostrarNotificacion(texto) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = texto;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function toggleAlertas() {
+            const btn = document.getElementById('btn-notif');
+            btn.classList.toggle('active');
+            mostrarNotificacion(btn.classList.contains('active') ? "Alertas activadas 🔔" : "Alertas silenciadas 🔕");
+        }
+
+        function obtenerMiniaturaVideo(id) {
+            return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+        }
+
+        function reproducirVideo(id, boton) {
+            const contenedor = boton.closest('.video-thumbnail');
+            if (!contenedor || contenedor.dataset.playing === 'true') return;
+
+            contenedor.dataset.playing = 'true';
+            contenedor.classList.add('is-loading');
+            contenedor.innerHTML = `
+                <iframe
+                    src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+                    title="Reproductor de YouTube"
+                    onload="this.parentElement.classList.remove('is-loading')"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                </iframe>
+                <span class="video-loading-label">Reproduciendo...</span>
+            `;
+        }
+
+        function crearTarjetaVideo(id) {
+            const esFav = listaFavoritos.includes(id);
+            const favClass = esFav ? 'fav-badge active' : 'fav-badge';
+            const miniatura = obtenerMiniaturaVideo(id);
+            return `
+                <div class="video-card">
+                    <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
+                    <div class="video-thumbnail">
+                        <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
+                        <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
+                        <span class="video-loading-label">Reproduciendo...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function animarAparicionTarjetas(selector) {
+            setTimeout(() => {
+                document.querySelectorAll(`${selector} .video-card`).forEach((card, index) => {
+                    setTimeout(() => { card.classList.add('ready'); }, index * 20); 
+                });
+            }, 20);
+        }
+
+        function renderizarVideos() {
+            const grid = document.getElementById('main-video-grid');
+            if(!grid) return;
+            grid.innerHTML = idsVideos.map(id => crearTarjetaVideo(id)).join('');
+            animarAparicionTarjetas('#main-video-grid');
+        }
+
+        function renderizarDirectos() {
+            const grid = document.getElementById('main-directos-grid');
+            if(!grid) return;
+            grid.innerHTML = idsDirectos.map(id => crearTarjetaVideo(id)).join('');
+            animarAparicionTarjetas('#main-directos-grid');
+        }
+
+        function renderizarFavoritos() {
+            const grid = document.getElementById('fav-video-grid');
+            if(!grid) return;
+            if(listaFavoritos.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>';
+                return;
+            }
+            grid.innerHTML = listaFavoritos.map(id => crearTarjetaVideo(id)).join('');
+            animarAparicionTarjetas('#fav-video-grid');
+        }
+
+        function toggleFavorito(id, event) {
+            const index = listaFavoritos.indexOf(id);
+            if (index === -1) {
+                listaFavoritos.push(id);
+                event.target.classList.add('active');
+                mostrarNotificacion("Añadido a favoritos ⭐");
+            } else {
+                listaFavoritos.splice(index, 1);
+                event.target.classList.remove('active');
+                mostrarNotificacion("Eliminado de favoritos ❌");
+            }
+            localStorage.setItem('osito_favs', JSON.stringify(listaFavoritos));
+            if(document.getElementById('tab-btn-favs').classList.contains('active')) renderizarFavoritos();
+        }
+
+        function iniciarEspacio() {
+            const canvas = document.getElementById('space-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const stars = [];
+            const starCount = !animacionesActivas ? 0 : (advancedAnimacionesEnabled ? 60 : 24);
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * (advancedAnimacionesEnabled ? 1.3 : 0.9),
+                    vx: (Math.random() - 0.5) * (advancedAnimacionesEnabled ? 0.4 : 0.2),
+                    vy: (Math.random() - 0.5) * (advancedAnimacionesEnabled ? 0.4 : 0.2)
+                });
+            }
+            function draw() {
+                if(!animacionesActivas || document.hidden) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                for (let i = 0; i < stars.length; i++) {
+                    let star = stars[i];
+                    ctx.moveTo(star.x, star.y);
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2, true);
+                }
+                ctx.fill();
+                update();
+            }
+            function update() {
+                for (let i = 0; i < stars.length; i++) {
+                    let star = stars[i];
+                    star.y += star.vy;
+                    star.x += star.vx;
+                    if (star.x < 0 || star.x > canvas.width) star.vx = -star.vx;
+                    if (star.y < 0 || star.y > canvas.height) star.vy = -star.vy;
+                }
+                animationFrameId = requestAnimationFrame(draw);
+            }
+            // Start drawing only if we have stars to render
+            if (stars.length > 0) draw();
+
+            // Pause animations when tab is hidden to save CPU/battery
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                } else {
+                    if (!animationFrameId && animacionesActivas && stars.length > 0) draw();
+                }
+            });
+        }
+        
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('space-canvas');
+            if(canvas && animacionesActivas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+
+            <!-- FAQ section (moved to page end) -->
+            <section class="ia-section" id="faq-section" style="margin-top:28px; padding:20px; width:100%;">
+                <div class="ia-setup" style="max-width:1100px; margin:0 auto;">
+                    <h3 class="promo-title-main" style="font-size:1.4rem; margin-bottom:6px;">Preguntas Frecuentes</h3>
+                    <p class="promo-desc">Busca en las preguntas frecuentes del sitio.</p>
+                    <div class="ia-chat-box" id="faq-box" style="display:flex; flex-direction:column; gap:12px;">
+                        <div style="display:flex; gap:8px;">
+                            <input id="faq-search" class="input-gamer" placeholder="Buscar FAQ..." aria-label="Buscar FAQ">
+                            <button class="btn-premium" id="faq-clear">Limpiar</button>
+                        </div>
+                        <div style="display:flex; gap:12px; align-items:flex-start;">
+                            <div style="flex:1;">
+                                <div class="ia-messages" id="faq-results" role="list" aria-live="polite"></div>
+                            </div>
+                            <div style="width:220px; min-width:180px;">
+                                <h4 style="margin:0 0 8px 0; color:var(--text-muted); font-size:13px;">Búsquedas recientes</h4>
+                                <div id="faq-recent" style="font-size:13px; color:var(--text-muted);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+    <script>
+        (function(){
+            const faqs = [
+                { q: '¿Cómo sincronizan los videos?', a: 'La web consulta listas de reproducción de YouTube y las muestra en la cuadrícula principal.' },
+                { q: '¿Cómo agrego un video a favoritos?', a: 'Haz clic en la estrella (⭐) en la tarjeta del video para añadirlo o quitarlo de tus favoritos. Se guarda en localStorage.' },
+                { q: '¿Qué es OsitoExpo?', a: 'OsitoExpo es el evento anual del canal. Consulta la sección de promociones o el enlace de horarios para más detalles.' },
+                { q: '¿Puedo desactivar animaciones?', a: 'Sí — usa el botón 🎬 en el header para quitar o activar las animaciones.' },
+                { q: '¿Cómo contacto al canal?', a: 'Visita el canal de YouTube (en la barra lateral) y usa la sección "Acerca de" o los comentarios en los videos.' }
+            ];
+
+            const input = document.getElementById('faq-search');
+            const results = document.getElementById('faq-results');
+            const recentBox = document.getElementById('faq-recent');
+            const clearBtn = document.getElementById('faq-clear');
+
+            function renderList(list){
+                results.innerHTML = '';
+                if(!list.length){
+                    results.innerHTML = '<p style="color:var(--text-muted); padding:12px;">No se encontraron resultados.</p>';
+                    return;
+                }
+                list.forEach((item, idx) => {
+                    const container = document.createElement('div');
+                    container.className = 'msg bot';
+                    container.style.cursor = 'pointer';
+                    container.setAttribute('role', 'listitem');
+
+                    const qDiv = document.createElement('div');
+                    qDiv.style.fontWeight = '800';
+                    qDiv.style.marginBottom = '6px';
+                    qDiv.textContent = item.q;
+
+                    const aDiv = document.createElement('div');
+                    aDiv.style.display = 'none';
+                    aDiv.style.marginTop = '6px';
+                    aDiv.style.color = 'var(--text-muted)';
+                    aDiv.textContent = item.a;
+
+                    container.appendChild(qDiv);
+                    container.appendChild(aDiv);
+                    container.addEventListener('click', () => { aDiv.style.display = aDiv.style.display === 'none' ? 'block' : 'none'; });
+                    results.appendChild(container);
+                });
+            }
+
+            function loadRecent(){
+                try{
+                    const raw = localStorage.getItem('osito_faq_recent');
+                    return raw ? JSON.parse(raw) : [];
+                } catch(e){ return []; }
+            }
+
+            function saveRecent(term){
+                if(!term) return;
+                const arr = loadRecent();
+                const idx = arr.indexOf(term);
+                if(idx !== -1) arr.splice(idx,1);
+                arr.unshift(term);
+                while(arr.length>5) arr.pop();
+                localStorage.setItem('osito_faq_recent', JSON.stringify(arr));
+                renderRecent();
+            }
+
+            function renderRecent(){
+                const arr = loadRecent();
+                if(arr.length === 0){ recentBox.innerHTML = '<div style="color:var(--text-muted);">Sin búsquedas recientes.</div>'; return; }
+                recentBox.innerHTML = arr.map(t => `<div style="padding:6px 0; cursor:pointer; color:var(--primary-color);">${t}</div>`).join('');
+                Array.from(recentBox.children).forEach((el, i) => { el.addEventListener('click', () => { input.value = arr[i]; doSearch(); }); });
+            }
+
+            function doSearch(){
+                const term = (input.value || '').trim().toLowerCase();
+                if(term){
+                    saveRecent(input.value.trim());
+                }
+                if(!term){ renderList(faqs); return; }
+                const filtered = faqs.filter(f => (f.q+" "+f.a).toLowerCase().includes(term));
+                renderList(filtered);
+            }
+
+            input.addEventListener('input', () => { doSearch(); });
+            clearBtn.addEventListener('click', () => { input.value=''; doSearch(); localStorage.removeItem('osito_faq_recent'); renderRecent(); });
+
+            // init
+            renderList(faqs);
+            renderRecent();
+
+            const aiMessages = document.getElementById('ai-messages');
+            const aiForm = document.getElementById('ai-form');
+            const aiInput = document.getElementById('ai-input');
+            const aiSuggestions = document.querySelectorAll('.ai-suggestion');
+            const aiGenderBtns = document.querySelectorAll('.ai-gender-btn');
+            const aiVoiceToggle = document.getElementById('ai-voice-toggle');
+            let ultimaRespuestaIA = '';
+            let turnoIA = 0;
+            let aiGenero = localStorage.getItem('osito_ai_genero') || '';
+            let vozActiva = localStorage.getItem('osito_ai_voz') !== 'false';
+
+            const infoCanal = {
+                canal: 'OsitoYT360',
+                cumpleCanal: { mes: 5, dia: 2, anioInicio: 2022 },
+                cumpleCreador: { mes: 8, dia: 28, anio: 2008 },
+                pais: 'El Salvador',
+                ositoExpo: '2 de agosto de 2026 a las 10:30 AM, hora de El Salvador',
+                contenido: 'videojuegos de todo tipo, especialmente Minecraft, Roblox, Free Fire, Craftman/Craftsman, gameplays, directos, shorts y series',
+                favoritos: 'Minecraft, Roblox y Craftman/Craftsman',
+                origen: 'el nombre Osito viene de un peluche que empezo en 2019, cuando se grababa con un panda chiquito de peluche',
+                inspiracion: 'Max Wish, Los Compas y Mikecrack',
+                editor: 'Santiago',
+                serie: 'Survivalang',
+                logro: 'llegar a 1000 suscriptores',
+                videoFavorito: 'un vlog armando el arbol de Navidad',
+                colaborador: 'Allay MC',
+                reglasDirectos: 'no insultos, no humillar a la gente y mantener todo humildemente',
+                meta: 'terminar sus estudios, seguir con el canal y hacer crecer mas la comunidad'
+            };
+
+            function agregarMensajeIA(texto, tipo) {
+                if (!aiMessages) return;
+                const msg = document.createElement('div');
+                msg.className = `msg ${tipo}`;
+                msg.textContent = texto;
+                aiMessages.appendChild(msg);
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+                if (tipo === 'bot') hablarIA(texto);
+            }
+
+            function apodoIA() {
+                return aiGenero === 'female' ? 'osita' : 'osito';
+            }
+
+            function prefijoIA() {
+                return aiGenero ? apodoIA() : 'crack';
+            }
+
+            function setGeneroIA(genero) {
+                aiGenero = genero;
+                localStorage.setItem('osito_ai_genero', genero);
+                aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
+                const apodo = apodoIA();
+                agregarMensajeIA(`¡Qué onda, ${apodo}! 😄 Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
+            }
+
+            function hablarIA(texto) {
+                if (!vozActiva || !('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const limpio = texto.replace(/[^\w\s.,;:!?¿¡áéíóúÁÉÍÓÚñÑ]/g, ' ');
+                const utterance = new SpeechSynthesisUtterance(limpio);
+                utterance.lang = 'es-419';
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            function actualizarBotonVoz() {
+                if (!aiVoiceToggle) return;
+                aiVoiceToggle.classList.toggle('active', vozActiva);
+                aiVoiceToggle.textContent = vozActiva ? 'Voz activada' : 'Voz apagada';
+            }
+
+            function edadEnFecha(nacimiento, fecha = new Date()) {
+                let edad = fecha.getFullYear() - nacimiento.anio;
+                const yaCumplio = fecha.getMonth() > nacimiento.mes || (fecha.getMonth() === nacimiento.mes && fecha.getDate() >= nacimiento.dia);
+                if (!yaCumplio) edad -= 1;
+                return edad;
+            }
+
+            function anosCanal(fecha = new Date()) {
+                let anos = fecha.getFullYear() - infoCanal.cumpleCanal.anioInicio;
+                const yaCumplio = fecha.getMonth() > infoCanal.cumpleCanal.mes || (fecha.getMonth() === infoCanal.cumpleCanal.mes && fecha.getDate() >= infoCanal.cumpleCanal.dia);
+                if (!yaCumplio) anos -= 1;
+                return anos;
+            }
+
+            function horaElSalvador() {
+                return new Intl.DateTimeFormat('es-SV', {
+                    timeZone: 'America/El_Salvador',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }).format(new Date());
+            }
+
+            function elegirRespuesta(opciones) {
+                if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo una base clara todavia. Si me das mas contexto, te ayudo mejor.`;
+                let respuesta = opciones[turnoIA % opciones.length];
+                if (respuesta === ultimaRespuestaIA && opciones.length > 1) {
+                    respuesta = opciones[(turnoIA + 1) % opciones.length];
+                }
+                turnoIA += 1;
+                ultimaRespuestaIA = respuesta;
+                return respuesta;
+            }
+
+            function responderIA(pregunta) {
+                const texto = pregunta.toLowerCase();
+                const respuestas = [];
+                const nombre = prefijoIA();
+
+                if (!aiGenero && /\b(hombre|masculino|varon|chico|soy hombre)\b/.test(texto)) {
+                    aiGenero = 'male';
+                    localStorage.setItem('osito_ai_genero', aiGenero);
+                    aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                    return '¡Qué onda, osito! 😄 Todo bien. Ya te llamaré osito desde ahora. ¿Con qué te ayudo?';
+                }
+
+                if (!aiGenero && /\b(mujer|femenino|chica|soy mujer)\b/.test(texto)) {
+                    aiGenero = 'female';
+                    localStorage.setItem('osito_ai_genero', aiGenero);
+                    aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                    return '¡Qué onda, osita! 😄 Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
+                }
+
+                if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|dónde vive|casa|numero|número|whatsapp|telefono|teléfono|apellido|nombre completo|donde estudia|dónde estudia|colegio|instituto|escuela/.test(texto)) {
+                    respuestas.push(
+                        `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. 🔒`,
+                        `Eso sí que no, ${nombre}. Por seguridad no comparto mi ubicación, número, apellido completo ni lugar de estudio. 🔐`,
+                        `No te puedo ayudar con datos privados. Puedo hablar del canal y del contenido, pero información personal no.`
+                    );
+                }
+
+                if (/hora|qué hora|que hora|pais|país|salvador/.test(texto) && !/ubicacion|departamento|direccion|dirección|donde vive|dónde vive/.test(texto)) {
+                    respuestas.push(
+                        `En El Salvador ahorita son las ${horaElSalvador()} 🇸🇻. Solo doy la hora del país, no ubicaciones personales.`,
+                        `La hora de El Salvador es: ${horaElSalvador()} 🇸🇻. Nada de departamentos ni datos privados, eso se cuida mucho.`
+                    );
+                }
+
+                if (/edad|años tienes|cuántos años|cuantos años|cumpleaños|naciste|nacimiento/.test(texto)) {
+                    respuestas.push(
+                        `El creador nació el 28 de septiembre de 2008. Su edad se actualiza sola: ahora tiene ${edadEnFecha(infoCanal.cumpleCreador)} años. 🎂`,
+                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} años.`
+                    );
+                }
+
+                if (/cumple.*canal|aniversario.*canal|años.*canal|cuando cumple el canal|cuándo cumple el canal/.test(texto)) {
+                    const anos = anosCanal();
+                    respuestas.push(
+                        `El canal cumple años el 2 de junio. En 2026 cumple 4 años; calculado a la fecha, lleva ${anos} años. 🎉`,
+                        `El aniversario del canal es el 2 de junio. Ese día se celebra otro año más de OsitoYT360.`
+                    );
+                }
+
+                if (/favorito|favoritos|estrella|guardar/.test(texto)) {
+                    respuestas.push(
+                        `Toca la estrella de una tarjeta, ${nombre}. Si ya estaba guardado, la misma estrella lo quita de favoritos ⭐`,
+                        'Los favoritos se guardan en este navegador con localStorage, así que aparecerán cuando entres otra vez.',
+                        'Entra a "Mis Favoritos" para ver lo guardado. ¡La estrella manda! Un toque agrega, otro toque elimina.'
+                    );
+                }
+
+                if (/que puedo hacer|qué puedo hacer|pagina|página|sitio|funciones|para que sirve|para qué sirve/.test(texto)) {
+                    respuestas.push(
+                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo, el contador de OsitoExpo y preguntarme lo que quieras, ${nombre}. 😄`,
+                        'La pagina sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
+                        `Puedes moverte por las pestañas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.`
+                    );
+                }
+
+                if (/de que trata|de qué trata|contenido|canal|youtube|video|videos|juego|juegos|minecraft|roblox|free fire|craftman|craftsman/.test(texto)) {
+                    respuestas.push(
+                        `El canal trata de videojuegos: Minecraft, Roblox, Free Fire, Craftman/Craftsman y cualquier juego que se venga bueno. 🎮`,
+                        `OsitoYT360 es de gameplays, directos, shorts y series. Los juegos favoritos son Minecraft, Roblox y Craftman/Craftsman.`,
+                        `Por aqui vas a ver contenido variado de videojuegos, ${nombre}: Roblox, Minecraft, Free Fire, Craftman/Craftsman y mas.`
+                    );
+                }
+
+                if (/directo|live|stream|transmision/.test(texto)) {
+                    respuestas.push(
+                        `Los directos salen en la pestaña "Directos", ${nombre}. Normalmente hay un en vivo por semana entre viernes, sábado o domingo. 🔴`,
+                        'Si una semana no se puede hacer directo, puede pasar para la siguiente. La idea es mantenerlo constante sin forzarlo.',
+                        `Regla de los en vivo: nada de insultos ni humillar a los demás. Todo con humildad. 🤝`
+                    );
+                }
+
+                if (/ositoexpo|expo|evento|fecha|cuando|horario/.test(texto)) {
+                    respuestas.push(
+                        `OsitoExpo 2026 se estrena el 2 de agosto a las 10:30 AM, hora de El Salvador. Va a ser estreno de un video. 🎬`,
+                        'En OsitoExpo se van a contar cosas futuras del canal, incluyendo futuras canciones y proyectos.',
+                        `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}. El estreno es el 2 de agosto a las 10:30 AM SV.`
+                    );
+                }
+
+                if (/cancion|canciones|musica|música|navidad|24 de diciembre|especial/.test(texto)) {
+                    respuestas.push(
+                        'Si, van a venir mas canciones en el futuro. En OsitoExpo se van a mencionar futuras canciones. 🎵',
+                        'Para Navidad, el 24 de diciembre, esta planeado un especial con en vivo y una cancion. 🎄',
+                        `Si preguntas por musica: si, ${nombre}, hay planes de sacar mas canciones.`
+                    );
+                }
+
+                if (/serie|series|temporada|temporadas|survivalang/.test(texto)) {
+                    respuestas.push(
+                        'Si, van a haber mas series y mas temporadas de las series actuales. Survivalang va para largo.',
+                        'Survivalang va a durar un monton; ni el creador sabe exactamente cuantos capitulos van a salir 😄',
+                        `Sobre series, ${nombre}: si hay planes de seguir con mas temporadas y nuevos proyectos.`
+                    );
+                }
+
+                if (/colaboracion|colaboraciones|colab|allay|alay|mrbeast|mikecrack|compas|max wish|maxwish/.test(texto)) {
+                    respuestas.push(
+                        'Si van a haber colaboraciones futuras, aunque por ahora no hay planes exactos. El colaborador mas reciente fue Allay MC.',
+                        'Al creador le gustaria algun dia colaborar con MrBeast y Mikecrack. Son metas grandes, pero soñar tambien cuenta 😄',
+                        'La inspiracion viene de Max Wish, Los Compas y creadores grandes de videojuegos.'
+                    );
+                }
+
+                if (/por que osito|por qué osito|nombre|origen|peluche|inspir/.test(texto) && !/apellido|completo/.test(texto)) {
+                    respuestas.push(
+                        'El nombre Osito viene de un peluche. La historia empezo en 2019, cuando se grababa con un panda chiquito de peluche.',
+                        'La idea del nombre nacio por un peluche y por esa inspiracion de empezar a grabar contenido desde pequeño.',
+                        `Se llama Osito por esa historia del peluche, ${nombre}. El apellido o datos completos no se comparten.`
+                    );
+                }
+
+                if (/como te conocieron|cómo te conocieron|shorts|bed wars|bedwars|grupos|whatsapp|craftman 0.14.3|craftsman 0.14.3/.test(texto)) {
+                    respuestas.push(
+                        'Mucha gente lo conocio por Craftman/Craftsman Bed Wars 0.14.3, shorts de Roblox, en vivos de Bedwars y algunos grupos de WhatsApp.',
+                        'Parte de la comunidad llego por shorts, Roblox, Grotes, directos de Bedwars y ese servidor de Craftman/Craftsman que ya casi no tiene gente.',
+                        'Puede que algun dia saque un servidor parecido al Bed Wars de Craftman/Craftsman 0.14.3.'
+                    );
+                }
+
+                if (/meta|futuro|dejar el canal|seguir el canal|estudio|estudios|software|ingenier/.test(texto)) {
+                    respuestas.push(
+                        'Su meta es terminar los estudios, seguir con el canal y hacer crecer mas la comunidad. Todavia no sabe si en el futuro sera mas desarrollador de software o creador de contenido.',
+                        'Esta estudiando enfocado en ingenieria de desarrollo de software, pero no se comparte donde estudia. Eso es privado. 🔒',
+                        `Sobre el futuro, ${nombre}: quiere crecer, estudiar y seguir mejorando, pero todavia hay cosas que se van a decidir con el tiempo.`
+                    );
+                }
+
+                if (/editor|editar|edicion|ediciones|miniatura|miniaturas|titulo|titulos|descripcion|descripciones/.test(texto)) {
+                    respuestas.push(
+                        'Tiene un editor de video llamado Santiago. Tambien ha mejorado en ediciones, miniaturas, titulos, descripciones, videos y en vivos.',
+                        'Quiere que sus videos se vean cada vez mas profesionales y explorar nuevos contenidos en el futuro.',
+                        'Una de sus mejoras mas fuertes ha sido cuidar miniaturas, titulos, descripciones y la presentacion del canal.'
+                    );
+                }
+
+                if (/horario|graba|grabacion|grabación|cuando sube|cuando hace vivo|cuando hace en vivo/.test(texto)) {
+                    respuestas.push(
+                        'Suele grabar o hacer contenido jueves, viernes, sabado o domingo, porque son dias donde puede tener mas tiempo.',
+                        'Normalmente intenta hacer un en vivo por semana entre viernes, sabado o domingo; si no se puede, queda para la siguiente semana.',
+                        `El horario depende del estudio y del tiempo libre, ${nombre}. La idea es organizarse sin descuidar responsabilidades.`
+                    );
+                }
+
+                if (/logro|mil suscriptores|1000|suscriptores|video favorito|vlog|arbol|árbol/.test(texto)) {
+                    respuestas.push(
+                        'Uno de sus logros mas grandes fue llegar a 1000 suscriptores. Eso marco bastante al canal. 🏆',
+                        'Su video favorito fue un vlog armando el arbol de Navidad.',
+                        `Llegar a los 1000 suscriptores fue un logro enorme, ${nombre}.`
+                    );
+                }
+
+                if (/consejo|creador|empezando|empezar|youtube no es facil|youtube no es fácil|vici/.test(texto)) {
+                    respuestas.push(
+                        'Consejo para creadores: no se rindan. YouTube no es facil con videos ni vistas, pero hay que seguir y no parar.',
+                        'Tambien recomienda no viciarse mucho con los juegos y tener horarios especificos para estudiar y jugar.',
+                        `Si quieres crear contenido, ${nombre}, constancia y humildad. Y los estudios tambien van primero.`
+                    );
+                }
+
+                if (/actualizacion|actualizaciones|nuevo|tiempo real|reciente/.test(texto)) {
+                    respuestas.push(
+                        'Cada actualizacion con fecha aparece como "Actualizado hace..." y se mantiene viva sin recargar la pagina.',
+                        'El sistema intenta leer actualizaciones del endpoint local, luego Firebase, y si nada responde usa datos de respaldo.'
+                    );
+                }
+
+                if (/animacion|animaciones|rendimiento|ram|lento|rapido|performance|4 gb/.test(texto)) {
+                    respuestas.push(
+                        `Para 4 GB de RAM, ${nombre}, si notas lento el sitio apaga animaciones avanzadas y usa modo compacto.`,
+                        'Las animaciones usan transform y opacity porque son mas livianas. En movil tambien se reducen efectos pesados.',
+                        'Para mas fluidez: no reproduzcas muchos videos a la vez, baja animaciones avanzadas y deja el modo compacto si lo necesitas.'
+                    );
+                }
+
+                if (/diseno|boton|botones|tema|color|estilo|destello/.test(texto)) {
+                    respuestas.push(
+                        `El diseño usa paneles oscuros, brillo controlado y botones con destello, ${nombre}. Se ve pro sin ponerse pesado.`,
+                        'Puedes cambiar colores desde los temas o los selectores. Los botones heredan esos colores para mantener todo consistente.',
+                        'El destello de los botones es CSS liviano: no usa imagenes ni librerias pesadas.'
+                    );
+                }
+
+                if (/hola|buenas|hey|saludos|que onda|qué onda/.test(texto)) {
+                    respuestas.push(
+                        `Que onda, ${nombre} 😄 Todo bien. Con que te ayudo hoy?`,
+                        `Hey, ${nombre}. Aqui ando, tirame la pregunta y vemos. ✨`,
+                        `Buenas, ${nombre}. Dale, preguntame lo que quieras del canal o del sitio.`
+                    );
+                }
+
+                if (!respuestas.length) {
+                    respuestas.push(
+                        `Mmm, ${nombre}, de eso no tengo una base de datos exacta todavia. Pero si me lo explicas un poco mas, te ayudo con gusto. 🤔`,
+                        `Buena pregunta, ${nombre}. No quiero inventarte cosas; dame un poquito mas de contexto y te respondo mejor.`,
+                        `Eso no lo tengo confirmado. Puedo ayudarte con una respuesta general, pero prefiero no mentirte.`
+                    );
+                }
+
+                return elegirRespuesta(respuestas);
+            }
+
+            function enviarPreguntaIA(pregunta) {
+                const limpia = (pregunta || '').trim();
+                if (!limpia) return;
+                agregarMensajeIA(limpia, 'user');
+                if (aiInput) aiInput.value = '';
+                if (!aiGenero && !/\b(hombre|masculino|varon|chico|soy hombre|mujer|femenino|chica|soy mujer)\b/i.test(limpia)) {
+                    setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer 😄 Asi te hablo como osito u osita.', 'bot'), 160);
+                    return;
+                }
+                setTimeout(() => agregarMensajeIA(responderIA(limpia), 'bot'), 180);
+            }
+
+            aiGenderBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.gender === aiGenero);
+                btn.addEventListener('click', () => setGeneroIA(btn.dataset.gender));
+            });
+
+            actualizarBotonVoz();
+            if (aiVoiceToggle) {
+                aiVoiceToggle.addEventListener('click', () => {
+                    vozActiva = !vozActiva;
+                    localStorage.setItem('osito_ai_voz', vozActiva ? 'true' : 'false');
+                    if (!vozActiva && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                    actualizarBotonVoz();
+                });
+            }
+
+            if (aiForm && aiInput) {
+                aiForm.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    enviarPreguntaIA(aiInput.value);
+                });
+            }
+
+            aiSuggestions.forEach(btn => {
+                btn.addEventListener('click', () => enviarPreguntaIA(btn.dataset.question || btn.textContent));
+            });
+
+            // Design presets and customization bindings
+            const presetBtns = document.querySelectorAll('.design-preset');
+            presetBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const p1 = btn.dataset.p1;
+                    const p2 = btn.dataset.p2;
+                    if (typeof cambiarFondo === 'function') cambiarFondo(p1, p2);
+                    try { localStorage.setItem('osito_theme_preset', JSON.stringify({ p1, p2 })); } catch (e) {}
+                });
+            });
+
+            const fontRange = document.getElementById('font-size-range');
+            function applyFontSize(size) {
+                document.documentElement.style.fontSize = size + 'px';
+                try { localStorage.setItem('osito_font_size', String(size)); } catch (e) {}
+            }
+            if (fontRange) {
+                const savedSize = Number(localStorage.getItem('osito_font_size') || fontRange.value || 14);
+                fontRange.value = savedSize;
+                applyFontSize(savedSize);
+                fontRange.addEventListener('input', () => applyFontSize(fontRange.value));
+            }
+
+            const layoutCheckbox = document.getElementById('layout-compact');
+            function applyLayoutCompact(enabled) {
+                document.body.classList.toggle('compact-layout', !!enabled);
+                try { localStorage.setItem('osito_layout_compact', enabled ? 'true' : 'false'); } catch (e) {}
+            }
+            if (layoutCheckbox) {
+                const saved = localStorage.getItem('osito_layout_compact') === 'true';
+                layoutCheckbox.checked = saved;
+                applyLayoutCompact(saved);
+                layoutCheckbox.addEventListener('change', () => applyLayoutCompact(layoutCheckbox.checked));
+            }
+
+            // Apply saved theme preset if present
+            (function(){
+                try{
+                    const raw = localStorage.getItem('osito_theme_preset');
+                    if(raw){ const cfg = JSON.parse(raw); if(cfg.p1 && cfg.p2 && typeof cambiarFondo === 'function') cambiarFondo(cfg.p1, cfg.p2); }
+                }catch(e){}
+            })();
+        })();
+    </script>
+</body>
+</html>

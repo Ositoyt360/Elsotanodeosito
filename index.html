@@ -1834,19 +1834,18 @@
 
         // Sistema de actualización de timestamps en tiempo real
         function formatearTiempoRelativo(timestamp) {
-            if (!timestamp) return "Hace poco";
-            
-            const ahora = new Date().getTime();
-            const diferencia = Math.max(0, Math.floor((ahora - timestamp) / 1000)); // segundos
-            const segundos = diferencia % 60;
-            const minutos = Math.floor(diferencia / 60);
-            
-            if (diferencia < 60) return `Hace ${diferencia} s`;
-            if (diferencia < 3600) return `Hace ${minutos} min ${segundos} s`;
-            if (diferencia < 86400) return `Hace ${Math.floor(diferencia / 3600)} h`;
-            if (diferencia < 604800) return `Hace ${Math.floor(diferencia / 86400)} d`;
-            if (diferencia < 2592000) return `Hace ${Math.floor(diferencia / 604800)} sem`;
-            return `Hace ${Math.floor(diferencia / 2592000)} mes`;
+            if (!timestamp) return "Fecha desconocida";
+            const fecha = new Date(timestamp);
+            return fecha.toLocaleString('es-SV', {
+                timeZone: 'America/El_Salvador',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
         }
 
         function actualizarTimestamps() {
@@ -2030,8 +2029,7 @@
             if(animacionesActivas) iniciarEspacio();
         }
 
-        // Actualizar timestamps cada segundo
-        setInterval(actualizarTimestamps, 1000);
+        actualizarTimestamps();
 
         function cambiarPestaña(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -2718,6 +2716,17 @@
                 layoutCheckbox.addEventListener('change', () => applyLayoutCompact(layoutCheckbox.checked));
             }
 
+            // Apply saved theme preset if present
+            (function(){
+                try{
+                    const raw = localStorage.getItem('osito_theme_preset');
+                    if(raw){ const cfg = JSON.parse(raw); if(cfg.p1 && cfg.p2 && typeof cambiarFondo === 'function') cambiarFondo(cfg.p1, cfg.p2); }
+                }catch(e){}
+            })();
+        })();
+    </script>
+</body>
+</html>
             // Apply saved theme preset if present
             (function(){
                 try{

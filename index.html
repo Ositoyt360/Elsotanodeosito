@@ -433,6 +433,19 @@
             50% { transform: translateY(-3px); }
         }
 
+        /* --- ESTILOS DE CELEBRACIÓN --- */
+        .celebration-particle {
+            position: fixed;
+            top: -50px;
+            z-index: 10001;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
         /* Compact layout adjustments */
         .compact-layout .page-layout { gap: 12px; padding: 20px 5%; }
         .compact-layout .sidebar-subscribe { padding: 12px; min-width: 240px; }
@@ -1858,12 +1871,25 @@
             });
 
             const liveCounter = document.getElementById('updates-live-counter');
-            const firstTimestamp = document.querySelector('.promo-update-time.update-timestamp');
-            if (liveCounter && firstTimestamp) {
-                const timestamp = Number(firstTimestamp.getAttribute('data-timestamp'));
-                if (Number.isFinite(timestamp) && timestamp > 0) {
-                    liveCounter.textContent = `Ultima actualizacion: ${formatearTiempoRelativo(timestamp)}`;
+            const hoy = new Date();
+            const esAniversario = hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026;
+
+            if (liveCounter) {
+                if (esAniversario) {
+                    // El contador inicia a las 12:00 AM de El Salvador (6:00 AM UTC)
+                    const inicioCelebracion = Date.UTC(2026, 5, 2, 6, 0, 0);
+                    const ahora = Date.now();
+                    const diff = ahora - inicioCelebracion;
+                    
+                    if (diff >= 0) {
+                        const h = Math.floor(diff / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        liveCounter.textContent = `Celebrando hace: ${h}h ${m}m ${s}s`;
+                        return; // Salir después de establecer el contador de aniversario
+                    }
                 }
+                liveCounter.textContent = "Estado: Sincronizado en tiempo real";
             }
         }
 
@@ -1877,25 +1903,41 @@
 
         function actualizacionesDemo() {
             const ahora = new Date().getTime();
-            return [
+            const hoy = new Date();
+            const inicioHoy = new Date(2026, 5, 2, 0, 0, 0).getTime();
+            const list = [];
+            
+            // Inyectamos la actualización de aniversario si es la fecha
+            // Novedades específicas de HOY 2 de Junio
+            if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026) {
+                list.push({
+                    badge: 'HOY',
+                    titulo: 'Celebración de 4 Años Activada',
+                    descripcion: 'Se agregó lluvia de confeti infinita, banner dinámico y contador de aniversario persistente.',
+                    timestamp: ahora // Tiempo real de la sesión actual
+                });
+            }
+
+            list.push(...[
                 {
                     badge: 'Nuevo',
                     titulo: 'Contador de 4 años en YouTube agregado',
                     descripcion: 'La barra lateral ahora muestra el contador del aniversario junto al evento OsitoExpo.',
-                    timestamp: ahora - 1 * 60 * 1000
+                    timestamp: inicioHoy + (8 * 60 * 60 * 1000) // 8:00 AM de hoy
                 },
                 {
                     badge: 'Videos',
                     titulo: 'Reproduccion dentro de la pagina',
                     descripcion: 'Los videos cargan con miniaturas ligeras y se abren dentro de cada tarjeta al tocar reproducir.',
-                    timestamp: ahora - 12 * 60 * 1000
+                    timestamp: inicioHoy - (24 * 60 * 60 * 1000) // Ayer
                 },
                 {
                     badge: 'Correccion',
                     titulo: 'Modo sin animaciones corregido',
-                    timestamp: ahora - 25 * 60 * 1000
+                    timestamp: inicioHoy - (48 * 60 * 60 * 1000) // Hace 2 días
                 }
-            ];
+            ]);
+            return list;
         }
 
         function renderizarActualizaciones(datos) {
@@ -2007,6 +2049,7 @@
                 const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
 
                 timer.innerHTML = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
+                actualizarTimestamps(); // Sincronizamos los contadores del banner en cada tick
             }, 1000);
         }
 
@@ -2027,9 +2070,38 @@
             setTimeout(() => { document.getElementById('welcome-screen').remove(); }, 400);
             setTimeout(() => { document.getElementById('sidebar-panel').classList.add('sidebar-show'); }, 100);
             if(animacionesActivas) iniciarEspacio();
+            verificarCelebracion();
         }
 
-        actualizarTimestamps();
+        function verificarCelebracion() {
+            const hoy = new Date();
+            // 2 de Junio (Mes 5 en JS) de 2026
+            if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026) {
+                mostrarNotificacion("¡Feliz 4to Aniversario de OsitoYT360! 🥳🎉");
+                lanzarConfetti();
+                renderizarActualizaciones(actualizacionesDemo());
+
+                // Lluvia constante: ráfagas cada 4 segundos para que nunca pare
+                setInterval(() => {
+                    if (animacionesActivas) lanzarConfetti();
+                }, 4000);
+            }
+        }
+
+        function lanzarConfetti() {
+            const emojis = ['🎉', '🎈', '🎊', '🐻', '✨', '🎂', '🍭'];
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'celebration-particle';
+                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.fontSize = (Math.random() * 25 + 15) + 'px';
+                particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                particle.style.animationDelay = (Math.random() * 2) + 's';
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 6000);
+            }
+        }
 
         function cambiarPestaña(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));

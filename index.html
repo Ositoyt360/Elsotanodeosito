@@ -236,6 +236,18 @@
         .sidebar-subscribe { width: 320px; min-width: 320px; background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 20px; padding: 25px; box-sizing: border-box; height: fit-content; position: sticky; top: 100px; backdrop-filter: blur(20px); transform: translateX(-30px); opacity: 0; transition: all 0.6s ease; }
         .sidebar-show { transform: translateX(0); opacity: 1; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
 
+        /* Scrollbar solo para PC en la barra lateral */
+        @media (min-width: 981px) {
+            .sidebar-subscribe {
+                max-height: calc(100vh - 120px);
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: var(--primary-color) transparent;
+            }
+            .sidebar-subscribe::-webkit-scrollbar { width: 4px; }
+            .sidebar-subscribe::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+        }
+
         .countdown-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
         .cd-text { font-size: 11px; font-weight: 800; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; opacity: 0; transform: translateY(15px); }
         .countdown-timer { font-family: monospace; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 8px; opacity: 0; transform: translateY(15px); }
@@ -1486,22 +1498,16 @@
         <div class="logo">EL_SÓTANO</div>
         <div class="header-actions">
             <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
-                <span>🎬</span> Quitar Animaciones
+                <span>🎬</span>Mejorar Rendimiento
             </button>
 
             <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
-                <span>🔔</span> Recibir Alertas
+                <span>🔔</span> Activar Notificaciones
             </button>
             
             <div class="theme-selector">
-                <span class="theme-label">Tema:</span>
-                <div class="theme-dot" style="background: linear-gradient(45deg, #00f2fe, #9d00ff);" title="Cyberpunk" onclick="cambiarFondo('#00f2fe', '#9d00ff')"></div>
-                <div class="theme-dot" style="background: linear-gradient(45deg, #ff007f, #00f2fe);" title="Synthwave" onclick="cambiarFondo('#ff007f', '#00f2fe')"></div>
-                <div class="theme-dot" style="background: linear-gradient(45deg, #00ff66, #025921);" title="Matrix" onclick="cambiarFondo('#00ff66', '#025921')"></div>
-                <div class="theme-dot" style="background: linear-gradient(45deg, #ff3333, #ffaa00);" title="Fuego" onclick="cambiarFondo('#ffaa00', '#ff3333')"></div>
-                
+                <span class="theme-label">Personalizar Colores:</span>
                 <div class="color-picker-container">
-                    <span style="font-size: 18px;" title="Personaliza tus propios colores">🎨</span>
                     <input type="color" id="picker-primario" class="color-picker" title="Color Principal" onchange="aplicarColoresPersonalizados()">
                     <input type="color" id="picker-secundario" class="color-picker" title="Color Secundario" onchange="aplicarColoresPersonalizados()">
                 </div>
@@ -1517,30 +1523,30 @@
                 <div class="cd-date">2 de Agosto 2026 - 10:30 AM, hora de El Salvador (UTC-6)</div>
             </div>
 
-            <a href="https://horarioositoexpo2026.netlify.app" target="_blank" class="btn-directos-nav">
-                <span>&#127757;</span> Horarios
-            </a>
-
             <div class="countdown-box">
-                <div class="cd-text">4 años en YouTube</div>
+                <div class="cd-text">5 años en YouTube</div>
                 <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
-                <div class="cd-date">2 de Junio 2026</div>
+                <div class="cd-date">2 de Junio 2027</div>
             </div>
 
             <h3 style="margin-top: 0;">&Uacute;nete al Canal &#128308;</h3>
             <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">P&aacute;sate por el canal de YouTube de OsitoYT360 para interactuar en los streams en vivo.</p>
-            <br>
+            
             <a href="https://www.youtube.com/@OsitoYT360/videos" target="_blank" class="btn-premium">&iexcl;Ir al Canal!</a>
 
             <div style="margin-top:16px;"> 
-                <div style="font-weight:800; color:var(--text-muted); margin-bottom:8px;">Diseños personalizables</div>
+                <div style="font-weight:800; color:var(--text-muted); margin-bottom:8px;">Diseños personalizados</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 12px;">
+                     <button class="btn-action design-preset" data-p1="#ff007f" data-p2="#00f2fe">Synthwave</button>
+                    <button class="btn-action design-preset" data-p1="#00ff66" data-p2="#025921">Matrix</button>
+                    <button class="btn-action design-preset" data-p1="#ffaa00" data-p2="#ff3333">Fuego</button>
+                    <button class="btn-action design-preset" data-p1="#00f2fe" data-p2="#9d00ff">Cyberpunk</button>
+                </div>
+            </div>
+
+            <div style="margin-top:16px;"> 
+                <div style="font-weight:800; color:var(--text-muted); margin-bottom:8px;">Ajustes de Interfaz</div>
                 <div style="display:flex; gap:8px; flex-direction:column;">
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button class="btn-action design-preset" data-p1="#00f2fe" data-p2="#9d00ff">Cyberpunk</button>
-                        <button class="btn-action design-preset" data-p1="#ff007f" data-p2="#00f2fe">Synthwave</button>
-                        <button class="btn-action design-preset" data-p1="#00ff66" data-p2="#025921">Matrix</button>
-                        <button class="btn-action design-preset" data-p1="#ffaa00" data-p2="#ff3333">Fuego</button>
-                    </div>
                     <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
                         <label style="color:var(--text-muted); font-weight:700; width:90px;">Tamaño fuente</label>
                         <input id="font-size-range" type="range" min="12" max="20" value="14">
@@ -1567,14 +1573,14 @@
                 <div class="promo-slide" id="slide-1">
                     <span class="promo-tag">ALERTA &bull; Imperdible</span>
                     <h2 class="promo-title-main">OsitoExpo 2026</h2>
-                    <p class="promo-desc">El evento gamer del a&ntilde;o llega este pr&oacute;ximo 2 de agosto. &Uacute;nete para sorpresas exclusivas, anuncios masivos en directo e interacciones &uacute;nicas.</p>
-                    <a href="https://horarioositoexpo2026.netlify.app" target="_blank" class="btn-premium" style="max-width:200px; margin:0 auto;">Ver Horarios Locales</a>
+                    <p class="promo-desc">El OsitoExpo                                                                                  llega este pr&oacute;ximo 2 de agosto. &Uacute;nete para sorpresas exclusivas, anuncios masivos en directo e interacciones &uacute;nicas.</p>
+                   
                 </div>
 
                 <div class="promo-slide" id="slide-2">
                     <span class="promo-tag">LIVE &bull; UPDATES</span>
                     <h2 class="promo-title-main">&Uacute;LTIMAS ACTUALIZACIONES</h2>
-                    <p class="promo-desc">Cambios recientes del sitio con tiempo actualizado autom&aacute;ticamente.</p>
+                    <p class="promo-desc">Actualizaciones recientes del sitio</p>
                     <div class="promo-live-counter" id="updates-live-counter">Actualizando en vivo</div>
                     <div class="promo-updates" id="promo-updates-container">
                         <div class="promo-update-card">
@@ -1595,7 +1601,7 @@
             <!-- FAQ moved to the end of the page -->
 
             <div class="tabs-container">
-                <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaña('videos')">Videos recientes</button>
+                <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaña('videos')">Videos recientes📼</button>
                 <button class="tab-btn" id="tab-btn-directos" onclick="cambiarPestaña('directos')">Directos 🔴</button>
                 <button class="tab-btn" id="tab-btn-favs" onclick="cambiarPestaña('favs')">Mis Favoritos ⭐</button>
             </div>
@@ -1637,19 +1643,19 @@
                         <div class="ai-profile-row">
                             <span style="color:var(--text-muted); font-weight:800;">Primero elige cómo quieres que te hable:</span>
                             <div class="ai-profile-actions">
-                                <button class="btn-action ai-gender-btn" data-gender="male" type="button">Soy hombre</button>
-                                <button class="btn-action ai-gender-btn" data-gender="female" type="button">Soy mujer</button>
-                                <button class="btn-action ai-voice-toggle active" id="ai-voice-toggle" type="button">Voz activada</button>
+                                <button class="btn-action ai-gender-btn" data-gender="male" type="button">Soy Osito</button>
+                                <button class="btn-action ai-gender-btn" data-gender="female" type="button">Soy Osita</button>
+                                <button class="btn-action ai-voice-toggle active" id="ai-voice-toggle" type="button">Activar Voz</button>
                             </div>
                         </div>
                         <div class="ia-messages ai-messages" id="ai-messages" role="log" aria-live="polite">
-                            <div class="msg bot">¡Qué onda! 😄 Antes de empezar: ¿eres hombre o mujer? Así te digo osito u osita.</div>
+                            <div class="msg bot">¡Hola! 😄 Antes de empezar: ¿eres hombre o mujer? Así te digo Osito u Osita.</div>
                         </div>
                         <div class="ai-suggestions" aria-label="Preguntas rápidas">
                             <button class="btn-action ai-suggestion" data-question="¿Qué puedo hacer en esta página?">¿Qué puedo hacer?</button>
                             <button class="btn-action ai-suggestion" data-question="¿Cómo agrego favoritos?">Favoritos</button>
                             <button class="btn-action ai-suggestion" data-question="Cuando es OsitoExpo 2026?">OsitoExpo</button>
-                            <button class="btn-action ai-suggestion" data-question="Como mejoro el rendimiento?">Rendimiento</button>
+                           
                         </div>
                         <form class="ai-input-row" id="ai-form">
                             <input id="ai-input" class="input-gamer" autocomplete="off" placeholder="Escribe cualquier pregunta..." aria-label="Pregunta para la IA">
@@ -1849,15 +1855,11 @@
         function formatearTiempoRelativo(timestamp) {
             if (!timestamp) return "Fecha desconocida";
             const fecha = new Date(timestamp);
-            return fecha.toLocaleString('es-SV', {
+            return fecha.toLocaleDateString('es-SV', {
                 timeZone: 'America/El_Salvador',
                 day: '2-digit',
                 month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
+                year: 'numeric'
             });
         }
 
@@ -1921,7 +1923,7 @@
             list.push(...[
                 {
                     badge: 'Nuevo',
-                    titulo: 'Contador de 4 años en YouTube agregado',
+                    titulo: 'Contador de 5 años en YouTube agregado',
                     descripcion: 'La barra lateral ahora muestra el contador del aniversario junto al evento OsitoExpo.',
                     timestamp: inicioHoy + (8 * 60 * 60 * 1000) // 8:00 AM de hoy
                 },
@@ -1943,7 +1945,7 @@
         function renderizarActualizaciones(datos) {
             // Acepta tanto un array directo como un objeto con la propiedad actualizaciones
             const arr = Array.isArray(datos) ? datos : (datos && datos.actualizaciones ? datos.actualizaciones : []);
-            const lista = (arr.length ? arr : actualizacionesDemo())
+            const lista = (arr.length ? arr : actualizacionesDemo(2027, 5))
                 .map(act => ({
                     badge: act.badge || 'Nuevo',
                     titulo: act.titulo || 'Actualización',
@@ -1981,7 +1983,7 @@
                     console.warn('Usando actualizaciones alternativas', err);
 
                     if (!window.dbFirebase) {
-                        renderizarActualizaciones(actualizacionesDemo());
+                        renderizarActualizaciones(actualizacionesDemo(2027, 5));
                         return;
                     }
 
@@ -2004,7 +2006,7 @@
                         );
                     } catch (e) {
                         console.warn('No se pudo conectar a actualizaciones en Firebase', e);
-                        renderizarActualizaciones(actualizacionesDemo());
+                        renderizarActualizaciones(actualizacionesDemo(2027, 5));
                     }
                 });
         }
@@ -2030,7 +2032,7 @@
 
         function iniciarContadorYouTube() {
             // 12:00 AM en El Salvador equivale a 06:00 UTC porque El Salvador usa UTC-6.
-            const fechaAniversarioYouTubeUTC = Date.UTC(2026, 5, 2, 6, 0, 0);
+            const fechaAniversarioYouTubeUTC = Date.UTC(2027, 5, 2, 6, 0, 0);
             const timer = document.getElementById("youtube-anniversary-timer");
             if (!timer) return;
 
@@ -2038,7 +2040,7 @@
                 const ahoraUTC = new Date().getTime();
                 const distancia = fechaAniversarioYouTubeUTC - ahoraUTC;
 
-                if (distancia < 0) {
+                if (distancia <= 0) {
                     timer.innerHTML = "&iexcl;4 A&Ntilde;OS EN YOUTUBE!";
                     return;
                 }
@@ -2076,30 +2078,9 @@
         function verificarCelebracion() {
             const hoy = new Date();
             // 2 de Junio (Mes 5 en JS) de 2026
-            if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026) {
-                mostrarNotificacion("¡Feliz 4to Aniversario de OsitoYT360! 🥳🎉");
-                lanzarConfetti();
-                renderizarActualizaciones(actualizacionesDemo());
-
-                // Lluvia constante: ráfagas cada 4 segundos para que nunca pare
-                setInterval(() => {
-                    if (animacionesActivas) lanzarConfetti();
-                }, 4000);
-            }
-        }
-
-        function lanzarConfetti() {
-            const emojis = ['🎉', '🎈', '🎊', '🐻', '✨', '🎂', '🍭'];
-            for (let i = 0; i < 30; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'celebration-particle';
-                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                particle.style.left = Math.random() * 100 + 'vw';
-                particle.style.fontSize = (Math.random() * 25 + 15) + 'px';
-                particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                particle.style.animationDelay = (Math.random() * 2) + 's';
-                document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 6000);
+            if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2027) {
+                mostrarNotificacion("¡Feliz 5to Aniversario de OsitoYT360! 🥳🎉");
+                renderizarActualizaciones(actualizacionesDemo(2027, 5));
             }
         }
 
@@ -2231,34 +2212,60 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             const stars = [];
-            const starCount = !animacionesActivas ? 0 : (advancedAnimacionesEnabled ? 60 : 24);
+            const starCount = !animacionesActivas ? 0 : (advancedAnimacionesEnabled ? 80 : 35);
+            const connectionDist = 150; // Distancia para dibujar líneas
+
             for (let i = 0; i < starCount; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    radius: Math.random() * (advancedAnimacionesEnabled ? 1.3 : 0.9),
-                    vx: (Math.random() - 0.5) * (advancedAnimacionesEnabled ? 0.4 : 0.2),
-                    vy: (Math.random() - 0.5) * (advancedAnimacionesEnabled ? 0.4 : 0.2)
+                    radius: Math.random() * 1.5 + 1,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5
                 });
             }
+
             function draw() {
                 if(!animacionesActivas || document.hidden) return;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                ctx.beginPath();
+                
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+
+                // Dibujar conexiones primero (malla profesional)
+                ctx.lineWidth = 0.5;
                 for (let i = 0; i < stars.length; i++) {
-                    let star = stars[i];
-                    ctx.moveTo(star.x, star.y);
-                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2, true);
+                    for (let j = i + 1; j < stars.length; j++) {
+                        const dx = stars[i].x - stars[j].x;
+                        const dy = stars[i].y - stars[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < connectionDist) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 * (1 - dist / connectionDist)})`;
+                            ctx.moveTo(stars[i].x, stars[i].y);
+                            ctx.lineTo(stars[j].x, stars[j].y);
+                            ctx.stroke();
+                        }
+                    }
                 }
-                ctx.fill();
+
+                // Dibujar partículas
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                for (let i = 0; i < stars.length; i++) {
+                    const star = stars[i];
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 update();
             }
+
             function update() {
                 for (let i = 0; i < stars.length; i++) {
                     let star = stars[i];
-                    star.y += star.vy;
                     star.x += star.vx;
+                    star.y += star.vy;
+
                     if (star.x < 0 || star.x > canvas.width) star.vx = -star.vx;
                     if (star.y < 0 || star.y > canvas.height) star.vy = -star.vy;
                 }
@@ -2548,7 +2555,7 @@
                 if (/cumple.*canal|aniversario.*canal|años.*canal|cuando cumple el canal|cuándo cumple el canal/.test(texto)) {
                     const anos = anosCanal();
                     respuestas.push(
-                        `El canal cumple años el 2 de junio. En 2026 cumple 4 años; calculado a la fecha, lleva ${anos} años. 🎉`,
+                        `El canal cumple años el 2 de junio. En 2027 cumple 5 años; calculado a la fecha, lleva ${anos} años. 🎉`,
                         `El aniversario del canal es el 2 de junio. Ese día se celebra otro año más de OsitoYT360.`
                     );
                 }
@@ -2788,17 +2795,6 @@
                 layoutCheckbox.addEventListener('change', () => applyLayoutCompact(layoutCheckbox.checked));
             }
 
-            // Apply saved theme preset if present
-            (function(){
-                try{
-                    const raw = localStorage.getItem('osito_theme_preset');
-                    if(raw){ const cfg = JSON.parse(raw); if(cfg.p1 && cfg.p2 && typeof cambiarFondo === 'function') cambiarFondo(cfg.p1, cfg.p2); }
-                }catch(e){}
-            })();
-        })();
-    </script>
-</body>
-</html>
             // Apply saved theme preset if present
             (function(){
                 try{

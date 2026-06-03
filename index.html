@@ -277,6 +277,8 @@
         /* Borde pulsante en sección IA */
         .ia-section {
             animation: pulseBorder 4s ease-in-out infinite;
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 400px;
         }
 
         /* Scanline decorativo en el banner promo (solo visual, no bloquea nada) */
@@ -2148,7 +2150,8 @@
         }
 
         function obtenerMiniaturaVideo(id) {
-            return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+            // mqdefault es más ligero que hqdefault y webp carga mucho más rápido
+            return `https://i.ytimg.com/vi_webp/${id}/mqdefault.webp`;
         }
 
         function reproducirVideo(id, boton) {
@@ -2240,7 +2243,7 @@
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            const stars = [];
+            let stars = [];
             const starCount = !animacionesActivas ? 0 : (advancedAnimacionesEnabled ? 80 : 35);
             const connectionDist = 150; // Distancia para dibujar líneas
 
@@ -2249,8 +2252,8 @@
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
                     radius: Math.random() * 1.5 + 1,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: (Math.random() - 0.5) * 0.5
+                    vx: (Math.random() - 0.5) * 0.3, // Velocidad reducida para fluidez
+                    vy: (Math.random() - 0.5) * 0.3
                 });
             }
 
@@ -2279,14 +2282,15 @@
                 }
 
                 // Dibujar partículas
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 for (let i = 0; i < stars.length; i++) {
                     const star = stars[i];
                     ctx.beginPath();
                     ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
                     ctx.fill();
                 }
-                update();
+                
+                if (animacionesActivas) update();
             }
 
             function update() {
@@ -2564,6 +2568,14 @@
                         `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. 🔒`,
                         `Eso sí que no, ${nombre}. Por seguridad no comparto mi ubicación, número, apellido completo ni lugar de estudio. 🔐`,
                         `No te puedo ayudar con datos privados. Puedo hablar del canal y del contenido, pero información personal no.`
+                    );
+                }
+
+                if (/tarea|estudio|estudiar|matematica|historia|ciencia|biologia|geografia|fisica|quimica|examen|ayuda con|que es|qué es|como funciona|cómo funciona/.test(texto)) {
+                    respuestas.push(
+                        `¡A darle con todo a los estudios, ${nombre}! Como futuro ingeniero, me encanta ayudar con tareas. ¿Qué tema estamos viendo? 📚`,
+                        `Dime qué necesitas investigar y te busco la mejor info. La humildad y el estudio van de la mano.`,
+                        `¡Claro que sí! Los estudios son la meta número uno. Pregúntame lo que sea de la escuela o el instituto y lo resolvemos. ✍️`
                     );
                 }
 

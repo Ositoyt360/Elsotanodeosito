@@ -1681,20 +1681,32 @@
         let advancedAnimacionesEnabled = true;
 
         window.addEventListener('DOMContentLoaded', () => {
-            const c1 = localStorage.getItem('theme_primary') || '#00f2fe';
-            const c2 = localStorage.getItem('theme_secondary') || '#9d00ff';
-            cambiarFondo(c1, c2);
+            // Cargar configuración de diseño guardada
+            const p1 = localStorage.getItem('theme_primary') || '#00f2fe';
+            const p2 = localStorage.getItem('theme_secondary') || '#9d00ff';
+            cambiarFondo(p1, p2);
+
+            const savedFont = localStorage.getItem('osito_font_size');
+            if (savedFont) {
+                document.documentElement.style.fontSize = savedFont + 'px';
+                const fontRange = document.getElementById('font-size-range');
+                if (fontRange) fontRange.value = savedFont;
+            }
+
+            if (localStorage.getItem('osito_layout_compact') === 'true') {
+                document.body.classList.add('compact-layout');
+                const layoutCheck = document.getElementById('layout-compact');
+                if (layoutCheck) layoutCheck.checked = true;
+            }
+
             iniciarContador();
             iniciarContadorYouTube();
             
             // detect low-end devices and user preferences
             detectDeviceAndPreferences();
 
-            if(localStorage.getItem('osito_no_anim') === 'true') {
-                toggleAnimaciones();
-            } else {
-                iniciarSecuenciaPublicitaria();
-            }
+            if(localStorage.getItem('osito_no_anim') === 'true') toggleAnimaciones();
+            else iniciarSecuenciaPublicitaria();
 
             if ('requestIdleCallback' in window) {
                 requestIdleCallback(() => {
@@ -2031,27 +2043,44 @@
         }
 
         function iniciarContadorYouTube() {
-            // 12:00 AM en El Salvador equivale a 06:00 UTC porque El Salvador usa UTC-6.
-            const fechaAniversarioYouTubeUTC = Date.UTC(2027, 5, 2, 6, 0, 0);
+            const anioInicio = 2022;
+            const ahora = new Date();
+            let anioDestino = ahora.getFullYear();
+            
+            // Si ya pasó el 2 de junio de este año, apuntar al próximo
+            if (ahora.getMonth() > 5 || (ahora.getMonth() === 5 && ahora.getDate() >= 2)) {
+                anioDestino++;
+            }
+
+            const fechaAniversarioUTC = Date.UTC(anioDestino, 5, 2, 6, 0, 0);
+            const numAnos = anioDestino - anioInicio;
+            
             const timer = document.getElementById("youtube-anniversary-timer");
-            if (!timer) return;
+            const label = timer?.previousElementSibling;
+            const dateLabel = timer?.nextElementSibling;
+
+            if (label) label.innerText = `${numAnos} años en YouTube`;
+            if (dateLabel) dateLabel.innerText = `2 de Junio ${anioDestino}`;
 
             setInterval(() => {
                 const ahoraUTC = new Date().getTime();
-                const distancia = fechaAniversarioYouTubeUTC - ahoraUTC;
+                const distancia = fechaAniversarioUTC - ahoraUTC;
+                if (distancia <= 0) { timer.innerHTML = `¡${numAnos} AÑOS EN YOUTUBE!`; return; }
 
-                if (distancia <= 0) {
-                    timer.innerHTML = "&iexcl;4 A&Ntilde;OS EN YOUTUBE!";
-                    return;
+                const totalMs = distancia;
+                const days = Math.floor(totalMs / 86400000);
+                const hours = Math.floor((totalMs % 86400000) / 3600000);
+                const minutes = Math.floor((totalMs % 3600000) / 60000);
+                const seconds = Math.floor((totalMs % 60000) / 1000);
+
+                let displayDays = days;
+                // Si hay horas, minutos o segundos restantes, y no es ya 0 días,
+                // se redondea el número de días para la visualización.
+                if (days > 0 && (hours > 0 || minutes > 0 || seconds > 0)) {
+                    displayDays++;
                 }
 
-                const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
-                const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
-                const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
-
-                timer.innerHTML = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
-                actualizarTimestamps(); // Sincronizamos los contadores del banner en cada tick
+                timer.innerHTML = `${displayDays.toString().padStart(2,'0')}d : ${hours.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${seconds.toString().padStart(2,'0')}s`;
             }, 1000);
         }
 
@@ -2766,42 +2795,26 @@
                 btn.addEventListener('click', () => {
                     const p1 = btn.dataset.p1;
                     const p2 = btn.dataset.p2;
-                    if (typeof cambiarFondo === 'function') cambiarFondo(p1, p2);
-                    try { localStorage.setItem('osito_theme_preset', JSON.stringify({ p1, p2 })); } catch (e) {}
+                    cambiarFondo(p1, p2);
                 });
             });
 
             const fontRange = document.getElementById('font-size-range');
-            function applyFontSize(size) {
-                document.documentElement.style.fontSize = size + 'px';
-                try { localStorage.setItem('osito_font_size', String(size)); } catch (e) {}
-            }
             if (fontRange) {
-                const savedSize = Number(localStorage.getItem('osito_font_size') || fontRange.value || 14);
-                fontRange.value = savedSize;
-                applyFontSize(savedSize);
-                fontRange.addEventListener('input', () => applyFontSize(fontRange.value));
+                fontRange.addEventListener('input', () => {
+                    document.documentElement.style.fontSize = fontRange.value + 'px';
+                    localStorage.setItem('osito_font_size', fontRange.value);
+                });
             }
 
             const layoutCheckbox = document.getElementById('layout-compact');
-            function applyLayoutCompact(enabled) {
-                document.body.classList.toggle('compact-layout', !!enabled);
-                try { localStorage.setItem('osito_layout_compact', enabled ? 'true' : 'false'); } catch (e) {}
-            }
             if (layoutCheckbox) {
-                const saved = localStorage.getItem('osito_layout_compact') === 'true';
-                layoutCheckbox.checked = saved;
-                applyLayoutCompact(saved);
-                layoutCheckbox.addEventListener('change', () => applyLayoutCompact(layoutCheckbox.checked));
+                layoutCheckbox.addEventListener('change', () => {
+                    const isCompact = layoutCheckbox.checked;
+                    document.body.classList.toggle('compact-layout', isCompact);
+                    localStorage.setItem('osito_layout_compact', isCompact ? 'true' : 'false');
+                });
             }
-
-            // Apply saved theme preset if present
-            (function(){
-                try{
-                    const raw = localStorage.getItem('osito_theme_preset');
-                    if(raw){ const cfg = JSON.parse(raw); if(cfg.p1 && cfg.p2 && typeof cambiarFondo === 'function') cambiarFondo(cfg.p1, cfg.p2); }
-                }catch(e){}
-            })();
         })();
     </script>
 </body>

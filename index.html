@@ -1,0 +1,1481 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Sótano de Osito</title>
+    <link rel="preconnect" href="https://i.ytimg.com">
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://www.google.com">
+    <link rel="stylesheet" href="styles.css">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5WI_hxT6U0YKbQqK-4DYpS6UibnPscho",
+            authDomain: "panelwed.firebaseapp.com",
+            projectId: "panelwed",
+            storageBucket: "panelwed.firebasestorage.app",
+            messagingSenderId: "138095012886",
+            appId: "1:138095012886:web:e0c1643308656f7e9dd937",
+            measurementId: "G-NNX37YHZ1T"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.dbFirebase = db;
+        window.collectionFirebase = collection;
+        window.onSnapshotFirebase = onSnapshot;
+    </script>
+
+    <script src="actualizaciones-helper.js"></script>
+</head>
+<body>
+
+    <canvas id="space-canvas"></canvas>
+    <div class="ambient-glow" id="glow-1"></div>
+    <div class="ambient-glow" id="glow-2"></div>
+    <a class="live-corner" id="youtube-live-corner" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" aria-live="polite">
+        <span class="live-dot"></span>
+        <span>En vivo</span>
+    </a>
+
+    <div class="toast-notification" id="toast">
+        <span style="font-size: 20px;">🔔</span>
+        <div id="toast-text">Alertas configuradas con éxito.</div>
+    </div> 
+
+    <div id="welcome-screen">
+        <div class="welcome-overlay"></div>
+        <div class="gamer-grid"></div>
+        <div class="welcome-panel">
+            <h1 class="welcome-title">El Sótano de Osito</h1>
+            <button class="btn-enter-hub" id="btn-ready" onclick="iniciarCarga()">Entrar al sótano</button>
+            <div class="loading-container" id="loading-container" style="display: none;">
+                <div class="loading-bar" id="progress-bar"></div>
+            </div>
+            <div class="loading-text" id="progress-text" style="display: none;">Iniciando módulos...</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo">EL_SÓTANO</div>
+        <div class="header-actions"> 
+            <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
+                <span>🎬</span>Mejorar Rendimiento
+            </button>
+
+            <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
+                <span>🔔</span> Activar Notificaciones
+            </button>
+            
+            <div class="theme-selector">
+                <span class="theme-label">Personalizar Colores:</span>
+                <div class="color-picker-container">
+                    <input type="color" id="picker-primario" class="color-picker" title="Color Principal" onchange="aplicarColoresPersonalizados()">
+                    <input type="color" id="picker-secundario" class="color-picker" title="Color Secundario" onchange="aplicarColoresPersonalizados()">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-layout">
+        <main class="main-content content-right">
+            <section class="promo-container">
+                <div class="promo-bg-fx"></div>
+                
+                <div class="promo-slide active" id="slide-0">
+                    <span class="promo-tag">INFO &bull; COMUNIDAD</span>
+                    <h2 class="promo-title-main">EL S&Oacute;TANO DE OSITO</h2>
+                    <p class="promo-intro">Te damos la bienvenida a la experiencia oficial de OsitoYT360.</p>
+                    <p class="promo-desc">Esta p&aacute;gina centraliza los videos recientes, los directos de respaldo, las novedades del canal y los eventos m&aacute;s importantes de la comunidad en un solo lugar.</p>
+                </div>
+
+                <div class="promo-slide" id="slide-1">
+                    <span class="promo-tag">ALERTA &bull; Imperdible</span>
+                    <h2 class="promo-title-main">OsitoExpo 2026</h2>
+                    <p class="promo-desc">OsitoExpo 2026 llega el 2 de agosto con anuncios especiales, momentos en directo y contenido exclusivo para toda la comunidad.</p>
+                   
+                </div>
+
+                <div class="promo-slide" id="slide-2">
+                    <span class="promo-tag">LIVE &bull; UPDATES</span>
+                    <h2 class="promo-title-main">&Uacute;LTIMAS ACTUALIZACIONES</h2>
+                    <p class="promo-desc promo-desc-compact">Cambios recientes del sitio con fecha y estado en vivo.</p>
+                    <div class="promo-live-counter" id="updates-live-counter">Actualizando en vivo</div>
+                    <div class="promo-updates" id="promo-updates-container">
+                        <div class="promo-update-card">
+                            <span class="promo-update-badge">Nuevo</span>
+                            <h3 class="promo-update-title">Cargando actualizaciones...</h3>
+                            <div class="promo-update-time update-timestamp" data-timestamp="">Actualizando...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="promo-arrow promo-arrow-left" type="button" aria-label="Banner anterior" onclick="cambiarPromo(-1)">&#10094;</button>
+                <button class="promo-arrow promo-arrow-right" type="button" aria-label="Siguiente banner" onclick="cambiarPromo(1)">&#10095;</button>
+
+                <div class="promo-controls" id="promo-dots-container">
+                    <div class="promo-dot-nav active" onclick="saltarAnuncio(0)"></div>
+                    <div class="promo-dot-nav" onclick="saltarAnuncio(1)"></div>
+                    <div class="promo-dot-nav" onclick="saltarAnuncio(2)"></div>
+                </div>
+            </section>
+
+            <section class="content-section content-tabs-shell">
+                <div class="dashboard-section-header">
+                    <h2 class="section-heading">Explorar Contenido</h2>
+                    <div class="tabs-container">
+                        <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaña('videos')">Videos</button>
+                        <button class="tab-btn" id="tab-btn-directos" onclick="cambiarPestaña('directos')">Directos</button>
+                        <button class="tab-btn" id="tab-btn-canciones" onclick="cambiarPestaña('canciones')">Canciones</button>
+                        <button class="tab-btn" id="tab-btn-populares" onclick="cambiarPestaña('populares')">Videos populares</button>
+                        <button class="tab-btn" id="tab-btn-animaciones" onclick="cambiarPestaña('animaciones')">Animaciones</button>
+                        <button class="tab-btn" id="tab-btn-series" onclick="cambiarPestaña('series')">Series</button>
+                        <button class="tab-btn" id="tab-btn-favs" onclick="cambiarPestaña('favs')">Favoritos</button>
+                    </div>
+                </div>
+
+                <div class="tab-panels">
+                    <div id="tab-videos" class="tab-content active">
+                        <div class="video-grid" id="main-video-grid">
+                            <p style="color: var(--text-muted); padding: 20px;">Sincronizando con YouTube...</p> 
+                        </div>
+                    </div>
+
+                    <div id="tab-directos" class="tab-content">
+                        <div class="video-grid" id="main-directos-grid">
+                            <p style="color: var(--text-muted); padding: 20px;">Sincronizando transmisiones de respaldo...</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-canciones" class="tab-content">
+                        <div class="video-grid" id="main-canciones-grid">
+                            <p style="color: var(--text-muted); padding: 20px;">Cargando canciones...</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-populares" class="tab-content">
+                        <div class="video-grid" id="main-populares-grid">
+                            <p style="color: var(--text-muted); padding: 20px;">Cargando videos populares...</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-animaciones" class="tab-content">
+                        <div class="video-grid" id="main-animaciones-grid">
+                            <p style="color: var(--text-muted); padding: 20px;">Cargando animaciones...</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-series" class="tab-content">
+                        <div class="series-board" id="series-board">
+                            <p style="color: var(--text-muted); padding: 20px;">Cargando series...</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-favs" class="tab-content">
+                        <div class="video-grid" id="fav-video-grid">
+                            <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer style="text-align:center; padding:18px 10px; color:var(--text-muted); font-size:14px; background: rgba(4,6,12,0.6); border-top:1px solid rgba(255,255,255,0.03); margin-top:20px;"> 
+                © 2026 OsitoYT360. Todos los derechos reservados.
+            </footer>
+            <div class="social-links" id="social-links">
+                <a href="https://www.youtube.com/@OsitoYT360" target="_blank">YouTube</a>
+                <a href="https://x.com/Ositogamer360yt" target="_blank">Twitter</a>
+            </div>
+        </main>
+
+        <aside class="sidebar-subscribe" id="sidebar-panel">
+            <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
+                <img src="logo yt.png" alt="" class="yt-channel-logo">
+                <span>Únete al Canal</span>
+            </a>
+
+            <div class="sidebar-card countdown-box">
+                <div class="cd-text">&#128293; OsitoExpo2026 &#128293;</div>
+                <div class="countdown-timer" id="countdown-timer">-- : -- : -- : --</div>
+                <div class="cd-date">2 de Agosto 2026 - 10:30 AM, hora de El Salvador (UTC-6)</div>
+            </div>
+
+            <div class="sidebar-card countdown-box">
+                <div class="cd-text">5 años en YouTube</div>
+                <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
+                <div class="cd-date">2 de Junio 2027</div>
+            </div>
+
+            <div class="sidebar-card settings-section"> 
+                <div class="sidebar-card-title">Diseños personalizados</div>
+                <div class="preset-grid">
+                    <button class="btn-action design-preset" data-p1="#ff007f" data-p2="#00f2fe">Synthwave</button>
+                    <button class="btn-action design-preset" data-p1="#00ff66" data-p2="#025921">Matrix</button>
+                    <button class="btn-action design-preset" data-p1="#ffaa00" data-p2="#ff3333">Fuego</button>
+                    <button class="btn-action design-preset" data-p1="#00f2fe" data-p2="#9d00ff">Cyberpunk</button>
+                </div>
+            </div>
+
+            <div class="sidebar-card settings-section"> 
+                <div class="sidebar-card-title">Ajustes de Interfaz</div>
+                <div class="settings-stack">
+                    <div class="setting-row">
+                        <label for="font-size-range">Tamaño fuente</label>
+                        <input id="font-size-range" type="range" min="12" max="20" value="14">
+                    </div>
+                    <div class="setting-row">
+                        <label for="layout-compact">Compacto</label>
+                        <input id="layout-compact" type="checkbox">
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="ia-floating-container">
+        <div class="ia-toggle-bubble" id="ia-bubble" onclick="toggleIAPanel()">🤖</div>
+        <section class="ia-section" id="ai-section">
+                <div class="ia-header">
+                    <h3>Asistente de Inteligencia</h3>
+                </div>
+                <div class="ia-setup">
+                    <div class="ai-chat-shell">
+                        <div class="ai-profile-row">
+                            <div class="ai-profile-actions">
+                                <button class="btn-action ai-gender-btn" data-gender="male" type="button">♂ Osito</button>
+                                <button class="btn-action ai-gender-btn" data-gender="female" type="button">♀ Osita</button>
+                                <button class="btn-action" id="ai-voice-toggle" type="button">Voz activada</button>
+                            </div>
+                        </div>
+                        <div class="ia-messages" id="ai-messages" role="log" aria-live="polite"> 
+                            <div class="msg bot">Identidad requerida: ¿Eres Osito o Osita?</div>
+                        </div>
+                        <div class="ai-suggestions" aria-label="Preguntas rápidas" style="margin-top:10px;">
+                            <button class="btn-action ai-suggestion" data-question="¿Qué puedo hacer aquí?">Info del sitio</button>
+                            <button class="btn-action ai-suggestion" data-question="¿Cuándo hay directo?">Directos</button>
+                            <button class="btn-action ai-suggestion" data-question="¿Qué canciones hay?">Canciones</button>
+                        </div>
+                        <form class="ai-input-row" id="ai-form" style="padding-top: 10px; border-top: 1px solid var(--glass-border);">
+                            <input id="ai-input" class="input-gamer" autocomplete="off" placeholder="Escribe cualquier pregunta..." aria-label="Pregunta para la IA">
+                            <button class="btn-send" type="submit">▶</button>
+                        </form>
+                    </div>
+                </div>
+        </section>
+    </div>
+
+    <script> 
+        const GOOGLE_API_KEY = "AIzaSyC6xRVfY4z4ZyD9gr5z4J6GpUNjtCEl8LI"; 
+        const PLAYLIST_ID = "PLe_gf6mBCqGhNbo0kXQqXe_WfnLvsqaOx";
+        const PLAYLISTS = {
+            videos: { id: PLAYLIST_ID, grid: 'main-video-grid' },
+            directos: { id: 'PLe_gf6mBCqGg0Ki-xNU38RuiFkui0eED4', grid: 'main-directos-grid' },
+            canciones: { id: 'PLe_gf6mBCqGgjjlAZt-6HLE-c6EVm84NY', grid: 'main-canciones-grid' },
+            populares: { id: 'PLe_gf6mBCqGgDX03lwSzIzK_vpgAN5SW3', grid: 'main-populares-grid' },
+            animaciones: { id: 'PLe_gf6mBCqGiVH5TxtIGgeyFXI-aYrCeq', grid: 'main-animaciones-grid' },
+            series: { id: 'PLe_gf6mBCqGi90BQuGakxWl7HGFUijGUL', grid: 'series-board', series: true }
+        };
+
+        let idsVideos = [];
+        let idsDirectos = ["PMJQH8iWcEA", "b9y8iEaglkI", "MzHeUQofzp0"];
+        const videosPorCategoria = {
+            videos: [],
+            directos: idsDirectos,
+            canciones: [],
+            populares: [],
+            animaciones: [],
+            series: []
+        };
+        let listaFavoritos = JSON.parse(localStorage.getItem('osito_favs')) || [];
+        let apodoUsuario = ""; 
+        let animacionesActivas = true;
+        let animationFrameId = null;
+        let indicePromoActual = 0;
+        let intervaloPromo = null;
+        let promoIntervalMs = 6000;
+        let promoHoverPause = false;
+        let advancedAnimacionesEnabled = true;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Cargar configuración de diseño guardada
+            const temaVersion = 'verde-profesional-2026-06-18';
+            if (localStorage.getItem('osito_theme_version') !== temaVersion) {
+                localStorage.setItem('theme_primary', '#58ff9a');
+                localStorage.setItem('theme_secondary', '#13b85b');
+                localStorage.setItem('osito_theme_version', temaVersion);
+            }
+            const p1 = localStorage.getItem('theme_primary') || '#58ff9a';
+            const p2 = localStorage.getItem('theme_secondary') || '#13b85b';
+            cambiarFondo(p1, p2);
+
+            const savedFont = localStorage.getItem('osito_font_size');
+            if (savedFont) {
+                document.documentElement.style.fontSize = savedFont + 'px';
+                const fontRange = document.getElementById('font-size-range');
+                if (fontRange) fontRange.value = savedFont;
+            }
+
+            if (localStorage.getItem('osito_layout_compact') === 'true') {
+                document.body.classList.add('compact-layout');
+                const layoutCheck = document.getElementById('layout-compact');
+                if (layoutCheck) layoutCheck.checked = true;
+            }
+
+            iniciarContador();
+            iniciarContadorYouTube();
+            
+            // detect low-end devices and user preferences
+            detectDeviceAndPreferences();
+
+            if(localStorage.getItem('osito_no_anim') === 'true') toggleAnimaciones();
+            else iniciarSecuenciaPublicitaria();
+
+            const promoContainer = document.querySelector('.promo-container');
+            if (promoContainer) {
+                promoContainer.addEventListener('mouseenter', () => {
+                    promoHoverPause = true;
+                    detenerSecuenciaPublicitaria();
+                });
+                promoContainer.addEventListener('mouseleave', () => {
+                    promoHoverPause = false;
+                    iniciarSecuenciaPublicitaria();
+                });
+            }
+
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    cargarVideosDesdePlaylist('videos');
+                    cargarVideosDesdePlaylist('directos');
+                    verificarDirectoYouTube();
+                    conectarFirebaseEnVivo();
+                    conectarActualizacionesEnVivo();
+                }, { timeout: 2000 });
+            } else {
+                cargarVideosDesdePlaylist('videos');
+                cargarVideosDesdePlaylist('directos');
+                verificarDirectoYouTube();
+                setTimeout(conectarFirebaseEnVivo, 600);
+                setTimeout(conectarActualizacionesEnVivo, 800);
+            }
+        });
+
+        function detectDeviceAndPreferences() {
+            try {
+                const deviceMemory = navigator.deviceMemory || 4; // in GB
+                const hwThreads = navigator.hardwareConcurrency || 4;
+                const ua = navigator.userAgent || '';
+                const isMobile = /Mobi|Android/i.test(ua);
+
+                const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2) || isMobile && deviceMemory <= 2;
+
+                // Default advanced animations enabled unless low-end
+                advancedAnimacionesEnabled = localStorage.getItem('osito_advanced_anim') !== null
+                    ? localStorage.getItem('osito_advanced_anim') === 'true'
+                    : !lowEnd;
+
+                // Set promo interval longer for low-end devices
+                promoIntervalMs = lowEnd ? 9000 : 6000;
+
+                // Reflect UI
+                const btnAdv = document.getElementById('btn-toggle-advanced');
+                if (btnAdv) {
+                    btnAdv.classList.toggle('active', advancedAnimacionesEnabled);
+                }
+
+                // Add body class to enable advanced animations in CSS
+                document.body.classList.toggle('advanced-anim', advancedAnimacionesEnabled);
+            } catch (e) {
+                console.warn('Device detection failed', e);
+            }
+        }
+
+        function toggleAdvancedAnimaciones() {
+            advancedAnimacionesEnabled = !advancedAnimacionesEnabled;
+            localStorage.setItem('osito_advanced_anim', advancedAnimacionesEnabled ? 'true' : 'false');
+            document.body.classList.toggle('advanced-anim', advancedAnimacionesEnabled);
+            const btn = document.getElementById('btn-toggle-advanced');
+            if (btn) btn.classList.toggle('active', advancedAnimacionesEnabled);
+            // restart space effect with new settings
+            if (animacionesActivas) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                iniciarEspacio();
+            }
+        }
+
+        function iniciarSecuenciaPublicitaria() {
+            if(intervaloPromo) clearInterval(intervaloPromo);
+            if (promoHoverPause) return;
+            intervaloPromo = setInterval(() => {
+                if(animacionesActivas) {
+                    let siguienteIdx = (indicePromoActual + 1) % 3;
+                    saltarAnuncio(siguienteIdx);
+                }
+            }, 6000);
+        }
+
+        function detenerSecuenciaPublicitaria() {
+            if(intervaloPromo) {
+                clearInterval(intervaloPromo);
+                intervaloPromo = null;
+            } 
+        }
+
+        function saltarAnuncio(indice) {
+            if (indice === indicePromoActual) return;
+            document.querySelectorAll('.promo-slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelectorAll('.promo-dot-nav').forEach(dot => dot.classList.remove('active'));
+            
+            const slideObj = document.getElementById(`slide-${indice}`);
+            const dotsContainer = document.getElementById('promo-dots-container');
+            
+            if(slideObj && dotsContainer) {
+                slideObj.classList.add('active');
+                dotsContainer.children[indice].classList.add('active');
+                indicePromoActual = indice;
+            }
+            if (!promoHoverPause) {
+                iniciarSecuenciaPublicitaria();
+            }
+        }
+
+        function cambiarPromo(direccion) {
+            const total = document.querySelectorAll('.promo-slide').length;
+            const siguiente = (indicePromoActual + direccion + total) % total;
+            saltarAnuncio(siguiente);
+        }
+
+        function toggleAnimaciones() {
+            animacionesActivas = !animacionesActivas;
+            const btn = document.getElementById('btn-toggle-anim');
+            
+            if (!animacionesActivas) {
+                document.body.classList.add('no-animations');
+                btn.classList.add('active');
+                btn.innerHTML = "<span>🎬</span> Activar Animaciones"; 
+                localStorage.setItem('osito_no_anim', 'true');
+                if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                if(intervaloPromo) clearInterval(intervaloPromo);
+            } else {
+                document.body.classList.remove('no-animations');
+                btn.classList.remove('active'); 
+                btn.innerHTML = "<span>🎬</span> Quitar Animaciones";
+                localStorage.setItem('osito_no_anim', 'false');
+                iniciarEspacio();
+                iniciarSecuenciaPublicitaria();
+            }
+        }
+
+        async function cargarVideosDesdePlaylist(categoria = 'videos') {
+            const config = PLAYLISTS[categoria] || PLAYLISTS.videos;
+            const grid = document.getElementById(config.grid);
+            if (!grid) return;
+            let arrayVideosAcumulados = [];
+            let nextPageToken = "";
+            let primerRenderHecho = false;
+            
+            try {
+                do {
+                    let tokenQuery = nextPageToken ? `&pageToken=${nextPageToken}` : "";
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${config.id}&key=${GOOGLE_API_KEY}${tokenQuery}`;
+                    
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            if(item.contentDetails && item.contentDetails.videoId) {
+                                arrayVideosAcumulados.push({
+                                    id: item.contentDetails.videoId,
+                                    title: item.snippet?.title || 'Video del canal'
+                                });
+                            }
+                        });
+                        videosPorCategoria[categoria] = arrayVideosAcumulados;
+                        if (categoria === 'videos') idsVideos = arrayVideosAcumulados;
+                        if (categoria === 'directos') idsDirectos = arrayVideosAcumulados;
+                        if(!primerRenderHecho) {
+                            renderizarCategoria(categoria);
+                            primerRenderHecho = true;
+                        }
+                    }
+                    nextPageToken = data.nextPageToken || "";
+                } while (nextPageToken);
+
+                renderizarCategoria(categoria);
+                if (videosPorCategoria[categoria].length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción está vacía.</p>';
+                }
+            } catch (error) {
+                console.error("Error al conectar con YouTube API:", error);
+                if(videosPorCategoria[categoria].length === 0) {
+                    grid.innerHTML = '<p style="color: #ff3333; padding: 20px;">Error al conectar con YouTube.</p>';
+                }
+            }
+        }
+
+        function conectarFirebaseEnVivo() {
+            if (!window.dbFirebase) {
+                renderizarDirectos();
+                return;
+            }
+            window.onSnapshotFirebase(window.collectionFirebase(window.dbFirebase, "directos"), (snapshot) => {
+                let directosNube = [];
+                snapshot.forEach(doc => { if(doc.data().youtubeId) directosNube.push(doc.data().youtubeId); });
+                if(directosNube.length > 0) {
+                    idsDirectos = directosNube;
+                    videosPorCategoria.directos = directosNube.map(id => ({ id, title: 'Directo del canal' }));
+                }
+                renderizarDirectos();
+            });
+        }
+
+        // Sistema de actualización de timestamps en tiempo real
+        function formatearTiempoRelativo(timestamp) {
+            if (!timestamp) return "Fecha desconocida";
+            const fecha = new Date(timestamp);
+            return fecha.toLocaleDateString('es-SV', {
+                timeZone: 'America/El_Salvador',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function actualizarTimestamps() {
+            const timestampsElements = document.querySelectorAll('.update-timestamp');
+            timestampsElements.forEach(el => {
+                const timestamp = Number(el.getAttribute('data-timestamp'));
+                if (Number.isFinite(timestamp) && timestamp > 0) {
+                    el.textContent = `Actualizado ${formatearTiempoRelativo(timestamp)}`;
+                }
+            });
+
+            const liveCounter = document.getElementById('updates-live-counter');
+            const hoy = new Date();
+            const esAniversario = hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026;
+
+            if (liveCounter) {
+                if (esAniversario) {
+                    // El contador inicia a las 12:00 AM de El Salvador (6:00 AM UTC)
+                    const inicioCelebracion = Date.UTC(2026, 5, 2, 6, 0, 0);
+                    const ahora = Date.now();
+                    const diff = ahora - inicioCelebracion;
+                    
+                    if (diff >= 0) {
+                        const h = Math.floor(diff / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        liveCounter.textContent = `Celebrando hace: ${h}h ${m}m ${s}s`;
+                        return; // Salir después de establecer el contador de aniversario
+                    }
+                }
+                liveCounter.textContent = "Estado: Sincronizado en tiempo real";
+            }
+        }
+
+        function normalizarTimestamp(timestamp) {
+            if (!timestamp) return new Date().getTime();
+            if (typeof timestamp === 'number') return timestamp;
+            if (timestamp.seconds) return timestamp.seconds * 1000;
+            const parsed = Date.parse(timestamp);
+            return Number.isNaN(parsed) ? new Date().getTime() : parsed;
+        }
+
+        function actualizacionesDemo() {
+            const ahora = new Date().getTime();
+            const hoy = new Date();
+            const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0).getTime();
+            const list = [];
+             
+            // Inyectamos la actualización de aniversario si es la fecha
+            // Novedades específicas de HOY 2 de Junio
+            if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026) {
+                list.push({
+                    badge: 'HOY',
+                    titulo: 'Celebración de 4 Años Activada',
+                    descripcion: 'Se agregó lluvia de confeti infinita, banner dinámico y contador de aniversario persistente.',
+                    timestamp: ahora // Tiempo real de la sesiÃ³n actual 
+                });
+            }
+
+            list.push(...[
+                {
+                    badge: 'Nuevo',
+                    titulo: 'Contador de 5 años en YouTube agregado',
+                    descripcion: 'La barra lateral ahora muestra el contador del aniversario junto al evento OsitoExpo.', 
+                    timestamp: inicioHoy + (8 * 60 * 60 * 1000) // 8:00 AM de hoy 
+                },
+                {
+                    badge: 'Videos',
+                    titulo: 'Reproducción dentro de la página',
+                    descripcion: 'Los videos cargan con miniaturas ligeras y se abren dentro de cada tarjeta al tocar reproducir.', 
+                    timestamp: inicioHoy - (24 * 60 * 60 * 1000) // Ayer 
+                },
+                {
+                    badge: 'Correccion',
+                    titulo: 'Modo sin animaciones corregido', 
+                    timestamp: inicioHoy - (48 * 60 * 60 * 1000) // Hace 2 días
+                },
+                {
+                    badge: 'Diseño',
+                    titulo: 'Panel profesional actualizado',
+                    descripcion: 'Videos en 3 columnas, actualizaciones compactas, tema verde, logo del canal y aviso de directos en vivo.',
+                    timestamp: Date.now()
+                }
+            ]);
+            return list;
+        }
+
+        function renderizarActualizaciones(datos) {
+            // Acepta tanto un array directo como un objeto con la propiedad actualizaciones
+            const arr = Array.isArray(datos) ? datos : (datos && datos.actualizaciones ? datos.actualizaciones : []);
+            const lista = (arr.length ? arr : actualizacionesDemo(2027, 5))
+                .map(act => ({
+                    badge: act.badge || 'Nuevo',
+                    titulo: act.titulo || 'Actualización',
+                    descripcion: act.descripcion || '',
+                    timestamp: normalizarTimestamp(act.timestamp)
+                }))
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 3);
+
+            const promoContainer = document.getElementById('promo-updates-container');
+            if (promoContainer) {
+                promoContainer.innerHTML = lista.map(act => `
+                    <div class="promo-update-card">
+                        <span class="promo-update-badge">${act.badge}</span>
+                        <div class="promo-update-copy">
+                            <h3 class="promo-update-title">${act.titulo}</h3>
+                            <div class="promo-update-time update-timestamp" data-timestamp="${act.timestamp}">
+                                Actualizado ${formatearTiempoRelativo(act.timestamp)}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            actualizarTimestamps();
+        }
+
+        function conectarActualizacionesEnVivo() {
+            fetch('/api/actualizaciones')
+                .then(res => {
+                    if (!res.ok) throw new Error('Endpoint no disponible');
+                    return res.json();
+                })
+                .then(actualizaciones => {
+                    renderizarActualizaciones(actualizaciones);
+                })
+                .catch(err => {
+                    console.warn('Usando actualizaciones alternativas', err);
+
+                    if (!window.dbFirebase) {
+                        renderizarActualizaciones(actualizacionesDemo(2027, 5));
+                        return;
+                    }
+
+                    try {
+                        window.onSnapshotFirebase(
+                            window.collectionFirebase(window.dbFirebase, 'actualizaciones'),
+                            (snapshot) => {
+                                const actualizacionesFB = [];
+                                snapshot.forEach(doc => {
+                                    const data = doc.data();
+                                    actualizacionesFB.push({
+                                        badge: data.badge || 'Nuevo',
+                                        titulo: data.titulo || 'Actualizacion',
+                                        descripcion: data.descripcion || '', 
+                                        timestamp: normalizarTimestamp(data.timestamp)
+                                    });
+                                });
+                                renderizarActualizaciones(actualizacionesFB);
+                            }
+                        );
+                    } catch (e) {
+                        console.warn('No se pudo conectar a actualizaciones en Firebase', e);
+                        renderizarActualizaciones(actualizacionesDemo(2027, 5));
+                    }
+                });
+        }
+
+        function iniciarContador() {
+            // 10:30 AM en El Salvador equivale a 16:30 UTC porque El Salvador usa UTC-6.
+            const fechaOsitoExpoElSalvadorUTC = Date.UTC(2026, 7, 2, 16, 30, 0); 
+            setInterval(() => { 
+                const ahoraUTC = new Date().getTime(); 
+                const distancia = fechaOsitoExpoElSalvadorUTC - ahoraUTC;
+                if (distancia < 0) {
+                    document.getElementById("countdown-timer").innerHTML = "¡EN DIRECTO!";
+                    return;
+                }
+                const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
+                const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
+ 
+                document.getElementById("countdown-timer").innerHTML = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
+            }, 1000);
+        }
+
+        function iniciarContadorYouTube() {
+            const anioInicio = 2022;
+            const ahora = new Date();
+            let anioDestino = ahora.getFullYear();
+            
+            // Si ya pasó el 2 de junio de este año, apuntar al próximo
+            if (ahora.getMonth() > 5 || (ahora.getMonth() === 5 && ahora.getDate() >= 2)) {
+                anioDestino++;
+            }
+
+            const fechaAniversarioUTC = Date.UTC(anioDestino, 5, 2, 6, 0, 0);
+            const numAnos = anioDestino - anioInicio;
+            
+            const timer = document.getElementById("youtube-anniversary-timer");
+            const label = timer?.previousElementSibling;
+            const dateLabel = timer?.nextElementSibling;
+ 
+            if (label) label.innerText = `${numAnos} años en YouTube`;
+            if (dateLabel) dateLabel.innerText = `2 de Junio ${anioDestino}`;
+
+            setInterval(() => {
+                const ahoraUTC = new Date().getTime();
+                const distancia = fechaAniversarioUTC - ahoraUTC;
+                if (distancia <= 0) { timer.innerHTML = `¡${numAnos} AÑOS EN YOUTUBE!`; return; }
+
+                const totalMs = distancia;
+                const days = Math.floor(totalMs / 86400000);
+                const hours = Math.floor((totalMs % 86400000) / 3600000);
+                const minutes = Math.floor((totalMs % 3600000) / 60000);
+                const seconds = Math.floor((totalMs % 60000) / 1000);
+
+                let displayDays = days;
+                // Si hay horas, minutos o segundos restantes, y no es ya 0 días,
+                // se redondea el número de días para la visualización.
+                if (days > 0 && (hours > 0 || minutes > 0 || seconds > 0)) {
+                    displayDays++; 
+                }
+
+                timer.innerHTML = `${displayDays.toString().padStart(2,'0')}d : ${hours.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${seconds.toString().padStart(2,'0')}s`;
+            }, 1000);
+        }
+
+        function iniciarCarga() {
+            document.getElementById('btn-ready').style.display = "none";
+            document.getElementById('loading-container').style.display = "block";
+            document.getElementById('progress-text').style.display = "block";
+            
+            setTimeout(() => {
+                document.getElementById('progress-bar').style.width = "100%";
+                document.getElementById('progress-text').innerText = "¡Sótano Desbloqueado!";
+                setTimeout(entrarAlSitio, 200);
+            }, 300);
+        }
+
+        function entrarAlSitio() {
+            document.getElementById('welcome-screen').classList.add('welcome-fade-out');
+            setTimeout(() => { document.getElementById('welcome-screen').remove(); }, 400);
+            setTimeout(() => { document.getElementById('sidebar-panel').classList.add('sidebar-show'); }, 100); 
+            if(animacionesActivas) iniciarEspacio();
+            verificarCelebracion();
+        }
+
+        function verificarCelebracion() {
+            const hoy = new Date();
+            // 2 de Junio (Mes 5 en JS) de 2026
+            if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2027) { 
+                mostrarNotificacion("¡Feliz 5to Aniversario de OsitoYT360! 🥳🎉");
+                renderizarActualizaciones(actualizacionesDemo(2027, 5));
+            }
+        }
+
+        function cambiarPestaña(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if(document.getElementById('tab-btn-' + tabName)) document.getElementById('tab-btn-' + tabName).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if(tabName === 'favs') renderizarFavoritos();
+            if(PLAYLISTS[tabName] && videosPorCategoria[tabName].length === 0) cargarVideosDesdePlaylist(tabName);
+        }
+
+        function cambiarFondo(c1, c2) {
+            document.documentElement.style.setProperty('--primary-color', c1);
+            document.documentElement.style.setProperty('--secondary-color', c2);
+            document.getElementById('picker-primario').value = c1;
+            document.getElementById('picker-secundario').value = c2;
+            localStorage.setItem('theme_primary', c1);
+            localStorage.setItem('theme_secondary', c2); 
+        }
+
+        function aplicarColoresPersonalizados() {
+            cambiarFondo(document.getElementById('picker-primario').value, document.getElementById('picker-secundario').value);
+        }
+
+        function mostrarNotificacion(texto) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = texto;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000); 
+        }
+
+        function toggleAlertas() {
+            const btn = document.getElementById('btn-notif');
+            btn.classList.toggle('active');
+            mostrarNotificacion(btn.classList.contains('active') ? "Alertas activadas 🔔" : "Alertas silenciadas 🔕");
+        }
+
+        function obtenerMiniaturaVideo(id) {
+            return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+        }
+
+        function reproducirVideo(id, boton) {
+            const contenedor = boton.closest('.video-thumbnail');
+            if (!contenedor || contenedor.dataset.playing === 'true') return;
+
+            contenedor.dataset.playing = 'true';
+            contenedor.innerHTML = `
+                <iframe 
+                    src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+                    title="Reproductor de YouTube"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                </iframe>
+            `;
+        }
+
+        function crearTarjetaVideo(id) {
+            if (typeof id === 'object') id = id.id;
+            const esFav = listaFavoritos.includes(id);
+            const favClass = esFav ? 'fav-badge active' : 'fav-badge';
+            const miniatura = obtenerMiniaturaVideo(id);
+            return `
+                <div class="video-card">
+                    <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
+                    <div class="video-thumbnail">
+                        <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
+                        <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function verificarDirectoYouTube() {
+            const liveBadge = document.getElementById('youtube-live-corner');
+            if (!liveBadge) return;
+
+            try {
+                const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&eventType=live&q=OsitoYT360&key=${GOOGLE_API_KEY}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('No se pudo verificar el directo');
+                const data = await res.json();
+                const liveItem = (data.items || []).find(item => item.id && item.id.videoId);
+
+                liveBadge.classList.toggle('show', Boolean(liveItem));
+                if (liveItem) {
+                    liveBadge.href = `https://www.youtube.com/watch?v=${liveItem.id.videoId}`;
+                }
+            } catch (error) {
+                liveBadge.classList.remove('show');
+                console.warn('No se pudo consultar el estado en vivo', error);
+            }
+        }
+
+        function animarAparicionTarjetas(selector) {
+            setTimeout(() => {
+                document.querySelectorAll(`${selector} .video-card`).forEach((card, index) => {
+                    setTimeout(() => { card.classList.add('ready'); }, index * 20); 
+                }); 
+            }, 20);
+        }
+
+        function renderizarVideos() {
+            const grid = document.getElementById('main-video-grid');
+            if(!grid) return;
+            grid.innerHTML = videosPorCategoria.videos.map(video => crearTarjetaVideo(video)).join('');
+            animarAparicionTarjetas('#main-video-grid');
+        }
+
+        function renderizarDirectos() {
+            const grid = document.getElementById('main-directos-grid');
+            if(!grid) return;
+            grid.innerHTML = videosPorCategoria.directos.map(video => crearTarjetaVideo(video)).join('');
+            animarAparicionTarjetas('#main-directos-grid');
+        }
+
+        function renderizarCategoria(categoria) {
+            if (categoria === 'videos') return renderizarVideos();
+            if (categoria === 'directos') return renderizarDirectos();
+            if (categoria === 'series') return renderizarSeries();
+
+            const config = PLAYLISTS[categoria];
+            const grid = document.getElementById(config.grid);
+            if (!grid) return;
+            grid.innerHTML = videosPorCategoria[categoria].map(video => crearTarjetaVideo(video)).join('');
+            animarAparicionTarjetas(`#${config.grid}`);
+        }
+
+        function obtenerNombreSerie(titulo) {
+            const limpio = (titulo || 'Serie').replace(/\s*[-|:]\s*(capitulo|cap|episodio|ep)\.?\s*\d+.*/i, '').trim();
+            const match = limpio.match(/^(.+?)(?:\s+#?\d+|\s+capitulo\s+\d+|\s+cap\s+\d+|\s+ep\s+\d+)$/i);
+            return (match ? match[1] : limpio).slice(0, 42) || 'Serie';
+        }
+
+        function escaparHTML(texto) {
+            return String(texto).replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            })[char]);
+        }
+
+        function renderizarSeries() {
+            const board = document.getElementById('series-board');
+            if (!board) return;
+            const grupos = {};
+            videosPorCategoria.series.forEach(video => {
+                const nombre = obtenerNombreSerie(video.title);
+                if (!grupos[nombre]) grupos[nombre] = [];
+                grupos[nombre].push(video);
+            });
+
+            board.innerHTML = Object.keys(grupos).sort().map(nombre => `
+                <section class="series-group">
+                    <h3>${escaparHTML(nombre)}</h3>
+                    <div class="video-grid series-grid">
+                        ${grupos[nombre].map(video => crearTarjetaVideo(video)).join('')}
+                    </div>
+                </section>
+            `).join('');
+            animarAparicionTarjetas('#series-board');
+        }
+
+        function renderizarFavoritos() {
+            const grid = document.getElementById('fav-video-grid');
+            if(!grid) return;
+            if(listaFavoritos.length === 0) { 
+                grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>';
+                return;
+            }
+            grid.innerHTML = listaFavoritos.map(id => crearTarjetaVideo(id)).join('');
+            animarAparicionTarjetas('#fav-video-grid');
+        }
+
+        function toggleFavorito(id, event) {
+            const index = listaFavoritos.indexOf(id);
+            if (index === -1) {
+                listaFavoritos.push(id);
+                event.target.classList.add('active'); 
+                mostrarNotificacion("Añadido a favoritos ⭐");
+            } else {
+                listaFavoritos.splice(index, 1); 
+                event.target.classList.remove('active');
+                mostrarNotificacion("Eliminado de favoritos ❌");
+            }
+            localStorage.setItem('osito_favs', JSON.stringify(listaFavoritos));
+            if(document.getElementById('tab-btn-favs').classList.contains('active')) renderizarFavoritos();
+        }
+
+        function iniciarEspacio() {
+            const canvas = document.getElementById('space-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight; 
+            const stars = [];
+            const starCount = !animacionesActivas ? 0 : (advancedAnimacionesEnabled ? 120 : 40); 
+            const connectionDist = 150; // Distancia para dibujar líneas
+
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 1,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+
+            function draw() {
+                if(!animacionesActivas || document.hidden) { animationFrameId = requestAnimationFrame(draw); return; } 
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+
+                let primaryRgb = '255, 255, 255'; // Default to white
+                if (primaryColor.startsWith('#')) {
+                    const hex = primaryColor.slice(1);
+                    const r = parseInt(hex.substring(0, 2), 16);
+                    const g = parseInt(hex.substring(2, 4), 16);
+                    const b = parseInt(hex.substring(4, 6), 16);
+                    primaryRgb = `${r}, ${g}, ${b}`;
+                } else if (primaryColor.startsWith('rgb')) {
+                    const parts = primaryColor.match(/\d+/g);
+                    if (parts && parts.length >= 3) primaryRgb = `${parts[0]}, ${parts[1]}, ${parts[2]}`;
+                }
+                // Dibujar conexiones primero (malla profesional)
+                const now = performance.now() * 0.001;
+                ctx.lineWidth = 0.7;
+                for (let i = 0; i < stars.length; i++) {
+                    for (let j = i + 1; j < stars.length; j++) {
+                        const dx = stars[i].x - stars[j].x;
+                        const dy = stars[i].y - stars[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy); 
+
+                        if (dist < connectionDist) {
+                            const alpha = 0.18 * (1 - dist / connectionDist);
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(${primaryRgb}, ${alpha})`;
+                            ctx.moveTo(stars[i].x, stars[i].y);
+                            ctx.lineTo(stars[j].x, stars[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Particulas con pulso suave para que el fondo no se sienta estatico.
+                for (let i = 0; i < stars.length; i++) {
+                    const star = stars[i];
+                    const pulseSize = star.radius + Math.sin(now * 2 + star.pulse) * 0.55;
+                    ctx.beginPath();
+                    ctx.fillStyle = `rgba(${primaryRgb}, ${0.46 + Math.sin(now * 2 + star.pulse) * 0.18})`;
+                    ctx.arc(star.x, star.y, Math.max(0.6, pulseSize), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                update();
+            }
+
+            function update() {
+                for (let i = 0; i < stars.length; i++) {
+                    let star = stars[i];
+                    star.x += star.vx; 
+                    star.y += star.vy;
+
+                    if (star.x < 0 || star.x > canvas.width) star.vx = -star.vx;
+                    if (star.y < 0 || star.y > canvas.height) star.vy = -star.vy;
+                }
+                animationFrameId = requestAnimationFrame(draw);
+            }
+            // Start drawing only if we have stars to render
+            if (stars.length > 0) draw();
+
+            // Pause animations when tab is hidden to save CPU/battery
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                } else {
+                    if (!animationFrameId && animacionesActivas && stars.length > 0) draw();
+                }
+            });
+        }
+        
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('space-canvas');
+            if(canvas && animacionesActivas) {
+                canvas.width = window.innerWidth; 
+                canvas.height = window.innerHeight; 
+            } 
+        }); 
+    </script> 
+
+    <script>
+        (function(){
+            const aiMessages = document.getElementById('ai-messages');
+            const aiForm = document.getElementById('ai-form');
+            const aiInput = document.getElementById('ai-input');
+            const aiSuggestions = document.querySelectorAll('.ai-suggestion');
+            const aiGenderBtns = document.querySelectorAll('.ai-gender-btn');
+            const aiVoiceToggle = document.getElementById('ai-voice-toggle'); 
+            let ultimaRespuestaIA = '';
+            let turnoIA = 0;
+            let aiGenero = localStorage.getItem('osito_ai_genero') || '';
+            let vozActiva = localStorage.getItem('osito_ai_voz') !== 'false';
+
+            const infoCanal = {
+                canal: 'OsitoYT360',
+                cumpleCanal: { mes: 5, dia: 2, anioInicio: 2022 },
+                cumpleCreador: { mes: 8, dia: 28, anio: 2008 },
+                pais: 'El Salvador',
+                ositoExpo: '2 de agosto de 2026 a las 10:30 AM, hora de El Salvador',
+                contenido: 'videojuegos de todo tipo, especialmente Minecraft, Roblox, Free Fire, Craftman/Craftsman, gameplays, directos, shorts y series',
+                favoritos: 'Minecraft, Roblox y Craftman/Craftsman',
+                origen: 'el nombre Osito viene de un peluche que empezo en 2019, cuando se grababa con un panda chiquito de peluche',
+                inspiracion: 'Max Wish, Los Compas y Mikecrack',
+                editor: 'Santiago',
+                serie: 'Survivalang',
+                logro: 'llegar a 1000 suscriptores',
+                videoFavorito: 'un vlog armando el arbol de Navidad',
+                colaborador: 'Allay MC',
+                reglasDirectos: 'no insultos, no humillar a la gente y mantener todo humildemente',
+                meta: 'terminar sus estudios, seguir con el canal y hacer crecer mas la comunidad'
+            };
+
+            function agregarMensajeIA(texto, tipo) {
+                if (!aiMessages) return;
+                const msg = document.createElement('div');
+                msg.className = `msg ${tipo}`;
+                msg.textContent = texto; 
+                aiMessages.appendChild(msg);
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+                if (tipo === 'bot') hablarIA(texto);
+            }
+
+            function apodoIA() {
+                return aiGenero === 'female' ? 'osita' : 'osito';
+            }
+
+            function prefijoIA() {
+                return aiGenero ? apodoIA() : 'crack';
+            }
+
+            function setGeneroIA(genero) {
+                aiGenero = genero;
+                localStorage.setItem('osito_ai_genero', genero);
+                aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
+                const apodo = apodoIA();
+                agregarMensajeIA(`¡Qué onda, ${apodo}! 😄 Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
+            }
+
+            function hablarIA(texto) {
+                if (!vozActiva || !('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const limpio = texto.replace(/[^\w\s.,;:!?¿¡áéíóúÁÉÍÓÚñÑ]/g, ' ');
+                const utterance = new SpeechSynthesisUtterance(limpio);
+                utterance.lang = 'es-419';
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            function actualizarBotonVoz() {
+                if (!aiVoiceToggle) return;
+                aiVoiceToggle.classList.toggle('active', vozActiva);
+                aiVoiceToggle.textContent = vozActiva ? 'Voz activada' : 'Voz apagada';
+            }
+
+            function edadEnFecha(nacimiento, fecha = new Date()) {
+                let edad = fecha.getFullYear() - nacimiento.anio;
+                const yaCumplio = fecha.getMonth() > nacimiento.mes || (fecha.getMonth() === nacimiento.mes && fecha.getDate() >= nacimiento.dia);
+                if (!yaCumplio) edad -= 1;
+                return edad;
+            }
+
+            function anosCanal(fecha = new Date()) {
+                let anos = fecha.getFullYear() - infoCanal.cumpleCanal.anioInicio;
+                const yaCumplio = fecha.getMonth() > infoCanal.cumpleCanal.mes || (fecha.getMonth() === infoCanal.cumpleCanal.mes && fecha.getDate() >= infoCanal.cumpleCanal.dia);
+                if (!yaCumplio) anos -= 1;
+                return anos;
+            }
+
+            function horaElSalvador() {
+                return new Intl.DateTimeFormat('es-SV', {
+                    timeZone: 'America/El_Salvador',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }).format(new Date());
+            }
+
+            function elegirRespuesta(opciones) {
+                if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo una base clara todavia. Si me das mas contexto, te ayudo mejor.`;
+                let respuesta = opciones[turnoIA % opciones.length];
+                if (respuesta === ultimaRespuestaIA && opciones.length > 1) {
+                    respuesta = opciones[(turnoIA + 1) % opciones.length];
+                }
+                turnoIA += 1;
+                ultimaRespuestaIA = respuesta;
+                return respuesta;
+            }
+
+            function responderIA(pregunta) {
+                const texto = pregunta.toLowerCase();
+                const respuestas = [];
+                const nombre = prefijoIA();
+
+                if (!aiGenero && /\b(hombre|masculino|varon|chico|soy hombre)\b/.test(texto)) {
+                    aiGenero = 'male'; 
+                    localStorage.setItem('osito_ai_genero', aiGenero);
+                    aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                    return '¡Qué onda, osito! 😄 Todo bien. Ya te llamaré osito desde ahora. ¿Con qué te ayudo?';
+                }
+
+                if (!aiGenero && /\b(mujer|femenino|chica|soy mujer)\b/.test(texto)) {
+                    aiGenero = 'female'; 
+                    localStorage.setItem('osito_ai_genero', aiGenero);
+                    aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                    return '¡Qué onda, osita! 😄 Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
+                }
+
+                if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|dónde vive|casa|numero|número|whatsapp|telefono|teléfono|apellido|nombre completo|donde estudia|dónde estudia|colegio|instituto|escuela/.test(texto)) {
+                    respuestas.push(
+                        `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. 🔒`,
+                        `Eso sí que no, ${nombre}. Por seguridad no comparto mi ubicación, número, apellido completo ni lugar de estudio. 🔐`,
+                        `No te puedo ayudar con datos privados. Puedo hablar del canal y del contenido, pero información personal no.`
+                    );
+                }
+
+                if (/hora|qué hora|que hora|pais|país|salvador/.test(texto) && !/ubicacion|departamento|direccion|dirección|donde vive|dónde vive/.test(texto)) {
+                    respuestas.push(
+                        `En El Salvador ahorita son las ${horaElSalvador()} 🇸🇻. Solo doy la hora del país, no ubicaciones personales.`,
+                        `La hora de El Salvador es: ${horaElSalvador()} 🇸🇻. Nada de departamentos ni datos privados, eso se cuida mucho.`
+                    );
+                }
+
+                if (/edad|años tienes|cuántos años|cuantos años|cumpleaños|naciste|nacimiento/.test(texto)) {
+                    respuestas.push(
+                        `El creador nació el 28 de septiembre de 2008. Su edad se actualiza sola: ahora tiene ${edadEnFecha(infoCanal.cumpleCreador)} años. 🎂`,
+                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} años.`
+                    );
+                }
+
+                if (/cumple.*canal|aniversario.*canal|años.*canal|cuando cumple el canal|cuándo cumple el canal/.test(texto)) {
+                    const anos = anosCanal(); 
+                    respuestas.push(
+                        `El canal cumple años el 2 de junio. En 2027 cumple 5 años; calculado a la fecha, lleva ${anos} años. 🥳`,
+                        `El aniversario del canal es el 2 de junio. Ese día se celebra otro año más de OsitoYT360.`
+                    );
+                }
+ 
+                if (/favorito|favoritos|estrella|guardar/.test(texto)) { 
+                    respuestas.push(
+                        `Toca la estrella de una tarjeta, ${nombre}. Si ya estaba guardado, la misma estrella lo quita de favoritos ⭐`,
+                        'Los favoritos se guardan en este navegador con localStorage, así que aparecerán cuando entres otra vez.',
+                        'Entra a "Mis Favoritos" para ver lo guardado. ¡La estrella manda! Un toque agrega, otro toque elimina.'
+                    );
+                }
+
+                if (/que puedo hacer|qué puedo hacer|pagina|página|sitio|funciones|para que sirve|para qué sirve/.test(texto)) {
+                    respuestas.push(
+                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo, el contador de OsitoExpo y preguntarme lo que quieras, ${nombre}. 😄`,
+                        'La pagina sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
+                        `Puedes moverte por las pestañas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.`
+                    );
+                }
+
+                if (/de que trata|de qué trata|contenido|canal|youtube|video|videos|juego|juegos|minecraft|roblox|free fire|craftman|craftsman/.test(texto)) {
+                    respuestas.push(
+                        `El canal trata de videojuegos: Minecraft, Roblox, Free Fire, Craftman/Craftsman y cualquier juego que se venga bueno. 🎮`,
+                        `OsitoYT360 es de gameplays, directos, shorts y series. Los juegos favoritos son Minecraft, Roblox y Craftman/Craftsman.`,
+                        `Por aqui vas a ver contenido variado de videojuegos, ${nombre}: Roblox, Minecraft, Free Fire, Craftman/Craftsman y mas.`
+                    );
+                }
+
+                if (/directo|live|stream|transmision/.test(texto)) { 
+                    respuestas.push(
+                        `Los directos salen en la pestaña "Directos", ${nombre}. Normalmente hay un en vivo por semana entre viernes, sábado o domingo. 🔴`,
+                        'Si una semana no se puede hacer directo, puede pasar para la siguiente. La idea es mantenerlo constante sin forzarlo.',
+                        `Regla de los en vivo: nada de insultos ni humillar a los demás. Todo con humildad. 🤝`
+                    );
+                }
+
+                if (/ositoexpo|expo|evento|fecha|cuando|horario/.test(texto)) { 
+                    respuestas.push(
+                        `OsitoExpo 2026 se estrena el 2 de agosto a las 10:30 AM, hora de El Salvador. Va a ser estreno de un video. 🎬`,
+                        'En OsitoExpo se van a contar cosas futuras del canal, incluyendo futuras canciones y proyectos.',
+                        `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}. El estreno es el 2 de agosto a las 10:30 AM SV.`
+                    );
+                }
+
+                if (/cancion|canciones|musica|música|navidad|24 de diciembre|especial/.test(texto)) { 
+                    respuestas.push(
+                        'Si, van a venir mas canciones en el futuro. En OsitoExpo se van a mencionar futuras canciones. 🎵',
+                        'Para Navidad, el 24 de diciembre, esta planeado un especial con en vivo y una cancion. 🎄',
+                        `Si preguntas por musica: si, ${nombre}, hay planes de sacar mas canciones.`
+                    );
+                }
+
+                if (/serie|series|temporada|temporadas|survivalang/.test(texto)) { 
+                    respuestas.push(
+                        'Si, van a haber mas series y mas temporadas de las series actuales. Survivalang va para largo.',
+                        'Survivalang va a durar un monton; ni el creador sabe exactamente cuantos capitulos van a salir 😄',
+                        `Sobre series, ${nombre}: si hay planes de seguir con mas temporadas y nuevos proyectos.`
+                    );
+                }
+
+                if (/colaboracion|colaboraciones|colab|allay|alay|mrbeast|mikecrack|compas|max wish|maxwish/.test(texto)) { 
+                    respuestas.push(
+                        'Si van a haber colaboraciones futuras, aunque por ahora no hay planes exactos. El colaborador mas reciente fue Allay MC.',
+                        'Al creador le gustaria algun dia colaborar con MrBeast y Mikecrack. Son metas grandes, pero soñar tambien cuenta 😄',
+                        'La inspiracion viene de Max Wish, Los Compas y creadores grandes de videojuegos.'
+                    );
+                }
+
+                if (/por que osito|por qué osito|nombre|origen|peluche|inspir/.test(texto) && !/apellido|completo/.test(texto)) { 
+                    respuestas.push(
+                        'El nombre Osito viene de un peluche. La historia empezo en 2019, cuando se grababa con un panda chiquito de peluche.',
+                        'La idea del nombre nacio por un peluche y por esa inspiracion de empezar a grabar contenido desde pequeño.',
+                        `Se llama Osito por esa historia del peluche, ${nombre}. El apellido o datos completos no se comparten.`
+                    );
+                }
+
+                if (/como te conocieron|cómo te conocieron|shorts|bed wars|bedwars|grupos|whatsapp|craftman 0.14.3|craftsman 0.14.3/.test(texto)) { 
+                    respuestas.push(
+                        'Mucha gente lo conocio por Craftman/Craftsman Bed Wars 0.14.3, shorts de Roblox, en vivos de Bedwars y algunos grupos de WhatsApp.',
+                        'Parte de la comunidad llego por shorts, Roblox, Grotes, directos de Bedwars y ese servidor de Craftman/Craftsman que ya casi no tiene gente.',
+                        'Puede que algun dia saque un servidor parecido al Bed Wars de Craftman/Craftsman 0.14.3.'
+                    );
+                }
+
+                if (/meta|futuro|dejar el canal|seguir el canal|estudio|estudios|software|ingenier/.test(texto)) { 
+                    respuestas.push(
+                        'Su meta es terminar los estudios, seguir con el canal y hacer crecer mas la comunidad. Todavia no sabe si en el futuro sera mas desarrollador de software o creador de contenido.',
+                        'Esta estudiando enfocado en ingenieria de desarrollo de software, pero no se comparte donde estudia. Eso es privado. 🔒',
+                        `Sobre el futuro, ${nombre}: quiere crecer, estudiar y seguir mejorando, pero todavia hay cosas que se van a decidir con el tiempo.`
+                    );
+                }
+
+                if (/editor|editar|edicion|ediciones|miniatura|miniaturas|titulo|titulos|descripcion|descripciones/.test(texto)) { 
+                    respuestas.push(
+                        'Tiene un editor de video llamado Santiago. Tambien ha mejorado en ediciones, miniaturas, titulos, descripciones, videos y en vivos.',
+                        'Quiere que sus videos se vean cada vez mas profesionales y explorar nuevos contenidos en el futuro.',
+                        'Una de sus mejoras mas fuertes ha sido cuidar miniaturas, titulos, descripciones y la presentacion del canal.'
+                    );
+                }
+
+                if (/horario|graba|grabacion|grabación|cuando sube|cuando hace vivo|cuando hace en vivo/.test(texto)) { 
+                    respuestas.push(
+                        'Suele grabar o hacer contenido jueves, viernes, sabado o domingo, porque son dias donde puede tener mas tiempo.',
+                        'Normalmente intenta hacer un en vivo por semana entre viernes, sabado o domingo; si no se puede, queda para la siguiente semana.',
+                        `El horario depende del estudio y del tiempo libre, ${nombre}. La idea es organizarse sin descuidar responsabilidades.`
+                    );
+                }
+
+                if (/logro|mil suscriptores|1000|suscriptores|video favorito|vlog|arbol|árbol/.test(texto)) { 
+                    respuestas.push(
+                        'Uno de sus logros mas grandes fue llegar a 1000 suscriptores. Eso marco bastante al canal. 🏆',
+                        'Su video favorito fue un vlog armando el arbol de Navidad.',
+                        `Llegar a los 1000 suscriptores fue un logro enorme, ${nombre}.`
+                    );
+                }
+
+                if (/consejo|creador|empezando|empezar|youtube no es facil|youtube no es fácil|vici/.test(texto)) { 
+                    respuestas.push(
+                        'Consejo para creadores: no se rindan. YouTube no es facil con videos ni vistas, pero hay que seguir y no parar.',
+                        'Tambien recomienda no viciarse mucho con los juegos y tener horarios especificos para estudiar y jugar.',
+                        `Si quieres crear contenido, ${nombre}, constancia y humildad. Y los estudios tambien van primero.`
+                    );
+                }
+
+                if (/actualizacion|actualizaciones|nuevo|tiempo real|reciente/.test(texto)) { 
+                    respuestas.push(
+                        'Cada actualizacion con fecha aparece como "Actualizado hace..." y se mantiene viva sin recargar la pagina.',
+                        'El sistema intenta leer actualizaciones del endpoint local, luego Firebase, y si nada responde usa datos de respaldo.'
+                    );
+                }
+
+                if (/animacion|animaciones|rendimiento|ram|lento|rapido|performance|4 gb/.test(texto)) {
+                    respuestas.push( 
+                        `Para 4 GB de RAM, ${nombre}, si notas lento el sitio apaga animaciones avanzadas y usa modo compacto.`,
+                        'Las animaciones usan transform y opacity porque son mas livianas. En movil tambien se reducen efectos pesados.',
+                        'Para mas fluidez: no reproduzcas muchos videos a la vez, baja animaciones avanzadas y deja el modo compacto si lo necesitas.'
+                    );
+                }
+
+                if (/diseno|boton|botones|tema|color|estilo|destello/.test(texto)) {
+                    respuestas.push( 
+                        `El diseño usa paneles oscuros, brillo controlado y botones con destello, ${nombre}. Se ve pro sin ponerse pesado.`,
+                        'Puedes cambiar colores desde los temas o los selectores. Los botones heredan esos colores para mantener todo consistente.',
+                        'El destello de los botones es CSS liviano: no usa imagenes ni librerias pesadas.'
+                    );
+                }
+
+                if (/hola|buenas|hey|saludos|que onda|quÃ© onda/.test(texto)) {
+                    respuestas.push( 
+                        `Que onda, ${nombre} 😄 Todo bien. Con que te ayudo hoy?`,
+                        `Hey, ${nombre}. Aqui ando, tirame la pregunta y vemos. ✨`,
+                        `Buenas, ${nombre}. Dale, preguntame lo que quieras del canal o del sitio.`
+                    );
+                }
+
+                if (!respuestas.length) {
+                    respuestas.push( 
+                        `Mmm, ${nombre}, de eso no tengo una base de datos exacta todavia. Pero si me lo explicas un poco mas, te ayudo con gusto. 🤔`,
+                        `Buena pregunta, ${nombre}. No quiero inventarte cosas; dame un poquito mas de contexto y te respondo mejor.`,
+                        `Eso no lo tengo confirmado. Puedo ayudarte con una respuesta general, pero prefiero no mentirte.`
+                    );
+                }
+
+                return elegirRespuesta(respuestas);
+            }
+
+            function enviarPreguntaIA(pregunta) {
+                const limpia = (pregunta || '').trim();
+                if (!limpia) return;
+                agregarMensajeIA(limpia, 'user'); 
+                if (aiInput) aiInput.value = '';
+                if (!aiGenero && !/\b(hombre|masculino|varon|chico|soy hombre|mujer|femenino|chica|soy mujer)\b/i.test(limpia)) {
+                    setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer 😄 Asi te hablo como osito u osita.', 'bot'), 160);
+                    return;
+                }
+                setTimeout(() => agregarMensajeIA(responderIA(limpia), 'bot'), 180);
+            }
+
+            aiGenderBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.gender === aiGenero); 
+                btn.addEventListener('click', () => setGeneroIA(btn.dataset.gender));
+            });
+
+            actualizarBotonVoz();
+            if (aiVoiceToggle) {
+                aiVoiceToggle.addEventListener('click', () => {
+                    vozActiva = !vozActiva;
+                    localStorage.setItem('osito_ai_voz', vozActiva ? 'true' : 'false'); 
+                    if (!vozActiva && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                    actualizarBotonVoz();
+                    if (vozActiva) hablarIA('Voz activada');
+                });
+            }
+
+            if (aiForm && aiInput) {
+                aiForm.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    enviarPreguntaIA(aiInput.value); 
+                });
+            }
+
+            aiSuggestions.forEach(btn => {
+                btn.addEventListener('click', () => enviarPreguntaIA(btn.dataset.question || btn.textContent));
+            });
+
+            // Design presets and customization bindings
+            const presetBtns = document.querySelectorAll('.design-preset');
+            presetBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const p1 = btn.dataset.p1;
+                    const p2 = btn.dataset.p2;
+                    cambiarFondo(p1, p2); 
+                });
+            });
+
+            const fontRange = document.getElementById('font-size-range');
+            if (fontRange) {
+                fontRange.addEventListener('input', () => {
+                    document.documentElement.style.fontSize = fontRange.value + 'px';
+                    localStorage.setItem('osito_font_size', fontRange.value); 
+                });
+            }
+
+            const layoutCheckbox = document.getElementById('layout-compact');
+            if (layoutCheckbox) {
+                layoutCheckbox.addEventListener('change', () => {
+                    const isCompact = layoutCheckbox.checked;
+                    document.body.classList.toggle('compact-layout', isCompact); 
+                    localStorage.setItem('osito_layout_compact', isCompact ? 'true' : 'false');
+                });
+            }
+        })();
+
+        function toggleIAPanel() {
+            const panel = document.getElementById('ai-section');
+            panel.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

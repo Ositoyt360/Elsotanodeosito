@@ -1220,6 +1220,16 @@ body.no-animations .video-card {
     border-color: transparent;
 }
 
+.ai-input-row.ai-locked {
+    opacity: 0.72;
+}
+
+.ai-input-row input:disabled,
+.ai-suggestion:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .ia-messages {
     height: clamp(160px, 28vh, 240px);
 }

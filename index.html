@@ -194,10 +194,32 @@
         </main>
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
+            <audio id="bg-music" src="musica snowfall.mp3" preload="auto" loop></audio>
+
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
                 <img src="logo yt.png" alt="" class="yt-channel-logo">
                 <span>Únete al Canal</span>
             </a>
+
+            <div class="sidebar-card settings-section" id="music-card">
+                <div class="sidebar-card-title">Música de fondo</div>
+                <div class="settings-stack">
+                    <div class="setting-row">
+                        <label id="music-volume-label" for="music-volume">Volumen</label>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button class="btn-action" id="music-toggle" type="button" aria-label="Reproducir o pausar música">▶️</button>
+                        </div>
+                    </div>
+                    <div class="setting-row" style="gap:10px;">
+                        <input id="music-volume" type="range" min="0" max="100" value="30" aria-label="Volumen música" />
+                        <span id="music-volume-value" style="color: var(--text-muted); font-weight:800;">30%</span>
+                    </div>
+                    <div class="cd-date" style="opacity:1; text-align:left; padding: 0 4px; font-size: 11px;">
+                        Se inicia cuando tocas “Entrar al sótano”.
+                    </div>
+                </div>
+            </div>
+
 
             <div class="sidebar-card countdown-box">
                 <div class="cd-text">&#128293; OsitoExpo2026 &#128293;</div>
@@ -603,6 +625,15 @@
                 });
             }
 
+            // Música de fondo: control de volumen en la barra lateral
+            // (usamos un timestamp fijo para que se vea con la fecha en el banner)
+            list.push({
+                badge: 'Música',
+                titulo: 'Volumen de música de fondo (Snowfall)',
+                descripcion: 'Ahora puedes bajar o subir el volumen del audio de fondo desde la barra lateral. Se inicia al entrar al sótano.',
+                timestamp: Date.UTC(2026, 5, 18, 12, 0, 0) // 18/06/2026 (UTC)
+            });
+
             list.push(...[
                 {
                     badge: 'Nuevo',
@@ -764,6 +795,9 @@
         }
 
         function iniciarCarga() {
+            if (typeof window.reproducirBienvenidaSitio === 'function') {
+                window.reproducirBienvenidaSitio();
+            }
             document.getElementById('btn-ready').style.display = "none";
             document.getElementById('loading-container').style.display = "block";
             document.getElementById('progress-text').style.display = "block";
@@ -778,10 +812,117 @@
         function entrarAlSitio() {
             document.getElementById('welcome-screen').classList.add('welcome-fade-out');
             setTimeout(() => { document.getElementById('welcome-screen').remove(); }, 400);
-            setTimeout(() => { document.getElementById('sidebar-panel').classList.add('sidebar-show'); }, 100); 
+            setTimeout(() => { document.getElementById('sidebar-panel').classList.add('sidebar-show'); }, 100);
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
+            // Autoplay permitido después del gesto del usuario
+            iniciarMusicaFondo();
         }
+
+        // ================================
+        // Música de fondo (Snowfall)
+        // ================================
+        function iniciarMusicaFondo() {
+            const audio = document.getElementById('bg-music');
+            const toggleBtn = document.getElementById('music-toggle');
+            const volSlider = document.getElementById('music-volume');
+            const volValue = document.getElementById('music-volume-value');
+
+            if (!audio) return;
+
+            // cargar volumen guardado (0-100)
+            const savedVol = Number(localStorage.getItem('osito_music_volume') ?? '30');
+            const volClamped = Number.isFinite(savedVol) ? Math.min(100, Math.max(0, savedVol)) : 30;
+
+            audio.volume = volClamped / 100;
+            if (volSlider) volSlider.value = String(volClamped);
+            if (volValue) volValue.textContent = `${volClamped}%`;
+
+            // listeners una sola vez
+            if (!audio.dataset.bound) {
+                audio.dataset.bound = 'true';
+
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', () => toggleMusicaFondo());
+                }
+
+                if (volSlider) {
+                    volSlider.addEventListener('input', () => {
+                        const v = Number(volSlider.value);
+                        setMusicaVolumen(v);
+                    });
+                }
+
+                // Si el usuario pauso/play manual y el navegador bloquea autoplay,
+                // al menos dejamos listo el toggle.
+                if (!audio.paused) {
+                    audio.loop = true;
+                }
+            }
+
+            // Intentar reproducir
+            try {
+                audio.loop = true;
+                // importante: play en Promise
+                const p = audio.play();
+                if (p && typeof p.then === 'function') {
+                    p.then(() => {
+                        if (toggleBtn) toggleBtn.textContent = audio.paused ? '▶️' : '⏸️';
+                    }).catch(() => {
+                        // Si el navegador bloquea, dejamos el toggle listo.
+                        if (toggleBtn) toggleBtn.textContent = '▶️';
+                    });
+                }
+            } catch (e) {
+                console.warn('Música: no se pudo iniciar', e);
+            }
+        }
+
+        function setMusicaVolumen(vol100) {
+            const audio = document.getElementById('bg-music');
+            const toggleBtn = document.getElementById('music-toggle');
+            const volSlider = document.getElementById('music-volume');
+            const volValue = document.getElementById('music-volume-value');
+
+            if (!audio) return;
+            const v = Math.min(100, Math.max(0, Number(vol100) || 0));
+            audio.volume = v / 100;
+
+            localStorage.setItem('osito_music_volume', String(v));
+
+            if (volSlider) volSlider.value = String(v);
+            if (volValue) volValue.textContent = `${v}%`;
+
+            if (toggleBtn) toggleBtn.textContent = audio.paused ? '▶️' : '⏸️';
+        }
+
+        function toggleMusicaFondo() {
+            const audio = document.getElementById('bg-music');
+            const toggleBtn = document.getElementById('music-toggle');
+            if (!audio) return;
+
+            if (audio.paused) {
+                try {
+                    const p = audio.play();
+                    if (p && typeof p.then === 'function') {
+                        p.then(() => {
+                            if (toggleBtn) toggleBtn.textContent = '⏸️';
+                        }).catch(() => {
+                            if (toggleBtn) toggleBtn.textContent = '▶️';
+                        });
+                    } else {
+                        if (toggleBtn) toggleBtn.textContent = '⏸️';
+                    }
+                } catch (e) {
+                    if (toggleBtn) toggleBtn.textContent = '▶️';
+                }
+            } else {
+                audio.pause();
+                if (toggleBtn) toggleBtn.textContent = '▶️';
+            }
+        }
+
+
 
         function verificarCelebracion() {
             const hoy = new Date();
@@ -1095,8 +1236,10 @@
             const aiVoiceToggle = document.getElementById('ai-voice-toggle'); 
             let ultimaRespuestaIA = '';
             let turnoIA = 0;
-            let aiGenero = localStorage.getItem('osito_ai_genero') || '';
+            let aiGenero = '';
             let vozActiva = localStorage.getItem('osito_ai_voz') !== 'false';
+            let bienvenidaReproducida = false;
+            const bienvenidaSitio = 'Bienvenido al Sotano de Osito. Aqui puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo, el contador de OsitoExpo y hablar con la inteligencia del sitio. Esta pagina es segura: no te pide crear cuenta ni iniciar sesion. Para usar la IA, primero elige si eres Osito u Osita; despues podras preguntar cualquier cosa del canal o de la pagina.';
 
             const infoCanal = {
                 canal: 'OsitoYT360',
@@ -1137,8 +1280,8 @@
 
             function setGeneroIA(genero) {
                 aiGenero = genero;
-                localStorage.setItem('osito_ai_genero', genero);
                 aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
+                actualizarBloqueoIA();
                 const apodo = apodoIA();
                 agregarMensajeIA(`¡Qué onda, ${apodo}! 😄 Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
             }
@@ -1159,6 +1302,28 @@
                 aiVoiceToggle.classList.toggle('active', vozActiva);
                 aiVoiceToggle.textContent = vozActiva ? 'Voz activada' : 'Voz apagada';
             }
+
+            function actualizarBloqueoIA() {
+                const bloqueado = !aiGenero;
+                if (aiInput) {
+                    aiInput.disabled = bloqueado;
+                    aiInput.placeholder = bloqueado ? 'Primero elige Osito u Osita...' : 'Escribe cualquier pregunta...';
+                    aiInput.setAttribute('aria-disabled', bloqueado ? 'true' : 'false');
+                }
+                aiSuggestions.forEach(btn => {
+                    btn.disabled = bloqueado;
+                    btn.setAttribute('aria-disabled', bloqueado ? 'true' : 'false');
+                });
+                if (aiForm) aiForm.classList.toggle('ai-locked', bloqueado);
+            }
+
+            function reproducirBienvenidaSitio() {
+                if (bienvenidaReproducida) return;
+                bienvenidaReproducida = true;
+                hablarIA(bienvenidaSitio);
+            }
+
+            window.reproducirBienvenidaSitio = reproducirBienvenidaSitio;
 
             function edadEnFecha(nacimiento, fecha = new Date()) {
                 let edad = fecha.getFullYear() - nacimiento.anio;
@@ -1201,15 +1366,15 @@
 
                 if (!aiGenero && /\b(hombre|masculino|varon|chico|soy hombre)\b/.test(texto)) {
                     aiGenero = 'male'; 
-                    localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                    actualizarBloqueoIA();
                     return '¡Qué onda, osito! 😄 Todo bien. Ya te llamaré osito desde ahora. ¿Con qué te ayudo?';
                 }
 
                 if (!aiGenero && /\b(mujer|femenino|chica|soy mujer)\b/.test(texto)) {
                     aiGenero = 'female'; 
-                    localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                    actualizarBloqueoIA();
                     return '¡Qué onda, osita! 😄 Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
                 }
 
@@ -1408,12 +1573,13 @@
             function enviarPreguntaIA(pregunta) {
                 const limpia = (pregunta || '').trim();
                 if (!limpia) return;
-                agregarMensajeIA(limpia, 'user'); 
-                if (aiInput) aiInput.value = '';
                 if (!aiGenero && !/\b(hombre|masculino|varon|chico|soy hombre|mujer|femenino|chica|soy mujer)\b/i.test(limpia)) {
+                    if (aiInput) aiInput.value = '';
                     setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer 😄 Asi te hablo como osito u osita.', 'bot'), 160);
                     return;
                 }
+                agregarMensajeIA(limpia, 'user'); 
+                if (aiInput) aiInput.value = '';
                 setTimeout(() => agregarMensajeIA(responderIA(limpia), 'bot'), 180);
             }
 
@@ -1423,6 +1589,7 @@
             });
 
             actualizarBotonVoz();
+            actualizarBloqueoIA();
             if (aiVoiceToggle) {
                 aiVoiceToggle.addEventListener('click', () => {
                     vozActiva = !vozActiva;

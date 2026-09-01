@@ -1,5 +1,4 @@
 /* Importación de tipografía moderna para interfaces Web */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
 
 :root {
     --bg-color: #080a0f;
@@ -463,6 +462,8 @@ header {
 
 .tab-content {
     display: none;
+    content-visibility: auto;
+    contain-intrinsic-size: 500px;
 }
 
 .tab-content.active {
@@ -567,6 +568,8 @@ header {
     border-radius: var(--radius-md);
     overflow: hidden;
     transition: var(--transition-premium);
+    content-visibility: auto;
+    contain-intrinsic-size: 260px;
 }
 
 .video-card:hover {
@@ -841,6 +844,8 @@ body::before {
     border-radius: 8px;
     opacity: 0;
     transform: translateY(12px);
+    content-visibility: auto;
+    contain-intrinsic-size: 260px;
 }
 
 .video-card.ready {
@@ -1133,6 +1138,8 @@ body.no-animations .video-card {
         linear-gradient(135deg, rgba(88, 255, 154, 0.08), transparent 42%),
         rgba(0, 0, 0, 0.36);
     border-color: rgba(88, 255, 154, 0.16);
+    content-visibility: auto;
+    contain-intrinsic-size: 200px;
 }
 
 .sidebar-card-title {
@@ -1196,6 +1203,8 @@ body.no-animations .video-card {
     border-radius: 8px;
     background: rgba(0,0,0,0.18);
     border: 1px solid rgba(88, 255, 154, 0.1);
+    content-visibility: auto;
+    contain-intrinsic-size: 320px;
 }
 
 .series-group h3 {

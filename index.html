@@ -6,7 +6,9 @@
     <title>El Sótano de Osito</title>
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
-    <link rel="preconnect" href="https://www.google.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap">
     <link rel="stylesheet" href="styles.css">
 
     <script type="module">
@@ -198,10 +200,10 @@
         </main>
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
-            <audio id="bg-music" src="musica snowfall.mp3" preload="auto" loop></audio>
+            <audio id="bg-music" src="musica snowfall.mp3" preload="none" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
-                <img src="logo yt.png" alt="" class="yt-channel-logo">
+                <img src="logo yt.png" alt="" class="yt-channel-logo" loading="lazy" decoding="async">
                 <span>Únete al Canal</span>
             </a>
 
@@ -352,11 +354,14 @@
         let apodoUsuario = ""; 
         let animacionesActivas = true;
         let animationFrameId = null;
+        let espacioReiniciar = null;
+        let espacioVisibilidadListenerRegistrado = false;
         let indicePromoActual = 0;
         let intervaloPromo = null;
         let promoIntervalMs = 6000;
         let promoHoverPause = false;
         let advancedAnimacionesEnabled = true;
+        let primaryRgbCanvas = '88, 255, 154';
         let vigilanciaVideosId = null;
         let ultimoVideoNotificado = localStorage.getItem('osito_ultimo_video_notificado') || '';
 
@@ -1021,8 +1026,25 @@
             document.documentElement.style.setProperty('--secondary-color', c2);
             document.getElementById('picker-primario').value = c1;
             document.getElementById('picker-secundario').value = c2;
+            actualizarColorCanvas(c1);
             localStorage.setItem('theme_primary', c1);
             localStorage.setItem('theme_secondary', c2); 
+        }
+
+        function actualizarColorCanvas(color) {
+            const primaryColor = color || getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+            let primaryRgb = '88, 255, 154';
+            if (primaryColor.startsWith('#')) {
+                const hex = primaryColor.slice(1);
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                primaryRgb = `${r}, ${g}, ${b}`;
+            } else if (primaryColor.startsWith('rgb')) {
+                const parts = primaryColor.match(/\d+/g);
+                if (parts && parts.length >= 3) primaryRgb = `${parts[0]}, ${parts[1]}, ${parts[2]}`;
+            }
+            primaryRgbCanvas = primaryRgb;
         }
 
         function aplicarColoresPersonalizados() {
@@ -1122,6 +1144,7 @@
                 <iframe 
                     src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
                     title="Reproductor de YouTube"
+                    loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerpolicy="strict-origin-when-cross-origin"
                     allowfullscreen>
@@ -1138,7 +1161,7 @@
                 <div class="video-card">
                     <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
                     <div class="video-thumbnail">
-                        <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
+                        <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async" fetchpriority="low" width="480" height="360">
                         <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
                     </div>
                 </div>
@@ -1266,14 +1289,20 @@
         function iniciarEspacio() {
             const canvas = document.getElementById('space-canvas');
             if(!canvas) return;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight; 
             const stars = [];
             const starCount = !animacionesActivas || document.body.classList.contains('ultra-performance')
                 ? 0
-                : (advancedAnimacionesEnabled ? 120 : 40);
-            const connectionDist = 150; // Distancia para dibujar líneas
+                : (advancedAnimacionesEnabled ? 80 : 28);
+            const connectionDist = 120;
+            const frameBudget = advancedAnimacionesEnabled ? 33 : 50;
+            let lastFrameTime = 0;
 
             for (let i = 0; i < starCount; i++) {
                 stars.push({
@@ -1286,23 +1315,17 @@
                 });
             }
 
-            function draw() {
-                if(!animacionesActivas || document.hidden) { animationFrameId = requestAnimationFrame(draw); return; } 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
-
-                let primaryRgb = '255, 255, 255'; // Default to white
-                if (primaryColor.startsWith('#')) {
-                    const hex = primaryColor.slice(1);
-                    const r = parseInt(hex.substring(0, 2), 16);
-                    const g = parseInt(hex.substring(2, 4), 16);
-                    const b = parseInt(hex.substring(4, 6), 16);
-                    primaryRgb = `${r}, ${g}, ${b}`;
-                } else if (primaryColor.startsWith('rgb')) {
-                    const parts = primaryColor.match(/\d+/g);
-                    if (parts && parts.length >= 3) primaryRgb = `${parts[0]}, ${parts[1]}, ${parts[2]}`;
+            function draw(timestamp = 0) {
+                if(!animacionesActivas || document.hidden) {
+                    animationFrameId = null;
+                    return;
                 }
+                if (timestamp - lastFrameTime < frameBudget) {
+                    animationFrameId = requestAnimationFrame(draw);
+                    return;
+                }
+                lastFrameTime = timestamp;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 // Dibujar conexiones primero (malla profesional)
                 const now = performance.now() * 0.001;
                 ctx.lineWidth = 0.7;
@@ -1315,7 +1338,7 @@
                         if (dist < connectionDist) {
                             const alpha = 0.18 * (1 - dist / connectionDist);
                             ctx.beginPath();
-                            ctx.strokeStyle = `rgba(${primaryRgb}, ${alpha})`;
+                            ctx.strokeStyle = `rgba(${primaryRgbCanvas}, ${alpha})`;
                             ctx.moveTo(stars[i].x, stars[i].y);
                             ctx.lineTo(stars[j].x, stars[j].y);
                             ctx.stroke();
@@ -1328,7 +1351,7 @@
                     const star = stars[i];
                     const pulseSize = star.radius + Math.sin(now * 2 + star.pulse) * 0.55;
                     ctx.beginPath();
-                    ctx.fillStyle = `rgba(${primaryRgb}, ${0.46 + Math.sin(now * 2 + star.pulse) * 0.18})`;
+                    ctx.fillStyle = `rgba(${primaryRgbCanvas}, ${0.46 + Math.sin(now * 2 + star.pulse) * 0.18})`;
                     ctx.arc(star.x, star.y, Math.max(0.6, pulseSize), 0, Math.PI * 2);
                     ctx.fill();
                 }
@@ -1350,14 +1373,23 @@
             if (stars.length > 0) draw();
 
             // Pause animations when tab is hidden to save CPU/battery
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                } else {
-                    if (!animationFrameId && animacionesActivas && stars.length > 0) draw();
-                }
-            });
+            espacioReiniciar = () => {
+                if (!animacionesActivas || document.hidden || stars.length === 0) return;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(draw);
+            };
+
+            if (!espacioVisibilidadListenerRegistrado) {
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    } else if (espacioReiniciar) {
+                        espacioReiniciar();
+                    }
+                });
+                espacioVisibilidadListenerRegistrado = true;
+            }
         }
         
         window.addEventListener('resize', () => {

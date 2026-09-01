@@ -68,6 +68,10 @@
                 <span>🎬</span>Mejorar Rendimiento
             </button>
 
+            <button class="btn-action btn-anim" id="btn-ultra-performance" onclick="toggleModoUltra()">
+                <span>⚡</span>Modo ultra
+            </button>
+
             <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
                 <span>🔔</span> Activar Notificaciones
             </button>
@@ -95,9 +99,9 @@
                 </div>
 
                 <div class="promo-slide" id="slide-1">
-                    <span class="promo-tag">ALERTA &bull; Imperdible</span>
-                    <h2 class="promo-title-main">OsitoExpo 2026</h2>
-                    <p class="promo-desc">OsitoExpo 2026 llega el 2 de agosto con anuncios especiales, momentos en directo y contenido exclusivo para toda la comunidad.</p>
+                    <span class="promo-tag">PR&Oacute;XIMAMENTE &bull; Imperdible</span>
+                    <h2 class="promo-title-main">OsitoExpo muy pronto</h2>
+                    <p class="promo-desc">Se vienen anuncios especiales, momentos en directo y contenido exclusivo para toda la comunidad.</p>
                    
                 </div>
 
@@ -222,15 +226,15 @@
 
 
             <div class="sidebar-card countdown-box">
-                <div class="cd-text">&#128293; OsitoExpo2026 &#128293;</div>
+                <div class="cd-text">&#128293; OsitoExpo muy pronto &#128293;</div>
                 <div class="countdown-timer" id="countdown-timer">-- : -- : -- : --</div>
-                <div class="cd-date">2 de Agosto 2026 - 10:30 AM, hora de El Salvador (UTC-6)</div>
+                <div class="cd-date">Nuevas sorpresas para la comunidad</div>
             </div>
 
             <div class="sidebar-card countdown-box">
                 <div class="cd-text">5 años en YouTube</div>
                 <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
-                <div class="cd-date">2 de Junio 2027</div>
+                <div class="cd-date">2 de junio</div>
             </div>
 
             <div class="sidebar-card settings-section"> 
@@ -263,7 +267,13 @@
         <div class="ia-toggle-bubble" id="ia-bubble" onclick="toggleIAPanel()">🤖</div>
         <section class="ia-section" id="ai-section">
                 <div class="ia-header">
-                    <h3>Asistente de Inteligencia</h3>
+                    <div class="ia-header-title">
+                        <span class="ia-status-dot" aria-hidden="true"></span>
+                        <div>
+                            <h3>Asistente de Inteligencia</h3>
+                            <p>Tu copiloto del sótano</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="ia-setup">
                     <div class="ai-chat-shell">
@@ -272,6 +282,10 @@
                                 <button class="btn-action ai-gender-btn" data-gender="male" type="button">♂ Osito</button>
                                 <button class="btn-action ai-gender-btn" data-gender="female" type="button">♀ Osita</button>
                                 <button class="btn-action" id="ai-voice-toggle" type="button">Voz activada</button>
+                            </div>
+                            <div class="ai-name-row">
+                                <input id="ai-name-input" class="input-gamer" autocomplete="name" maxlength="24" placeholder="Escribe tu nombre..." aria-label="Nombre para la IA">
+                                <button class="btn-action ai-name-save" id="ai-name-save" type="button"><span aria-hidden="true">&#10003;</span> Guardar mi nombre</button>
                             </div>
                         </div>
                         <div class="ia-messages" id="ai-messages" role="log" aria-live="polite"> 
@@ -322,6 +336,8 @@
         let promoIntervalMs = 6000;
         let promoHoverPause = false;
         let advancedAnimacionesEnabled = true;
+        let vigilanciaVideosId = null;
+        let ultimoVideoNotificado = localStorage.getItem('osito_ultimo_video_notificado') || '';
 
         window.addEventListener('DOMContentLoaded', () => {
             // Cargar configuración de diseño guardada
@@ -353,6 +369,7 @@
             
             // detect low-end devices and user preferences
             detectDeviceAndPreferences();
+            configurarAlertas();
 
             if(localStorage.getItem('osito_no_anim') === 'true') toggleAnimaciones();
             else iniciarSecuenciaPublicitaria();
@@ -393,7 +410,9 @@
                 const ua = navigator.userAgent || '';
                 const isMobile = /Mobi|Android/i.test(ua);
 
+                const ultraGuardado = localStorage.getItem('osito_ultra_performance') === 'true';
                 const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2) || isMobile && deviceMemory <= 2;
+                if (ultraGuardado || deviceMemory <= 1) activarModoUltra(false);
 
                 // Default advanced animations enabled unless low-end
                 advancedAnimacionesEnabled = localStorage.getItem('osito_advanced_anim') !== null
@@ -414,6 +433,36 @@
             } catch (e) {
                 console.warn('Device detection failed', e);
             }
+        }
+
+        function activarModoUltra(guardar = true) {
+            document.body.classList.add('ultra-performance');
+            advancedAnimacionesEnabled = false;
+            promoIntervalMs = 12000;
+            document.body.classList.remove('advanced-anim');
+            if (guardar) localStorage.setItem('osito_ultra_performance', 'true');
+            const btn = document.getElementById('btn-ultra-performance');
+            if (btn) {
+                btn.classList.add('active');
+                btn.innerHTML = '<span>⚡</span>Modo ultra activo';
+            }
+            if (animacionesActivas) iniciarEspacio();
+        }
+
+        function toggleModoUltra() {
+            if (document.body.classList.contains('ultra-performance')) {
+                document.body.classList.remove('ultra-performance');
+                localStorage.setItem('osito_ultra_performance', 'false');
+                const btn = document.getElementById('btn-ultra-performance');
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '<span>⚡</span>Modo ultra';
+                }
+                advancedAnimacionesEnabled = false;
+                if (animacionesActivas) iniciarEspacio();
+                return;
+            }
+            activarModoUltra();
         }
 
         function toggleAdvancedAnimaciones() {
@@ -437,7 +486,7 @@
                     let siguienteIdx = (indicePromoActual + 1) % 3;
                     saltarAnuncio(siguienteIdx);
                 }
-            }, 6000);
+            }, promoIntervalMs);
         }
 
         function detenerSecuenciaPublicitaria() {
@@ -637,8 +686,8 @@
             list.push(...[
                 {
                     badge: 'Nuevo',
-                    titulo: 'Contador de 5 años en YouTube agregado',
-                    descripcion: 'La barra lateral ahora muestra el contador del aniversario junto al evento OsitoExpo.', 
+                    titulo: 'Modo ultra y experiencia móvil mejorados',
+                    descripcion: 'Se redujeron animaciones para celulares con poca RAM y la IA ahora guarda tu identidad y nombre.', 
                     timestamp: inicioHoy + (8 * 60 * 60 * 1000) // 8:00 AM de hoy 
                 },
                 {
@@ -734,11 +783,14 @@
         }
 
         function iniciarContador() {
+            const timer = document.getElementById("countdown-timer");
+            if (timer) timer.textContent = "OSITOEXPO MUY PRONTO";
+            return;
             // 10:30 AM en El Salvador equivale a 16:30 UTC porque El Salvador usa UTC-6.
-            const fechaOsitoExpoElSalvadorUTC = Date.UTC(2026, 7, 2, 16, 30, 0); 
+            const fechaProximaNovedadUTC = Date.UTC(2026, 7, 2, 16, 30, 0); 
             setInterval(() => { 
                 const ahoraUTC = new Date().getTime(); 
-                const distancia = fechaOsitoExpoElSalvadorUTC - ahoraUTC;
+                const distancia = fechaProximaNovedadUTC - ahoraUTC;
                 if (distancia < 0) {
                     document.getElementById("countdown-timer").innerHTML = "¡EN DIRECTO!";
                     return;
@@ -770,7 +822,7 @@
             const dateLabel = timer?.nextElementSibling;
  
             if (label) label.innerText = `${numAnos} años en YouTube`;
-            if (dateLabel) dateLabel.innerText = `2 de Junio ${anioDestino}`;
+            if (dateLabel) dateLabel.innerText = `2 de junio ${anioDestino}`;
 
             setInterval(() => {
                 const ahoraUTC = new Date().getTime();
@@ -802,11 +854,12 @@
             document.getElementById('loading-container').style.display = "block";
             document.getElementById('progress-text').style.display = "block";
             
+            const esperaBienvenida = document.body.classList.contains('ultra-performance') ? 80 : 300;
             setTimeout(() => {
                 document.getElementById('progress-bar').style.width = "100%";
                 document.getElementById('progress-text').innerText = "¡Sótano Desbloqueado!";
-                setTimeout(entrarAlSitio, 200);
-            }, 300);
+                setTimeout(entrarAlSitio, document.body.classList.contains('ultra-performance') ? 60 : 200);
+            }, esperaBienvenida);
         }
 
         function entrarAlSitio() {
@@ -964,8 +1017,75 @@
 
         function toggleAlertas() {
             const btn = document.getElementById('btn-notif');
-            btn.classList.toggle('active');
-            mostrarNotificacion(btn.classList.contains('active') ? "Alertas activadas 🔔" : "Alertas silenciadas 🔕");
+            if (!('Notification' in window)) {
+                mostrarNotificacion('Este dispositivo no admite notificaciones del navegador.');
+                return;
+            }
+
+            if (localStorage.getItem('osito_alertas') === 'true') {
+                localStorage.setItem('osito_alertas', 'false');
+                btn.classList.remove('active');
+                if (vigilanciaVideosId) clearInterval(vigilanciaVideosId);
+                vigilanciaVideosId = null;
+                mostrarNotificacion('Alertas silenciadas 🔕');
+                return;
+            }
+
+            Notification.requestPermission().then(permiso => {
+                if (permiso !== 'granted') {
+                    btn.classList.remove('active');
+                    mostrarNotificacion('Permiso de notificaciones no concedido.');
+                    return;
+                }
+                localStorage.setItem('osito_alertas', 'true');
+                btn.classList.add('active');
+                iniciarVigilanciaVideos();
+                mostrarNotificacion('Permiso concedido. Te avisaremos si sale video nuevo 🔔');
+            });
+        }
+
+        function configurarAlertas() {
+            const btn = document.getElementById('btn-notif');
+            if (!btn || !('Notification' in window)) return;
+            const activas = localStorage.getItem('osito_alertas') === 'true' && Notification.permission === 'granted';
+            btn.classList.toggle('active', activas);
+            if (activas) iniciarVigilanciaVideos();
+        }
+
+        function iniciarVigilanciaVideos() {
+            if (vigilanciaVideosId) clearInterval(vigilanciaVideosId);
+            comprobarVideoNuevo();
+            const intervalo = document.body.classList.contains('ultra-performance') ? 900000 : 300000;
+            vigilanciaVideosId = setInterval(comprobarVideoNuevo, intervalo);
+        }
+
+        async function comprobarVideoNuevo() {
+            if (localStorage.getItem('osito_alertas') !== 'true' || Notification.permission !== 'granted') return;
+            try {
+                const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=1&playlistId=${PLAYLIST_ID}&key=${GOOGLE_API_KEY}`;
+                const respuesta = await fetch(url);
+                if (!respuesta.ok) return;
+                const datos = await respuesta.json();
+                const video = datos.items?.[0];
+                const videoId = video?.contentDetails?.videoId;
+                if (!videoId) return;
+                if (!ultimoVideoNotificado) {
+                    ultimoVideoNotificado = videoId;
+                    localStorage.setItem('osito_ultimo_video_notificado', videoId);
+                    return;
+                }
+                if (videoId === ultimoVideoNotificado) return;
+                ultimoVideoNotificado = videoId;
+                localStorage.setItem('osito_ultimo_video_notificado', videoId);
+                const titulo = video.snippet?.title || 'Nuevo video del canal';
+                const aviso = new Notification('Nuevo video disponible', {
+                    body: titulo,
+                    icon: 'logo yt.png'
+                });
+                aviso.onclick = () => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            } catch (error) {
+                console.warn('No se pudo revisar videos nuevos', error);
+            }
         }
 
         function obtenerMiniaturaVideo(id) {
@@ -1129,7 +1249,9 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight; 
             const stars = [];
-            const starCount = !animacionesActivas ? 0 : (advancedAnimacionesEnabled ? 120 : 40); 
+            const starCount = !animacionesActivas || document.body.classList.contains('ultra-performance')
+                ? 0
+                : (advancedAnimacionesEnabled ? 120 : 40);
             const connectionDist = 150; // Distancia para dibujar líneas
 
             for (let i = 0; i < starCount; i++) {
@@ -1236,17 +1358,19 @@
             const aiVoiceToggle = document.getElementById('ai-voice-toggle'); 
             let ultimaRespuestaIA = '';
             let turnoIA = 0;
-            let aiGenero = '';
+            let aiGenero = localStorage.getItem('osito_ai_genero') || '';
+            let aiNombre = localStorage.getItem('osito_ai_nombre') || '';
+            const aiNameInput = document.getElementById('ai-name-input');
+            const aiNameSave = document.getElementById('ai-name-save');
             let vozActiva = localStorage.getItem('osito_ai_voz') !== 'false';
             let bienvenidaReproducida = false;
-            const bienvenidaSitio = 'Bienvenido al Sotano de Osito. Aqui puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo, el contador de OsitoExpo y hablar con la inteligencia del sitio. Esta pagina es segura: no te pide crear cuenta ni iniciar sesion. Para usar la IA, primero elige si eres Osito u Osita; despues podras preguntar cualquier cosa del canal o de la pagina.';
+            const bienvenidaSitio = 'Bienvenido al Sotano de Osito. Aqui puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo y hablar con la inteligencia del sitio. Esta pagina es segura: no te pide crear cuenta ni iniciar sesion. Para usar la IA, primero elige tu identidad y dime como quieres que te llame; despues podras preguntar cualquier cosa del canal o de la pagina.';
 
             const infoCanal = {
                 canal: 'OsitoYT360',
                 cumpleCanal: { mes: 5, dia: 2, anioInicio: 2022 },
                 cumpleCreador: { mes: 8, dia: 28, anio: 2008 },
                 pais: 'El Salvador',
-                ositoExpo: '2 de agosto de 2026 a las 10:30 AM, hora de El Salvador',
                 contenido: 'videojuegos de todo tipo, especialmente Minecraft, Roblox, Free Fire, Craftman/Craftsman, gameplays, directos, shorts y series',
                 favoritos: 'Minecraft, Roblox y Craftman/Craftsman',
                 origen: 'el nombre Osito viene de un peluche que empezo en 2019, cuando se grababa con un panda chiquito de peluche',
@@ -1275,15 +1399,33 @@
             }
 
             function prefijoIA() {
-                return aiGenero ? apodoIA() : 'crack';
+                return aiNombre || (aiGenero ? apodoIA() : 'crack');
             }
 
             function setGeneroIA(genero) {
+                if (aiGenero) return;
                 aiGenero = genero;
+                localStorage.setItem('osito_ai_genero', genero);
                 aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
                 actualizarBloqueoIA();
                 const apodo = apodoIA();
                 agregarMensajeIA(`¡Qué onda, ${apodo}! 😄 Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
+            }
+
+            function guardarNombreIA() {
+                const nombre = (aiNameInput?.value || '').trim().replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 24);
+                if (!nombre || aiNombre) return;
+                aiNombre = nombre;
+                localStorage.setItem('osito_ai_nombre', aiNombre);
+                if (aiNameInput) {
+                    aiNameInput.value = aiNombre;
+                    aiNameInput.disabled = true;
+                }
+                if (aiNameSave) {
+                    aiNameSave.disabled = true;
+                    aiNameSave.textContent = 'Nombre guardado';
+                }
+                agregarMensajeIA(`Perfecto, desde ahora te llamare ${aiNombre}.`, 'bot');
             }
 
             function hablarIA(texto) {
@@ -1305,6 +1447,10 @@
 
             function actualizarBloqueoIA() {
                 const bloqueado = !aiGenero;
+                aiGenderBtns.forEach(btn => {
+                    btn.disabled = Boolean(aiGenero);
+                    btn.setAttribute('aria-disabled', aiGenero ? 'true' : 'false');
+                });
                 if (aiInput) {
                     aiInput.disabled = bloqueado;
                     aiInput.placeholder = bloqueado ? 'Primero elige Osito u Osita...' : 'Escribe cualquier pregunta...';
@@ -1366,6 +1512,7 @@
 
                 if (!aiGenero && /\b(hombre|masculino|varon|chico|soy hombre)\b/.test(texto)) {
                     aiGenero = 'male'; 
+                    localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
                     actualizarBloqueoIA();
                     return '¡Qué onda, osito! 😄 Todo bien. Ya te llamaré osito desde ahora. ¿Con qué te ayudo?';
@@ -1373,6 +1520,7 @@
 
                 if (!aiGenero && /\b(mujer|femenino|chica|soy mujer)\b/.test(texto)) {
                     aiGenero = 'female'; 
+                    localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
                     actualizarBloqueoIA();
                     return '¡Qué onda, osita! 😄 Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
@@ -1418,7 +1566,7 @@
 
                 if (/que puedo hacer|qué puedo hacer|pagina|página|sitio|funciones|para que sirve|para qué sirve/.test(texto)) {
                     respuestas.push(
-                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo, el contador de OsitoExpo y preguntarme lo que quieras, ${nombre}. 😄`,
+                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo y preguntarme lo que quieras, ${nombre}. 😄`,
                         'La pagina sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
                         `Puedes moverte por las pestañas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.`
                     );
@@ -1440,17 +1588,17 @@
                     );
                 }
 
-                if (/ositoexpo|expo|evento|fecha|cuando|horario/.test(texto)) { 
+                if (/expo|evento|fecha|cuando|horario/.test(texto)) { 
                     respuestas.push(
-                        `OsitoExpo 2026 se estrena el 2 de agosto a las 10:30 AM, hora de El Salvador. Va a ser estreno de un video. 🎬`,
-                        'En OsitoExpo se van a contar cosas futuras del canal, incluyendo futuras canciones y proyectos.',
-                        `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}. El estreno es el 2 de agosto a las 10:30 AM SV.`
+                        `Muy pronto habrá novedades y anuncios especiales del canal, ${nombre}. 🎬`,
+                        'Cuando haya una fecha confirmada, aparecerá en las actualizaciones del sitio.',
+                        `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}.`
                     );
                 }
 
                 if (/cancion|canciones|musica|música|navidad|24 de diciembre|especial/.test(texto)) { 
                     respuestas.push(
-                        'Si, van a venir mas canciones en el futuro. En OsitoExpo se van a mencionar futuras canciones. 🎵',
+                        'Si, van a venir mas canciones en el futuro. 🎵',
                         'Para Navidad, el 24 de diciembre, esta planeado un especial con en vivo y una cancion. 🎄',
                         `Si preguntas por musica: si, ${nombre}, hay planes de sacar mas canciones.`
                     );
@@ -1587,6 +1735,14 @@
                 btn.classList.toggle('active', btn.dataset.gender === aiGenero); 
                 btn.addEventListener('click', () => setGeneroIA(btn.dataset.gender));
             });
+
+            if (aiNombre && aiNameInput && aiNameSave) {
+                aiNameInput.value = aiNombre;
+                aiNameInput.disabled = true;
+                aiNameSave.disabled = true;
+                aiNameSave.textContent = 'Nombre guardado';
+            }
+            if (aiNameSave) aiNameSave.addEventListener('click', guardarNombreIA);
 
             actualizarBotonVoz();
             actualizarBloqueoIA();

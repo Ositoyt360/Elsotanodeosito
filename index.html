@@ -1956,7 +1956,7 @@
                 <div id="admin-auth-box">
                     <div class="livechat-admin-field">
                         <label for="admin-pass">Contraseña de Administrador:</label>
-                        <input type="password" id="admin-pass" placeholder="Escribe tu clave (ej: 240625)..." onkeyup="if(event.key==='Enter') verificarClaveAdmin()">
+                        <input type="password" id="admin-pass" placeholder="Escribe tu clave..." onkeyup="if(event.key==='Enter') verificarClaveAdmin()">
                     </div>
                     <button class="livechat-admin-btn btn-admin-broadcast" type="button" onclick="verificarClaveAdmin()" style="width: 100%; margin-top: 8px;">🔑 Entrar como Admin</button>
                     <div id="admin-auth-status" style="font-size: 12px; margin-top: 10px; font-weight: 800; text-align: center;"></div>
@@ -2007,6 +2007,7 @@
             let esAdminKeyGuardada = localStorage.getItem('osito_chat_admin_key') || '';
             let modoOfflineLocal = false;
             let modoFirebaseChat = false;
+            const CLAVE_ADMIN = '240625';
 
             function obtenerServerBaseUrl() {
                 if (window.location.protocol === 'file:') {
@@ -2276,8 +2277,11 @@
                                 }
                             }
                         },
-                        () => {
-                            iniciarModoOfflineLocal();
+                        (error) => {
+                            modoFirebaseChat = false;
+                            establecerEstadoConexion(false, 'Error de Firebase');
+                            console.error('No se pudo leer el chat de Firebase:', error);
+                            mostrarNotificacion('Firebase no permite leer el chat. Revisa las reglas de Firestore.');
                         }
                     );
                 } catch (e) {
@@ -2392,8 +2396,9 @@
                         isSystem: false,
                         isAdmin: false
                     })
-                    .catch(() => {
-                        enviarMensajeLocalFallback(miNombre, limpia);
+                    .catch((error) => {
+                        console.error('No se pudo guardar el mensaje en Firebase:', error);
+                        mostrarNotificacion('No se pudo guardar el mensaje. Revisa las reglas de Firestore.');
                     });
                     return;
                 }
@@ -2524,6 +2529,18 @@
                     return;
                 }
 
+                if (pass === CLAVE_ADMIN) {
+                    localStorage.setItem('osito_chat_admin_key', pass);
+                    esAdminKeyGuardada = pass;
+                    desbloquearPanelAdmin();
+                    if (statusEl) {
+                        statusEl.style.color = '#58ff9a';
+                        statusEl.textContent = 'Clave correcta. Sesion iniciada.';
+                    }
+                    mostrarNotificacion('Modo Administrador activado');
+                    return;
+                }
+
                 const baseUrl = obtenerServerBaseUrl();
                 fetch(`${baseUrl}/api/chat/admin`, {
                     method: 'POST',
@@ -2550,7 +2567,7 @@
                     }
                 })
                 .catch(() => {
-                    if (pass === '240625') {
+                    if (pass === CLAVE_ADMIN) {
                         localStorage.setItem('osito_chat_admin_key', pass);
                         esAdminKeyGuardada = pass;
                         desbloquearPanelAdmin();

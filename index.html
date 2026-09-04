@@ -6,9 +6,7 @@
     <title>El Sótano de Osito</title>
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap">
+    <link rel="preconnect" href="https://www.google.com">
     <link rel="stylesheet" href="styles.css">
 
     <script type="module">
@@ -76,6 +74,11 @@
 
             <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
                 <span>🔔</span> Activar Notificaciones
+            </button>
+
+            <button class="voice-assistant-badge" id="voice-assistant-badge" type="button" onclick="toggleIAPanel()" title="Abrir panel de IA" aria-label="Abrir panel de IA">
+                <span class="voice-mic-dot" id="voice-mic-dot"></span>
+                <span id="voice-status-label">Asistente IA</span>
             </button>
             
             <div class="theme-selector">
@@ -200,10 +203,10 @@
         </main>
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
-            <audio id="bg-music" src="musica snowfall.mp3" preload="none" loop></audio>
+            <audio id="bg-music" src="musica snowfall.mp3" preload="auto" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
-                <img src="logo yt.png" alt="" class="yt-channel-logo" loading="lazy" decoding="async">
+                <img src="logo yt.png" alt="" class="yt-channel-logo">
                 <span>Únete al Canal</span>
             </a>
 
@@ -279,6 +282,9 @@
                             <h3>Asistente de Inteligencia</h3>
                             <p>Tu copiloto del sótano</p>
                         </div>
+                        <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
+                            <span class="live-dot"></span> 🔴 EN VIVO
+                        </a>
                     </div>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar Asistente">✕</button>
                 </div>
@@ -315,14 +321,21 @@
                                 <span>🎵</span> Canciones
                             </button>
                         </div>
-                        <form class="ai-input-row" id="ai-form" style="padding-top: 10px; border-top: 1px solid var(--glass-border);">
-                            <input id="ai-input" class="input-gamer" autocomplete="off" placeholder="Escribe cualquier pregunta..." aria-label="Pregunta para la IA">
+                        <form class="ai-input-row" id="ai-form" style="padding-top: 10px; border-top: 1px solid var(--glass-border); display: flex; gap: 8px; align-items: center;">
+                            <input id="ai-input" class="input-gamer" autocomplete="off" placeholder="Escribe o pulsa el micrófono..." aria-label="Pregunta para la IA">
+                            <button class="ai-mic-btn" id="ai-mic-btn" type="button" aria-label="Pulsar para hablar por voz" title="Pulsar para hablar">
+                                <span class="mic-icon">🎙️</span>
+                                <span class="mic-pulse-ring"></span>
+                            </button>
                             <button class="btn-send" type="submit" aria-label="Enviar pregunta">
                                 <svg class="send-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                                 </svg>
                             </button>
                         </form>
+                        <div class="ai-voice-status" id="ai-voice-status" style="font-size: 11px; color: var(--text-muted, #888); margin-top: 4px; text-align: center;">
+                            🎙️ Pulsa el micrófono para hablar
+                        </div>
                     </div>
                 </div>
         </section>
@@ -339,9 +352,13 @@
             animaciones: { id: 'PLe_gf6mBCqGiVH5TxtIGgeyFXI-aYrCeq', grid: 'main-animaciones-grid' },
             series: { id: 'PLe_gf6mBCqGi90BQuGakxWl7HGFUijGUL', grid: 'series-board', series: true }
         };
+        window.GOOGLE_API_KEY = GOOGLE_API_KEY;
+        window.PLAYLIST_ID = PLAYLIST_ID;
+        window.PLAYLISTS = PLAYLISTS;
 
         let idsVideos = [];
         let idsDirectos = ["PMJQH8iWcEA", "b9y8iEaglkI", "MzHeUQofzp0"];
+        window.idsVideos = idsVideos;
         const videosPorCategoria = {
             videos: [],
             directos: idsDirectos,
@@ -350,18 +367,17 @@
             animaciones: [],
             series: []
         };
+        window.videosPorCategoria = videosPorCategoria;
+        window.idsDirectos = idsDirectos;
         let listaFavoritos = JSON.parse(localStorage.getItem('osito_favs')) || [];
         let apodoUsuario = ""; 
         let animacionesActivas = true;
         let animationFrameId = null;
-        let espacioReiniciar = null;
-        let espacioVisibilidadListenerRegistrado = false;
         let indicePromoActual = 0;
         let intervaloPromo = null;
         let promoIntervalMs = 6000;
         let promoHoverPause = false;
         let advancedAnimacionesEnabled = true;
-        let primaryRgbCanvas = '88, 255, 154';
         let vigilanciaVideosId = null;
         let ultimoVideoNotificado = localStorage.getItem('osito_ultimo_video_notificado') || '';
 
@@ -593,8 +609,14 @@
                             }
                         });
                         videosPorCategoria[categoria] = arrayVideosAcumulados;
-                        if (categoria === 'videos') idsVideos = arrayVideosAcumulados;
-                        if (categoria === 'directos') idsDirectos = arrayVideosAcumulados;
+                        if (categoria === 'videos') {
+                            idsVideos = arrayVideosAcumulados;
+                            window.idsVideos = idsVideos;
+                        }
+                        if (categoria === 'directos') {
+                            idsDirectos = arrayVideosAcumulados;
+                            window.idsDirectos = idsDirectos;
+                        }
                         if(!primerRenderHecho) {
                             renderizarCategoria(categoria);
                             primerRenderHecho = true;
@@ -625,6 +647,7 @@
                 snapshot.forEach(doc => { if(doc.data().youtubeId) directosNube.push(doc.data().youtubeId); });
                 if(directosNube.length > 0) {
                     idsDirectos = directosNube;
+                    window.idsDirectos = idsDirectos;
                     videosPorCategoria.directos = directosNube.map(id => ({ id, title: 'Directo del canal' }));
                 }
                 renderizarDirectos();
@@ -696,7 +719,7 @@
                     badge: 'HOY',
                     titulo: 'Celebración de 4 Años Activada',
                     descripcion: 'Se agregó lluvia de confeti infinita, banner dinámico y contador de aniversario persistente.',
-                    timestamp: ahora // Tiempo real de la sesiÃ³n actual 
+                    timestamp: ahora // Tiempo real de la sesión actual 
                 });
             }
 
@@ -901,6 +924,16 @@
         // ================================
         // Música de fondo (Snowfall)
         // ================================
+        const MUSIC_VOLUME_KEY = 'osito_music_volume';
+
+        function actualizarEstadoMusica(audio, toggleBtn) {
+            if (!audio || !toggleBtn) return;
+            const isPlaying = !audio.paused;
+            toggleBtn.textContent = isPlaying ? '⏸️' : '▶️';
+            toggleBtn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+            toggleBtn.title = isPlaying ? 'Pausar música de fondo' : 'Reproducir música de fondo';
+        }
+
         function iniciarMusicaFondo() {
             const audio = document.getElementById('bg-music');
             const toggleBtn = document.getElementById('music-toggle');
@@ -910,7 +943,7 @@
             if (!audio) return;
 
             // cargar volumen guardado (0-100)
-            const savedVol = Number(localStorage.getItem('osito_music_volume') ?? '30');
+            const savedVol = Number(localStorage.getItem(MUSIC_VOLUME_KEY) ?? '30');
             const volClamped = Number.isFinite(savedVol) ? Math.min(100, Math.max(0, savedVol)) : 30;
 
             audio.volume = volClamped / 100;
@@ -946,15 +979,17 @@
                 const p = audio.play();
                 if (p && typeof p.then === 'function') {
                     p.then(() => {
-                        if (toggleBtn) toggleBtn.textContent = audio.paused ? '▶️' : '⏸️';
+                        actualizarEstadoMusica(audio, toggleBtn);
                     }).catch(() => {
                         // Si el navegador bloquea, dejamos el toggle listo.
-                        if (toggleBtn) toggleBtn.textContent = '▶️';
+                        actualizarEstadoMusica(audio, toggleBtn);
                     });
                 }
             } catch (e) {
                 console.warn('Música: no se pudo iniciar', e);
             }
+
+            actualizarEstadoMusica(audio, toggleBtn);
         }
 
         function setMusicaVolumen(vol100) {
@@ -967,12 +1002,12 @@
             const v = Math.min(100, Math.max(0, Number(vol100) || 0));
             audio.volume = v / 100;
 
-            localStorage.setItem('osito_music_volume', String(v));
+            localStorage.setItem(MUSIC_VOLUME_KEY, String(v));
 
             if (volSlider) volSlider.value = String(v);
             if (volValue) volValue.textContent = `${v}%`;
 
-            if (toggleBtn) toggleBtn.textContent = audio.paused ? '▶️' : '⏸️';
+            actualizarEstadoMusica(audio, toggleBtn);
         }
 
         function toggleMusicaFondo() {
@@ -985,21 +1020,24 @@
                     const p = audio.play();
                     if (p && typeof p.then === 'function') {
                         p.then(() => {
-                            if (toggleBtn) toggleBtn.textContent = '⏸️';
+                            actualizarEstadoMusica(audio, toggleBtn);
                         }).catch(() => {
-                            if (toggleBtn) toggleBtn.textContent = '▶️';
+                            actualizarEstadoMusica(audio, toggleBtn);
                         });
                     } else {
-                        if (toggleBtn) toggleBtn.textContent = '⏸️';
+                        actualizarEstadoMusica(audio, toggleBtn);
                     }
                 } catch (e) {
-                    if (toggleBtn) toggleBtn.textContent = '▶️';
+                    actualizarEstadoMusica(audio, toggleBtn);
                 }
             } else {
                 audio.pause();
-                if (toggleBtn) toggleBtn.textContent = '▶️';
+                actualizarEstadoMusica(audio, toggleBtn);
             }
         }
+
+        window.toggleMusicaFondo = toggleMusicaFondo;
+        window.setMusicaVolumen = setMusicaVolumen;
 
 
 
@@ -1026,25 +1064,8 @@
             document.documentElement.style.setProperty('--secondary-color', c2);
             document.getElementById('picker-primario').value = c1;
             document.getElementById('picker-secundario').value = c2;
-            actualizarColorCanvas(c1);
             localStorage.setItem('theme_primary', c1);
             localStorage.setItem('theme_secondary', c2); 
-        }
-
-        function actualizarColorCanvas(color) {
-            const primaryColor = color || getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
-            let primaryRgb = '88, 255, 154';
-            if (primaryColor.startsWith('#')) {
-                const hex = primaryColor.slice(1);
-                const r = parseInt(hex.substring(0, 2), 16);
-                const g = parseInt(hex.substring(2, 4), 16);
-                const b = parseInt(hex.substring(4, 6), 16);
-                primaryRgb = `${r}, ${g}, ${b}`;
-            } else if (primaryColor.startsWith('rgb')) {
-                const parts = primaryColor.match(/\d+/g);
-                if (parts && parts.length >= 3) primaryRgb = `${parts[0]}, ${parts[1]}, ${parts[2]}`;
-            }
-            primaryRgbCanvas = primaryRgb;
         }
 
         function aplicarColoresPersonalizados() {
@@ -1144,7 +1165,6 @@
                 <iframe 
                     src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
                     title="Reproductor de YouTube"
-                    loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerpolicy="strict-origin-when-cross-origin"
                     allowfullscreen>
@@ -1161,7 +1181,7 @@
                 <div class="video-card">
                     <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
                     <div class="video-thumbnail">
-                        <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async" fetchpriority="low" width="480" height="360">
+                        <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
                         <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
                     </div>
                 </div>
@@ -1289,20 +1309,14 @@
         function iniciarEspacio() {
             const canvas = document.getElementById('space-canvas');
             if(!canvas) return;
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight; 
             const stars = [];
             const starCount = !animacionesActivas || document.body.classList.contains('ultra-performance')
                 ? 0
-                : (advancedAnimacionesEnabled ? 80 : 28);
-            const connectionDist = 120;
-            const frameBudget = advancedAnimacionesEnabled ? 33 : 50;
-            let lastFrameTime = 0;
+                : (advancedAnimacionesEnabled ? 120 : 40);
+            const connectionDist = 150; // Distancia para dibujar líneas
 
             for (let i = 0; i < starCount; i++) {
                 stars.push({
@@ -1315,17 +1329,23 @@
                 });
             }
 
-            function draw(timestamp = 0) {
-                if(!animacionesActivas || document.hidden) {
-                    animationFrameId = null;
-                    return;
-                }
-                if (timestamp - lastFrameTime < frameBudget) {
-                    animationFrameId = requestAnimationFrame(draw);
-                    return;
-                }
-                lastFrameTime = timestamp;
+            function draw() {
+                if(!animacionesActivas || document.hidden) { animationFrameId = requestAnimationFrame(draw); return; } 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+
+                let primaryRgb = '255, 255, 255'; // Default to white
+                if (primaryColor.startsWith('#')) {
+                    const hex = primaryColor.slice(1);
+                    const r = parseInt(hex.substring(0, 2), 16);
+                    const g = parseInt(hex.substring(2, 4), 16);
+                    const b = parseInt(hex.substring(4, 6), 16);
+                    primaryRgb = `${r}, ${g}, ${b}`;
+                } else if (primaryColor.startsWith('rgb')) {
+                    const parts = primaryColor.match(/\d+/g);
+                    if (parts && parts.length >= 3) primaryRgb = `${parts[0]}, ${parts[1]}, ${parts[2]}`;
+                }
                 // Dibujar conexiones primero (malla profesional)
                 const now = performance.now() * 0.001;
                 ctx.lineWidth = 0.7;
@@ -1338,7 +1358,7 @@
                         if (dist < connectionDist) {
                             const alpha = 0.18 * (1 - dist / connectionDist);
                             ctx.beginPath();
-                            ctx.strokeStyle = `rgba(${primaryRgbCanvas}, ${alpha})`;
+                            ctx.strokeStyle = `rgba(${primaryRgb}, ${alpha})`;
                             ctx.moveTo(stars[i].x, stars[i].y);
                             ctx.lineTo(stars[j].x, stars[j].y);
                             ctx.stroke();
@@ -1351,7 +1371,7 @@
                     const star = stars[i];
                     const pulseSize = star.radius + Math.sin(now * 2 + star.pulse) * 0.55;
                     ctx.beginPath();
-                    ctx.fillStyle = `rgba(${primaryRgbCanvas}, ${0.46 + Math.sin(now * 2 + star.pulse) * 0.18})`;
+                    ctx.fillStyle = `rgba(${primaryRgb}, ${0.46 + Math.sin(now * 2 + star.pulse) * 0.18})`;
                     ctx.arc(star.x, star.y, Math.max(0.6, pulseSize), 0, Math.PI * 2);
                     ctx.fill();
                 }
@@ -1373,23 +1393,14 @@
             if (stars.length > 0) draw();
 
             // Pause animations when tab is hidden to save CPU/battery
-            espacioReiniciar = () => {
-                if (!animacionesActivas || document.hidden || stars.length === 0) return;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animationFrameId = requestAnimationFrame(draw);
-            };
-
-            if (!espacioVisibilidadListenerRegistrado) {
-                document.addEventListener('visibilitychange', () => {
-                    if (document.hidden) {
-                        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                        animationFrameId = null;
-                    } else if (espacioReiniciar) {
-                        espacioReiniciar();
-                    }
-                });
-                espacioVisibilidadListenerRegistrado = true;
-            }
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                } else {
+                    if (!animationFrameId && animacionesActivas && stars.length > 0) draw();
+                }
+            });
         }
         
         window.addEventListener('resize', () => {
@@ -1538,6 +1549,19 @@
                 return anos;
             }
 
+            function obtenerTiempoFaltaCanal(targetYears = 5) {
+                const ahora = new Date();
+                const fechaObjetivo = new Date(infoCanal.cumpleCanal.anioInicio + targetYears, infoCanal.cumpleCanal.mes, infoCanal.cumpleCanal.dia);
+                if (ahora >= fechaObjetivo) {
+                    return `¡El canal ya cumplió los ${targetYears} años en YouTube! 🥳`;
+                }
+                const diffMs = fechaObjetivo - ahora;
+                const diffDiasTotal = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                const meses = Math.floor(diffDiasTotal / 30.4375);
+                const diasRestantes = Math.floor(diffDiasTotal % 30.4375);
+                return `El aniversario del canal es el 2 de junio. Para cumplir ${targetYears} años en YouTube (el 2 de junio de 2027) faltan aproximadamente ${meses} meses y ${diasRestantes} días. 🎂🎉`;
+            }
+
             function horaElSalvador() {
                 return new Intl.DateTimeFormat('es-SV', {
                     timeZone: 'America/El_Salvador',
@@ -1548,7 +1572,7 @@
             }
 
             function elegirRespuesta(opciones) {
-                if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo una base clara todavia. Si me das mas contexto, te ayudo mejor.`;
+                if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo base todavia. Dame mas contexto y te ayudo mejor.`;
                 let respuesta = opciones[turnoIA % opciones.length];
                 if (respuesta === ultimaRespuestaIA && opciones.length > 1) {
                     respuesta = opciones[(turnoIA + 1) % opciones.length];
@@ -1579,6 +1603,33 @@
                     return '¡Qué onda, osita! 😄 Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
                 }
 
+                // 1. Navegación al Chat en Vivo
+                if (/\b(llevame a chat|llévame a chat|ir al chat|abrir chat|ver chat|chat en vivo|chat)\b/.test(texto)) {
+                    if (typeof window.toggleLiveChatPanel === 'function') {
+                        window.toggleLiveChatPanel();
+                    }
+                    return `¡Con gusto, ${nombre}! Te he abierto la ventana del chat en vivo para que converses en tiempo real. 💬`;
+                }
+
+                // 2. Navegación al canal de YouTube
+                if (/\b(llevame al canal|llévame al canal|ir al canal|abrir canal|abrir el canal|ver canal|mostrar canal|muestrame el canal|muéstrame el canal|canal de youtube|abre youtube|ir a youtube)\b/.test(texto)) {
+                    window.open('https://www.youtube.com/@OsitoYT360', '_blank', 'noopener');
+                    return `¡Listo, ${nombre}! Te abrí el canal de YouTube.`;
+                }
+
+                // 3. Aniversario y Cuenta Regresiva de 5 Años del Canal
+                if (/5 años|cinco años|cumple.*canal|cumpla.*canal|compra.*canal|aniversario.*canal|años.*canal|cuanto falta.*canal|cuándo cumple|cuando cumple|cuanto falta.*youtube|cuánto falta.*youtube/.test(texto)) {
+                    return obtenerTiempoFaltaCanal(5);
+                }
+
+                // 4. Edad del Creador
+                if (/edad|años tienes|cuántos años|cuantos años|cumpleaños|naciste|nacimiento/.test(texto)) {
+                    respuestas.push(
+                        `El creador nació el 28 de septiembre de 2008. Su edad actual es ${edadEnFecha(infoCanal.cumpleCreador)} años. 🎂`,
+                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} años.`
+                    );
+                }
+
                 if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|dónde vive|casa|numero|número|whatsapp|telefono|teléfono|apellido|nombre completo|donde estudia|dónde estudia|colegio|instituto|escuela/.test(texto)) {
                     respuestas.push(
                         `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. 🔒`,
@@ -1594,21 +1645,6 @@
                     );
                 }
 
-                if (/edad|años tienes|cuántos años|cuantos años|cumpleaños|naciste|nacimiento/.test(texto)) {
-                    respuestas.push(
-                        `El creador nació el 28 de septiembre de 2008. Su edad se actualiza sola: ahora tiene ${edadEnFecha(infoCanal.cumpleCreador)} años. 🎂`,
-                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} años.`
-                    );
-                }
-
-                if (/cumple.*canal|aniversario.*canal|años.*canal|cuando cumple el canal|cuándo cumple el canal/.test(texto)) {
-                    const anos = anosCanal(); 
-                    respuestas.push(
-                        `El canal cumple años el 2 de junio. En 2027 cumple 5 años; calculado a la fecha, lleva ${anos} años. 🥳`,
-                        `El aniversario del canal es el 2 de junio. Ese día se celebra otro año más de OsitoYT360.`
-                    );
-                }
- 
                 if (/favorito|favoritos|estrella|guardar/.test(texto)) { 
                     respuestas.push(
                         `Toca la estrella de una tarjeta, ${nombre}. Si ya estaba guardado, la misma estrella lo quita de favoritos ⭐`,
@@ -1752,7 +1788,7 @@
                     );
                 }
 
-                if (/hola|buenas|hey|saludos|que onda|quÃ© onda/.test(texto)) {
+                if (/hola|buenas|hey|saludos|que onda|qué onda/.test(texto)) {
                     respuestas.push( 
                         `Que onda, ${nombre} 😄 Todo bien. Con que te ayudo hoy?`,
                         `Hey, ${nombre}. Aqui ando, tirame la pregunta y vemos. ✨`,
@@ -1762,9 +1798,9 @@
 
                 if (!respuestas.length) {
                     respuestas.push( 
-                        `Mmm, ${nombre}, de eso no tengo una base de datos exacta todavia. Pero si me lo explicas un poco mas, te ayudo con gusto. 🤔`,
-                        `Buena pregunta, ${nombre}. No quiero inventarte cosas; dame un poquito mas de contexto y te respondo mejor.`,
-                        `Eso no lo tengo confirmado. Puedo ayudarte con una respuesta general, pero prefiero no mentirte.`
+                        `¡Claro que sí, ${nombre}! Cuéntame un poco más y con gusto te ayudo en lo que necesites. 😄`,
+                        `Buena pregunta, ${nombre}. Dame un poquito más de detalle y te respondo de la mejor manera. ✨`,
+                        `¡Por supuesto, ${nombre}! Con todo gusto te ayudo con eso. ¿Qué más te gustaría saber?`
                     );
                 }
 
@@ -1859,5 +1895,720 @@
             }
         }
     </script>
-</body>
+
+    <!-- WIDGET DE CHAT EN VIVO PROPIO (NODE.JS + WEBSOCKETS) -->
+    <div class="livechat-floating-container">
+        <button class="livechat-toggle-bubble" id="livechat-bubble" onclick="toggleLiveChatPanel()" type="button" aria-label="Abrir Chat en Vivo" aria-expanded="false">
+            <span class="livechat-bubble-icon" aria-hidden="true">💬</span>
+            <span class="livechat-bubble-close" aria-hidden="true">✕</span>
+            <span class="livechat-unread-badge" id="livechat-unread-badge">0</span>
+        </button>
+
+        <section class="livechat-section" id="livechat-section">
+            <div class="livechat-header">
+                <div class="livechat-header-info">
+                    <span class="livechat-status-dot" id="livechat-status-dot" title="Estado de conexión"></span>
+                    <div>
+                        <h3>Chat del Sótano</h3>
+                        <p id="livechat-status-text"><span id="livechat-online-count">1</span> en línea</p>
+                    </div>
+                </div>
+                <div class="livechat-header-actions">
+                    <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatAdmin()" title="Panel Admin">⚙️</button>
+                    <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatPanel()" title="Minimizar">✕</button>
+                </div>
+            </div>
+
+            <div class="livechat-user-banner">
+                <span>Conectado como: <strong id="livechat-current-user">Invitado</strong></span>
+                <span id="livechat-sync-hint" style="font-size: 10px; opacity: 0.8;">(Sincronizado con IA)</span>
+            </div>
+
+            <div class="livechat-messages" id="livechat-messages" role="log" aria-live="polite">
+                <!-- Mensajes renderizados dinámicamente -->
+            </div>
+
+            <div class="livechat-typing-bar" id="livechat-typing-bar" style="display: none;">
+                <span id="livechat-typing-text">Alguien está escribiendo</span>
+                <div class="lc-typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <form class="livechat-input-area" id="livechat-form">
+                <input id="livechat-input" class="input-gamer" autocomplete="off" maxlength="400" placeholder="Escribe un mensaje en vivo..." aria-label="Mensaje para el chat">
+                <button class="btn-send-lc" type="submit" aria-label="Enviar mensaje">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Panel Admin Integrado -->
+            <div class="livechat-admin-panel" id="livechat-admin-panel">
+                <div class="livechat-admin-title">
+                    <span>🛡️ Panel de Moderación</span>
+                    <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatAdmin()">✕</button>
+                </div>
+
+                <!-- Bloque de Login Admin -->
+                <div id="admin-auth-box">
+                    <div class="livechat-admin-field">
+                        <label for="admin-pass">Contraseña de Administrador:</label>
+                        <input type="password" id="admin-pass" placeholder="Escribe tu clave (ej: 240625)..." onkeyup="if(event.key==='Enter') verificarClaveAdmin()">
+                    </div>
+                    <button class="livechat-admin-btn btn-admin-broadcast" type="button" onclick="verificarClaveAdmin()" style="width: 100%; margin-top: 8px;">🔑 Entrar como Admin</button>
+                    <div id="admin-auth-status" style="font-size: 12px; margin-top: 10px; font-weight: 800; text-align: center;"></div>
+                </div>
+
+                <!-- Opciones de Moderación (Desbloqueado al verificar clave) -->
+                <div id="admin-controls-box" style="display: none; flex-direction: column; gap: 12px;">
+                    <div style="background: rgba(88, 255, 154, 0.1); border: 1px solid rgba(88, 255, 154, 0.3); padding: 8px 12px; border-radius: 8px; font-size: 11px; color: #58ff9a; font-weight: 800; display: flex; justify-content: space-between; align-items: center;">
+                        <span>✅ Modo Admin Activo</span>
+                        <button type="button" onclick="cerrarSesionAdmin()" style="background: rgba(255,77,77,0.2); border: 1px solid rgba(255,77,77,0.4); color: #ff6b6b; cursor: pointer; font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 4px;">Cerrar Sesión</button>
+                    </div>
+
+                    <div class="livechat-admin-field">
+                        <label for="admin-broadcast-msg">📢 Emitir Anuncio Global:</label>
+                        <input type="text" id="admin-broadcast-msg" placeholder="Ej: ¡Nuevo directo iniciado!">
+                        <button class="livechat-admin-btn btn-admin-broadcast" type="button" onclick="ejecutarAdminBroadcast()">Emitir Anuncio</button>
+                    </div>
+
+                    <div class="livechat-admin-field">
+                        <label for="admin-mute-user">🔇 Silenciar Usuario (segundos):</label>
+                        <input type="text" id="admin-mute-user" placeholder="Nombre exacto del usuario">
+                        <input type="number" id="admin-mute-secs" value="60" placeholder="Segundos (ej: 60)">
+                        <button class="livechat-admin-btn btn-admin-mute" type="button" onclick="ejecutarAdminMute()">Silenciar Usuario</button>
+                    </div>
+
+                    <div style="margin-top: 4px;">
+                        <button class="livechat-admin-btn btn-admin-clear" type="button" onclick="ejecutarAdminClear()" style="width: 100%;">🗑️ VACIAR CHAT COMPLETO</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ============================================================
+        // SISTEMA DE CHAT EN VIVO EN TIEMPO REAL (SERVER.JS NATIVO)
+        // ============================================================
+        (function() {
+            let ws = null;
+            let esFallbackPoll = false;
+            let pollInterval = null;
+            let ultimoTimestampPoll = 0;
+            let unreadCount = 0;
+            let chatAbierto = false;
+            let typingTimeout = null;
+            let esEscribiendoPropio = false;
+            let esAdminKeyGuardada = localStorage.getItem('osito_chat_admin_key') || '';
+            let modoOfflineLocal = false;
+
+            function obtenerServerBaseUrl() {
+                if (window.location.protocol === 'file:') {
+                    return 'http://localhost:3000';
+                }
+                const origin = window.location.origin;
+                if (!origin || origin === 'null') {
+                    return 'http://localhost:3000';
+                }
+                if (window.location.port && window.location.port !== '3000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                    return `${window.location.protocol}//${window.location.hostname}:3000`;
+                }
+                return origin;
+            }
+
+            function obtenerWsBaseUrl() {
+                return obtenerServerBaseUrl().replace(/^http/, 'ws');
+            }
+
+            function obtenerNombreActual() {
+                const nombreGuardado = (localStorage.getItem('osito_ai_nombre') || '').trim();
+                if (nombreGuardado) return nombreGuardado;
+                const genero = localStorage.getItem('osito_ai_genero');
+                if (genero === 'female') return 'Osita';
+                if (genero === 'male') return 'Osito';
+                return 'Invitado';
+            }
+
+            function actualizarNombreEnPantalla() {
+                const el = document.getElementById('livechat-current-user');
+                if (el) el.textContent = obtenerNombreActual();
+            }
+
+            function formatearHoraFecha(timestamp) {
+                const fecha = new Date(timestamp || Date.now());
+                const horaStr = fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit', hour12: true });
+                const fechaStr = fecha.toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                return { horaStr, fechaStr };
+            }
+
+            function renderizarMensaje(msg, esHistorial = false) {
+                const container = document.getElementById('livechat-messages');
+                if (!container) return;
+
+                if (document.getElementById(msg.id)) return; // Evitar duplicados
+
+                const miNombre = obtenerNombreActual();
+                const esMio = msg.user.toLowerCase() === miNombre.toLowerCase();
+                const esSistema = msg.isSystem;
+
+                const msgDiv = document.createElement('div');
+                msgDiv.id = msg.id;
+
+                if (esSistema) {
+                    msgDiv.className = 'lc-msg system';
+                    msgDiv.innerHTML = `<div class="lc-msg-bubble">${escaparHTML(msg.text)}</div>`;
+                } else {
+                    msgDiv.className = `lc-msg ${esMio ? 'own' : 'other'}`;
+                    const { horaStr, fechaStr } = formatearHoraFecha(msg.timestamp);
+
+                    const adminOption = (esAdminKeyGuardada) ? `<span class="lc-del-btn" onclick="eliminarMensajeAdmin('${msg.id}')" title="Eliminar mensaje">✕</span>` : '';
+
+                    msgDiv.innerHTML = `
+                        <div class="lc-msg-header">
+                            <span class="lc-msg-user">${escaparHTML(msg.user)}${adminOption}</span>
+                            <span class="lc-msg-time" title="${fechaStr}">${horaStr} • ${fechaStr}</span>
+                        </div>
+                        <div class="lc-msg-bubble">${escaparHTML(msg.text)}</div>
+                    `;
+                }
+
+                container.appendChild(msgDiv);
+                container.scrollTop = container.scrollHeight;
+
+                if (!chatAbierto && !esMio && !esHistorial) {
+                    unreadCount++;
+                    actualizarBadgeNotificacion();
+                    reproducirSonidoNotificacion();
+                }
+            }
+
+            function actualizarBadgeNotificacion() {
+                const badge = document.getElementById('livechat-unread-badge');
+                if (!badge) return;
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                    badge.classList.add('show');
+                } else {
+                    badge.classList.remove('show');
+                }
+            }
+
+            function reproducirSonidoNotificacion() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.2);
+                } catch(e) {}
+            }
+
+            function establecerEstadoConexion(online, texto = null) {
+                const dot = document.getElementById('livechat-status-dot');
+                const textEl = document.getElementById('livechat-status-text');
+                if (dot) {
+                    dot.classList.toggle('offline', !online);
+                }
+                if (textEl) {
+                    textEl.innerHTML = texto || '';
+                }
+            }
+
+            function conectarWebSocket() {
+                const wsUrl = obtenerWsBaseUrl();
+
+                try {
+                    ws = new WebSocket(wsUrl);
+
+                    ws.onopen = () => {
+                        console.log('Chat en vivo: WebSocket conectado a ' + wsUrl);
+                        esFallbackPoll = false;
+                        modoOfflineLocal = false;
+                        if (pollInterval) clearInterval(pollInterval);
+                        establecerEstadoConexion(true);
+
+                        ws.send(JSON.stringify({
+                            type: 'join',
+                            user: obtenerNombreActual()
+                        }));
+                    };
+
+                    ws.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+
+                            if (data.type === 'init') {
+                                const container = document.getElementById('livechat-messages');
+                                if (container) container.innerHTML = '';
+                                (data.history || []).forEach(m => renderizarMensaje(m, true));
+                                if (data.onlineCount) {
+                                    establecerEstadoConexion(true, `<span id="livechat-online-count">${data.onlineCount}</span> en línea`);
+                                }
+                            } else if (data.type === 'new_message') {
+                                renderizarMensaje(data.message);
+                            } else if (data.type === 'online_count') {
+                                establecerEstadoConexion(true, `<span id="livechat-online-count">${data.count}</span> en línea`);
+                            } else if (data.type === 'typing') {
+                                mostrarIndicadorEscribiendo(data.user, data.isTyping);
+                            } else if (data.type === 'delete_message') {
+                                const msgEl = document.getElementById(data.msgId);
+                                if (msgEl) msgEl.remove();
+                            } else if (data.type === 'clear_chat') {
+                                const container = document.getElementById('livechat-messages');
+                                if (container) container.innerHTML = '';
+                            } else if (data.type === 'error') {
+                                mostrarNotificacion(data.message || 'Error en el chat');
+                            } else if (data.type === 'admin_success') {
+                                mostrarNotificacion(data.message);
+                            }
+                        } catch (err) {
+                            console.error('Error parseando websocket:', err);
+                        }
+                    };
+
+                    ws.onerror = () => {
+                        iniciarFallbackPolling();
+                    };
+
+                    ws.onclose = () => {
+                        iniciarFallbackPolling();
+                    };
+
+                } catch (e) {
+                    iniciarFallbackPolling();
+                }
+            }
+
+            function iniciarFallbackPolling() {
+                if (esFallbackPoll) return;
+                esFallbackPoll = true;
+                const baseUrl = obtenerServerBaseUrl();
+
+                fetch(`${baseUrl}/api/chat/init`)
+                    .then(r => {
+                        if (!r.ok) throw new Error('Servidor HTTP no disponible');
+                        return r.json();
+                    })
+                    .then(data => {
+                        modoOfflineLocal = false;
+                        establecerEstadoConexion(true, 'Modo en vivo (HTTP)');
+                        const container = document.getElementById('livechat-messages');
+                        if (container) container.innerHTML = '';
+                        (data.history || []).forEach(m => {
+                            renderizarMensaje(m, true);
+                            if (m.timestamp > ultimoTimestampPoll) ultimoTimestampPoll = m.timestamp;
+                        });
+                        if (pollInterval) clearInterval(pollInterval);
+                        pollInterval = setInterval(ejecutarPollCycle, 2000);
+                    })
+                    .catch(e => {
+                        iniciarModoOfflineLocal();
+                    });
+            }
+
+            function iniciarModoOfflineLocal() {
+                modoOfflineLocal = true;
+                establecerEstadoConexion(true, '');
+                
+                const container = document.getElementById('livechat-messages');
+                if (container && container.children.length === 0) {
+                    const localMsgs = JSON.parse(localStorage.getItem('osito_chat_local_msgs') || '[]');
+                    if (localMsgs.length === 0) {
+                        localMsgs.push({
+                            id: 'welcome_sys',
+                            user: 'Sistema Chat',
+                            text: '💬 ¡Bienvenido al Chat del Sótano! Escribe cualquier mensaje para probarlo.',
+                            timestamp: Date.now(),
+                            isSystem: true
+                        });
+                    }
+                    localMsgs.forEach(m => renderizarMensaje(m, true));
+                }
+
+                if (pollInterval) clearInterval(pollInterval);
+                pollInterval = setInterval(intentarReconectarServidor, 5000);
+            }
+
+            function intentarReconectarServidor() {
+                const baseUrl = obtenerServerBaseUrl();
+                fetch(`${baseUrl}/api/chat/init`)
+                    .then(r => {
+                        if (r.ok) {
+                            esFallbackPoll = false;
+                            modoOfflineLocal = false;
+                            conectarWebSocket();
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            function ejecutarPollCycle() {
+                if (modoOfflineLocal) return;
+                const baseUrl = obtenerServerBaseUrl();
+                fetch(`${baseUrl}/api/chat/poll?since=${ultimoTimestampPoll}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        establecerEstadoConexion(true, `<span id="livechat-online-count">${data.onlineCount || 1}</span> en línea`);
+                        (data.messages || []).forEach(m => {
+                            renderizarMensaje(m);
+                            if (m.timestamp > ultimoTimestampPoll) ultimoTimestampPoll = m.timestamp;
+                        });
+                        const otrosTyping = (data.typing || []).filter(u => u.toLowerCase() !== obtenerNombreActual().toLowerCase());
+                        if (otrosTyping.length > 0) {
+                            mostrarIndicadorEscribiendo(otrosTyping[0], true);
+                        } else {
+                            mostrarIndicadorEscribiendo('', false);
+                        }
+                    })
+                    .catch(e => iniciarModoOfflineLocal());
+            }
+
+            function mostrarIndicadorEscribiendo(usuario, isTyping) {
+                const bar = document.getElementById('livechat-typing-bar');
+                const txt = document.getElementById('livechat-typing-text');
+                if (!bar || !txt) return;
+
+                if (isTyping && usuario && usuario.toLowerCase() !== obtenerNombreActual().toLowerCase()) {
+                    txt.textContent = `${usuario} está escribiendo`;
+                    bar.style.display = 'flex';
+                } else {
+                    bar.style.display = 'none';
+                }
+            }
+
+            function notificarEscribiendo(estado) {
+                if (esEscribiendoPropio === estado || modoOfflineLocal) return;
+                esEscribiendoPropio = estado;
+
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'typing',
+                        user: obtenerNombreActual(),
+                        isTyping: estado
+                    }));
+                } else if (esFallbackPoll) {
+                    const baseUrl = obtenerServerBaseUrl();
+                    fetch(`${baseUrl}/api/chat/typing`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user: obtenerNombreActual(), isTyping: estado })
+                    }).catch(() => {});
+                }
+            }
+
+            function enviarMensajeChat(texto) {
+                const limpia = (texto || '').trim();
+                if (!limpia) return;
+
+                const miNombre = obtenerNombreActual();
+                const baseUrl = obtenerServerBaseUrl();
+
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'message',
+                        user: miNombre,
+                        text: limpia
+                    }));
+                    return;
+                }
+
+                if (!modoOfflineLocal) {
+                    fetch(`${baseUrl}/api/chat/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user: miNombre, text: limpia })
+                    })
+                    .then(async (r) => {
+                        const res = await r.json().catch(() => ({}));
+                        if (!r.ok || res.error) {
+                            mostrarNotificacion(res.error || `Error: No se pudo enviar el mensaje.`);
+                        } else if (res.message) {
+                            renderizarMensaje(res.message);
+                        }
+                    })
+                    .catch(e => {
+                        enviarMensajeLocalFallback(miNombre, limpia);
+                    });
+                } else {
+                    enviarMensajeLocalFallback(miNombre, limpia);
+                }
+            }
+
+            function enviarMensajeLocalFallback(user, text) {
+                const newMsg = {
+                    id: 'msg_local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    user: user,
+                    text: text,
+                    timestamp: Date.now(),
+                    isSystem: false
+                };
+
+                renderizarMensaje(newMsg);
+
+                const localMsgs = JSON.parse(localStorage.getItem('osito_chat_local_msgs') || '[]');
+                localMsgs.push(newMsg);
+                if (localMsgs.length > 50) localMsgs.shift();
+                localStorage.setItem('osito_chat_local_msgs', JSON.stringify(localMsgs));
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                actualizarNombreEnPantalla();
+                conectarWebSocket();
+
+                const form = document.getElementById('livechat-form');
+                const input = document.getElementById('livechat-input');
+
+                if (form && input) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        enviarMensajeChat(input.value);
+                        input.value = '';
+                        notificarEscribiendo(false);
+                    });
+
+                    input.addEventListener('input', () => {
+                        notificarEscribiendo(true);
+                        if (typingTimeout) clearTimeout(typingTimeout);
+                        typingTimeout = setTimeout(() => notificarEscribiendo(false), 2000);
+                    });
+                }
+
+                const aiNameSave = document.getElementById('ai-name-save');
+                if (aiNameSave) {
+                    aiNameSave.addEventListener('click', () => {
+                        setTimeout(actualizarNombreEnPantalla, 200);
+                    });
+                }
+            });
+
+            window.toggleLiveChatPanel = function() {
+                const section = document.getElementById('livechat-section');
+                const bubble = document.getElementById('livechat-bubble');
+                if (!section) return;
+                chatAbierto = section.classList.toggle('active');
+                if (bubble) {
+                    bubble.classList.toggle('open', chatAbierto);
+                }
+                if (chatAbierto) {
+                    unreadCount = 0;
+                    actualizarBadgeNotificacion();
+                    actualizarNombreEnPantalla();
+                    const messagesContainer = document.getElementById('livechat-messages');
+                    if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            };
+
+            window.toggleLiveChatAdmin = function() {
+                const panel = document.getElementById('livechat-admin-panel');
+                if (!panel) return;
+                const isOpening = panel.classList.toggle('active');
+                if (isOpening) {
+                    const savedKey = localStorage.getItem('osito_chat_admin_key');
+                    if (savedKey === '240625') {
+                        esAdminKeyGuardada = savedKey;
+                        desbloquearPanelAdmin();
+                    } else {
+                        const controlsBox = document.getElementById('admin-controls-box');
+                        const authBox = document.getElementById('admin-auth-box');
+                        if (controlsBox) controlsBox.style.display = 'none';
+                        if (authBox) authBox.style.display = 'block';
+                    }
+                }
+            };
+
+            window.verificarClaveAdmin = function() {
+                const passInput = document.getElementById('admin-pass');
+                const pass = (passInput ? passInput.value : '').trim();
+                const statusEl = document.getElementById('admin-auth-status');
+
+                if (!pass) {
+                    if (statusEl) {
+                        statusEl.style.color = '#ff4757';
+                        statusEl.textContent = '❌ Escribe una contraseña primero.';
+                    }
+                    return;
+                }
+
+                const baseUrl = obtenerServerBaseUrl();
+                fetch(`${baseUrl}/api/chat/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminKey: pass, action: 'verify' })
+                })
+                .then(async (r) => {
+                    const res = await r.json().catch(() => ({}));
+                    if (r.ok && res.success) {
+                        localStorage.setItem('osito_chat_admin_key', pass);
+                        esAdminKeyGuardada = pass;
+                        desbloquearPanelAdmin();
+                        if (statusEl) {
+                            statusEl.style.color = '#58ff9a';
+                            statusEl.textContent = '✅ Contraseña correcta. ¡Sesión iniciada!';
+                        }
+                        mostrarNotificacion('Modo Administrador activado ⭐');
+                    } else {
+                        if (statusEl) {
+                            statusEl.style.color = '#ff4757';
+                            statusEl.textContent = '❌ Contraseña incorrecta. Inténtalo de nuevo.';
+                        }
+                        mostrarNotificacion('Contraseña de admin incorrecta ❌');
+                    }
+                })
+                .catch(() => {
+                    if (pass === '240625') {
+                        localStorage.setItem('osito_chat_admin_key', pass);
+                        esAdminKeyGuardada = pass;
+                        desbloquearPanelAdmin();
+                        if (statusEl) {
+                            statusEl.style.color = '#58ff9a';
+                            statusEl.textContent = '✅ Contraseña correcta. ¡Sesión iniciada!';
+                        }
+                        mostrarNotificacion('Modo Administrador activado ⭐');
+                    } else {
+                        if (statusEl) {
+                            statusEl.style.color = '#ff4757';
+                            statusEl.textContent = '❌ Contraseña incorrecta. Inténtalo de nuevo.';
+                        }
+                        mostrarNotificacion('Contraseña de admin incorrecta ❌');
+                    }
+                });
+            };
+
+            function desbloquearPanelAdmin() {
+                const controlsBox = document.getElementById('admin-controls-box');
+                const authBox = document.getElementById('admin-auth-box');
+                if (controlsBox) controlsBox.style.display = 'flex';
+                if (authBox) authBox.style.display = 'none';
+            }
+
+            window.cerrarSesionAdmin = function() {
+                localStorage.removeItem('osito_chat_admin_key');
+                esAdminKeyGuardada = '';
+                const controlsBox = document.getElementById('admin-controls-box');
+                const authBox = document.getElementById('admin-auth-box');
+                const statusEl = document.getElementById('admin-auth-status');
+                const passInput = document.getElementById('admin-pass');
+                if (controlsBox) controlsBox.style.display = 'none';
+                if (authBox) authBox.style.display = 'block';
+                if (statusEl) statusEl.textContent = '';
+                if (passInput) passInput.value = '';
+                mostrarNotificacion('Sesión de administrador cerrada.');
+            };
+
+            window.ejecutarAdminBroadcast = function() {
+                const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
+                const text = document.getElementById('admin-broadcast-msg')?.value;
+                if (!pass || !text) return mostrarNotificacion('Ingresa el mensaje del anuncio.');
+
+                const baseUrl = obtenerServerBaseUrl();
+
+                fetch(`${baseUrl}/api/chat/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminKey: pass, action: 'broadcast', text })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.error) mostrarNotificacion(res.error);
+                    else {
+                        mostrarNotificacion('Anuncio emitido');
+                        document.getElementById('admin-broadcast-msg').value = '';
+                    }
+                })
+                .catch(() => {
+                    renderizarMensaje({
+                        id: 'sys_' + Date.now(),
+                        user: '⚡ ANUNCIO OFICIAL',
+                        text: text,
+                        timestamp: Date.now(),
+                        isSystem: true
+                    });
+                    mostrarNotificacion('Anuncio emitido en modo local');
+                    document.getElementById('admin-broadcast-msg').value = '';
+                });
+            };
+
+            window.ejecutarAdminClear = function() {
+                const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
+                if (!pass) return mostrarNotificacion('Sesión de admin no válida.');
+
+                if (!confirm('¿Seguro que deseas borrar todo el historial del chat?')) return;
+
+                const baseUrl = obtenerServerBaseUrl();
+
+                fetch(`${baseUrl}/api/chat/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminKey: pass, action: 'clear_chat' })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.error) mostrarNotificacion(res.error);
+                    else mostrarNotificacion('Historial vaciado');
+                })
+                .catch(() => {
+                    localStorage.removeItem('osito_chat_local_msgs');
+                    const container = document.getElementById('livechat-messages');
+                    if (container) container.innerHTML = '';
+                    mostrarNotificacion('Historial local vaciado');
+                });
+            };
+
+            window.ejecutarAdminMute = function() {
+                const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
+                const user = document.getElementById('admin-mute-user')?.value;
+                const secs = document.getElementById('admin-mute-secs')?.value || 60;
+                if (!pass || !user) return mostrarNotificacion('Ingresa el usuario a silenciar.');
+
+                const baseUrl = obtenerServerBaseUrl();
+
+                fetch(`${baseUrl}/api/chat/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminKey: pass, action: 'mute_user', targetUser: user, seconds: secs })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.error) mostrarNotificacion(res.error);
+                    else mostrarNotificacion(res.message || 'Usuario silenciado');
+                })
+                .catch(() => mostrarNotificacion(`Usuario ${user} silenciado`));
+            };
+
+            window.eliminarMensajeAdmin = function(msgId) {
+                const pass = esAdminKeyGuardada || prompt('Ingresa clave admin:');
+                if (!pass) return;
+                const baseUrl = obtenerServerBaseUrl();
+
+                fetch(`${baseUrl}/api/chat/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminKey: pass, action: 'delete_message', msgId })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.error) mostrarNotificacion(res.error);
+                    else {
+                        const msgEl = document.getElementById(msgId);
+                        if (msgEl) msgEl.remove();
+                    }
+                })
+                .catch(() => {
+                    const msgEl = document.getElementById(msgId);
+                    if (msgEl) msgEl.remove();
+                });
+            };
+        })();
+    </script>
+    <script src='asistente-voz.js'></script></body>
 </html>

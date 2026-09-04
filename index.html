@@ -11,7 +11,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5WI_hxT6U0YKbQqK-4DYpS6UibnPscho",
@@ -29,6 +29,7 @@
         window.dbFirebase = db;
         window.collectionFirebase = collection;
         window.onSnapshotFirebase = onSnapshot;
+        window.addDocFirebase = addDoc;
     </script>
 
     <script src="actualizaciones-helper.js"></script>
@@ -1997,6 +1998,7 @@
             let ws = null;
             let esFallbackPoll = false;
             let pollInterval = null;
+            let firebaseUnsubscribe = null;
             let ultimoTimestampPoll = 0;
             let unreadCount = 0;
             let chatAbierto = false;
@@ -2004,6 +2006,7 @@
             let esEscribiendoPropio = false;
             let esAdminKeyGuardada = localStorage.getItem('osito_chat_admin_key') || '';
             let modoOfflineLocal = false;
+            let modoFirebaseChat = false;
 
             function obtenerServerBaseUrl() {
                 if (window.location.protocol === 'file:') {
@@ -2212,13 +2215,81 @@
                         pollInterval = setInterval(ejecutarPollCycle, 2000);
                     })
                     .catch(e => {
+                        if (window.dbFirebase && window.collectionFirebase && window.onSnapshotFirebase && window.addDocFirebase) {
+                            iniciarModoFirebaseChat();
+                            return;
+                        }
                         iniciarModoOfflineLocal();
                     });
             }
 
+            function iniciarModoFirebaseChat() {
+                if (!window.dbFirebase || !window.collectionFirebase || !window.onSnapshotFirebase) {
+                    iniciarModoOfflineLocal();
+                    return;
+                }
+
+                try {
+                    if (typeof firebaseUnsubscribe === 'function') {
+                        firebaseUnsubscribe();
+                        firebaseUnsubscribe = null;
+                    }
+                } catch (e) {}
+
+                modoFirebaseChat = true;
+                modoOfflineLocal = false;
+                establecerEstadoConexion(true, 'Modo Firebase');
+
+                const container = document.getElementById('livechat-messages');
+                if (container && container.children.length === 0) {
+                    container.innerHTML = '';
+                }
+
+                if (pollInterval) clearInterval(pollInterval);
+
+                try {
+                    firebaseUnsubscribe = window.onSnapshotFirebase(
+                        window.collectionFirebase(window.dbFirebase, 'livechat'),
+                        (snapshot) => {
+                            const firebaseMsgs = [];
+                            snapshot.forEach((doc) => {
+                                const data = doc.data() || {};
+                                firebaseMsgs.push({
+                                    id: doc.id,
+                                    user: data.user || 'Invitado',
+                                    text: data.text || '',
+                                    timestamp: Number(data.timestamp) || Date.now(),
+                                    isSystem: Boolean(data.isSystem),
+                                    isAdmin: Boolean(data.isAdmin)
+                                });
+                            });
+
+                            firebaseMsgs
+                                .sort((a, b) => a.timestamp - b.timestamp)
+                                .slice(-100)
+                                .forEach((m) => renderizarMensaje(m, true));
+
+                            if (firebaseMsgs.length > 0) {
+                                const last = firebaseMsgs[firebaseMsgs.length - 1];
+                                if (last.timestamp > ultimoTimestampPoll) {
+                                    ultimoTimestampPoll = last.timestamp;
+                                }
+                            }
+                        },
+                        () => {
+                            iniciarModoOfflineLocal();
+                        }
+                    );
+                } catch (e) {
+                    console.warn('No se pudo iniciar el chat con Firebase', e);
+                    iniciarModoOfflineLocal();
+                }
+            }
+
             function iniciarModoOfflineLocal() {
+                modoFirebaseChat = false;
                 modoOfflineLocal = true;
-                establecerEstadoConexion(true, '');
+                establecerEstadoConexion(true, 'Modo local');
                 
                 const container = document.getElementById('livechat-messages');
                 if (container && container.children.length === 0) {
@@ -2253,7 +2324,7 @@
             }
 
             function ejecutarPollCycle() {
-                if (modoOfflineLocal) return;
+                if (modoOfflineLocal || modoFirebaseChat) return;
                 const baseUrl = obtenerServerBaseUrl();
                 fetch(`${baseUrl}/api/chat/poll?since=${ultimoTimestampPoll}`)
                     .then(r => r.json())
@@ -2312,6 +2383,20 @@
 
                 const miNombre = obtenerNombreActual();
                 const baseUrl = obtenerServerBaseUrl();
+
+                if (modoFirebaseChat && window.dbFirebase && window.collectionFirebase && window.addDocFirebase) {
+                    window.addDocFirebase(window.collectionFirebase(window.dbFirebase, 'livechat'), {
+                        user: miNombre,
+                        text: limpia,
+                        timestamp: Date.now(),
+                        isSystem: false,
+                        isAdmin: false
+                    })
+                    .catch(() => {
+                        enviarMensajeLocalFallback(miNombre, limpia);
+                    });
+                    return;
+                }
 
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({

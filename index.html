@@ -2217,14 +2217,33 @@
                         return Promise.reject(new Error('Este usuario está silenciado temporalmente.'));
                     }
 
-                    return window.livechatPushFirebase(messagesRef, {
+                    const messageData = {
                         user,
                         text,
                         timestamp: Date.now(),
                         isSystem: Boolean(payload.isSystem),
                         isAdmin: Boolean(payload.isAdmin),
                         clientId: CLIENT_ID
+                    };
+
+                    return window.livechatPushFirebase(messagesRef, messageData).then((newMessageRef) => {
+                        // Pintamos el mensaje confirmado sin esperar otro ciclo de red.
+                        const msg = { id: newMessageRef.key, ...messageData };
+                        if (!seenMessageIds.has(msg.id)) {
+                            seenMessageIds.add(msg.id);
+                            renderizarMensaje(msg, false);
+                        }
+                        return newMessageRef;
                     });
+                }
+
+                function describirErrorFirebase(error) {
+                    const codigo = error?.code || '';
+                    if (codigo.includes('PERMISSION_DENIED')) {
+                        return 'Firebase rechazo el mensaje. Publica database.rules.json en Realtime Database > Rules.';
+                    }
+                    if (codigo.includes('NETWORK')) return 'No hay conexion con Firebase. Revisa tu internet.';
+                    return error?.message || 'No se pudo enviar el mensaje a Firebase.';
                 }
 
                 window.publicarMensajeLiveChat = function(texto, usuario = 'IA Osito', opciones = {}) {
@@ -2351,7 +2370,8 @@
                         isSystem: false,
                         isAdmin: false
                     }).catch((error) => {
-                        mostrarNotificacion(error.message || 'No se pudo enviar el mensaje.');
+                        console.error('No se pudo enviar el mensaje a Firebase:', error);
+                        mostrarNotificacion(describirErrorFirebase(error));
                     });
                 }
 

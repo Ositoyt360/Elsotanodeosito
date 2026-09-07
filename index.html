@@ -11,7 +11,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
@@ -27,16 +26,22 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        // Analytics no debe bloquear Auth/Firestore en archivos locales o navegadores que no lo soporten.
-        let analytics = null;
-        try {
-            analytics = firebaseConfig.measurementId ? getAnalytics(app) : null;
-        } catch (error) {
-            console.warn('[Firebase] Analytics no disponible; Auth y Firestore continuan activos.', error);
-        }
-        const db = getFirestore(app);
+        // Analytics no es necesario para el acceso y no debe bloquearlo.
+        const analytics = null;
         const auth = getAuth(app);
-        const storage = getStorage(app);
+        let db = null;
+        try {
+            db = getFirestore(app);
+        } catch (error) {
+            console.warn('[Firebase] Firestore no disponible; el acceso seguira activo.', error);
+        }
+        // Storage es opcional para que un problema con el bucket no bloquee Auth.
+        let storage = null;
+        try {
+            storage = getStorage(app);
+        } catch (error) {
+            console.warn('[Firebase] Storage no disponible; el acceso continua activo.', error);
+        }
 
         window.firebaseApp = app;
         window.firebaseAnalytics = analytics;
@@ -156,7 +161,7 @@
                         </div>
 
                         <button class="btn-enter-hub auth-submit" id="auth-submit" type="submit">Crear cuenta</button>
-                        <button class="btn-action auth-guest" id="auth-guest" type="button">Entrar como invitado</button>
+                        <button class="btn-action auth-guest" id="auth-guest" type="button" onclick="window.entrarComoInvitado?.()">Entrar como invitado</button>
                         <button class="btn-action auth-logout" id="auth-logout" type="button" style="display:none;">Cerrar sesión</button>
                         <p class="auth-status" id="auth-status">Listo para entrar.</p>
                     </form>

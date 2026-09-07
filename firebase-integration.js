@@ -425,12 +425,24 @@
         await startAiListener(user.uid);
     }
 
+    async function waitForFirebaseServices(timeoutMs = 6000) {
+        const startedAt = Date.now();
+        while (Date.now() - startedAt < timeoutMs) {
+            if (window.firebaseAuth && window.setPersistenceFirebase && window.onAuthStateChangedFirebase) {
+                return true;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        return false;
+    }
+
     async function initAuth() {
+        const firebaseReady = await waitForFirebaseServices();
         db = window.dbFirebase || null;
         auth = window.firebaseAuth || null;
         storage = window.firebaseStorage || null;
 
-        if (!auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
+        if (!firebaseReady || !auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
             showUnauthenticatedView();
             setStatus('Firebase no esta disponible en este navegador.', 'error');
             return;
@@ -533,6 +545,7 @@
     };
 
     window.salirDeSesion = handleSignOut;
+    window.entrarComoInvitado = enterAsGuest;
 
     window.publicarMensajeLiveChat = async function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
         if (!state.currentUser || !db || !window.collectionFirebase || !window.addDocFirebase) {

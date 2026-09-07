@@ -207,6 +207,8 @@
                             <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres">
                         </label>
 
+                        <button class="btn-enter-hub auth-submit" id="auth-submit" type="submit">Entrar</button>
+
                         <div class="auth-register-only" id="auth-register-only">
                             <label class="auth-field">
                                 <span>Sexo</span>
@@ -226,7 +228,6 @@
                             </div>
                         </div>
 
-                        <button class="btn-enter-hub auth-submit" id="auth-submit" type="submit">Crear cuenta</button>
                         <button class="btn-action auth-guest" id="auth-guest" type="button" onclick="window.entrarComoInvitado?.()">Entrar como invitado</button>
                         <button class="btn-action auth-logout" id="auth-logout" type="button" style="display:none;">Cerrar sesión</button>
                         <p class="auth-status" id="auth-status">Listo para entrar.</p>

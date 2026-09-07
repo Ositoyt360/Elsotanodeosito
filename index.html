@@ -3373,9 +3373,9 @@
                     iniciarModoFirebaseChat();
                 });
 
-                // Arrancamos el chat solo si no quedó activo el flujo de Firebase.
-                // Sin esto, el panel se abre pero nunca carga historial ni escucha mensajes.
-                if (window.ositoCurrentUser) {
+                // Si Firestore está disponible, lo usamos aunque el visitante no haya iniciado sesión.
+                // Así el chat queda realmente sincronizado entre dispositivos.
+                if (window.dbFirebase && window.collectionFirebase && window.onSnapshotFirebase) {
                     iniciarModoFirebaseChat();
                 } else if ((window.ositoLivechatTransport || 'server').toLowerCase() !== 'firestore') {
                     conectarWebSocket();

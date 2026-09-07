@@ -2236,6 +2236,23 @@ body.compact-layout .promo-title-main {
     font-size: 10px;
 }
 
+.lc-msg-avatar {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(88, 255, 154, 0.45);
+    background: #10251c;
+    color: #baffd0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 900;
+    line-height: 1;
+}
+
 .lc-msg-user {
     font-weight: 800;
     color: var(--primary-color);

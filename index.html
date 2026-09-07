@@ -2875,11 +2875,15 @@
                 } else {
                     msgDiv.className = `lc-msg ${esMio ? 'own' : 'other'}`;
                     const { horaStr, fechaStr } = formatearHoraFecha(msg.timestamp);
+                    const avatar = msg.photoURL
+                        ? `<img class="lc-msg-avatar" src="${escaparHTML(msg.photoURL)}" alt="Foto de ${escaparHTML(msg.user)}" loading="lazy">`
+                        : '<span class="lc-msg-avatar lc-msg-avatar-fallback">OS</span>';
 
                     const adminOption = (esAdminKeyGuardada) ? `<span class="lc-del-btn" onclick="eliminarMensajeAdmin('${msg.id}')" title="Eliminar mensaje">✕</span>` : '';
 
                     msgDiv.innerHTML = `
                         <div class="lc-msg-header">
+                            ${avatar}
                             <span class="lc-msg-user">${escaparHTML(msg.user)}${adminOption}</span>
                             <span class="lc-msg-time" title="${fechaStr}">${horaStr} • ${fechaStr}</span>
                         </div>
@@ -3065,6 +3069,7 @@
                                     id: doc.id,
                                     user: data.user || 'Invitado',
                                     text: data.text || '',
+                                    photoURL: data.photoURL || '',
                                     timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : (Number(data.timestamp) || Date.now()),
                                     isSystem: Boolean(data.isSystem),
                                     isAdmin: Boolean(data.isAdmin)

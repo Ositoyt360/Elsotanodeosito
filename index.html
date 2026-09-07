@@ -27,7 +27,13 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const analytics = firebaseConfig.measurementId ? getAnalytics(app) : null;
+        // Analytics no debe bloquear Auth/Firestore en archivos locales o navegadores que no lo soporten.
+        let analytics = null;
+        try {
+            analytics = firebaseConfig.measurementId ? getAnalytics(app) : null;
+        } catch (error) {
+            console.warn('[Firebase] Analytics no disponible; Auth y Firestore continuan activos.', error);
+        }
         const db = getFirestore(app);
         const auth = getAuth(app);
         const storage = getStorage(app);
@@ -150,6 +156,7 @@
                         </div>
 
                         <button class="btn-enter-hub auth-submit" id="auth-submit" type="submit">Crear cuenta</button>
+                        <button class="btn-action auth-guest" id="auth-guest" type="button">Entrar como invitado</button>
                         <button class="btn-action auth-logout" id="auth-logout" type="button" style="display:none;">Cerrar sesión</button>
                         <p class="auth-status" id="auth-status">Listo para entrar.</p>
                     </form>
@@ -182,6 +189,8 @@
                 <span class="voice-mic-dot" id="voice-mic-dot"></span>
                 <span id="voice-status-label">Asistente IA</span>
             </button>
+
+            <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
             
             <div class="theme-selector">
                 <span class="theme-label">Personalizar Colores:</span>
@@ -998,7 +1007,7 @@
         }
 
         function iniciarCarga() {
-            if (!window.ositoTutorialPendiente && typeof window.reproducirBienvenidaSitio === 'function') {
+            if (typeof window.reproducirBienvenidaSitio === 'function') {
                 window.reproducirBienvenidaSitio();
             }
             document.getElementById('btn-ready').style.display = "none";
@@ -1021,9 +1030,6 @@
             verificarCelebracion();
             // Autoplay permitido después del gesto del usuario
             iniciarMusicaFondo();
-            if (typeof window.ejecutarTutorialVozFirebase === 'function') {
-                window.ejecutarTutorialVozFirebase();
-            }
         }
 
         // ================================
@@ -1397,6 +1403,10 @@
         }
 
         function toggleFavorito(id, event) {
+            if (window.ositoGuestMode) {
+                mostrarNotificacion('Inicia sesion para guardar videos favoritos.');
+                return;
+            }
             const index = listaFavoritos.indexOf(id);
             if (index === -1) {
                 listaFavoritos.push(id);
@@ -1686,6 +1696,45 @@
                 }).format(new Date());
             }
 
+            async function buscarRespuestaDinamica(pregunta) {
+                const texto = pregunta.toLowerCase();
+                const ahora = new Date();
+
+                if (/\b(hora|que hora|qué hora|hora es)\b/.test(texto)) {
+                    return `En El Salvador son las ${horaElSalvador()}.`;
+                }
+
+                if (/\b(fecha|dia|día|hoy|que fecha|qué fecha)\b/.test(texto)) {
+                    const fecha = new Intl.DateTimeFormat('es-SV', {
+                        timeZone: 'America/El_Salvador',
+                        dateStyle: 'full'
+                    }).format(ahora);
+                    return `Hoy es ${fecha}.`;
+                }
+
+                try {
+                    const searchUrl = `https://es.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(pregunta)}&limit=1`;
+                    const searchResponse = await fetch(searchUrl, { headers: { Accept: 'application/json' } });
+                    if (!searchResponse.ok) return null;
+                    const searchData = await searchResponse.json();
+                    const page = searchData.pages?.[0];
+                    if (!page?.key) return null;
+
+                    const summaryUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(page.key)}`;
+                    const summaryResponse = await fetch(summaryUrl, { headers: { Accept: 'application/json' } });
+                    if (!summaryResponse.ok) return null;
+                    const summary = await summaryResponse.json();
+                    const extract = String(summary.extract || '').trim();
+                    if (!extract) return null;
+
+                    const corto = extract.length > 700 ? `${extract.slice(0, 697)}...` : extract;
+                    return `Esto encontre sobre ${summary.title || page.title}: ${corto}`;
+                } catch (error) {
+                    console.warn('[Asistente] No se pudo consultar informacion externa.', error);
+                    return null;
+                }
+            }
+
             function elegirRespuesta(opciones) {
                 if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo base todavia. Dame mas contexto y te ayudo mejor.`;
                 let respuesta = opciones[turnoIA % opciones.length];
@@ -1911,20 +1960,16 @@
                     );
                 }
 
-                if (!respuestas.length) {
-                    respuestas.push( 
-                        `¡Claro que sí, ${nombre}! Cuéntame un poco más y con gusto te ayudo en lo que necesites. 😄`,
-                        `Buena pregunta, ${nombre}. Dame un poquito más de detalle y te respondo de la mejor manera. ✨`,
-                        `¡Por supuesto, ${nombre}! Con todo gusto te ayudo con eso. ¿Qué más te gustaría saber?`
-                    );
-                }
-
-                return elegirRespuesta(respuestas);
+                return respuestas.length ? elegirRespuesta(respuestas) : null;
             }
 
-            function enviarPreguntaIA(pregunta) {
+            async function enviarPreguntaIA(pregunta) {
                 const limpia = (pregunta || '').trim();
                 if (!limpia) return;
+                if (window.ositoGuestMode) {
+                    mostrarNotificacion('La inteligencia artificial solo esta disponible para usuarios con cuenta.');
+                    return;
+                }
                 if (!aiGenero && !/\b(hombre|masculino|varon|chico|soy hombre|mujer|femenino|chica|soy mujer)\b/i.test(limpia)) {
                     if (aiInput) aiInput.value = '';
                     setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer 😄 Asi te hablo como osito u osita.', 'bot'), 160);
@@ -1932,7 +1977,15 @@
                 }
                 agregarMensajeIA(limpia, 'user'); 
                 if (aiInput) aiInput.value = '';
-                setTimeout(() => agregarMensajeIA(responderIA(limpia), 'bot'), 180);
+                const respuestaLocal = responderIA(limpia);
+                if (respuestaLocal) {
+                    setTimeout(() => agregarMensajeIA(respuestaLocal, 'bot'), 180);
+                    return;
+                }
+
+                const respuestaDinamica = await buscarRespuestaDinamica(limpia);
+                const respuestaFinal = respuestaDinamica || 'No encontre una respuesta confiable. Prueba con una pregunta mas especifica.';
+                agregarMensajeIA(respuestaFinal, 'bot');
             }
 
             aiGenderBtns.forEach(btn => {
@@ -2678,7 +2731,6 @@
                         .catch(() => mostrarNotificacion('No se pudo eliminar el mensaje.'));
                 };
             })();
-            return;
             let ws = null;
             let esFallbackPoll = false;
             let pollInterval = null;
@@ -2926,9 +2978,7 @@
                 establecerEstadoConexion(true, 'Modo Firebase');
 
                 const container = document.getElementById('livechat-messages');
-                if (container && container.children.length === 0) {
-                    container.innerHTML = '';
-                }
+                if (container) container.innerHTML = '';
 
                 if (pollInterval) clearInterval(pollInterval);
 
@@ -2943,7 +2993,7 @@
                                     id: doc.id,
                                     user: data.user || 'Invitado',
                                     text: data.text || '',
-                                    timestamp: Number(data.timestamp) || Date.now(),
+                                    timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : (Number(data.timestamp) || Date.now()),
                                     isSystem: Boolean(data.isSystem),
                                     isAdmin: Boolean(data.isAdmin)
                                 });
@@ -3135,6 +3185,15 @@
             window.addEventListener('DOMContentLoaded', () => {
                 actualizarNombreEnPantalla();
                 conectarWebSocket();
+
+                // Auth puede resolverse despues de cargar el widget; en ese momento
+                // reemplazamos cualquier fallback por la escucha Firestore en vivo.
+                window.addEventListener('osito:firebase-auth-ready', () => {
+                    iniciarModoFirebaseChat();
+                });
+                if (window.firebaseAuth?.currentUser) {
+                    iniciarModoFirebaseChat();
+                }
 
                 const form = document.getElementById('livechat-form');
                 const input = document.getElementById('livechat-input');

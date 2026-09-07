@@ -9,12 +9,13 @@
         selectedPhotoFile: null,
         aiUnsubscribe: null,
         aiSeededFromDom: false,
-        tutorialPlayedForUid: null
     };
 
-    const db = window.dbFirebase || null;
-    const auth = window.firebaseAuth || null;
-    const storage = window.firebaseStorage || null;
+    // El modulo Firebase de index.html es deferido; estas referencias se resuelven
+    // al iniciar Auth para evitar capturar null durante la carga inicial.
+    let db = null;
+    let auth = null;
+    let storage = null;
 
     function el(id) {
         return document.getElementById(id);
@@ -55,6 +56,8 @@
             form: el('auth-form'),
             submit: el('auth-submit'),
             logout: el('auth-logout'),
+            guest: el('auth-guest'),
+            mainLogout: el('main-logout'),
             status: el('auth-status'),
             email: el('auth-email'),
             password: el('auth-password'),
@@ -76,6 +79,13 @@
         if (!status) return;
         status.textContent = message;
         status.dataset.tone = tone;
+    }
+
+    function setGuestMode(isGuest) {
+        window.ositoGuestMode = Boolean(isGuest);
+        document.body.classList.toggle('guest-mode', Boolean(isGuest));
+        const mainLogout = el('main-logout');
+        if (mainLogout) mainLogout.style.display = isGuest ? 'inline-flex' : 'none';
     }
 
     function setPreview(profile, user) {
@@ -127,9 +137,12 @@
     }
 
     function showUnauthenticatedView() {
-        const { form, logout, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, readyButton } = getAuthElements();
+        setGuestMode(false);
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
+        if (guest) guest.style.display = 'inline-flex';
+        if (mainLogout) mainLogout.style.display = 'none';
         if (readyButton) readyButton.style.display = 'none';
         setStatus('Listo para entrar.', 'neutral');
         setMode(state.mode);
@@ -138,17 +151,36 @@
         window.ositoCurrentUserProfile = null;
         window.ositoTutorialPendiente = false;
         state.aiSeededFromDom = false;
-        state.tutorialPlayedForUid = null;
         state.selectedPhotoFile = null;
     }
 
     function showAuthenticatedView(profile, user) {
-        const { form, logout, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, readyButton } = getAuthElements();
+        setGuestMode(false);
         if (form) form.style.display = 'none';
         if (logout) logout.style.display = 'inline-flex';
+        if (guest) guest.style.display = 'none';
+        if (mainLogout) mainLogout.style.display = 'inline-flex';
         if (readyButton) readyButton.style.display = 'inline-flex';
         setPreview(profile, user);
         setStatus(`Sesion activa: ${user?.email || 'usuario autenticado'}.`, 'success');
+        if (typeof window.mostrarNotificacion === 'function') {
+            window.mostrarNotificacion('Conectado: Tu cuenta se sincroniza en la nube.');
+        }
+    }
+
+    function enterAsGuest() {
+        state.currentUser = null;
+        state.profile = null;
+        state.authReady = true;
+        setGuestMode(true);
+        const { form, logout, guest, readyButton } = getAuthElements();
+        if (form) form.style.display = 'none';
+        if (logout) logout.style.display = 'inline-flex';
+        if (guest) guest.style.display = 'none';
+        if (readyButton) readyButton.style.display = 'inline-flex';
+        setPreview(null, null);
+        setStatus('Entraste como invitado. Algunas funciones estan bloqueadas.', 'neutral');
     }
 
     async function loadOrCreateProfile(user, fromRegister = false, registerGender = '', registerPhotoURL = '') {
@@ -358,11 +390,15 @@
     }
 
     async function handleSignOut() {
+        if (window.ositoGuestMode) {
+            window.location.reload();
+            return;
+        }
         if (!auth || !window.signOutFirebase) return;
         try {
             await window.signOutFirebase(auth);
             state.selectedPhotoFile = null;
-            setStatus('Sesion cerrada.', 'neutral');
+            window.location.reload();
         } catch (error) {
             console.error('[FirebaseAuth]', error);
             setStatus('No se pudo cerrar la sesion.', 'error');
@@ -375,7 +411,7 @@
         state.currentUser = user;
         window.ositoCurrentUser = user;
         window.ositoCurrentUserProfile = profile;
-        window.ositoTutorialPendiente = !profile.tutorialSeen;
+        window.ositoTutorialPendiente = false;
         state.aiSeededFromDom = false;
 
         setPreview(profile, user);
@@ -389,65 +425,11 @@
         await startAiListener(user.uid);
     }
 
-    async function playTutorialSequence() {
-        const profile = state.profile || {};
-        const uid = state.currentUser?.uid || '';
-        if (!uid || state.tutorialPlayedForUid === uid) return;
-
-        state.tutorialPlayedForUid = uid;
-        window.ositoTutorialPendiente = false;
-
-        const steps = [
-            'Paso uno. En el centro tienes los videos, directos, canciones, animaciones, series y favoritos.',
-            'Paso dos. A la derecha esta la barra lateral con musica, colores, tamano de texto y modo compacto.',
-            'Paso tres. Abajo a la izquierda esta el chat en vivo para hablar con la comunidad y guardar el historial.',
-            'Paso cuatro. Abajo a la derecha esta la inteligencia artificial, que recuerda tu nombre y puede responderte con voz.',
-            `Paso cinco. Tu perfil ya esta guardado en Firebase. Puedes volver despues y entrar sin repetir el registro.`
-        ];
-
-        if (!('speechSynthesis' in window)) {
-            if (db && window.updateDocFirebase && window.docFirebase) {
-                try {
-                    await window.updateDocFirebase(window.docFirebase(db, 'users', uid), {
-                        tutorialSeen: true,
-                        tutorialSeenAt: Date.now()
-                    });
-                    if (state.profile) state.profile.tutorialSeen = true;
-                } catch (error) {
-                    console.warn('[FirebaseTutorial]', error);
-                }
-            }
-            return;
-        }
-
-        window.speechSynthesis.cancel();
-
-        for (const step of steps) {
-            await new Promise((resolve) => {
-                const utterance = new SpeechSynthesisUtterance(step);
-                utterance.lang = 'es-419';
-                utterance.rate = 0.95;
-                utterance.pitch = 1;
-                utterance.onend = resolve;
-                utterance.onerror = resolve;
-                window.speechSynthesis.speak(utterance);
-            });
-        }
-
-        if (db && window.updateDocFirebase && window.docFirebase) {
-            try {
-                await window.updateDocFirebase(window.docFirebase(db, 'users', uid), {
-                    tutorialSeen: true,
-                    tutorialSeenAt: Date.now()
-                });
-                if (state.profile) state.profile.tutorialSeen = true;
-            } catch (error) {
-                console.warn('[FirebaseTutorial]', error);
-            }
-        }
-    }
-
     async function initAuth() {
+        db = window.dbFirebase || null;
+        auth = window.firebaseAuth || null;
+        storage = window.firebaseStorage || null;
+
         if (!auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
             showUnauthenticatedView();
             setStatus('Firebase no esta disponible en este navegador.', 'error');
@@ -456,7 +438,6 @@
 
         await window.setPersistenceFirebase(auth, window.authPersistenceLocalFirebase);
 
-        window.ejecutarTutorialVozFirebase = playTutorialSequence;
         window.ositoTutorialPendiente = false;
 
         window.onAuthStateChangedFirebase(auth, async (user) => {
@@ -483,11 +464,14 @@
                     photoURL: ''
                 }, user);
             }
+
+            // El chat puede conectarse aunque el perfil tarde en terminar de cargar.
+            window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
         });
     }
 
     function bindUi() {
-        const { form, logout, photoButton, photoInput, modeButtons, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, photoButton, photoInput, modeButtons } = getAuthElements();
 
         if (modeButtons) {
             modeButtons.forEach((btn) => {
@@ -501,6 +485,14 @@
 
         if (logout) {
             logout.addEventListener('click', handleSignOut);
+        }
+
+        if (guest) {
+            guest.addEventListener('click', enterAsGuest);
+        }
+
+        if (mainLogout) {
+            mainLogout.addEventListener('click', handleSignOut);
         }
 
         if (photoButton && photoInput) {
@@ -539,6 +531,8 @@
             }
         );
     };
+
+    window.salirDeSesion = handleSignOut;
 
     window.publicarMensajeLiveChat = async function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
         if (!state.currentUser || !db || !window.collectionFirebase || !window.addDocFirebase) {

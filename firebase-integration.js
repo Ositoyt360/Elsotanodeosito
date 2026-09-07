@@ -389,6 +389,10 @@
                 });
 
                 messages.sort((a, b) => a.timestamp - b.timestamp);
+                window.ositoLastLivechatSnapshot = messages.slice(-100);
+                if ((window.ositoLivechatTransport || '').toLowerCase() !== 'firestore') {
+                    return;
+                }
                 window.dispatchEvent(new CustomEvent('osito:livechat-snapshot', {
                     detail: messages.slice(-100)
                 }));
@@ -532,14 +536,15 @@
             if (window.updateProfileFirebase) {
                 await window.updateProfileFirebase(state.currentUser, { photoURL });
             }
-            if (db && window.docFirebase && window.updateDocFirebase) {
-                await window.updateDocFirebase(window.docFirebase(db, 'users', state.currentUser.uid), {
+            if (db && window.docFirebase && window.setDocFirebase) {
+                await window.setDocFirebase(window.docFirebase(db, 'users', state.currentUser.uid), {
                     photoURL,
                     updatedAt: Date.now()
-                });
+                }, { merge: true });
             }
 
             state.profile = { ...(state.profile || {}), photoURL };
+            window.ositoCurrentUserProfile = { ...(window.ositoCurrentUserProfile || {}), photoURL };
             setPreview(state.profile, state.currentUser);
             setStatus('Foto guardada correctamente.', 'success');
             if (typeof window.mostrarNotificacion === 'function') {

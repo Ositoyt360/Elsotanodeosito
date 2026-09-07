@@ -187,6 +187,8 @@
                                 <strong id="auth-preview-name">Invitado</strong>
                                 <span id="auth-preview-email">Inicia sesión para continuar</span>
                             </div>
+                            <button class="btn-action auth-preview-photo-button" id="auth-preview-photo-button" type="button" style="display:none;">Cambiar foto</button>
+                            <input id="auth-preview-photo-input" type="file" accept="image/*" hidden>
                         </div>
                     </div>
 
@@ -263,6 +265,8 @@
             </button>
 
             <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
+            <button class="btn-action auth-profile-photo" id="profile-photo-change-button" type="button" style="display:none;">Cambiar foto</button>
+            <input id="profile-photo-change-input" type="file" accept="image/*" hidden>
             
             <div class="theme-selector">
                 <span class="theme-label">Personalizar Colores:</span>
@@ -3278,18 +3282,21 @@
 
             window.addEventListener('DOMContentLoaded', () => {
                 actualizarNombreEnPantalla();
-                conectarWebSocket();
 
-                // Auth puede resolverse despues de cargar el widget; en ese momento
-                // reemplazamos cualquier fallback por la escucha Firestore en vivo.
-                window.addEventListener('osito:firebase-auth-ready', () => {
-                    iniciarModoFirebaseChat();
-                });
-                if (window.firebaseAuth?.currentUser) {
-                    iniciarModoFirebaseChat();
-                }
+                // Firebase Integration controla el unico listener en vivo del chat.
                 window.addEventListener('osito:livechat-message', (event) => {
                     if (event.detail) renderizarMensaje(event.detail, false);
+                });
+                window.addEventListener('osito:livechat-snapshot', (event) => {
+                    const container = document.getElementById('livechat-messages');
+                    if (!container || !Array.isArray(event.detail)) return;
+                    container.innerHTML = '';
+                    event.detail.forEach((message) => renderizarMensaje(message, true));
+                    establecerEstadoConexion(true, 'En vivo con Firestore');
+                });
+                window.addEventListener('osito:livechat-error', () => {
+                    establecerEstadoConexion(false, 'Error de sincronizacion');
+                    mostrarNotificacion('No se pudo sincronizar el chat. Revisa las reglas de Firestore.');
                 });
 
                 const form = document.getElementById('livechat-form');

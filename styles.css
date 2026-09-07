@@ -362,6 +362,13 @@ body {
     color: #ff9b9b;
 }
 
+.auth-profile-photo {
+    width: auto;
+    white-space: nowrap;
+    color: var(--primary-color);
+    border-color: rgba(88, 255, 154, 0.35);
+}
+
 body.guest-mode .livechat-floating-container,
 body.guest-mode #ai-section,
 body.guest-mode #voice-assistant-badge {

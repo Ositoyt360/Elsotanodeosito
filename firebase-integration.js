@@ -8,7 +8,9 @@
         profile: null,
         selectedPhotoFile: null,
         aiUnsubscribe: null,
+        livechatUnsubscribe: null,
         aiSeededFromDom: false,
+        authSubmitting: false,
     };
 
     // El modulo Firebase de index.html es deferido; estas referencias se resuelven
@@ -58,6 +60,8 @@
             logout: el('auth-logout'),
             guest: el('auth-guest'),
             mainLogout: el('main-logout'),
+            profilePhotoButton: el('profile-photo-change-button'),
+            profilePhotoInput: el('profile-photo-change-input'),
             status: el('auth-status'),
             email: el('auth-email'),
             password: el('auth-password'),
@@ -145,12 +149,13 @@
     }
 
     function showUnauthenticatedView() {
-        const { form, logout, guest, mainLogout, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, readyButton } = getAuthElements();
         setGuestMode(false);
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
         if (guest) guest.style.display = 'inline-flex';
         if (mainLogout) mainLogout.style.display = 'none';
+        if (profilePhotoButton) profilePhotoButton.style.display = 'none';
         if (readyButton) readyButton.style.display = 'none';
         setStatus('Listo para entrar.', 'neutral');
         setMode(state.mode);
@@ -163,12 +168,13 @@
     }
 
     function showAuthenticatedView(profile, user) {
-        const { form, logout, guest, mainLogout, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, readyButton } = getAuthElements();
         setGuestMode(false);
         if (form) form.style.display = 'none';
         if (logout) logout.style.display = 'inline-flex';
         if (guest) guest.style.display = 'none';
         if (mainLogout) mainLogout.style.display = 'inline-flex';
+        if (profilePhotoButton) profilePhotoButton.style.display = 'inline-flex';
         if (readyButton) readyButton.style.display = 'inline-flex';
         setPreview(profile, user);
         setStatus(`Sesion activa: ${user?.email || 'usuario autenticado'}.`, 'success');
@@ -230,14 +236,37 @@
         return profile;
     }
 
+    async function optimizeImage(file) {
+        if (!file || !file.type?.startsWith('image/')) return file;
+        if (file.size <= 1024 * 1024) return file;
+
+        try {
+            const bitmap = await createImageBitmap(file);
+            const maxSide = 720;
+            const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+            canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+            bitmap.close();
+            return blob ? new File([blob], 'profile.jpg', { type: 'image/jpeg' }) : file;
+        } catch (error) {
+            console.warn('[FirebaseProfilePhoto] No se pudo comprimir la imagen.', error);
+            return file;
+        }
+    }
+
     async function uploadPhotoIfNeeded(user, file) {
         if (!file || !storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
             return '';
         }
 
+        const optimizedFile = await optimizeImage(file);
         const ref = window.storageRefFirebase(storage, `users/${user.uid}/profile.jpg`);
-        await window.uploadBytesFirebase(ref, file, {
-            contentType: file.type || 'image/jpeg'
+        await window.uploadBytesFirebase(ref, optimizedFile, {
+            contentType: optimizedFile.type || 'image/jpeg'
         });
         return window.getDownloadURLFirebase(ref);
     }
@@ -324,6 +353,51 @@
         });
     }
 
+    function startLiveChatListener() {
+        if (!db || !window.collectionFirebase || !window.onSnapshotFirebase) return;
+
+        if (typeof state.livechatUnsubscribe === 'function') {
+            state.livechatUnsubscribe();
+            state.livechatUnsubscribe = null;
+        }
+
+        state.livechatUnsubscribe = window.onSnapshotFirebase(
+            window.collectionFirebase(db, 'livechat'),
+            (snapshot) => {
+                const messages = [];
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data() || {};
+                    const timestamp = data.timestamp?.toMillis
+                        ? data.timestamp.toMillis()
+                        : (Number(data.timestamp) || Date.now());
+                    messages.push({
+                        id: docSnap.id,
+                        user: data.user || 'Invitado',
+                        text: data.text || '',
+                        timestamp,
+                        uid: data.uid || '',
+                        email: data.email || '',
+                        photoURL: data.photoURL || (data.uid === state.currentUser?.uid ? state.profile?.photoURL || '' : ''),
+                        isCreator: Boolean(data.isCreator),
+                        isSystem: Boolean(data.isSystem),
+                        isAdmin: Boolean(data.isAdmin)
+                    });
+                });
+
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                window.dispatchEvent(new CustomEvent('osito:livechat-snapshot', {
+                    detail: messages.slice(-100)
+                }));
+            },
+            (error) => {
+                console.error('[FirebaseLiveChat]', error);
+                window.dispatchEvent(new CustomEvent('osito:livechat-error', {
+                    detail: error
+                }));
+            }
+        );
+    }
+
     async function registerUser(user, gender, photoFile) {
         const photoURL = await uploadPhotoIfNeeded(user, photoFile);
         const displayName = safeEmailName(user.email);
@@ -353,8 +427,8 @@
     async function handleAuthSubmit(event) {
         event.preventDefault();
 
-        if (!auth) return;
-        const { email, password, gender, photoInput } = getAuthElements();
+        if (!auth || state.authSubmitting) return;
+        const { email, password, gender, photoInput, submit, modeButtons, guest } = getAuthElements();
         const cleanEmail = escapeText(email?.value).toLowerCase();
         const cleanPassword = escapeText(password?.value);
         const selectedGender = gender?.value === 'female' ? 'female' : 'male';
@@ -369,6 +443,14 @@
             setStatus('Usa un correo completo, por ejemplo: Usuario@Elsotanodeosito.com', 'error');
             return;
         }
+
+        state.authSubmitting = true;
+        if (submit) {
+            submit.disabled = true;
+            submit.textContent = state.mode === 'register' ? 'Creando cuenta...' : 'Entrando...';
+        }
+        modeButtons.forEach((button) => { button.disabled = true; });
+        if (guest) guest.disabled = true;
 
         try {
             setStatus(state.mode === 'register' ? 'Creando cuenta...' : 'Iniciando sesion...', 'neutral');
@@ -405,6 +487,14 @@
             if (code.includes('auth/invalid-credential') || code.includes('auth/invalid-login-credentials')) message = 'El correo o la contrasena no coinciden.';
             if (code.includes('auth/too-many-requests')) message = 'Demasiados intentos. Espera un momento y vuelve a probar.';
             setStatus(message, 'error');
+        } finally {
+            state.authSubmitting = false;
+            if (submit) {
+                submit.disabled = false;
+                submit.textContent = state.mode === 'register' ? 'Crear cuenta' : 'Entrar';
+            }
+            modeButtons.forEach((button) => { button.disabled = false; });
+            if (guest) guest.disabled = false;
         }
     }
 
@@ -421,6 +511,39 @@
         } catch (error) {
             console.error('[FirebaseAuth]', error);
             setStatus('No se pudo cerrar la sesion.', 'error');
+        }
+    }
+
+    async function updateProfilePhoto(file) {
+        if (!file || !state.currentUser) return;
+        if (!storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
+            setStatus('Storage no esta disponible para guardar la foto.', 'error');
+            return;
+        }
+
+        try {
+            setStatus('Guardando tu foto de perfil...', 'neutral');
+            const photoURL = await uploadPhotoIfNeeded(state.currentUser, file);
+
+            if (window.updateProfileFirebase) {
+                await window.updateProfileFirebase(state.currentUser, { photoURL });
+            }
+            if (db && window.docFirebase && window.updateDocFirebase) {
+                await window.updateDocFirebase(window.docFirebase(db, 'users', state.currentUser.uid), {
+                    photoURL,
+                    updatedAt: Date.now()
+                });
+            }
+
+            state.profile = { ...(state.profile || {}), photoURL };
+            setPreview(state.profile, state.currentUser);
+            setStatus('Foto guardada correctamente.', 'success');
+            if (typeof window.mostrarNotificacion === 'function') {
+                window.mostrarNotificacion('Tu foto de perfil se guardo en la nube.');
+            }
+        } catch (error) {
+            console.error('[FirebaseProfilePhoto]', error);
+            setStatus('No se pudo guardar la foto. Revisa Storage y sus reglas.', 'error');
         }
     }
 
@@ -480,6 +603,10 @@
                     state.aiUnsubscribe();
                     state.aiUnsubscribe = null;
                 }
+                if (typeof state.livechatUnsubscribe === 'function') {
+                    state.livechatUnsubscribe();
+                    state.livechatUnsubscribe = null;
+                }
                 showUnauthenticatedView();
                 return;
             }
@@ -497,12 +624,13 @@
             }
 
             // El chat puede conectarse aunque el perfil tarde en terminar de cargar.
+            startLiveChatListener();
             window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
         });
     }
 
     function bindUi() {
-        const { form, logout, guest, mainLogout, photoButton, photoInput, modeButtons } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, profilePhotoInput, photoButton, photoInput, modeButtons } = getAuthElements();
 
         if (modeButtons) {
             modeButtons.forEach((btn) => {
@@ -526,10 +654,30 @@
             mainLogout.addEventListener('click', handleSignOut);
         }
 
+        if (profilePhotoButton && profilePhotoInput) {
+            profilePhotoButton.addEventListener('click', () => profilePhotoInput.click());
+            profilePhotoInput.addEventListener('change', () => {
+                const file = profilePhotoInput.files?.[0] || null;
+                if (file && (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024)) {
+                    setStatus('La foto debe ser una imagen de menos de 8 MB.', 'error');
+                    profilePhotoInput.value = '';
+                    return;
+                }
+                updateProfilePhoto(file);
+                profilePhotoInput.value = '';
+            });
+        }
+
         if (photoButton && photoInput) {
             photoButton.addEventListener('click', () => photoInput.click());
             photoInput.addEventListener('change', () => {
                 const file = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+                if (file && (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024)) {
+                    setStatus('La foto debe ser una imagen de menos de 8 MB.', 'error');
+                    photoInput.value = '';
+                    state.selectedPhotoFile = null;
+                    return;
+                }
                 state.selectedPhotoFile = file;
                 if (file) {
                     const previewUrl = URL.createObjectURL(file);

@@ -357,6 +357,11 @@
             return;
         }
 
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+            setStatus('Usa un correo completo, por ejemplo: Usuario@Elsotanodeosito.com', 'error');
+            return;
+        }
+
         try {
             setStatus(state.mode === 'register' ? 'Creando cuenta...' : 'Iniciando sesion...', 'neutral');
 
@@ -385,6 +390,8 @@
             if (code.includes('auth/email-already-in-use')) message = 'Ese correo ya esta registrado.';
             if (code.includes('auth/user-not-found')) message = 'No encontre esa cuenta.';
             if (code.includes('auth/wrong-password')) message = 'La contrasena es incorrecta.';
+            if (code.includes('auth/invalid-credential') || code.includes('auth/invalid-login-credentials')) message = 'El correo o la contrasena no coinciden.';
+            if (code.includes('auth/too-many-requests')) message = 'Demasiados intentos. Espera un momento y vuelve a probar.';
             setStatus(message, 'error');
         }
     }

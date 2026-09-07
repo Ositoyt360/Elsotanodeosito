@@ -62,6 +62,8 @@
             mainLogout: el('main-logout'),
             profilePhotoButton: el('profile-photo-change-button'),
             profilePhotoInput: el('profile-photo-change-input'),
+            previewPhotoButton: el('auth-preview-photo-button'),
+            previewPhotoInput: el('auth-preview-photo-input'),
             status: el('auth-status'),
             email: el('auth-email'),
             password: el('auth-password'),
@@ -149,13 +151,14 @@
     }
 
     function showUnauthenticatedView() {
-        const { form, logout, guest, mainLogout, profilePhotoButton, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton } = getAuthElements();
         setGuestMode(false);
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
         if (guest) guest.style.display = 'inline-flex';
         if (mainLogout) mainLogout.style.display = 'none';
         if (profilePhotoButton) profilePhotoButton.style.display = 'none';
+        if (previewPhotoButton) previewPhotoButton.style.display = 'none';
         if (readyButton) readyButton.style.display = 'none';
         setStatus('Listo para entrar.', 'neutral');
         setMode(state.mode);
@@ -168,13 +171,14 @@
     }
 
     function showAuthenticatedView(profile, user) {
-        const { form, logout, guest, mainLogout, profilePhotoButton, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton } = getAuthElements();
         setGuestMode(false);
         if (form) form.style.display = 'none';
         if (logout) logout.style.display = 'inline-flex';
         if (guest) guest.style.display = 'none';
         if (mainLogout) mainLogout.style.display = 'inline-flex';
         if (profilePhotoButton) profilePhotoButton.style.display = 'inline-flex';
+        if (previewPhotoButton) previewPhotoButton.style.display = 'inline-flex';
         if (readyButton) readyButton.style.display = 'inline-flex';
         setPreview(profile, user);
         setStatus(`Sesion activa: ${user?.email || 'usuario autenticado'}.`, 'success');
@@ -583,6 +587,7 @@
         db = window.dbFirebase || null;
         auth = window.firebaseAuth || null;
         storage = window.firebaseStorage || null;
+        window.livechatDbFirebase = db;
 
         if (!firebaseReady || !auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
             showUnauthenticatedView();
@@ -630,7 +635,19 @@
     }
 
     function bindUi() {
-        const { form, logout, guest, mainLogout, profilePhotoButton, profilePhotoInput, photoButton, photoInput, modeButtons } = getAuthElements();
+        const {
+            form,
+            logout,
+            guest,
+            mainLogout,
+            profilePhotoButton,
+            profilePhotoInput,
+            previewPhotoButton,
+            previewPhotoInput,
+            photoButton,
+            photoInput,
+            modeButtons
+        } = getAuthElements();
 
         if (modeButtons) {
             modeButtons.forEach((btn) => {
@@ -665,6 +682,20 @@
                 }
                 updateProfilePhoto(file);
                 profilePhotoInput.value = '';
+            });
+        }
+
+        if (previewPhotoButton && previewPhotoInput) {
+            previewPhotoButton.addEventListener('click', () => previewPhotoInput.click());
+            previewPhotoInput.addEventListener('change', () => {
+                const file = previewPhotoInput.files?.[0] || null;
+                if (file && (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024)) {
+                    setStatus('La foto debe ser una imagen de menos de 8 MB.', 'error');
+                    previewPhotoInput.value = '';
+                    return;
+                }
+                updateProfilePhoto(file);
+                previewPhotoInput.value = '';
             });
         }
 

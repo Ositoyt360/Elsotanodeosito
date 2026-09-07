@@ -42,6 +42,7 @@
                 window.firebaseApp = app;
                 window.firebaseAuth = auth;
                 window.dbFirebase = db;
+                window.livechatDbFirebase = db;
                 window.firebaseStorage = storage;
                 window.collectionFirebase = (database, ...path) => database.collection(path.join('/'));
                 window.onSnapshotFirebase = (target, next, error) => target.onSnapshot(next, error);
@@ -112,6 +113,7 @@
         window.firebaseApp = app;
         window.firebaseAnalytics = analytics;
         window.dbFirebase = db;
+        window.livechatDbFirebase = db;
         window.firebaseAuth = auth;
         window.firebaseStorage = storage;
         window.collectionFirebase = collection;
@@ -136,7 +138,7 @@
         window.storageRefFirebase = storageRef;
         window.uploadBytesFirebase = uploadBytes;
         window.getDownloadURLFirebase = getDownloadURL;
-        window.livechatDbFirebase = null;
+        window.livechatDbFirebase = window.dbFirebase || null;
         window.livechatRefFirebase = null;
         window.livechatQueryFirebase = null;
         window.livechatOrderByChildFirebase = null;
@@ -2284,7 +2286,7 @@
                 }
 
                 function obtenerDb() {
-                    return window.livechatDbFirebase || null;
+                    return window.livechatDbFirebase || window.dbFirebase || null;
                 }
 
                 function obtenerRefs() {

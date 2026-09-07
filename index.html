@@ -2155,7 +2155,7 @@
                     </div>
                 </div>
                 <div class="livechat-header-actions">
-                    <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatAdmin()" title="Panel Admin">⚙️</button>
+                    <button class="livechat-btn-icon livechat-admin-trigger" type="button" onclick="toggleLiveChatAdmin()" title="Panel Admin">⚙️</button>
                     <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatPanel()" title="Minimizar">✕</button>
                 </div>
             </div>
@@ -2189,7 +2189,7 @@
             <div class="livechat-admin-panel" id="livechat-admin-panel">
                 <div class="livechat-admin-title">
                     <span>🛡️ Panel de Moderación</span>
-                    <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatAdmin()">✕</button>
+                    <button class="livechat-btn-icon livechat-admin-trigger" type="button" onclick="toggleLiveChatAdmin()">✕</button>
                 </div>
 
                 <!-- Bloque de Login Admin -->
@@ -2669,8 +2669,12 @@
                     }
                 };
 
-                window.toggleLiveChatAdmin = function() {
-                    const panel = document.getElementById('livechat-admin-panel');
+            window.toggleLiveChatAdmin = function() {
+                if (!window.ositoEsCreador) {
+                    mostrarNotificacion('Solo el creador puede abrir la moderacion.');
+                    return;
+                }
+                const panel = document.getElementById('livechat-admin-panel');
                     if (!panel) return;
                     const isOpening = panel.classList.toggle('active');
                     if (isOpening) {
@@ -2875,16 +2879,20 @@
                 } else {
                     msgDiv.className = `lc-msg ${esMio ? 'own' : 'other'}`;
                     const { horaStr, fechaStr } = formatearHoraFecha(msg.timestamp);
-                    const avatar = msg.photoURL
-                        ? `<img class="lc-msg-avatar" src="${escaparHTML(msg.photoURL)}" alt="Foto de ${escaparHTML(msg.user)}" loading="lazy">`
+                    const photoURL = msg.photoURL || (msg.uid === window.ositoCurrentUser?.uid ? window.ositoCurrentUserProfile?.photoURL : '');
+                    const esCreador = Boolean(msg.isCreator) || normalizarUsuario(msg.user) === 'ositoyt360';
+                    const avatar = photoURL
+                        ? `<img class="lc-msg-avatar" src="${escaparHTML(photoURL)}" alt="Foto de ${escaparHTML(msg.user)}" loading="lazy">`
                         : '<span class="lc-msg-avatar lc-msg-avatar-fallback">OS</span>';
+                    const creatorClass = esCreador ? 'lc-creator-name' : '';
+                    const creatorBadge = esCreador ? '<span class="lc-creator-badge">CREADOR</span>' : '';
 
                     const adminOption = (esAdminKeyGuardada) ? `<span class="lc-del-btn" onclick="eliminarMensajeAdmin('${msg.id}')" title="Eliminar mensaje">✕</span>` : '';
 
                     msgDiv.innerHTML = `
                         <div class="lc-msg-header">
                             ${avatar}
-                            <span class="lc-msg-user">${escaparHTML(msg.user)}${adminOption}</span>
+                            <span class="lc-msg-user ${creatorClass}">${escaparHTML(msg.user)}${creatorBadge}${adminOption}</span>
                             <span class="lc-msg-time" title="${fechaStr}">${horaStr} • ${fechaStr}</span>
                         </div>
                         <div class="lc-msg-bubble">${escaparHTML(msg.text)}</div>
@@ -3070,6 +3078,8 @@
                                     user: data.user || 'Invitado',
                                     text: data.text || '',
                                     photoURL: data.photoURL || '',
+                                    uid: data.uid || '',
+                                    isCreator: Boolean(data.isCreator) || String(data.user || '').toLowerCase() === 'ositoyt360',
                                     timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : (Number(data.timestamp) || Date.now()),
                                     isSystem: Boolean(data.isSystem),
                                     isAdmin: Boolean(data.isAdmin)
@@ -3316,6 +3326,10 @@
             };
 
             window.toggleLiveChatAdmin = function() {
+                if (!window.ositoEsCreador) {
+                    mostrarNotificacion('Solo el creador puede abrir la moderacion.');
+                    return;
+                }
                 const panel = document.getElementById('livechat-admin-panel');
                 if (!panel) return;
                 const isOpening = panel.classList.toggle('active');
@@ -3334,6 +3348,10 @@
             };
 
             window.verificarClaveAdmin = function() {
+                if (!window.ositoEsCreador) {
+                    mostrarNotificacion('Solo el creador puede validar la moderacion.');
+                    return;
+                }
                 const passInput = document.getElementById('admin-pass');
                 const pass = (passInput ? passInput.value : '').trim();
                 const statusEl = document.getElementById('admin-auth-status');

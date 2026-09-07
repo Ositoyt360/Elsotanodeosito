@@ -107,6 +107,14 @@
         if (photoThumb) photoThumb.src = avatarUrl;
 
         window.aiNombreActual = displayName;
+        const accountName = String(user?.email || '').split('@')[0].toLowerCase();
+        const profileName = String(profile?.displayName || '').toLowerCase();
+        const isCreator = Boolean(user && (accountName === 'ositoyt360' || profileName === 'ositoyt360'));
+        window.ositoEsCreador = isCreator;
+        document.body.classList.toggle('creator-mode', isCreator);
+        if (!isCreator && window.localStorage) {
+            localStorage.removeItem('osito_chat_admin_key');
+        }
         window.ositoCurrentUserProfile = {
             uid: user?.uid || '',
             email,
@@ -572,7 +580,8 @@
             isAdmin: Boolean(opciones?.isAdmin),
             uid: state.currentUser.uid,
             email: state.currentUser.email || '',
-            photoURL: state.profile?.photoURL || ''
+            photoURL: state.profile?.photoURL || '',
+            isCreator: Boolean(window.ositoEsCreador)
         });
     };
 

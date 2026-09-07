@@ -2196,6 +2196,14 @@ body.compact-layout .promo-title-main {
     color: var(--primary-color);
 }
 
+.livechat-admin-trigger {
+    display: none;
+}
+
+body.creator-mode .livechat-admin-trigger {
+    display: inline-flex;
+}
+
 .livechat-messages {
     flex-grow: 1;
     overflow-y: auto;
@@ -2256,6 +2264,35 @@ body.compact-layout .promo-title-main {
 .lc-msg-user {
     font-weight: 800;
     color: var(--primary-color);
+}
+
+.lc-creator-name {
+    animation: creatorNameGlow 2.4s ease-in-out infinite;
+}
+
+.lc-creator-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 5px;
+    padding: 2px 5px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffe36e, #ff9f1a);
+    color: #251600;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    animation: creatorBadgePulse 1.8s ease-in-out infinite;
+    vertical-align: middle;
+}
+
+@keyframes creatorNameGlow {
+    0%, 100% { text-shadow: 0 0 4px rgba(255, 204, 77, 0.25); color: #ffe36e; }
+    50% { text-shadow: 0 0 12px rgba(255, 174, 0, 0.8); color: #fff3ad; }
+}
+
+@keyframes creatorBadgePulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 174, 0, 0); }
+    50% { transform: scale(1.06); box-shadow: 0 0 10px rgba(255, 174, 0, 0.55); }
 }
 
 .lc-msg-time {

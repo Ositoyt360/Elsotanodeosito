@@ -9,7 +9,73 @@
     <link rel="preconnect" href="https://www.google.com">
     <link rel="stylesheet" href="styles.css">
 
-    <script type="module">
+    <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-storage-compat.js"></script>
+    <script>
+        (function () {
+            if (!window.firebase || window.firebaseAuth) return;
+
+            const configCompat = {
+                apiKey: 'AIzaSyAM4rnHi3YU5pY6EK66ztAPRQdESs789Ew',
+                authDomain: 'el-sotano-de-osito.firebaseapp.com',
+                projectId: 'el-sotano-de-osito',
+                storageBucket: 'el-sotano-de-osito.firebasestorage.app',
+                messagingSenderId: '569093514370',
+                appId: '1:569093514370:web:121b78008c667bde93409b',
+                measurementId: 'G-0YQHGMVSHL'
+            };
+
+            try {
+                const app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat);
+                const auth = window.firebase.auth();
+                const db = window.firebase.firestore();
+                let storage = null;
+                try {
+                    storage = window.firebase.storage();
+                } catch (storageError) {
+                    console.warn('[FirebaseCompat] Storage no disponible.', storageError);
+                }
+
+                window.firebaseApp = app;
+                window.firebaseAuth = auth;
+                window.dbFirebase = db;
+                window.firebaseStorage = storage;
+                window.collectionFirebase = (database, ...path) => database.collection(path.join('/'));
+                window.onSnapshotFirebase = (target, next, error) => target.onSnapshot(next, error);
+                window.addDocFirebase = (ref, data) => ref.add(data);
+                window.docFirebase = (database, ...path) => database.doc(path.join('/'));
+                window.getDocFirebase = (ref) => ref.get();
+                window.setDocFirebase = (ref, data, options) => ref.set(data, options);
+                window.updateDocFirebase = (ref, data) => ref.update(data);
+                window.queryFirebase = (ref, ...constraints) => constraints.reduce((queryRef, constraint) => {
+                    if (constraint?.type === 'orderBy') return queryRef.orderBy(constraint.field, constraint.direction || 'asc');
+                    if (constraint?.type === 'limit') return queryRef.limit(constraint.amount);
+                    return queryRef;
+                }, ref);
+                window.orderByFirebase = (field, direction = 'asc') => ({ type: 'orderBy', field, direction });
+                window.limitFirebase = (amount) => ({ type: 'limit', amount });
+                window.getDocsFirebase = (ref) => ref.get();
+                window.serverTimestampFirebase = () => window.firebase.firestore.FieldValue.serverTimestamp();
+                window.authPersistenceLocalFirebase = window.firebase.auth.Auth.Persistence.LOCAL;
+                window.setPersistenceFirebase = (instance, persistence) => instance.setPersistence(persistence);
+                window.createUserWithEmailAndPasswordFirebase = (instance, email, password) => instance.createUserWithEmailAndPassword(email, password);
+                window.signInWithEmailAndPasswordFirebase = (instance, email, password) => instance.signInWithEmailAndPassword(email, password);
+                window.signOutFirebase = (instance) => instance.signOut();
+                window.onAuthStateChangedFirebase = (instance, callback) => instance.onAuthStateChanged(callback);
+                window.updateProfileFirebase = (user, data) => user.updateProfile(data);
+                window.storageRefFirebase = (bucket, path) => bucket.ref(path);
+                window.uploadBytesFirebase = (ref, file, metadata) => ref.put(file, metadata);
+                window.getDownloadURLFirebase = (ref) => ref.getDownloadURL();
+            } catch (error) {
+                console.error('[FirebaseCompat]', error);
+            }
+        }());
+    </script>
+
+    <script type="text/plain" data-firebase-modular="disabled">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";

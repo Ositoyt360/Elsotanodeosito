@@ -3302,7 +3302,8 @@
                     if ((window.ositoLivechatTransport || '').toLowerCase() !== 'firestore') return;
                     const container = document.getElementById('livechat-messages');
                     if (!container || !Array.isArray(event.detail)) return;
-                    container.innerHTML = '';
+                    // Reconciliamos el snapshot sin vaciar primero para no perder mensajes
+                    // visibles si el update llega parcial o llega varias veces seguido.
                     event.detail.forEach((message) => renderizarMensaje(message, true));
                     establecerEstadoConexion(true, 'En vivo con Firestore');
                 });

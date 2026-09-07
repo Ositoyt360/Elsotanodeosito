@@ -2829,6 +2829,7 @@
             let esAdminKeyGuardada = localStorage.getItem('osito_chat_admin_key') || '';
             let modoOfflineLocal = false;
             let modoFirebaseChat = false;
+            let forzarFirestoreChat = false;
             window.ositoLivechatTransport = window.ositoLivechatTransport || 'server';
             const CLAVE_ADMIN = '240625';
 
@@ -2962,7 +2963,27 @@
                 }
             }
 
+            function detenerChatServidor() {
+                forzarFirestoreChat = true;
+                if (pollInterval) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                }
+                esFallbackPoll = false;
+
+                if (ws) {
+                    const socket = ws;
+                    ws = null;
+                    try {
+                        socket.onclose = null;
+                        socket.onerror = null;
+                        socket.close();
+                    } catch (e) {}
+                }
+            }
+
             function conectarWebSocket() {
+                if (forzarFirestoreChat) return;
                 const wsUrl = obtenerWsBaseUrl();
 
                 try {
@@ -3016,19 +3037,23 @@
                     };
 
                     ws.onerror = () => {
+                        if (forzarFirestoreChat) return;
                         iniciarFallbackPolling();
                     };
 
                     ws.onclose = () => {
+                        if (forzarFirestoreChat) return;
                         iniciarFallbackPolling();
                     };
 
                 } catch (e) {
+                    if (forzarFirestoreChat) return;
                     iniciarFallbackPolling();
                 }
             }
 
             function iniciarFallbackPolling() {
+                if (forzarFirestoreChat) return;
                 if (esFallbackPoll) return;
                 esFallbackPoll = true;
                 const baseUrl = obtenerServerBaseUrl();
@@ -3073,6 +3098,7 @@
                     }
                 } catch (e) {}
 
+                detenerChatServidor();
                 modoFirebaseChat = true;
                 modoOfflineLocal = false;
                 window.ositoLivechatTransport = 'firestore';
@@ -3128,7 +3154,8 @@
                     );
                 } catch (e) {
                     console.warn('No se pudo iniciar el chat con Firebase', e);
-                    iniciarModoOfflineLocal();
+                    forzarFirestoreChat = false;
+                    conectarWebSocket();
                 }
             }
 
@@ -3230,7 +3257,7 @@
 
                 const miNombre = obtenerNombreActual();
 
-                if ((window.ositoLivechatTransport || 'server').toLowerCase() === 'firestore' && typeof window.publicarMensajeLiveChat === 'function') {
+                if (typeof window.publicarMensajeLiveChat === 'function' && (window.ositoCurrentUser || (window.ositoLivechatTransport || '').toLowerCase() === 'firestore')) {
                     window.publicarMensajeLiveChat(limpia, miNombre, {
                         isSystem: false,
                         isAdmin: false
@@ -3308,6 +3335,11 @@
                     establecerEstadoConexion(true, 'En vivo con Firestore');
                 });
                 window.addEventListener('osito:livechat-error', () => {
+                    if (forzarFirestoreChat) {
+                        forzarFirestoreChat = false;
+                        conectarWebSocket();
+                        return;
+                    }
                     establecerEstadoConexion(false, 'Error de sincronizacion');
                     mostrarNotificacion('No se pudo sincronizar el chat. Revisa las reglas de Firestore.');
                 });
@@ -3337,9 +3369,15 @@
                     });
                 }
 
+                window.addEventListener('osito:firebase-auth-ready', () => {
+                    iniciarModoFirebaseChat();
+                });
+
                 // Arrancamos el chat solo si no quedó activo el flujo de Firebase.
                 // Sin esto, el panel se abre pero nunca carga historial ni escucha mensajes.
-                if ((window.ositoLivechatTransport || 'server').toLowerCase() !== 'firestore') {
+                if (window.ositoCurrentUser) {
+                    iniciarModoFirebaseChat();
+                } else if ((window.ositoLivechatTransport || 'server').toLowerCase() !== 'firestore') {
                     conectarWebSocket();
                 }
             });

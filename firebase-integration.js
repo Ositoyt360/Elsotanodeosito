@@ -390,6 +390,7 @@
 
                 messages.sort((a, b) => a.timestamp - b.timestamp);
                 window.ositoLastLivechatSnapshot = messages.slice(-100);
+                window.ositoLivechatTransport = 'firestore';
                 if ((window.ositoLivechatTransport || '').toLowerCase() !== 'firestore') {
                     return;
                 }

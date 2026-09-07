@@ -2533,6 +2533,30 @@ body.creator-mode .livechat-admin-trigger {
         width: calc(100vw - 28px);
         height: calc(100vh - 86px);
     }
+
+    .lc-msg {
+        max-width: 94%;
+    }
+
+    .lc-msg-header {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 4px 6px;
+    }
+
+    .lc-msg-user {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .lc-msg-time {
+        margin-left: auto;
+    }
+
+    .lc-creator-badge {
+        font-size: 7px;
+        padding: 2px 4px;
+    }
 }
 
 /* --- ESTILOS DEL ASISTENTE DE VOZ PUSH-TO-TALK INTEGRADO EN IA --- */

@@ -196,7 +196,7 @@
             return {
                 displayName: safeEmailName(user.email),
                 gender: registerGender || 'male',
-                photoURL: registerPhotoURL || '',
+                photoURL: registerPhotoURL || user.photoURL || '',
                 tutorialSeen: fromRegister ? false : true
             };
         }
@@ -210,7 +210,7 @@
                 uid: user.uid,
                 displayName: data.displayName || safeEmailName(user.email),
                 gender: data.gender || registerGender || 'male',
-                photoURL: data.photoURL || registerPhotoURL || '',
+                photoURL: data.photoURL || user.photoURL || registerPhotoURL || '',
                 tutorialSeen: Boolean(data.tutorialSeen),
                 createdAt: data.createdAt || null
             };
@@ -221,7 +221,7 @@
             email: user.email || '',
             displayName: safeEmailName(user.email),
             gender: registerGender || 'male',
-            photoURL: registerPhotoURL || '',
+            photoURL: registerPhotoURL || user.photoURL || '',
             tutorialSeen: fromRegister ? false : true,
             createdAt: Date.now()
         };
@@ -381,7 +381,11 @@
 
             if (state.mode === 'register') {
                 const credential = await window.createUserWithEmailAndPasswordFirebase(auth, cleanEmail, cleanPassword);
-                await registerUser(credential.user, selectedGender, photoFile);
+                const registeredProfile = await registerUser(credential.user, selectedGender, photoFile);
+                // El callback de Auth puede ejecutarse antes de terminar la subida.
+                // Actualizamos el estado local con el perfil que ya contiene la foto.
+                state.profile = registeredProfile;
+                setPreview(registeredProfile, credential.user);
                 state.selectedPhotoFile = null;
                 setStatus('Cuenta creada. Ya puedes entrar a la pagina principal.', 'success');
             } else {

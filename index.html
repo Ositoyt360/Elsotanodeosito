@@ -2867,7 +2867,10 @@
                 if (document.getElementById(msg.id)) return; // Evitar duplicados
 
                 const miNombre = obtenerNombreActual();
-                const esMio = msg.user.toLowerCase() === miNombre.toLowerCase();
+                const currentUid = window.firebaseAuth?.currentUser?.uid || window.ositoCurrentUser?.uid || '';
+                const esMio = currentUid && msg.uid
+                    ? msg.uid === currentUid
+                    : msg.user.toLowerCase() === miNombre.toLowerCase();
                 const esSistema = msg.isSystem;
 
                 const msgDiv = document.createElement('div');

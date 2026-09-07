@@ -1,0 +1,574 @@
+(function () {
+    'use strict';
+
+    const state = {
+        mode: 'login',
+        authReady: false,
+        currentUser: null,
+        profile: null,
+        selectedPhotoFile: null,
+        aiUnsubscribe: null,
+        aiSeededFromDom: false,
+        tutorialPlayedForUid: null
+    };
+
+    const db = window.dbFirebase || null;
+    const auth = window.firebaseAuth || null;
+    const storage = window.firebaseStorage || null;
+
+    function el(id) {
+        return document.getElementById(id);
+    }
+
+    function escapeText(value) {
+        return String(value || '').trim();
+    }
+
+    function safeEmailName(email) {
+        const local = String(email || '').split('@')[0].replace(/[^a-z0-9_-]/gi, '');
+        return local || 'osito';
+    }
+
+    function getDefaultAvatarDataUrl(seed = 'OS') {
+        const label = String(seed || 'OS').slice(0, 2).toUpperCase();
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+                <defs>
+                    <linearGradient id="g" x1="0%" x2="100%" y1="0%" y2="100%">
+                        <stop offset="0%" stop-color="#00f2fe"/>
+                        <stop offset="100%" stop-color="#9d00ff"/>
+                    </linearGradient>
+                </defs>
+                <rect width="160" height="160" rx="40" fill="#0b1020"/>
+                <circle cx="80" cy="80" r="62" fill="url(#g)" opacity="0.18"/>
+                <circle cx="80" cy="80" r="46" fill="url(#g)" opacity="0.65"/>
+                <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+                      font-family="Arial, sans-serif" font-size="48" font-weight="700" fill="#ffffff">${label}</text>
+            </svg>
+        `;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    function getAuthElements() {
+        return {
+            panel: el('auth-panel'),
+            form: el('auth-form'),
+            submit: el('auth-submit'),
+            logout: el('auth-logout'),
+            status: el('auth-status'),
+            email: el('auth-email'),
+            password: el('auth-password'),
+            registerOnly: el('auth-register-only'),
+            gender: el('auth-gender'),
+            photoButton: el('auth-photo-button'),
+            photoInput: el('auth-photo-input'),
+            photoThumb: el('auth-photo-thumb'),
+            previewName: el('auth-preview-name'),
+            previewEmail: el('auth-preview-email'),
+            avatarPreview: el('auth-avatar-preview'),
+            modeButtons: document.querySelectorAll('.auth-mode-btn'),
+            readyButton: el('btn-ready')
+        };
+    }
+
+    function setStatus(message, tone = 'neutral') {
+        const { status } = getAuthElements();
+        if (!status) return;
+        status.textContent = message;
+        status.dataset.tone = tone;
+    }
+
+    function setPreview(profile, user) {
+        const {
+            previewName,
+            previewEmail,
+            avatarPreview,
+            photoThumb
+        } = getAuthElements();
+
+        const isGuest = !user;
+        const displayName = isGuest ? 'Invitado' : (profile?.displayName || safeEmailName(user?.email));
+        const email = isGuest ? 'Inicia sesion para continuar' : (user?.email || 'Inicia sesion para continuar');
+        const avatarUrl = isGuest ? getDefaultAvatarDataUrl('OS') : (profile?.photoURL || getDefaultAvatarDataUrl(profile?.gender || 'OS'));
+
+        if (previewName) previewName.textContent = displayName;
+        if (previewEmail) previewEmail.textContent = email;
+        if (avatarPreview) avatarPreview.src = avatarUrl;
+        if (photoThumb) photoThumb.src = avatarUrl;
+
+        window.aiNombreActual = displayName;
+        window.ositoCurrentUserProfile = {
+            uid: user?.uid || '',
+            email,
+            displayName,
+            gender: profile?.gender || '',
+            photoURL: profile?.photoURL || ''
+        };
+
+        if (!isGuest && !localStorage.getItem('osito_ai_nombre')) {
+            localStorage.setItem('osito_ai_nombre', displayName);
+        }
+        if (!isGuest && profile?.gender && !localStorage.getItem('osito_ai_genero')) {
+            localStorage.setItem('osito_ai_genero', profile.gender);
+        }
+
+        const liveUser = document.getElementById('livechat-current-user');
+        if (liveUser) liveUser.textContent = displayName;
+    }
+
+    function setMode(mode) {
+        state.mode = mode === 'register' ? 'register' : 'login';
+        const { submit, registerOnly, modeButtons } = getAuthElements();
+        if (registerOnly) registerOnly.style.display = state.mode === 'register' ? 'grid' : 'none';
+        if (submit) submit.textContent = state.mode === 'register' ? 'Crear cuenta' : 'Entrar';
+        modeButtons.forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.mode === state.mode);
+        });
+    }
+
+    function showUnauthenticatedView() {
+        const { form, logout, readyButton } = getAuthElements();
+        if (form) form.style.display = 'grid';
+        if (logout) logout.style.display = 'none';
+        if (readyButton) readyButton.style.display = 'none';
+        setStatus('Listo para entrar.', 'neutral');
+        setMode(state.mode);
+        setPreview(null, null);
+        window.aiNombreActual = 'Invitado';
+        window.ositoCurrentUserProfile = null;
+        window.ositoTutorialPendiente = false;
+        state.aiSeededFromDom = false;
+        state.tutorialPlayedForUid = null;
+        state.selectedPhotoFile = null;
+    }
+
+    function showAuthenticatedView(profile, user) {
+        const { form, logout, readyButton } = getAuthElements();
+        if (form) form.style.display = 'none';
+        if (logout) logout.style.display = 'inline-flex';
+        if (readyButton) readyButton.style.display = 'inline-flex';
+        setPreview(profile, user);
+        setStatus(`Sesion activa: ${user?.email || 'usuario autenticado'}.`, 'success');
+    }
+
+    async function loadOrCreateProfile(user, fromRegister = false, registerGender = '', registerPhotoURL = '') {
+        if (!db || !window.docFirebase || !window.getDocFirebase || !window.setDocFirebase) {
+            return {
+                displayName: safeEmailName(user.email),
+                gender: registerGender || 'male',
+                photoURL: registerPhotoURL || '',
+                tutorialSeen: fromRegister ? false : true
+            };
+        }
+
+        const ref = window.docFirebase(db, 'users', user.uid);
+        const snap = await window.getDocFirebase(ref);
+
+        if (snap.exists()) {
+            const data = snap.data() || {};
+            return {
+                uid: user.uid,
+                displayName: data.displayName || safeEmailName(user.email),
+                gender: data.gender || registerGender || 'male',
+                photoURL: data.photoURL || registerPhotoURL || '',
+                tutorialSeen: Boolean(data.tutorialSeen),
+                createdAt: data.createdAt || null
+            };
+        }
+
+        const profile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: safeEmailName(user.email),
+            gender: registerGender || 'male',
+            photoURL: registerPhotoURL || '',
+            tutorialSeen: fromRegister ? false : true,
+            createdAt: Date.now()
+        };
+
+        await window.setDocFirebase(ref, profile, { merge: true });
+        return profile;
+    }
+
+    async function uploadPhotoIfNeeded(user, file) {
+        if (!file || !storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
+            return '';
+        }
+
+        const ref = window.storageRefFirebase(storage, `users/${user.uid}/profile.jpg`);
+        await window.uploadBytesFirebase(ref, file, {
+            contentType: file.type || 'image/jpeg'
+        });
+        return window.getDownloadURLFirebase(ref);
+    }
+
+    function renderAiMessages(messages) {
+        const container = document.getElementById('ai-messages');
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (!messages.length) {
+            return;
+        }
+
+        messages.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = `msg ${item.role === 'user' ? 'user' : 'bot'}`;
+            row.textContent = item.text || '';
+            container.appendChild(row);
+        });
+
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function seedAiHistoryFromDom(uid) {
+        if (state.aiSeededFromDom) return;
+        if (!db || !window.collectionFirebase || !window.addDocFirebase) return;
+
+        const container = document.getElementById('ai-messages');
+        if (!container) return;
+
+        const nodes = Array.from(container.querySelectorAll('.msg'));
+        if (!nodes.length) return;
+
+        state.aiSeededFromDom = true;
+        const collectionRef = window.collectionFirebase(db, 'aiChats', uid, 'messages');
+
+        for (const node of nodes) {
+            const role = node.classList.contains('user') ? 'user' : 'bot';
+            const text = escapeText(node.textContent);
+            if (!text) continue;
+            await window.addDocFirebase(collectionRef, {
+                role,
+                text,
+                timestamp: Date.now()
+            });
+        }
+    }
+
+    async function startAiListener(uid) {
+        if (!db || !window.collectionFirebase || !window.queryFirebase || !window.orderByFirebase || !window.limitFirebase || !window.onSnapshotFirebase) {
+            return;
+        }
+
+        if (typeof state.aiUnsubscribe === 'function') {
+            state.aiUnsubscribe();
+            state.aiUnsubscribe = null;
+        }
+
+        const collectionRef = window.collectionFirebase(db, 'aiChats', uid, 'messages');
+        const queryRef = window.queryFirebase(
+            collectionRef,
+            window.orderByFirebase('timestamp'),
+            window.limitFirebase(80)
+        );
+
+        state.aiUnsubscribe = window.onSnapshotFirebase(queryRef, async (snapshot) => {
+            const messages = [];
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data() || {};
+                messages.push({
+                    id: docSnap.id,
+                    role: data.role === 'user' ? 'user' : 'bot',
+                    text: data.text || '',
+                    timestamp: Number(data.timestamp) || Date.now()
+                });
+            });
+
+            if (!messages.length) {
+                await seedAiHistoryFromDom(uid);
+                return;
+            }
+
+            renderAiMessages(messages);
+        });
+    }
+
+    async function registerUser(user, gender, photoFile) {
+        const photoURL = await uploadPhotoIfNeeded(user, photoFile);
+        const displayName = safeEmailName(user.email);
+
+        if (window.updateProfileFirebase) {
+            await window.updateProfileFirebase(user, {
+                displayName,
+                photoURL: photoURL || null
+            });
+        }
+
+        if (db && window.docFirebase && window.setDocFirebase) {
+            await window.setDocFirebase(window.docFirebase(db, 'users', user.uid), {
+                uid: user.uid,
+                email: user.email || '',
+                displayName,
+                gender,
+                photoURL,
+                tutorialSeen: false,
+                createdAt: Date.now()
+            }, { merge: true });
+        }
+
+        return { displayName, gender, photoURL, tutorialSeen: false };
+    }
+
+    async function handleAuthSubmit(event) {
+        event.preventDefault();
+
+        if (!auth) return;
+        const { email, password, gender, photoInput } = getAuthElements();
+        const cleanEmail = escapeText(email?.value).toLowerCase();
+        const cleanPassword = escapeText(password?.value);
+        const selectedGender = gender?.value === 'female' ? 'female' : 'male';
+        const photoFile = state.selectedPhotoFile || photoInput?.files?.[0] || null;
+
+        if (!cleanEmail || !cleanPassword) {
+            setStatus('Escribe tu correo y tu contrasena.', 'error');
+            return;
+        }
+
+        try {
+            setStatus(state.mode === 'register' ? 'Creando cuenta...' : 'Iniciando sesion...', 'neutral');
+
+            if (!window.setPersistenceFirebase || !window.authPersistenceLocalFirebase) {
+                throw new Error('Persistence unavailable');
+            }
+
+            await window.setPersistenceFirebase(auth, window.authPersistenceLocalFirebase);
+
+            if (state.mode === 'register') {
+                const credential = await window.createUserWithEmailAndPasswordFirebase(auth, cleanEmail, cleanPassword);
+                await registerUser(credential.user, selectedGender, photoFile);
+                state.selectedPhotoFile = null;
+                setStatus('Cuenta creada. Ya puedes entrar a la pagina principal.', 'success');
+            } else {
+                await window.signInWithEmailAndPasswordFirebase(auth, cleanEmail, cleanPassword);
+                setStatus('Sesion iniciada. Ya puedes continuar.', 'success');
+            }
+        } catch (error) {
+            console.error('[FirebaseAuth]', error);
+            const code = error?.code || '';
+            let message = 'No se pudo completar el acceso.';
+            if (code.includes('auth/invalid-email')) message = 'El correo no es valido.';
+            if (code.includes('auth/missing-password')) message = 'Escribe tu contrasena.';
+            if (code.includes('auth/weak-password')) message = 'La contrasena debe tener al menos 6 caracteres.';
+            if (code.includes('auth/email-already-in-use')) message = 'Ese correo ya esta registrado.';
+            if (code.includes('auth/user-not-found')) message = 'No encontre esa cuenta.';
+            if (code.includes('auth/wrong-password')) message = 'La contrasena es incorrecta.';
+            setStatus(message, 'error');
+        }
+    }
+
+    async function handleSignOut() {
+        if (!auth || !window.signOutFirebase) return;
+        try {
+            await window.signOutFirebase(auth);
+            state.selectedPhotoFile = null;
+            setStatus('Sesion cerrada.', 'neutral');
+        } catch (error) {
+            console.error('[FirebaseAuth]', error);
+            setStatus('No se pudo cerrar la sesion.', 'error');
+        }
+    }
+
+    async function loadProfileAndAttach(user) {
+        const profile = await loadOrCreateProfile(user, state.mode === 'register');
+        state.profile = profile;
+        state.currentUser = user;
+        window.ositoCurrentUser = user;
+        window.ositoCurrentUserProfile = profile;
+        window.ositoTutorialPendiente = !profile.tutorialSeen;
+        state.aiSeededFromDom = false;
+
+        setPreview(profile, user);
+        showAuthenticatedView(profile, user);
+
+        if (window.localStorage) {
+            localStorage.setItem('osito_ai_nombre', profile.displayName || safeEmailName(user.email));
+            localStorage.setItem('osito_ai_genero', profile.gender || 'male');
+        }
+
+        await startAiListener(user.uid);
+    }
+
+    async function playTutorialSequence() {
+        const profile = state.profile || {};
+        const uid = state.currentUser?.uid || '';
+        if (!uid || state.tutorialPlayedForUid === uid) return;
+
+        state.tutorialPlayedForUid = uid;
+        window.ositoTutorialPendiente = false;
+
+        const steps = [
+            'Paso uno. En el centro tienes los videos, directos, canciones, animaciones, series y favoritos.',
+            'Paso dos. A la derecha esta la barra lateral con musica, colores, tamano de texto y modo compacto.',
+            'Paso tres. Abajo a la izquierda esta el chat en vivo para hablar con la comunidad y guardar el historial.',
+            'Paso cuatro. Abajo a la derecha esta la inteligencia artificial, que recuerda tu nombre y puede responderte con voz.',
+            `Paso cinco. Tu perfil ya esta guardado en Firebase. Puedes volver despues y entrar sin repetir el registro.`
+        ];
+
+        if (!('speechSynthesis' in window)) {
+            if (db && window.updateDocFirebase && window.docFirebase) {
+                try {
+                    await window.updateDocFirebase(window.docFirebase(db, 'users', uid), {
+                        tutorialSeen: true,
+                        tutorialSeenAt: Date.now()
+                    });
+                    if (state.profile) state.profile.tutorialSeen = true;
+                } catch (error) {
+                    console.warn('[FirebaseTutorial]', error);
+                }
+            }
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+
+        for (const step of steps) {
+            await new Promise((resolve) => {
+                const utterance = new SpeechSynthesisUtterance(step);
+                utterance.lang = 'es-419';
+                utterance.rate = 0.95;
+                utterance.pitch = 1;
+                utterance.onend = resolve;
+                utterance.onerror = resolve;
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        if (db && window.updateDocFirebase && window.docFirebase) {
+            try {
+                await window.updateDocFirebase(window.docFirebase(db, 'users', uid), {
+                    tutorialSeen: true,
+                    tutorialSeenAt: Date.now()
+                });
+                if (state.profile) state.profile.tutorialSeen = true;
+            } catch (error) {
+                console.warn('[FirebaseTutorial]', error);
+            }
+        }
+    }
+
+    async function initAuth() {
+        if (!auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
+            showUnauthenticatedView();
+            setStatus('Firebase no esta disponible en este navegador.', 'error');
+            return;
+        }
+
+        await window.setPersistenceFirebase(auth, window.authPersistenceLocalFirebase);
+
+        window.ejecutarTutorialVozFirebase = playTutorialSequence;
+        window.ositoTutorialPendiente = false;
+
+        window.onAuthStateChangedFirebase(auth, async (user) => {
+            state.authReady = true;
+            state.currentUser = user || null;
+            if (!user) {
+                state.profile = null;
+                if (typeof state.aiUnsubscribe === 'function') {
+                    state.aiUnsubscribe();
+                    state.aiUnsubscribe = null;
+                }
+                showUnauthenticatedView();
+                return;
+            }
+
+            try {
+                await loadProfileAndAttach(user);
+            } catch (error) {
+                console.error('[FirebaseAuth]', error);
+                setStatus('No pudimos cargar tu perfil.', 'error');
+                showAuthenticatedView({
+                    displayName: safeEmailName(user.email),
+                    gender: 'male',
+                    photoURL: ''
+                }, user);
+            }
+        });
+    }
+
+    function bindUi() {
+        const { form, logout, photoButton, photoInput, modeButtons, readyButton } = getAuthElements();
+
+        if (modeButtons) {
+            modeButtons.forEach((btn) => {
+                btn.addEventListener('click', () => setMode(btn.dataset.mode));
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', handleAuthSubmit);
+        }
+
+        if (logout) {
+            logout.addEventListener('click', handleSignOut);
+        }
+
+        if (photoButton && photoInput) {
+            photoButton.addEventListener('click', () => photoInput.click());
+            photoInput.addEventListener('change', () => {
+                const file = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+                state.selectedPhotoFile = file;
+                if (file) {
+                    const previewUrl = URL.createObjectURL(file);
+                    const { avatarPreview, photoThumb } = getAuthElements();
+                    if (avatarPreview) avatarPreview.src = previewUrl;
+                    if (photoThumb) photoThumb.src = previewUrl;
+                }
+            });
+        }
+
+    }
+
+    window.registrarMensajeIAEnFirebase = async function registrarMensajeIAEnFirebase(payload) {
+        if (!state.currentUser || !db || !window.collectionFirebase || !window.addDocFirebase) {
+            return null;
+        }
+
+        const role = payload?.role === 'user' ? 'user' : 'bot';
+        const text = escapeText(payload?.text);
+        if (!text) return null;
+
+        return window.addDocFirebase(
+            window.collectionFirebase(db, 'aiChats', state.currentUser.uid, 'messages'),
+            {
+                role,
+                text,
+                timestamp: Date.now(),
+                uid: state.currentUser.uid,
+                email: state.currentUser.email || ''
+            }
+        );
+    };
+
+    window.publicarMensajeLiveChat = async function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
+        if (!state.currentUser || !db || !window.collectionFirebase || !window.addDocFirebase) {
+            throw new Error('Firebase no esta listo.');
+        }
+
+        const cleanText = escapeText(texto);
+        if (!cleanText) {
+            throw new Error('El mensaje no puede estar vacio.');
+        }
+
+        return window.addDocFirebase(window.collectionFirebase(db, 'livechat'), {
+            user: escapeText(usuario).slice(0, 24) || 'Invitado',
+            text: cleanText,
+            timestamp: Date.now(),
+            isSystem: Boolean(opciones?.isSystem),
+            isAdmin: Boolean(opciones?.isAdmin),
+            uid: state.currentUser.uid,
+            email: state.currentUser.email || '',
+            photoURL: state.profile?.photoURL || ''
+        });
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        bindUi();
+        setMode('login');
+        initAuth().catch((error) => {
+            console.error('[FirebaseAuth]', error);
+            setStatus('No se pudo iniciar Firebase.', 'error');
+            showUnauthenticatedView();
+        });
+    });
+}());

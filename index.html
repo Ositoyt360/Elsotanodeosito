@@ -11,40 +11,67 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getDatabase, ref, query, orderByChild, limitToLast, get, push, onChildAdded, onChildRemoved, onValue, remove, set, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyA5WI_hxT6U0YKbQqK-4DYpS6UibnPscho",
-            authDomain: "panelwed.firebaseapp.com",
-            projectId: "panelwed",
-            databaseURL: "https://panelwed-default-rtdb.firebaseio.com",
-            storageBucket: "panelwed.firebasestorage.app",
-            messagingSenderId: "138095012886",
-            appId: "1:138095012886:web:e0c1643308656f7e9dd937",
-            measurementId: "G-NNX37YHZ1T"
+            apiKey: "AIzaSyAM4rnHi3YU5pY6EK66ztAPRQdESs789Ew",
+            authDomain: "el-sotano-de-osito.firebaseapp.com",
+            projectId: "el-sotano-de-osito",
+            storageBucket: "el-sotano-de-osito.firebasestorage.app",
+            messagingSenderId: "569093514370",
+            appId: "1:569093514370:web:121b78008c667bde93409b",
+            measurementId: "G-0YQHGMVSHL"
         };
 
         const app = initializeApp(firebaseConfig);
+        const analytics = firebaseConfig.measurementId ? getAnalytics(app) : null;
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
 
+        window.firebaseApp = app;
+        window.firebaseAnalytics = analytics;
         window.dbFirebase = db;
+        window.firebaseAuth = auth;
+        window.firebaseStorage = storage;
         window.collectionFirebase = collection;
         window.onSnapshotFirebase = onSnapshot;
         window.addDocFirebase = addDoc;
-        window.livechatDbFirebase = getDatabase(app);
-        window.livechatRefFirebase = ref;
-        window.livechatQueryFirebase = query;
-        window.livechatOrderByChildFirebase = orderByChild;
-        window.livechatLimitToLastFirebase = limitToLast;
-        window.livechatGetFirebase = get;
-        window.livechatPushFirebase = push;
-        window.livechatOnChildAddedFirebase = onChildAdded;
-        window.livechatOnChildRemovedFirebase = onChildRemoved;
-        window.livechatOnValueFirebase = onValue;
-        window.livechatRemoveFirebase = remove;
-        window.livechatSetFirebase = set;
-        window.livechatUpdateFirebase = update;
+        window.docFirebase = doc;
+        window.getDocFirebase = getDoc;
+        window.setDocFirebase = setDoc;
+        window.updateDocFirebase = updateDoc;
+        window.queryFirebase = query;
+        window.orderByFirebase = orderBy;
+        window.limitFirebase = limit;
+        window.getDocsFirebase = getDocs;
+        window.serverTimestampFirebase = serverTimestamp;
+        window.authPersistenceLocalFirebase = browserLocalPersistence;
+        window.setPersistenceFirebase = setPersistence;
+        window.createUserWithEmailAndPasswordFirebase = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPasswordFirebase = signInWithEmailAndPassword;
+        window.signOutFirebase = signOut;
+        window.onAuthStateChangedFirebase = onAuthStateChanged;
+        window.updateProfileFirebase = updateProfile;
+        window.storageRefFirebase = storageRef;
+        window.uploadBytesFirebase = uploadBytes;
+        window.getDownloadURLFirebase = getDownloadURL;
+        window.livechatDbFirebase = null;
+        window.livechatRefFirebase = null;
+        window.livechatQueryFirebase = null;
+        window.livechatOrderByChildFirebase = null;
+        window.livechatLimitToLastFirebase = null;
+        window.livechatGetFirebase = null;
+        window.livechatPushFirebase = null;
+        window.livechatOnChildAddedFirebase = null;
+        window.livechatOnChildRemovedFirebase = null;
+        window.livechatOnValueFirebase = null;
+        window.livechatRemoveFirebase = null;
+        window.livechatSetFirebase = null;
+        window.livechatUpdateFirebase = null;
     </script>
 
     <script src="actualizaciones-helper.js"></script>
@@ -69,7 +96,66 @@
         <div class="gamer-grid"></div>
         <div class="welcome-panel">
             <h1 class="welcome-title">El Sótano de Osito</h1>
-            <button class="btn-enter-hub" id="btn-ready" onclick="iniciarCarga()">Entrar al sótano</button>
+            <div class="auth-panel" id="auth-panel">
+                <div class="auth-card">
+                    <div class="auth-card-top">
+                        <div>
+                            <p class="auth-eyebrow">Firebase Access</p>
+                            <h2 class="auth-title">Entra con tu cuenta</h2>
+                            <p class="auth-copy">Guarda tu perfil, tu chat y la IA en la nube con una sola cuenta.</p>
+                        </div>
+                        <div class="auth-preview">
+                            <img id="auth-avatar-preview" class="auth-avatar-preview" src="" alt="Foto de perfil">
+                            <div>
+                                <strong id="auth-preview-name">Invitado</strong>
+                                <span id="auth-preview-email">Inicia sesión para continuar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="auth-form" class="auth-form">
+                        <div class="auth-mode-switch" role="tablist" aria-label="Modo de acceso">
+                            <button type="button" class="auth-mode-btn active" data-mode="login">Iniciar sesión</button>
+                            <button type="button" class="auth-mode-btn" data-mode="register">Registrarse</button>
+                        </div>
+
+                        <label class="auth-field">
+                            <span>Correo electrónico</span>
+                            <input id="auth-email" type="email" autocomplete="email" required placeholder="Usuario@Elsotanodeosito.com" aria-describedby="auth-email-example">
+                            <small id="auth-email-example">Ejemplo: Usuario@Elsotanodeosito.com</small>
+                        </label>
+
+                        <label class="auth-field">
+                            <span>Contraseña</span>
+                            <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+                        </label>
+
+                        <div class="auth-register-only" id="auth-register-only">
+                            <label class="auth-field">
+                                <span>Sexo</span>
+                                <select id="auth-gender">
+                                    <option value="male">Masculino</option>
+                                    <option value="female">Femenino</option>
+                                </select>
+                            </label>
+
+                            <div class="auth-photo-row">
+                                <div>
+                                    <span class="auth-photo-label">Foto de perfil</span>
+                                    <button class="btn-action auth-photo-btn" type="button" id="auth-photo-button">Subir imagen</button>
+                                    <input id="auth-photo-input" type="file" accept="image/*" hidden>
+                                </div>
+                                <img id="auth-photo-thumb" class="auth-photo-thumb" src="" alt="Vista previa de la foto">
+                            </div>
+                        </div>
+
+                        <button class="btn-enter-hub auth-submit" id="auth-submit" type="submit">Crear cuenta</button>
+                        <button class="btn-action auth-logout" id="auth-logout" type="button" style="display:none;">Cerrar sesión</button>
+                        <p class="auth-status" id="auth-status">Listo para entrar.</p>
+                    </form>
+                </div>
+            </div>
+            <button class="btn-enter-hub" id="btn-ready" onclick="iniciarCarga()" style="display:none;">Entrar a la página principal</button>
             <div class="loading-container" id="loading-container" style="display: none;">
                 <div class="loading-bar" id="progress-bar"></div>
             </div>
@@ -912,7 +998,7 @@
         }
 
         function iniciarCarga() {
-            if (typeof window.reproducirBienvenidaSitio === 'function') {
+            if (!window.ositoTutorialPendiente && typeof window.reproducirBienvenidaSitio === 'function') {
                 window.reproducirBienvenidaSitio();
             }
             document.getElementById('btn-ready').style.display = "none";
@@ -935,6 +1021,9 @@
             verificarCelebracion();
             // Autoplay permitido después del gesto del usuario
             iniciarMusicaFondo();
+            if (typeof window.ejecutarTutorialVozFirebase === 'function') {
+                window.ejecutarTutorialVozFirebase();
+            }
         }
 
         // ================================
@@ -1444,7 +1533,7 @@
             const aiNameSave = document.getElementById('ai-name-save');
             let vozActiva = localStorage.getItem('osito_ai_voz') !== 'false';
             let bienvenidaReproducida = false;
-            const bienvenidaSitio = 'Bienvenido al Sotano de Osito. Aqui puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo y hablar con la inteligencia del sitio. Esta pagina es segura: no te pide crear cuenta ni iniciar sesion. Para usar la IA, primero elige tu identidad y dime como quieres que te llame; despues podras preguntar cualquier cosa del canal o de la pagina.';
+            const bienvenidaSitio = 'Bienvenido al Sotano de Osito. Aqui puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo y hablar con la inteligencia del sitio. Ahora tu cuenta se guarda en Firebase para que puedas entrar sin repetir el registro y mantener tu chat e historial. Para usar la IA, primero elige tu identidad y dime como quieres que te llame; despues podras preguntar cualquier cosa del canal o de la pagina.';
 
             const infoCanal = {
                 canal: 'OsitoYT360',
@@ -1471,6 +1560,12 @@
                 msg.textContent = texto; 
                 aiMessages.appendChild(msg);
                 aiMessages.scrollTop = aiMessages.scrollHeight;
+                if (typeof window.registrarMensajeIAEnFirebase === 'function') {
+                    window.registrarMensajeIAEnFirebase({
+                        role: tipo,
+                        text: texto
+                    }).catch(() => {});
+                }
                 if (tipo === 'bot') {
                     hablarIA(texto);
                     window.publicarMensajeLiveChat?.(texto, 'IA Osito', { isSystem: true, isAdmin: true });
@@ -2091,8 +2186,10 @@
                 function establecerEstadoConexion(online, texto = null) {
                     const dot = document.getElementById('livechat-status-dot');
                     const textEl = document.getElementById('livechat-status-text');
+                    const hintEl = document.getElementById('livechat-sync-hint');
                     if (dot) dot.classList.toggle('offline', !online);
                     if (textEl) textEl.innerHTML = texto || '';
+                    if (hintEl && texto) hintEl.textContent = `(${texto})`;
                 }
 
                 function actualizarBadgeNotificacion() {
@@ -2226,15 +2323,32 @@
                         clientId: CLIENT_ID
                     };
 
-                    return window.livechatPushFirebase(messagesRef, messageData).then((newMessageRef) => {
-                        // Pintamos el mensaje confirmado sin esperar otro ciclo de red.
-                        const msg = { id: newMessageRef.key, ...messageData };
-                        if (!seenMessageIds.has(msg.id)) {
-                            seenMessageIds.add(msg.id);
-                            renderizarMensaje(msg, false);
-                        }
-                        return newMessageRef;
-                    });
+                    if (!window.livechatSetFirebase) {
+                        return Promise.reject(new Error('Firebase RTDB no esta listo para escribir.'));
+                    }
+
+                    const pendingId = `pending_${CLIENT_ID}_${Date.now()}`;
+                    renderizarMensaje({ id: pendingId, ...messageData }, false);
+
+                    try {
+                        const newMessageRef = window.livechatPushFirebase(messagesRef);
+                        return window.livechatSetFirebase(newMessageRef, messageData).then(() => {
+                            // Reemplazamos el mensaje temporal por el confirmado en la nube.
+                            document.getElementById(pendingId)?.remove();
+                            const msg = { id: newMessageRef.key, ...messageData };
+                            if (!seenMessageIds.has(msg.id)) {
+                                seenMessageIds.add(msg.id);
+                                renderizarMensaje(msg, false);
+                            }
+                            return newMessageRef;
+                        }).catch((error) => {
+                            document.getElementById(pendingId)?.remove();
+                            throw error;
+                        });
+                    } catch (error) {
+                        document.getElementById(pendingId)?.remove();
+                        return Promise.reject(error);
+                    }
                 }
 
                 function describirErrorFirebase(error) {
@@ -2282,23 +2396,31 @@
                 function escucharCambiosEnTiempoReal() {
                     limpiarSubscripciones();
 
-                    const offMessages = window.livechatOnChildAddedFirebase(messagesQuery, (snapshot) => {
-                        const data = snapshot.val() || {};
-                        const msg = {
-                            id: snapshot.key,
-                            user: data.user || 'Invitado',
-                            text: data.text || '',
-                            timestamp: Number(data.timestamp) || Date.now(),
-                            isSystem: Boolean(data.isSystem),
-                            isAdmin: Boolean(data.isAdmin)
-                        };
+                    const offMessages = window.livechatOnValueFirebase(messagesRef, (snapshot) => {
+                        const mensajes = [];
+                        snapshot.forEach((child) => {
+                            const data = child.val() || {};
+                            mensajes.push({
+                                id: child.key,
+                                user: data.user || 'Invitado',
+                                text: data.text || '',
+                                timestamp: Number(data.timestamp) || Date.now(),
+                                isSystem: Boolean(data.isSystem),
+                                isAdmin: Boolean(data.isAdmin)
+                            });
+                        });
 
-                        if (seenMessageIds.has(msg.id)) return;
-                        seenMessageIds.add(msg.id);
-                        renderizarMensaje(msg, false);
+                        mensajes.sort((a, b) => a.timestamp - b.timestamp);
+                        limpiarChatEnPantalla();
+                        seenMessageIds = new Set();
+                        mensajes.slice(-MAX_HISTORY).forEach((msg) => {
+                            seenMessageIds.add(msg.id);
+                            renderizarMensaje(msg, true);
+                        });
                     }, (error) => {
                         console.error('No se pudo escuchar el chat de Firebase:', error);
-                        mostrarNotificacion('No se pudo sincronizar el chat en tiempo real.');
+                        establecerEstadoConexion(false, describirErrorFirebase(error));
+                        mostrarNotificacion(`No se pudo sincronizar el chat: ${describirErrorFirebase(error)}`);
                     });
                     unsubscribers.push(offMessages);
 
@@ -2323,8 +2445,6 @@
 
                 function iniciarChatFirebase() {
                     if (!obtenerRefs()) {
-                        establecerEstadoConexion(false, 'Firebase RTDB no configurado');
-                        mostrarNotificacion('El chat necesita Firebase Realtime Database configurado.');
                         return;
                     }
 
@@ -2335,8 +2455,8 @@
                         })
                         .catch((error) => {
                             console.error('No se pudo cargar el historial del chat:', error);
-                            establecerEstadoConexion(false, 'Error al cargar el chat');
-                            mostrarNotificacion('No se pudo cargar el historial del chat en Firebase.');
+                            establecerEstadoConexion(false, describirErrorFirebase(error));
+                            mostrarNotificacion(`No se pudo cargar el chat: ${describirErrorFirebase(error)}`);
                         });
                 }
 
@@ -2364,15 +2484,18 @@
                     const limpia = (texto || '').trim();
                     if (!limpia) return;
 
-                    publicarMensajeEnFirebase({
-                        user: obtenerNombreActual(),
-                        text: limpia,
-                        isSystem: false,
-                        isAdmin: false
-                    }).catch((error) => {
-                        console.error('No se pudo enviar el mensaje a Firebase:', error);
-                        mostrarNotificacion(describirErrorFirebase(error));
-                    });
+                    if (typeof window.publicarMensajeLiveChat === 'function') {
+                        window.publicarMensajeLiveChat(limpia, obtenerNombreActual(), {
+                            isSystem: false,
+                            isAdmin: false
+                        }).catch((error) => {
+                            console.error('No se pudo enviar el mensaje a Firebase:', error);
+                            mostrarNotificacion(describirErrorFirebase(error));
+                        });
+                        return;
+                    }
+
+                    mostrarNotificacion('El chat en vivo no esta listo todavia.');
                 }
 
                 window.addEventListener('DOMContentLoaded', () => {
@@ -2947,22 +3070,19 @@
                 if (!limpia) return;
 
                 const miNombre = obtenerNombreActual();
-                const baseUrl = obtenerServerBaseUrl();
 
-                if (modoFirebaseChat && window.dbFirebase && window.collectionFirebase && window.addDocFirebase) {
-                    window.addDocFirebase(window.collectionFirebase(window.dbFirebase, 'livechat'), {
-                        user: miNombre,
-                        text: limpia,
-                        timestamp: Date.now(),
+                if (typeof window.publicarMensajeLiveChat === 'function') {
+                    window.publicarMensajeLiveChat(limpia, miNombre, {
                         isSystem: false,
                         isAdmin: false
-                    })
-                    .catch((error) => {
+                    }).catch((error) => {
                         console.error('No se pudo guardar el mensaje en Firebase:', error);
                         mostrarNotificacion('No se pudo guardar el mensaje. Revisa las reglas de Firestore.');
                     });
                     return;
                 }
+
+                const baseUrl = obtenerServerBaseUrl();
 
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({
@@ -3273,5 +3393,6 @@
             };
         })();
     </script>
+    <script src="firebase-integration.js"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

@@ -2623,6 +2623,10 @@
                     mostrarNotificacion('El chat en vivo no esta listo todavia.');
                 }
 
+                // El controlador antiguo de Realtime Database queda desactivado.
+                // El segundo controlador usa Firestore y es el unico que escucha el formulario.
+                return;
+
                 window.addEventListener('DOMContentLoaded', () => {
                     actualizarNombreEnPantalla();
                     iniciarChatFirebase();
@@ -3284,6 +3288,9 @@
                 if (window.firebaseAuth?.currentUser) {
                     iniciarModoFirebaseChat();
                 }
+                window.addEventListener('osito:livechat-message', (event) => {
+                    if (event.detail) renderizarMensaje(event.detail, false);
+                });
 
                 const form = document.getElementById('livechat-form');
                 const input = document.getElementById('livechat-input');

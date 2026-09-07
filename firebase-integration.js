@@ -576,7 +576,7 @@
             throw new Error('El mensaje no puede estar vacio.');
         }
 
-        return window.addDocFirebase(window.collectionFirebase(db, 'livechat'), {
+        const messageData = {
             user: escapeText(usuario).slice(0, 24) || 'Invitado',
             text: cleanText,
             timestamp: Date.now(),
@@ -586,7 +586,18 @@
             email: state.currentUser.email || '',
             photoURL: state.profile?.photoURL || '',
             isCreator: Boolean(window.ositoEsCreador)
-        });
+        };
+
+        const messageRef = await window.addDocFirebase(
+            window.collectionFirebase(db, 'livechat'),
+            messageData
+        );
+
+        // Render inmediato; onSnapshot sincroniza despues y evita duplicados por id.
+        window.dispatchEvent(new CustomEvent('osito:livechat-message', {
+            detail: { ...messageData, id: messageRef.id, uid: state.currentUser.uid }
+        }));
+        return messageRef;
     };
 
     window.addEventListener('DOMContentLoaded', () => {

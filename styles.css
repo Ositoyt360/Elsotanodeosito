@@ -2573,3 +2573,55 @@ body.compact-layout .promo-title-main {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
 }
+
+/* Acceso movil: el formulario puede crecer sin esconder sus botones. */
+@media (max-width: 640px) {
+    #welcome-screen {
+        align-items: flex-start;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 22px 0 42px;
+        box-sizing: border-box;
+    }
+
+    .welcome-panel {
+        width: calc(100% - 24px);
+        margin: auto;
+    }
+
+    .welcome-title {
+        font-size: clamp(2rem, 11vw, 2.8rem);
+        line-height: 1.05;
+        margin-bottom: 18px;
+    }
+
+    .auth-card {
+        padding: 18px 16px;
+        border-radius: 18px;
+    }
+
+    .auth-card-top {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .auth-preview {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .auth-mode-btn,
+    .auth-submit,
+    .auth-guest,
+    .auth-logout {
+        min-height: 48px;
+    }
+
+    #btn-ready {
+        width: 100%;
+        min-width: 0;
+        min-height: 52px;
+        margin-top: 16px;
+    }
+}

@@ -3150,13 +3150,15 @@
                     event.preventDefault();
                     saveAssignedRank().catch((error) => {
                         console.error('[LiveChat] No se pudo asignar el rango', error);
-                        if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se pudo guardar el rango.');
+                        const reason = error?.code || error?.message || 'error desconocido';
+                        if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion(`No se pudo guardar el rango: ${reason}`);
                     });
                 });
                 if (rankRemove) rankRemove.addEventListener('click', () => {
                     saveAssignedRank('').catch((error) => {
                         console.error('[LiveChat] No se pudo quitar el rango', error);
-                        if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se pudo quitar el rango.');
+                        const reason = error?.code || error?.message || 'error desconocido';
+                        if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion(`No se pudo quitar el rango: ${reason}`);
                     });
                 });
                 const syncAssignedRankPreview = () => {

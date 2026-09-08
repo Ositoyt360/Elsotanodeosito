@@ -112,6 +112,7 @@
             creatorBadge: el('auth-creator-badge'),
             accountTools: el('account-tools'),
             changePasswordForm: el('change-password-form'),
+            currentPassword: el('current-password'),
             newPassword: el('new-password'),
             newPasswordToggle: el('new-password-toggle'),
             rankForm: el('rank-form'),
@@ -852,9 +853,14 @@
 
     async function handleChangePassword(event) {
         event.preventDefault();
-        const { newPassword } = getAuthElements();
+        const { currentPassword, newPassword } = getAuthElements();
+        const oldPassword = String(currentPassword?.value || '');
         const password = String(newPassword?.value || '');
         if (!state.currentUser || !password) return;
+        if (!oldPassword) {
+            setStatus('Escribe tu contraseña actual para confirmar el cambio.', 'error');
+            return;
+        }
         if (password.length < 6) {
             setStatus('La contraseña debe tener al menos 6 caracteres.', 'error');
             return;
@@ -864,12 +870,20 @@
             return;
         }
         try {
+            if (window.authCredentialFirebase && window.reauthenticateWithCredentialFirebase) {
+                const credential = window.authCredentialFirebase(state.currentUser.email, oldPassword);
+                await window.reauthenticateWithCredentialFirebase(state.currentUser, credential);
+            }
             await window.updatePasswordFirebase(state.currentUser, password);
+            if (currentPassword) currentPassword.value = '';
             if (newPassword) newPassword.value = '';
             setStatus('Contraseña actualizada correctamente.', 'success');
         } catch (error) {
             console.error('[FirebaseAuth] Cambio de contraseña', error);
-            if (String(error?.code || '').includes('auth/requires-recent-login')) {
+            const code = String(error?.code || '');
+            if (code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
+                setStatus('La contraseña actual no es correcta.', 'error');
+            } else if (code.includes('auth/requires-recent-login')) {
                 setStatus('Por seguridad, vuelve a iniciar sesión para cambiarla.', 'error');
             } else {
                 setStatus('No se pudo cambiar la contraseña.', 'error');

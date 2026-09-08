@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=rank-chat-only-20260907-2">
+    <link rel="stylesheet" href="styles.css?v=queen-badge-password-20260908-1">
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -67,6 +67,8 @@
                 window.signInWithEmailAndPasswordFirebase = (instance, email, password) => instance.signInWithEmailAndPassword(email, password);
                 window.signOutFirebase = (instance) => instance.signOut();
                 window.updatePasswordFirebase = (user, password) => user.updatePassword(password);
+                window.authCredentialFirebase = (email, password) => window.firebase.auth.EmailAuthProvider.credential(email, password);
+                window.reauthenticateWithCredentialFirebase = (user, credential) => user.reauthenticateWithCredential(credential);
                 window.deleteDocFirebase = (ref) => ref.delete();
                 window.onAuthStateChangedFirebase = (instance, callback) => instance.onAuthStateChanged(callback);
                 window.updateProfileFirebase = (user, data) => user.updateProfile(data);
@@ -82,7 +84,7 @@
     <script type="text/plain" data-firebase-modular="disabled">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
         const firebaseConfig = {
@@ -138,6 +140,8 @@
         window.signInWithEmailAndPasswordFirebase = signInWithEmailAndPassword;
         window.signOutFirebase = signOut;
         window.updatePasswordFirebase = updatePassword;
+        window.authCredentialFirebase = (email, password) => EmailAuthProvider.credential(email, password);
+        window.reauthenticateWithCredentialFirebase = reauthenticateWithCredential;
         window.deleteDocFirebase = deleteDoc;
         window.onAuthStateChangedFirebase = onAuthStateChanged;
         window.updateProfileFirebase = updateProfile;
@@ -253,6 +257,10 @@
                             <small>Puedes cambiar tu contraseña cuando quieras.</small>
                         </div>
                         <form id="change-password-form" class="change-password-form">
+                            <label class="auth-field">
+                                <span>Contraseña actual</span>
+                                <input id="current-password" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña actual">
+                            </label>
                             <label class="auth-field">
                                 <span>Nueva contraseña</span>
                                 <div class="password-control">
@@ -2568,16 +2576,12 @@
                     const currentProfile = isOwnMessage(message) ? (window.ositoCurrentUserProfile || {}) : {};
                     const photoURL = String(message.photoURL || currentProfile.photoURL || '');
                     const isCreator = Boolean(message.isCreator) || normalize(message.email) === 'ositoyt360@elsotanodeosito.com';
-                    const rankLabel = String(message.rankLabel || message.rank || message.rankName || currentProfile.rankLabel || '').trim().slice(0, 24);
-                    const rankColorValue = String(message.rankColor || currentProfile.rankColor || '').trim();
-                    const rankColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(rankColorValue)
-                        ? rankColorValue
-                        : '#00f2fe';
+                    const isDenis = normalize(message.user) === 'denis';
                     const avatarMarkup = /^(https?:|data:image\/)/i.test(photoURL)
                         ? `<img class="lc-msg-avatar" src="${escapeHtml(photoURL)}" alt="Foto de ${escapeHtml(message.user || 'Invitado')}" loading="lazy">`
                         : `<span class="lc-msg-avatar">${escapeHtml(initials)}</span>`;
-                    const rankMarkup = rankLabel
-                        ? `<span class="lc-rank-badge" style="--rank-color:${escapeHtml(rankColor)}">${escapeHtml(rankLabel)}</span>`
+                    const rankMarkup = isDenis
+                        ? '<span class="lc-rank-badge lc-queen-badge">💜 La Reina del Creador 💜</span>'
                         : '';
 
                     wrapper.innerHTML = `
@@ -2594,15 +2598,6 @@
                         <div class="lc-msg-status ${seenCount > 0 ? 'seen' : ''}">${escapeHtml(statusText)}</div>
                     `;
 
-                    if (window.ositoEsCreador && message.uid && message.uid !== (window.firebaseAuth?.currentUser?.uid || '')) {
-                        const rankButton = document.createElement('button');
-                        rankButton.className = 'lc-rank-action';
-                        rankButton.type = 'button';
-                        rankButton.textContent = 'Rango';
-                        rankButton.title = `Asignar rango a ${message.user || 'este usuario'}`;
-                        rankButton.addEventListener('click', () => window.abrirAsignacionRango?.(message));
-                        wrapper.querySelector('.lc-msg-user-wrap')?.appendChild(rankButton);
-                    }
                 }
 
                 if (window.ositoEsCreador && !message.isSystem && !String(message.id).startsWith('pending_')) {
@@ -3194,6 +3189,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=firebase-profile-sync-20260908-14"></script>
+    <script src="firebase-integration.js?v=queen-badge-password-20260908-1"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

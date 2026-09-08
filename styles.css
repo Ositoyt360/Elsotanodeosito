@@ -367,6 +367,13 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Se conserva el marcado antiguo para no romper perfiles existentes, pero ya no se muestran rangos editables. */
+.livechat-rank-panel,
+.lc-rank-action,
+.rank-form {
+    display: none !important;
+}
+
 .rank-color-row {
     display: flex;
     align-items: center;
@@ -2478,6 +2485,15 @@ body.creator-mode .livechat-admin-trigger {
     box-shadow: 0 0 12px var(--rank-color, #00f2fe), inset 0 0 10px rgba(255, 255, 255, 0.05);
     text-shadow: 0 0 8px var(--rank-color, #00f2fe);
     animation: rankBadgePulse 2.4s ease-in-out infinite;
+}
+
+.lc-queen-badge {
+    --rank-color: #d946ef;
+    color: #f5b7ff;
+    border-color: #d946ef;
+    background: linear-gradient(135deg, rgba(91, 16, 120, .9), rgba(24, 5, 42, .95));
+    box-shadow: 0 0 8px #d946ef, 0 0 18px rgba(217, 70, 239, .8), inset 0 0 8px rgba(255, 255, 255, .12);
+    text-shadow: 0 0 8px #f0abfc;
 }
 
 .lc-rank-action {

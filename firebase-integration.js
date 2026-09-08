@@ -9,6 +9,7 @@
         selectedPhotoFile: null,
         aiUnsubscribe: null,
         livechatUnsubscribe: null,
+        profileUnsubscribe: null,
         aiSeededFromDom: false,
         authSubmitting: false,
     };
@@ -25,6 +26,25 @@
 
     function escapeText(value) {
         return String(value || '').trim();
+    }
+
+    function sanitizeRankLabel(value) {
+        return String(value || '')
+            .replace(/[\r\n\t]+/g, ' ')
+            .trim()
+            .slice(0, 24);
+    }
+
+    function sanitizeRankColor(value) {
+        const color = String(value || '').trim();
+        return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : '#00f2fe';
+    }
+
+    function getRankDisplay(profile) {
+        return {
+            label: sanitizeRankLabel(profile?.rankLabel || profile?.rank || profile?.rankName || ''),
+            color: sanitizeRankColor(profile?.rankColor || '#00f2fe')
+        };
     }
 
     const BAD_CHAT_WORDS = ['puta', 'puto', 'mierda', 'cabron', 'cabrona', 'imbecil', 'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'cono', 'joder', 'huevon', 'baboso'];
@@ -87,6 +107,10 @@
             changePasswordForm: el('change-password-form'),
             newPassword: el('new-password'),
             newPasswordToggle: el('new-password-toggle'),
+            rankForm: el('rank-form'),
+            rankInput: el('profile-rank'),
+            rankColorInput: el('profile-rank-color'),
+            rankPreview: el('profile-rank-preview'),
             registerOnly: el('auth-register-only'),
             gender: el('auth-gender'),
             photoButton: el('auth-photo-button'),
@@ -120,7 +144,10 @@
             previewEmail,
             avatarPreview,
             photoThumb,
-            creatorBadge
+            creatorBadge,
+            rankInput,
+            rankColorInput,
+            rankPreview
         } = getAuthElements();
         const headerAvatar = el('header-profile-avatar');
         const livechatAvatar = el('livechat-current-avatar');
@@ -129,6 +156,7 @@
         const displayName = isGuest ? 'Invitado' : (profile?.displayName || safeEmailName(user?.email));
         const email = isGuest ? 'Inicia sesion para continuar' : (user?.email || 'Inicia sesion para continuar');
         const avatarUrl = isGuest ? getDefaultAvatarDataUrl('OS') : (profile?.photoURL || getDefaultAvatarDataUrl(profile?.gender || 'OS'));
+        const rank = getRankDisplay(profile);
 
         if (previewName) previewName.textContent = displayName;
         if (previewEmail) previewEmail.textContent = email;
@@ -158,12 +186,21 @@
         if (!isCreator && window.localStorage) {
             localStorage.removeItem('osito_chat_admin_key');
         }
+        if (rankInput) rankInput.value = rank.label;
+        if (rankColorInput) rankColorInput.value = rank.color;
+        if (rankPreview) {
+            rankPreview.textContent = rank.label || 'Sin rango';
+            rankPreview.style.setProperty('--rank-color', rank.color);
+            rankPreview.classList.toggle('is-empty', !rank.label);
+        }
         window.ositoCurrentUserProfile = {
             uid: user?.uid || '',
             email,
             displayName,
             gender: profile?.gender || '',
-            photoURL: profile?.photoURL || ''
+            photoURL: profile?.photoURL || '',
+            rankLabel: rank.label,
+            rankColor: rank.color
         };
 
         if (!isGuest && !localStorage.getItem('osito_ai_nombre')) {
@@ -246,6 +283,8 @@
                 displayName: safeEmailName(user.email),
                 gender: registerGender || 'male',
                 photoURL: registerPhotoURL || user.photoURL || '',
+                rankLabel: '',
+                rankColor: '#00f2fe',
                 tutorialSeen: fromRegister ? false : true
             };
         }
@@ -260,6 +299,8 @@
                 displayName: data.displayName || safeEmailName(user.email),
                 gender: data.gender || registerGender || 'male',
                 photoURL: data.photoURL || user.photoURL || registerPhotoURL || '',
+                rankLabel: sanitizeRankLabel(data.rankLabel || data.rank || data.rankName || ''),
+                rankColor: sanitizeRankColor(data.rankColor || '#00f2fe'),
                 tutorialSeen: Boolean(data.tutorialSeen),
                 createdAt: data.createdAt || null
             };
@@ -271,6 +312,8 @@
             displayName: safeEmailName(user.email),
             gender: registerGender || 'male',
             photoURL: registerPhotoURL || user.photoURL || '',
+            rankLabel: '',
+            rankColor: '#00f2fe',
             tutorialSeen: fromRegister ? false : true,
             createdAt: Date.now()
         };
@@ -278,6 +321,91 @@
         await window.setDocFirebase(ref, profile, { merge: true });
         return profile;
     }
+
+    async function saveRankProfile() {
+        if (!state.currentUser || !db || !window.docFirebase || !window.setDocFirebase) return;
+        const { rankInput, rankColorInput } = getAuthElements();
+        const rankLabel = sanitizeRankLabel(rankInput?.value || '');
+        const rankColor = sanitizeRankColor(rankColorInput?.value || '#00f2fe');
+        const nextProfile = {
+            ...(state.profile || {}),
+            rankLabel,
+            rankColor
+        };
+
+        state.profile = nextProfile;
+        window.ositoCurrentUserProfile = {
+            ...(window.ositoCurrentUserProfile || {}),
+            rankLabel,
+            rankColor
+        };
+
+        setPreview(nextProfile, state.currentUser);
+
+        await window.setDocFirebase(window.docFirebase(db, 'users', state.currentUser.uid), {
+            uid: state.currentUser.uid,
+            email: state.currentUser.email || '',
+            displayName: nextProfile.displayName || safeEmailName(state.currentUser.email),
+            gender: nextProfile.gender || 'male',
+            photoURL: nextProfile.photoURL || state.currentUser.photoURL || '',
+            rankLabel,
+            rankColor,
+            updatedAt: Date.now()
+        }, { merge: true });
+    }
+
+    function startProfileListener(user) {
+        if (typeof state.profileUnsubscribe === 'function') {
+            state.profileUnsubscribe();
+            state.profileUnsubscribe = null;
+        }
+        if (!user || !db || !window.docFirebase || !window.onSnapshotFirebase) return;
+
+        state.profileUnsubscribe = window.onSnapshotFirebase(
+            window.docFirebase(db, 'users', user.uid),
+            (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.data() || {};
+                state.profile = {
+                    ...(state.profile || {}),
+                    ...data,
+                    uid: user.uid,
+                    rankLabel: sanitizeRankLabel(data.rankLabel || data.rank || data.rankName || ''),
+                    rankColor: sanitizeRankColor(data.rankColor || '#00f2fe')
+                };
+                setPreview(state.profile, user);
+            },
+            (error) => console.warn('[FirebaseAuth] No se pudo sincronizar el rango.', error)
+        );
+    }
+
+    window.asignarRangoUsuario = async function asignarRangoUsuario(uid, label, color) {
+        if (!window.ositoEsCreador || !uid || !db || !window.docFirebase || !window.setDocFirebase) {
+            throw new Error('No tienes permiso para asignar rangos.');
+        }
+
+        const rankLabel = sanitizeRankLabel(label);
+        const rankColor = sanitizeRankColor(color);
+        await window.setDocFirebase(window.docFirebase(db, 'users', String(uid)), {
+            rankLabel,
+            rankColor,
+            updatedAt: Date.now()
+        }, { merge: true });
+
+        // Actualiza tambien el historial para que el rango sea visible de inmediato.
+        if (window.collectionFirebase && window.getDocsFirebase && window.updateDocFirebase) {
+            try {
+                const snapshot = await window.getDocsFirebase(window.collectionFirebase(db, 'livechat'));
+                await Promise.all(snapshot.docs
+                    .filter((docSnap) => docSnap.data()?.uid === uid)
+                    .map((docSnap) => window.updateDocFirebase(docSnap.ref, { rankLabel, rankColor })));
+            } catch (error) {
+                console.warn('[FirebaseLiveChat] El perfil se guardo, pero no se pudo actualizar todo el historial.', error);
+            }
+        }
+
+        return { rankLabel, rankColor };
+    };
 
     async function optimizeImage(file) {
         if (!file || !file.type?.startsWith('image/')) return file;
@@ -454,19 +582,21 @@
                     const timestamp = data.timestamp?.toMillis
                         ? data.timestamp.toMillis()
                         : (Number(data.timestamp) || Date.now());
-                    messages.push({
-                        id: docSnap.id,
-                        user: data.user || 'Invitado',
-                        text: data.text || '',
-                        timestamp,
-                        uid: data.uid || '',
-                        email: data.email || '',
-                        photoURL: data.photoURL || (data.uid === state.currentUser?.uid ? state.profile?.photoURL || '' : ''),
-                        isCreator: Boolean(data.isCreator),
-                        isSystem: Boolean(data.isSystem),
-                        isAdmin: Boolean(data.isAdmin),
-                        imageURL: data.imageURL || '',
-                        seenBy: Array.isArray(data.seenBy) ? data.seenBy : []
+                messages.push({
+                    id: docSnap.id,
+                    user: data.user || 'Invitado',
+                    text: data.text || '',
+                    timestamp,
+                    uid: data.uid || '',
+                    email: data.email || '',
+                    photoURL: data.photoURL || (data.uid === state.currentUser?.uid ? state.profile?.photoURL || '' : ''),
+                    rankLabel: sanitizeRankLabel(data.rankLabel || data.rank || data.rankName || ''),
+                    rankColor: sanitizeRankColor(data.rankColor || state.profile?.rankColor || '#00f2fe'),
+                    isCreator: Boolean(data.isCreator),
+                    isSystem: Boolean(data.isSystem),
+                    isAdmin: Boolean(data.isAdmin),
+                    imageURL: data.imageURL || '',
+                    seenBy: Array.isArray(data.seenBy) ? data.seenBy : []
                     });
                 });
 
@@ -507,12 +637,14 @@
                 displayName,
                 gender,
                 photoURL,
+                rankLabel: '',
+                rankColor: '#00f2fe',
                 tutorialSeen: false,
                 createdAt: Date.now()
             }, { merge: true });
         }
 
-        return { displayName, gender, photoURL, tutorialSeen: false };
+        return { displayName, gender, photoURL, rankLabel: '', rankColor: '#00f2fe', tutorialSeen: false };
     }
 
     async function handleAuthSubmit(event) {
@@ -730,6 +862,10 @@
                     state.livechatUnsubscribe();
                     state.livechatUnsubscribe = null;
                 }
+                if (typeof state.profileUnsubscribe === 'function') {
+                    state.profileUnsubscribe();
+                    state.profileUnsubscribe = null;
+                }
                 showUnauthenticatedView();
                 return;
             }
@@ -742,11 +878,14 @@
                 showAuthenticatedView({
                     displayName: safeEmailName(user.email),
                     gender: 'male',
-                    photoURL: ''
+                    photoURL: '',
+                    rankLabel: '',
+                    rankColor: '#00f2fe'
                 }, user);
             }
 
             // El chat usa Firestore para sincronizar mensajes entre cuentas en tiempo real.
+            startProfileListener(user);
             startLiveChatListener();
             window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
         });
@@ -769,6 +908,9 @@
             changePasswordForm,
             newPassword,
             newPasswordToggle,
+            rankForm,
+            rankInput,
+            rankColorInput,
             modeButtons
         } = getAuthElements();
 
@@ -785,6 +927,35 @@
         if (passwordToggle) passwordToggle.addEventListener('click', () => togglePasswordVisibility(password, passwordToggle));
         if (newPasswordToggle) newPasswordToggle.addEventListener('click', () => togglePasswordVisibility(newPassword, newPasswordToggle));
         if (changePasswordForm) changePasswordForm.addEventListener('submit', handleChangePassword);
+        if (rankForm) {
+            rankForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                try {
+                    await saveRankProfile();
+                    setStatus('Rango guardado correctamente.', 'success');
+                    if (typeof window.mostrarNotificacion === 'function') {
+                        window.mostrarNotificacion('Tu rango ahora se muestra con color y brillo en el chat.');
+                    }
+                } catch (error) {
+                    console.error('[FirebaseAuth] Guardar rango', error);
+                    setStatus('No se pudo guardar el rango.', 'error');
+                }
+            });
+            if (rankInput && rankColorInput) {
+                const syncRankPreview = () => {
+                    const label = sanitizeRankLabel(rankInput.value || '');
+                    const color = sanitizeRankColor(rankColorInput.value || '#00f2fe');
+                    const preview = getAuthElements().rankPreview;
+                    if (preview) {
+                        preview.textContent = label || 'Sin rango';
+                        preview.style.setProperty('--rank-color', color);
+                        preview.classList.toggle('is-empty', !label);
+                    }
+                };
+                rankInput.addEventListener('input', syncRankPreview);
+                rankColorInput.addEventListener('input', syncRankPreview);
+            }
+        }
 
         if (logout) {
             logout.addEventListener('click', handleSignOut);
@@ -898,6 +1069,8 @@
             uid: state.currentUser.uid,
             email: state.currentUser.email || '',
             photoURL: state.profile?.photoURL || '',
+            rankLabel: sanitizeRankLabel(state.profile?.rankLabel || ''),
+            rankColor: sanitizeRankColor(state.profile?.rankColor || '#00f2fe'),
             isCreator: Boolean(window.ositoEsCreador)
         };
 

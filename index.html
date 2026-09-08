@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=profile-chat-fix-20260907">
+    <link rel="stylesheet" href="styles.css?v=rank-assignment-20260907">
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -261,6 +261,24 @@
                                 </div>
                             </label>
                             <button class="btn-action" type="submit">🔑 Cambiar contraseña</button>
+                        </form>
+                        <form id="rank-form" class="rank-form">
+                            <div class="account-tools-heading">
+                                <span>🏷️ Rango del chat</span>
+                                <small>Escribe tu etiqueta y elige un color para que se vea con brillo en el chat.</small>
+                            </div>
+                            <label class="auth-field">
+                                <span>Etiqueta de rango</span>
+                                <input id="profile-rank" type="text" maxlength="24" placeholder="Ejemplo: Moderador">
+                            </label>
+                            <label class="auth-field">
+                                <span>Color del rango</span>
+                                <div class="rank-color-row">
+                                    <input id="profile-rank-color" type="color" value="#00f2fe">
+                                    <span id="profile-rank-preview" class="rank-preview-chip">Moderador</span>
+                                </div>
+                            </label>
+                            <button class="btn-action" type="submit">✨ Guardar rango</button>
                         </form>
                     </section>
                 </div>
@@ -2261,6 +2279,29 @@
                 </div>
             </div>
 
+            <div class="livechat-rank-panel" id="livechat-rank-panel" style="display:none;">
+                <div class="livechat-admin-title">
+                    <span>Asignar rango</span>
+                    <button class="livechat-admin-close" id="livechat-rank-close" type="button" title="Cerrar rango">X</button>
+                </div>
+                <p class="livechat-rank-target" id="livechat-rank-target">Selecciona un usuario del chat.</p>
+                <form id="livechat-rank-form">
+                    <div class="livechat-admin-field">
+                        <label for="livechat-rank-label">Texto del rango</label>
+                        <input id="livechat-rank-label" type="text" maxlength="24" placeholder="Ejemplo: Moderador" autocomplete="off">
+                    </div>
+                    <div class="livechat-rank-color-row">
+                        <label for="livechat-rank-color">Color</label>
+                        <input id="livechat-rank-color" type="color" value="#00f2fe">
+                        <span id="livechat-rank-preview" class="rank-preview-chip is-empty">Sin rango</span>
+                    </div>
+                    <div class="livechat-admin-actions">
+                        <button class="livechat-admin-btn btn-admin-broadcast" type="submit">Guardar rango</button>
+                        <button class="livechat-admin-btn btn-admin-clear" id="livechat-rank-remove" type="button">Quitar rango</button>
+                    </div>
+                </form>
+            </div>
+
             <div class="livechat-messages" id="livechat-messages" role="log" aria-live="polite"></div>
 
             <div class="livechat-typing-bar" id="livechat-typing-bar" style="display: none;">
@@ -2546,15 +2587,23 @@
                     const statusText = mine ? (seenCount > 0 ? '✓✓ Visto' : '✓ Enviado') : '';
                     const photoURL = String(message.photoURL || '');
                     const isCreator = Boolean(message.isCreator) || normalize(message.email) === 'ositoyt360@elsotanodeosito.com';
+                    const rankLabel = String(message.rankLabel || message.rank || message.rankName || '').trim().slice(0, 24);
+                    const rankColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(message.rankColor || '').trim())
+                        ? String(message.rankColor).trim()
+                        : '#00f2fe';
                     const avatarMarkup = /^(https?:|data:image\/)/i.test(photoURL)
                         ? `<img class="lc-msg-avatar" src="${escapeHtml(photoURL)}" alt="Foto de ${escapeHtml(message.user || 'Invitado')}" loading="lazy">`
                         : `<span class="lc-msg-avatar">${escapeHtml(initials)}</span>`;
+                    const rankMarkup = rankLabel
+                        ? `<span class="lc-rank-badge" style="--rank-color:${escapeHtml(rankColor)}">${escapeHtml(rankLabel)}</span>`
+                        : '';
 
                     wrapper.innerHTML = `
                         <div class="lc-msg-header">
                             <div class="lc-msg-user-wrap">
                                 ${avatarMarkup}
                                 <span class="lc-msg-user ${isCreator ? 'lc-creator-name' : ''}">${escapeHtml(message.user || 'Invitado')}</span>
+                                ${rankMarkup}
                                 ${isCreator ? '<span class="lc-creator-badge">✨ Creador</span>' : ''}
                             </div>
                             <span class="lc-msg-time" title="${escapeHtml(formatDate(message.timestamp))}">${escapeHtml(formatTime(message.timestamp))}</span>
@@ -2562,6 +2611,16 @@
                         <div class="lc-msg-bubble">${escapeHtml(message.text || '')}</div>
                         <div class="lc-msg-status ${seenCount > 0 ? 'seen' : ''}">${escapeHtml(statusText)}</div>
                     `;
+
+                    if (window.ositoEsCreador && message.uid && message.uid !== (window.firebaseAuth?.currentUser?.uid || '')) {
+                        const rankButton = document.createElement('button');
+                        rankButton.className = 'lc-rank-action';
+                        rankButton.type = 'button';
+                        rankButton.textContent = 'Rango';
+                        rankButton.title = `Asignar rango a ${message.user || 'este usuario'}`;
+                        rankButton.addEventListener('click', () => window.abrirAsignacionRango?.(message));
+                        wrapper.querySelector('.lc-msg-user-wrap')?.appendChild(rankButton);
+                    }
                 }
 
                 if (window.ositoEsCreador && !message.isSystem && !String(message.id).startsWith('pending_')) {
@@ -2758,6 +2817,8 @@
                     uid: currentUser?.uid || profile.uid || CLIENT_ID,
                     email: currentUser?.email || profile.email || '',
                     photoURL: profile.photoURL || '',
+                    rankLabel: String(profile.rankLabel || '').trim().slice(0, 24),
+                    rankColor: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(profile.rankColor || '').trim()) ? String(profile.rankColor).trim() : '#00f2fe',
                     isCreator: Boolean(window.ositoEsCreador),
                     seenBy: []
                 };
@@ -2846,7 +2907,11 @@
                     text: cleanText,
                     clientId: CLIENT_ID,
                     isSystem: Boolean(options && options.isSystem),
-                    isAdmin: Boolean(options && options.isAdmin)
+                    isAdmin: Boolean(options && options.isAdmin),
+                    rankLabel: String(window.ositoCurrentUserProfile?.rankLabel || '').trim().slice(0, 24),
+                    rankColor: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(window.ositoCurrentUserProfile?.rankColor || '').trim())
+                        ? String(window.ositoCurrentUserProfile.rankColor).trim()
+                        : '#00f2fe'
                 };
 
                 if (firebaseChatReady) {
@@ -2905,6 +2970,72 @@
                 adminComposerOpen = typeof force === 'boolean' ? force : !adminComposerOpen;
                 const panel = document.getElementById('livechat-admin-panel');
                 if (panel) panel.style.display = adminComposerOpen ? 'flex' : 'none';
+            }
+
+            let rankTargetMessage = null;
+
+            function cleanRankColor(value) {
+                const color = String(value || '').trim();
+                return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : '#00f2fe';
+            }
+
+            function updateDisplayedRank(uid, label, color) {
+                messageStore.forEach((message, id) => {
+                    if (message.uid !== uid) return;
+                    message.rankLabel = label;
+                    message.rankColor = color;
+                    const row = document.getElementById(id);
+                    const userWrap = row?.querySelector('.lc-msg-user-wrap');
+                    if (!userWrap) return;
+                    userWrap.querySelector('.lc-rank-badge')?.remove();
+                    if (!label) return;
+                    const badge = document.createElement('span');
+                    badge.className = 'lc-rank-badge';
+                    badge.textContent = label;
+                    badge.style.setProperty('--rank-color', color);
+                    userWrap.insertBefore(badge, userWrap.querySelector('.lc-rank-action') || null);
+                });
+            }
+
+            window.abrirAsignacionRango = function abrirAsignacionRango(message) {
+                if (!window.ositoEsCreador || !message?.uid) return;
+                rankTargetMessage = message;
+                const panel = document.getElementById('livechat-rank-panel');
+                const target = document.getElementById('livechat-rank-target');
+                const input = document.getElementById('livechat-rank-label');
+                const color = document.getElementById('livechat-rank-color');
+                const preview = document.getElementById('livechat-rank-preview');
+                const label = String(message.rankLabel || message.rank || message.rankName || '').trim().slice(0, 24);
+                const rankColor = cleanRankColor(message.rankColor);
+                if (target) target.textContent = `Usuario: ${message.user || 'Invitado'}`;
+                if (input) input.value = label;
+                if (color) color.value = rankColor;
+                if (preview) {
+                    preview.textContent = label || 'Sin rango';
+                    preview.style.setProperty('--rank-color', rankColor);
+                    preview.classList.toggle('is-empty', !label);
+                }
+                if (panel) panel.style.display = 'flex';
+            };
+
+            function closeRankAssignment() {
+                rankTargetMessage = null;
+                const panel = document.getElementById('livechat-rank-panel');
+                if (panel) panel.style.display = 'none';
+            }
+
+            async function saveAssignedRank(labelOverride) {
+                if (!window.ositoEsCreador || !rankTargetMessage || typeof window.asignarRangoUsuario !== 'function') return;
+                const input = document.getElementById('livechat-rank-label');
+                const colorInput = document.getElementById('livechat-rank-color');
+                const label = String(labelOverride ?? (input?.value || '')).replace(/[\r\n\t]+/g, ' ').trim().slice(0, 24);
+                const color = cleanRankColor(colorInput?.value);
+                await window.asignarRangoUsuario(rankTargetMessage.uid, label, color);
+                updateDisplayedRank(rankTargetMessage.uid, label, color);
+                if (typeof window.mostrarNotificacion === 'function') {
+                    window.mostrarNotificacion(label ? `Rango asignado a ${rankTargetMessage.user || 'usuario'}.` : 'Rango quitado correctamente.');
+                }
+                closeRankAssignment();
             }
 
             function imageFileToDataUrl(file) {
@@ -2986,10 +3117,39 @@
                 const adminClear = document.getElementById('livechat-admin-clear');
                 const adminImage = document.getElementById('livechat-admin-image');
                 const adminImagePreview = document.getElementById('livechat-admin-image-preview');
+                const rankForm = document.getElementById('livechat-rank-form');
+                const rankClose = document.getElementById('livechat-rank-close');
+                const rankRemove = document.getElementById('livechat-rank-remove');
+                const rankInput = document.getElementById('livechat-rank-label');
+                const rankColor = document.getElementById('livechat-rank-color');
+                const rankPreview = document.getElementById('livechat-rank-preview');
                 if (adminTrigger) adminTrigger.addEventListener('click', () => toggleCreatorComposer());
                 if (adminClose) adminClose.addEventListener('click', () => toggleCreatorComposer(false));
                 if (adminPublish) adminPublish.addEventListener('click', () => publishFirebaseAnnouncement().catch(() => {}));
                 if (adminClear) adminClear.addEventListener('click', () => clearFirebaseChat().catch(() => {}));
+                if (rankClose) rankClose.addEventListener('click', closeRankAssignment);
+                if (rankForm) rankForm.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    saveAssignedRank().catch((error) => {
+                        console.error('[LiveChat] No se pudo asignar el rango', error);
+                        if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se pudo guardar el rango.');
+                    });
+                });
+                if (rankRemove) rankRemove.addEventListener('click', () => {
+                    saveAssignedRank('').catch((error) => {
+                        console.error('[LiveChat] No se pudo quitar el rango', error);
+                        if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se pudo quitar el rango.');
+                    });
+                });
+                const syncAssignedRankPreview = () => {
+                    if (!rankPreview) return;
+                    const label = String(rankInput?.value || '').trim().slice(0, 24);
+                    rankPreview.textContent = label || 'Sin rango';
+                    rankPreview.style.setProperty('--rank-color', cleanRankColor(rankColor?.value));
+                    rankPreview.classList.toggle('is-empty', !label);
+                };
+                rankInput?.addEventListener('input', syncAssignedRankPreview);
+                rankColor?.addEventListener('input', syncAssignedRankPreview);
                 if (adminImage && adminImagePreview) {
                     adminImage.addEventListener('change', () => {
                         const file = adminImage.files?.[0] || null;
@@ -3038,6 +3198,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=profile-chat-fix-20260907-4"></script>
+    <script src="firebase-integration.js?v=rank-assignment-20260907-5"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

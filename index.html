@@ -1719,7 +1719,6 @@
                 }
                 if (tipo === 'bot') {
                     hablarIA(texto);
-                    window.publicarMensajeLiveChat?.(texto, 'IA Osito', { isSystem: true, isAdmin: true });
                 }
             }
 
@@ -2320,6 +2319,7 @@
 
             const CLIENT_ID_KEY = 'osito_livechat_client_id';
             const MUTE_KEY = 'osito_livechat_muted_until';
+            const EDIT_WINDOW_MS = 3 * 60 * 1000;
             const CLIENT_ID = localStorage.getItem(CLIENT_ID_KEY) || `client_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
             localStorage.setItem(CLIENT_ID_KEY, CLIENT_ID);
 
@@ -2339,6 +2339,7 @@
             const BAD_WORDS = ['puta', 'puto', 'mierda', 'cabron', 'cabrona', 'imbecil', 'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'cono', 'joder', 'huevon', 'baboso'];
 
             const messageStore = new Map();
+            const revealedDeletedMessages = new Set();
 
             function getUserName() {
                 const currentUser = window.firebaseAuth?.currentUser;
@@ -2400,6 +2401,135 @@
                 return (currentUid && String(msg.uid || '') === currentUid)
                     || normalize(msg.user) === normalize(getUserName())
                     || String(msg.clientId || '') === CLIENT_ID;
+            }
+
+            function isCreatorView() {
+                return Boolean(window.ositoEsCreador);
+            }
+
+            function getMessageAgeMs(message) {
+                return Math.max(0, Date.now() - (Number(message?.timestamp) || 0));
+            }
+
+            function canEditOwnMessage(message) {
+                return Boolean(message)
+                    && !message.isSystem
+                    && isOwnMessage(message)
+                    && !message.isDeleted
+                    && getMessageAgeMs(message) <= EDIT_WINDOW_MS;
+            }
+
+            function isDeletedMessage(message) {
+                return Boolean(message?.isDeleted) || Boolean(message?.deletedAt);
+            }
+
+            function getVisibleMessageText(message) {
+                if (!message) return '';
+                if (isDeletedMessage(message)) {
+                    if (isCreatorView() && revealedDeletedMessages.has(message.id)) {
+                        return String(message.deletedText || message.originalText || message.text || '');
+                    }
+                    return 'Mensaje eliminado';
+                }
+                return String(message.text || '');
+            }
+
+            function buildMessageActions(message) {
+                if (!message || message.isSystem || String(message.id || '').startsWith('pending_')) return '';
+
+                const actions = [];
+                if (canEditOwnMessage(message)) {
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-edit-btn" data-action="edit">Editar</button>');
+                }
+                if (isOwnMessage(message) && !isDeletedMessage(message)) {
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-delete-btn" data-action="delete">Borrar</button>');
+                }
+                if (isDeletedMessage(message) && isCreatorView()) {
+                    const revealed = revealedDeletedMessages.has(message.id);
+                    actions.push(`<button type="button" class="lc-msg-action-btn lc-msg-reveal-btn" data-action="reveal">${revealed ? 'Ocultar' : 'Ver mensaje'}</button>`);
+                }
+                if (!actions.length) return '';
+                return `<div class="lc-msg-actions">${actions.join('')}</div>`;
+            }
+
+            function buildMessageElement(message, options) {
+                const mine = isOwnMessage(message);
+                const wrapper = document.createElement('div');
+                wrapper.className = `lc-msg ${message.isSystem ? 'system' : mine ? 'own' : 'other'}${isDeletedMessage(message) ? ' is-deleted' : ''}`;
+                wrapper.id = message.id;
+                wrapper.dataset.messageId = message.id;
+                wrapper.dataset.timestamp = String(message.timestamp || Date.now());
+                wrapper.dataset.user = message.user || 'Invitado';
+
+                if (message.isSystem) {
+                    const imageMarkup = /^(https?:|data:image\/)/i.test(String(message.imageURL || ''))
+                        ? `<img class="lc-publication-image" src="${escapeHtml(message.imageURL)}" alt="Imagen de la publicacion" loading="lazy">`
+                        : '';
+                    wrapper.innerHTML = `<div class="lc-msg-bubble">${escapeHtml(message.text || '')}${imageMarkup}</div>`;
+                    return wrapper;
+                }
+
+                const initials = (message.user || 'I')
+                    .split(' ')
+                    .map((part) => part.charAt(0))
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase() || 'I';
+                const seenCount = Array.isArray(message.seenBy) ? new Set(message.seenBy.filter(Boolean)).size : 0;
+                const currentProfile = isOwnMessage(message) ? (window.ositoCurrentUserProfile || {}) : {};
+                const photoURL = String(message.photoURL || currentProfile.photoURL || '');
+                const isCreator = Boolean(message.isCreator) || normalize(message.email) === 'ositoyt360@elsotanodeosito.com';
+                const isDenis = normalize(message.user) === 'denis';
+                const avatarMarkup = /^(https?:|data:image\/)/i.test(photoURL)
+                    ? `<img class="lc-msg-avatar" src="${escapeHtml(photoURL)}" alt="Foto de ${escapeHtml(message.user || 'Invitado')}" loading="lazy">`
+                    : `<span class="lc-msg-avatar">${escapeHtml(initials)}</span>`;
+                const rankMarkup = isDenis
+                    ? '<span class="lc-rank-badge lc-queen-badge">💜 La Reina del Creador 💜</span>'
+                    : '';
+                const messageText = escapeHtml(getVisibleMessageText(message));
+                const visibleTextClass = isDeletedMessage(message) && isCreatorView() && revealedDeletedMessages.has(message.id)
+                    ? ' lc-msg-bubble-revealed'
+                    : '';
+                const deletedBadge = isDeletedMessage(message)
+                    ? `<span class="lc-deleted-badge">${isCreatorView() ? 'Eliminado' : 'Mensaje eliminado'}</span>`
+                    : '';
+                const statusText = isDeletedMessage(message)
+                    ? 'Eliminado'
+                    : (mine ? `${seenCount > 0 ? '✓✓ Visto' : '✓ Enviado'}${message.editedAt ? ' • Editado' : ''}` : (message.editedAt ? 'Editado' : ''));
+
+                wrapper.innerHTML = `
+                    <div class="lc-msg-header">
+                        <div class="lc-msg-user-wrap">
+                            ${avatarMarkup}
+                            <span class="lc-msg-user ${isCreator ? 'lc-creator-name' : ''}">${escapeHtml(message.user || 'Invitado')}</span>
+                            ${rankMarkup}
+                            ${isCreator ? '<span class="lc-creator-badge">✨ Creador</span>' : ''}
+                            ${deletedBadge}
+                        </div>
+                        <span class="lc-msg-time" title="${escapeHtml(formatDate(message.timestamp))}">${escapeHtml(formatTime(message.timestamp))}</span>
+                    </div>
+                    <div class="lc-msg-bubble${visibleTextClass}">${messageText}</div>
+                    <div class="lc-msg-status ${seenCount > 0 && !isDeletedMessage(message) ? 'seen' : ''}">${escapeHtml(statusText)}</div>
+                    ${buildMessageActions(message)}
+                `;
+
+                const actionsRoot = wrapper.querySelector('.lc-msg-actions');
+                if (actionsRoot) {
+                    const editBtn = actionsRoot.querySelector('[data-action="edit"]');
+                    const deleteBtn = actionsRoot.querySelector('[data-action="delete"]');
+                    const revealBtn = actionsRoot.querySelector('[data-action="reveal"]');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', () => requestEditMessage(message));
+                    }
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', () => requestDeleteMessage(message));
+                    }
+                    if (revealBtn) {
+                        revealBtn.addEventListener('click', () => toggleDeletedMessageReveal(message.id));
+                    }
+                }
+
+                return wrapper;
             }
 
             function setConnectionState(online, text) {
@@ -2473,11 +2603,16 @@
                 if (!status) return;
 
                 const seenCount = Array.isArray(message.seenBy) ? new Set(message.seenBy.filter(Boolean)).size : 0;
+                if (isDeletedMessage(message)) {
+                    status.textContent = 'Eliminado';
+                    status.classList.remove('seen');
+                    return;
+                }
                 if (isOwnMessage(message)) {
-                    status.textContent = seenCount > 0 ? '✓✓ Visto' : '✓ Enviado';
+                    status.textContent = `${seenCount > 0 ? '✓✓ Visto' : '✓ Enviado'}${message.editedAt ? ' • Editado' : ''}`;
                     status.classList.toggle('seen', seenCount > 0);
                 } else {
-                    status.textContent = '';
+                    status.textContent = message.editedAt ? 'Editado' : '';
                 }
             }
 
@@ -2517,101 +2652,121 @@
                 const container = document.getElementById('livechat-messages');
                 if (container) container.innerHTML = '';
                 messageStore.clear();
+                revealedDeletedMessages.clear();
                 lastTimestamp = 0;
             }
 
-            async function deleteFirebaseMessage(messageId) {
-                if (!window.ositoEsCreador || !messageId || String(messageId).startsWith('pending_')) return;
-                if (!window.dbFirebase || !window.docFirebase || !window.deleteDocFirebase) return;
+            function updateLocalMessage(messageId, updates) {
+                const existing = messageStore.get(messageId);
+                if (!existing) return null;
+                const next = { ...existing, ...updates };
+                messageStore.set(messageId, next);
+                renderMessage(next, { preserveScroll: true });
+                return next;
+            }
+
+            async function updateFirebaseMessage(messageId, updates) {
+                if (!messageId || String(messageId).startsWith('pending_')) return;
+                if (!window.dbFirebase || !window.docFirebase || !window.updateDocFirebase) return;
                 try {
-                    await window.deleteDocFirebase(window.docFirebase(window.dbFirebase, 'livechat', messageId));
+                    await window.updateDocFirebase(
+                        window.docFirebase(window.dbFirebase, 'livechat', messageId),
+                        updates
+                    );
                 } catch (error) {
-                    console.error('[LiveChat] No se pudo eliminar el mensaje', error);
-                    if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se pudo eliminar el mensaje.');
+                    console.error('[LiveChat] No se pudo actualizar el mensaje', error);
+                    if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se pudo actualizar el mensaje.');
                 }
+            }
+
+            async function requestEditMessage(message) {
+                if (!canEditOwnMessage(message)) return;
+                const currentText = String(message.text || '').trim();
+                const nextText = window.prompt('Edita tu mensaje', currentText);
+                if (nextText === null) return;
+                const cleanText = String(nextText || '').trim().slice(0, 400);
+                if (!cleanText) {
+                    if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('El mensaje no puede estar vacío.');
+                    return;
+                }
+                if (cleanText === currentText) return;
+                const updated = {
+                    ...message,
+                    text: cleanText,
+                    editedAt: Date.now()
+                };
+                updateLocalMessage(message.id, updated);
+                if (firebaseChatReady) {
+                    await updateFirebaseMessage(message.id, {
+                        text: cleanText,
+                        editedAt: updated.editedAt
+                    });
+                }
+            }
+
+            async function requestDeleteMessage(message) {
+                if (!message || !isOwnMessage(message) || isDeletedMessage(message)) return;
+                const deletedText = String(message.text || '').trim();
+                const updated = {
+                    ...message,
+                    text: 'Mensaje eliminado',
+                    isDeleted: true,
+                    deletedAt: Date.now(),
+                    deletedBy: window.firebaseAuth?.currentUser?.uid || CLIENT_ID,
+                    deletedByUser: getUserName(),
+                    deletedText
+                };
+                revealedDeletedMessages.delete(message.id);
+                updateLocalMessage(message.id, updated);
+                if (firebaseChatReady) {
+                    await updateFirebaseMessage(message.id, {
+                        text: 'Mensaje eliminado',
+                        isDeleted: true,
+                        deletedAt: updated.deletedAt,
+                        deletedBy: updated.deletedBy,
+                        deletedByUser: updated.deletedByUser,
+                        deletedText
+                    });
+                }
+            }
+
+            function toggleDeletedMessageReveal(messageId) {
+                if (!isCreatorView() || !messageId) return;
+                if (revealedDeletedMessages.has(messageId)) {
+                    revealedDeletedMessages.delete(messageId);
+                } else {
+                    revealedDeletedMessages.add(messageId);
+                }
+                const cached = messageStore.get(messageId);
+                if (cached) renderMessage(cached, { preserveScroll: true });
             }
 
             function renderMessage(message, options) {
                 options = options || {};
                 if (!message || !message.id) return;
                 if (!message.isSystem && normalize(message.user) === 'invitado') return;
-                if (!message.isSystem && hasBadWords(message.text || '')) return;
+                if (!message.isSystem && !isDeletedMessage(message) && hasBadWords(message.text || '')) return;
 
                 const container = document.getElementById('livechat-messages');
                 if (!container) return;
+                const mine = isOwnMessage(message);
 
                 messageStore.set(message.id, message);
                 if (typeof message.timestamp === 'number') {
-                    lastTimestamp = Math.max(lastTimestamp, message.timestamp);
+                    lastTimestamp = Math.max(
+                        lastTimestamp,
+                        Number(message.timestamp) || 0,
+                        Number(message.updatedAt) || 0,
+                        Number(message.editedAt) || 0,
+                        Number(message.deletedAt) || 0
+                    );
                 }
 
                 const existing = document.getElementById(message.id);
-                if (existing) {
-                    updateMessageStatus(message);
-                    return;
-                }
+                const wrapper = buildMessageElement(message, options);
+                if (existing) existing.replaceWith(wrapper);
+                else container.appendChild(wrapper);
 
-                const mine = isOwnMessage(message);
-                const wrapper = document.createElement('div');
-                wrapper.className = `lc-msg ${message.isSystem ? 'system' : mine ? 'own' : 'other'}`;
-                wrapper.id = message.id;
-                wrapper.dataset.messageId = message.id;
-                wrapper.dataset.timestamp = String(message.timestamp || Date.now());
-                wrapper.dataset.user = message.user || 'Invitado';
-
-                if (message.isSystem) {
-                    const imageMarkup = /^(https?:|data:image\/)/i.test(String(message.imageURL || ''))
-                        ? `<img class="lc-publication-image" src="${escapeHtml(message.imageURL)}" alt="Imagen de la publicacion" loading="lazy">`
-                        : '';
-                    wrapper.innerHTML = `<div class="lc-msg-bubble">${escapeHtml(message.text || '')}${imageMarkup}</div>`;
-                } else {
-                    const initials = (message.user || 'I')
-                        .split(' ')
-                        .map((part) => part.charAt(0))
-                        .join('')
-                        .slice(0, 2)
-                        .toUpperCase() || 'I';
-                    const seenCount = Array.isArray(message.seenBy) ? new Set(message.seenBy.filter(Boolean)).size : 0;
-                    const statusText = mine ? (seenCount > 0 ? '✓✓ Visto' : '✓ Enviado') : '';
-                    const currentProfile = isOwnMessage(message) ? (window.ositoCurrentUserProfile || {}) : {};
-                    const photoURL = String(message.photoURL || currentProfile.photoURL || '');
-                    const isCreator = Boolean(message.isCreator) || normalize(message.email) === 'ositoyt360@elsotanodeosito.com';
-                    const isDenis = normalize(message.user) === 'denis';
-                    const avatarMarkup = /^(https?:|data:image\/)/i.test(photoURL)
-                        ? `<img class="lc-msg-avatar" src="${escapeHtml(photoURL)}" alt="Foto de ${escapeHtml(message.user || 'Invitado')}" loading="lazy">`
-                        : `<span class="lc-msg-avatar">${escapeHtml(initials)}</span>`;
-                    const rankMarkup = isDenis
-                        ? '<span class="lc-rank-badge lc-queen-badge">💜 La Reina del Creador 💜</span>'
-                        : '';
-
-                    wrapper.innerHTML = `
-                        <div class="lc-msg-header">
-                            <div class="lc-msg-user-wrap">
-                                ${avatarMarkup}
-                                <span class="lc-msg-user ${isCreator ? 'lc-creator-name' : ''}">${escapeHtml(message.user || 'Invitado')}</span>
-                                ${rankMarkup}
-                                ${isCreator ? '<span class="lc-creator-badge">✨ Creador</span>' : ''}
-                            </div>
-                            <span class="lc-msg-time" title="${escapeHtml(formatDate(message.timestamp))}">${escapeHtml(formatTime(message.timestamp))}</span>
-                        </div>
-                        <div class="lc-msg-bubble">${escapeHtml(message.text || '')}</div>
-                        <div class="lc-msg-status ${seenCount > 0 ? 'seen' : ''}">${escapeHtml(statusText)}</div>
-                    `;
-
-                }
-
-                if (window.ositoEsCreador && !message.isSystem && !String(message.id).startsWith('pending_')) {
-                    const deleteButton = document.createElement('button');
-                    deleteButton.className = 'lc-del-btn';
-                    deleteButton.type = 'button';
-                    deleteButton.textContent = '🗑️';
-                    deleteButton.title = 'Eliminar mensaje';
-                    deleteButton.setAttribute('aria-label', 'Eliminar mensaje');
-                    deleteButton.addEventListener('click', () => deleteFirebaseMessage(message.id));
-                    wrapper.appendChild(deleteButton);
-                }
-
-                container.appendChild(wrapper);
                 if (!options.preserveScroll) ensureScrollBottom();
 
                 if (!chatOpen && !message.isSystem && !mine && !options.history) {
@@ -2680,10 +2835,19 @@
                     return;
                 }
 
+                if (payload.type === 'update_message' && payload.message) {
+                    renderMessage(payload.message, { history: false, preserveScroll: true });
+                    return;
+                }
+
                 if (payload.type === 'delete_message' && payload.msgId) {
-                    const el = document.getElementById(payload.msgId);
-                    if (el) el.remove();
-                    messageStore.delete(payload.msgId);
+                    if (payload.message) {
+                        renderMessage(payload.message, { history: false, preserveScroll: true });
+                    } else {
+                        const el = document.getElementById(payload.msgId);
+                        if (el) el.remove();
+                        messageStore.delete(payload.msgId);
+                    }
                     return;
                 }
 
@@ -2831,6 +2995,10 @@
                     user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
                     text: String(text || '').trim().slice(0, 400),
                     timestamp: Date.now(),
+                    updatedAt: Date.now(),
+                    editedAt: 0,
+                    isDeleted: false,
+                    deletedText: '',
                     isSystem: Boolean(options && options.isSystem),
                     isAdmin: Boolean(options && options.isAdmin),
                     uid: currentUser?.uid || profile.uid || CLIENT_ID,
@@ -2926,6 +3094,14 @@
                 }
                 return Promise.reject(new Error('Firebase no esta listo. Recarga la pagina e inicia sesion.'));
             }
+
+            window.editarMensajeLiveChat = function editarMensajeLiveChat(message) {
+                return requestEditMessage(message);
+            };
+
+            window.eliminarMensajeLiveChat = function eliminarMensajeLiveChat(message) {
+                return requestDeleteMessage(message);
+            };
 
             window.publicarMensajeLiveChat = function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
                 return sendMessage(texto, usuario, opciones);
@@ -3098,7 +3274,7 @@
             window.ejecutarAdminBroadcast = publishFirebaseAnnouncement;
             window.ejecutarAdminClear = clearFirebaseChat;
             window.ejecutarAdminMute = function() {};
-            window.eliminarMensajeAdmin = deleteFirebaseMessage;
+            window.eliminarMensajeAdmin = requestDeleteMessage;
 
             document.addEventListener('DOMContentLoaded', () => {
                 const form = document.getElementById('livechat-form');

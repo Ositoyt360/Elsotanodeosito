@@ -2578,6 +2578,69 @@ body.creator-mode .livechat-admin-trigger {
     position: relative;
 }
 
+.lc-msg.is-deleted .lc-msg-bubble {
+    opacity: 0.86;
+    border-style: dashed;
+}
+
+.lc-msg-bubble-revealed {
+    color: #fff7d1;
+    text-shadow: 0 0 8px rgba(255, 227, 110, 0.2);
+}
+
+.lc-deleted-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 5px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 107, 107, 0.35);
+    background: rgba(255, 107, 107, 0.12);
+    color: #ffb3b3;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.lc-msg-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.lc-msg-action-btn {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #e5eff5;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.lc-msg-action-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(88, 255, 154, 0.28);
+}
+
+.lc-msg-edit-btn {
+    color: #ffe36e;
+}
+
+.lc-msg-delete-btn {
+    color: #ff8d8d;
+}
+
+.lc-msg-reveal-btn {
+    color: #8be6ff;
+}
+
 .lc-msg.other {
     align-self: flex-start;
 }

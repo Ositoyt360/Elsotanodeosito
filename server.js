@@ -20,6 +20,7 @@ const DATA_FILE = path.join(__dirname, 'chat-data.json');
 const ADMIN_KEY = process.env.ADMIN_KEY || '240625';
 const MAX_MESSAGES = 200;
 const PROFANITY_MUTE_MS = 2 * 60 * 1000;
+const EDIT_WINDOW_MS = 3 * 60 * 1000;
 
 const BAD_WORDS = [
   'puta', 'puto', 'mierda', 'mierdas', 'cabron', 'cabrona', 'imbecil',
@@ -140,7 +141,11 @@ function ensureMessageShape(message) {
   if (!message || typeof message !== 'object') return message;
   if (!Array.isArray(message.seenBy)) message.seenBy = [];
   if (typeof message.timestamp !== 'number') message.timestamp = Date.now();
+  if (typeof message.updatedAt !== 'number') message.updatedAt = message.timestamp;
   if (typeof message.clientId !== 'string') message.clientId = '';
+  if (typeof message.editedAt !== 'number') message.editedAt = 0;
+  if (typeof message.isDeleted !== 'boolean') message.isDeleted = false;
+  if (typeof message.deletedText !== 'string') message.deletedText = '';
   return message;
 }
 
@@ -240,8 +245,63 @@ function createMessage({ user, text, clientId = '', uid = '', email = '', photoU
     rankLabel: sanitizeRankLabel(rankLabel),
     rankColor: sanitizeRankColor(rankColor),
     clientId: String(clientId || ''),
-    seenBy: []
+    seenBy: [],
+    updatedAt: now,
+    editedAt: 0,
+    isDeleted: false,
+    deletedText: ''
   };
+}
+
+function findMessage(messageId) {
+  return messages.find((item) => item && item.id === messageId) || null;
+}
+
+function broadcastUpdatedMessage(message) {
+  if (!message) return;
+  broadcastWS({ type: 'update_message', message });
+}
+
+function editMessageFromClient({ messageId, clientId, text }) {
+  const msg = findMessage(messageId);
+  if (!msg) return { error: 'No se encontro el mensaje.' };
+  if (msg.isSystem) return { error: 'No se puede editar un mensaje del sistema.' };
+  if (String(msg.clientId || '') !== String(clientId || '')) {
+    return { error: 'Solo puedes editar tus propios mensajes.' };
+  }
+  if (msg.isDeleted) return { error: 'No puedes editar un mensaje eliminado.' };
+  if (Date.now() - msg.timestamp > EDIT_WINDOW_MS) {
+    return { error: 'Ya paso la ventana de 3 minutos para editar este mensaje.' };
+  }
+
+  const cleanText = sanitizeText(text);
+  if (!cleanText) return { error: 'El mensaje no puede estar vacío.' };
+  msg.text = cleanText;
+  msg.editedAt = Date.now();
+  msg.updatedAt = msg.editedAt;
+  saveMessages();
+  broadcastUpdatedMessage(msg);
+  return { success: true, message: msg };
+}
+
+function deleteMessageFromClient({ messageId, clientId }) {
+  const msg = findMessage(messageId);
+  if (!msg) return { error: 'No se encontro el mensaje.' };
+  if (msg.isSystem) return { error: 'No se puede borrar un mensaje del sistema.' };
+  if (String(msg.clientId || '') !== String(clientId || '')) {
+    return { error: 'Solo puedes borrar tus propios mensajes.' };
+  }
+  if (msg.isDeleted) return { success: true, message: msg };
+
+  msg.deletedText = msg.text;
+  msg.text = 'Mensaje eliminado';
+  msg.isDeleted = true;
+  msg.deletedAt = Date.now();
+  msg.updatedAt = msg.deletedAt;
+  msg.deletedBy = String(clientId || '');
+  saveMessages();
+  broadcastUpdatedMessage(msg);
+  return { success: true, message: msg };
 }
 
 function sendMessageFromClient({ user, text, clientId, ip, uid = '', email = '', photoURL = '', isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
@@ -287,6 +347,28 @@ function sendMessageFromClient({ user, text, clientId, ip, uid = '', email = '',
   return { success: true, message: newMsg };
 }
 
+function updateMessageFromAdmin(messageId, updates = {}) {
+  const msg = findMessage(messageId);
+  if (!msg) return { error: 'No se encontro el mensaje.' };
+
+  if (updates.type === 'delete') {
+    msg.deletedText = msg.text;
+    msg.text = 'Mensaje eliminado';
+    msg.isDeleted = true;
+    msg.deletedAt = Date.now();
+    msg.updatedAt = msg.deletedAt;
+    msg.deletedBy = 'admin';
+  } else if (typeof updates.text === 'string') {
+    msg.text = sanitizeText(updates.text);
+    msg.editedAt = Date.now();
+    msg.updatedAt = msg.editedAt;
+  }
+
+  saveMessages();
+  broadcastUpdatedMessage(msg);
+  return { success: true, message: msg };
+}
+
 app.get('/api/chat/init', (req, res) => {
   res.json({
     type: 'init',
@@ -301,7 +383,7 @@ app.get('/api/chat/poll', (req, res) => {
   cleanTypingUsers();
 
   const since = parseInt(req.query.since, 10) || 0;
-  const newMsgs = messages.filter((m) => m.timestamp > since);
+  const newMsgs = messages.filter((m) => Math.max(Number(m.timestamp) || 0, Number(m.updatedAt) || 0) > since);
 
   res.json({
     onlineCount: getOnlineCount(),
@@ -393,9 +475,8 @@ app.post('/api/chat/admin', (req, res) => {
   }
 
   if (action === 'delete_message') {
-    messages = messages.filter((m) => m.id !== msgId);
-    saveMessages();
-    broadcastWS({ type: 'delete_message', msgId });
+    const result = updateMessageFromAdmin(msgId, { type: 'delete' });
+    if (result.error) return res.status(404).json(result);
     return res.json({ success: true, message: 'Mensaje eliminado correctamente.' });
   }
 
@@ -514,6 +595,35 @@ if (wss) {
           return;
         }
 
+        if (data.type === 'edit_message') {
+          const result = editMessageFromClient({
+            messageId: data.messageId,
+            clientId,
+            text: data.text
+          });
+          if (result.error) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: result.error
+            }));
+          }
+          return;
+        }
+
+        if (data.type === 'delete_message') {
+          const result = deleteMessageFromClient({
+            messageId: data.messageId,
+            clientId
+          });
+          if (result.error) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: result.error
+            }));
+          }
+          return;
+        }
+
         if (data.type === 'admin_action') {
           const key = data.adminKey;
           if (key !== ADMIN_KEY) {
@@ -534,9 +644,7 @@ if (wss) {
             saveMessages();
             broadcastWS({ type: 'new_message', message: sysMsg });
           } else if (data.action === 'delete_message') {
-            messages = messages.filter((m) => m.id !== data.msgId);
-            saveMessages();
-            broadcastWS({ type: 'delete_message', msgId: data.msgId });
+            updateMessageFromAdmin(data.msgId, { type: 'delete' });
           } else if (data.action === 'broadcast') {
             const cleanText = sanitizeText(data.text);
             if (cleanText) {

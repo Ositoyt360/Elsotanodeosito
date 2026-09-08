@@ -29,7 +29,10 @@ service cloud.firestore {
       // Los datos privados del usuario siguen protegidos en /users y /aiChats.
       allow read: if true;
       allow create: if (!messageId.matches('rank_.*') && (!messageId.matches('profile_.*') || (signedIn() && request.resource.data.uid == request.auth.uid))) || isCreator();
-      allow update: if !messageId.matches('rank_.*') && (!messageId.matches('profile_.*') || (signedIn() && resource.data.uid == request.auth.uid)) || isCreator();
+      allow update: if !messageId.matches('rank_.*') && (
+        (!messageId.matches('profile_.*') && signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid && request.resource.data.timestamp == resource.data.timestamp) ||
+        (!messageId.matches('profile_.*') && isCreator())
+      );
       allow delete: if isCreator();
     }
   }

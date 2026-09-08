@@ -2807,7 +2807,21 @@
                 if (!window.dbFirebase || !window.collectionFirebase || !window.addDocFirebase) {
                     throw new Error('Firebase todavía no está listo.');
                 }
-                const profile = window.ositoCurrentUserProfile || {};
+                let profile = window.ositoCurrentUserProfile || {};
+                if (currentUser?.uid && window.getDocFirebase && window.docFirebase) {
+                    try {
+                        const profileSnapshot = await window.getDocFirebase(
+                            window.docFirebase(window.dbFirebase, 'users', currentUser.uid)
+                        );
+                        if (profileSnapshot.exists()) {
+                            const savedProfile = profileSnapshot.data() || {};
+                            profile = { ...profile, ...savedProfile };
+                            window.ositoCurrentUserProfile = profile;
+                        }
+                    } catch (error) {
+                        console.warn('[LiveChat] No se pudo leer el rango actualizado.', error);
+                    }
+                }
                 const messageData = {
                     user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
                     text: String(text || '').trim().slice(0, 400),
@@ -3202,6 +3216,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=rank-assignment-20260907-5"></script>
+    <script src="firebase-integration.js?v=rank-chat-only-20260907-6"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

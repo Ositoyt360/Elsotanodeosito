@@ -397,14 +397,6 @@
             updatedAt: Date.now()
         }, { merge: true });
 
-        if (window.getDocFirebase) {
-            const savedProfile = await window.getDocFirebase(window.docFirebase(db, 'users', String(uid)));
-            const savedData = savedProfile.exists() ? (savedProfile.data() || {}) : {};
-            if (sanitizeRankLabel(savedData.rankLabel || '') !== rankLabel || sanitizeRankColor(savedData.rankColor) !== rankColor) {
-                throw new Error('Firebase no confirmo el rango guardado. Revisa las reglas de Firestore.');
-            }
-        }
-
         // Actualiza tambien el historial para que el rango sea visible de inmediato.
         if (window.collectionFirebase && window.getDocsFirebase && window.updateDocFirebase) {
             try {

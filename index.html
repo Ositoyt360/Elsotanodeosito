@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=profile-chat-fix-20260907">
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -51,6 +51,7 @@
                 window.getDocFirebase = (ref) => ref.get();
                 window.setDocFirebase = (ref, data, options) => ref.set(data, options);
                 window.updateDocFirebase = (ref, data) => ref.update(data);
+                window.arrayUnionFirebase = (value) => window.firebase.firestore.FieldValue.arrayUnion(value);
                 window.queryFirebase = (ref, ...constraints) => constraints.reduce((queryRef, constraint) => {
                     if (constraint?.type === 'orderBy') return queryRef.orderBy(constraint.field, constraint.direction || 'asc');
                     if (constraint?.type === 'limit') return queryRef.limit(constraint.amount);
@@ -78,7 +79,7 @@
 
     <script type="text/plain" data-firebase-modular="disabled">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
@@ -123,6 +124,7 @@
         window.getDocFirebase = getDoc;
         window.setDocFirebase = setDoc;
         window.updateDocFirebase = updateDoc;
+        window.arrayUnionFirebase = arrayUnion;
         window.queryFirebase = query;
         window.orderByFirebase = orderBy;
         window.limitFirebase = limit;
@@ -207,8 +209,8 @@
                         </label>
 
                         <label class="auth-field">
-                            <span>Contraseña</span>
-                            <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+                                <span>Contraseña</span>
+                                <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres">
                         </label>
 
                         <button class="btn-enter-hub auth-submit" id="auth-submit" type="submit">Entrar</button>
@@ -250,11 +252,11 @@
         <div class="logo">EL_SÓTANO</div>
         <div class="header-actions"> 
             <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
-                <span>🎬</span>Mejorar Rendimiento
+                <span>⚡</span> Mejorar Rendimiento
             </button>
 
             <button class="btn-action btn-anim" id="btn-ultra-performance" onclick="toggleModoUltra()">
-                <span>⚡</span>Modo ultra
+                <span>🚀</span> Modo ultra
             </button>
 
             <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
@@ -263,10 +265,12 @@
 
             <button class="voice-assistant-badge" id="voice-assistant-badge" type="button" onclick="toggleIAPanel()" title="Abrir panel de IA" aria-label="Abrir panel de IA">
                 <span class="voice-mic-dot" id="voice-mic-dot"></span>
+                <span aria-hidden="true">🤖</span>
                 <span id="voice-status-label">Asistente IA</span>
             </button>
 
             <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
+            <img class="header-profile-avatar" id="header-profile-avatar" src="" alt="Foto de perfil" style="display:none;">
             <button class="btn-action auth-profile-photo" id="profile-photo-change-button" type="button" style="display:none;">Cambiar foto</button>
             <input id="profile-photo-change-input" type="file" accept="image/*" hidden>
             
@@ -327,13 +331,13 @@
                 <div class="dashboard-section-header">
                     <h2 class="section-heading">Explorar Contenido</h2>
                     <div class="tabs-container">
-                        <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaña('videos')">Videos</button>
-                        <button class="tab-btn" id="tab-btn-directos" onclick="cambiarPestaña('directos')">Directos</button>
-                        <button class="tab-btn" id="tab-btn-canciones" onclick="cambiarPestaña('canciones')">Canciones</button>
-                        <button class="tab-btn" id="tab-btn-populares" onclick="cambiarPestaña('populares')">Videos populares</button>
-                        <button class="tab-btn" id="tab-btn-animaciones" onclick="cambiarPestaña('animaciones')">Animaciones</button>
-                        <button class="tab-btn" id="tab-btn-series" onclick="cambiarPestaña('series')">Series</button>
-                        <button class="tab-btn" id="tab-btn-favs" onclick="cambiarPestaña('favs')">Favoritos</button>
+                        <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaóa('videos')">Videos</button>
+                        <button class="tab-btn" id="tab-btn-directos" onclick="cambiarPestaóa('directos')">Directos</button>
+                        <button class="tab-btn" id="tab-btn-canciones" onclick="cambiarPestaóa('canciones')">Canciones</button>
+                        <button class="tab-btn" id="tab-btn-populares" onclick="cambiarPestaóa('populares')">Videos populares</button>
+                        <button class="tab-btn" id="tab-btn-animaciones" onclick="cambiarPestaóa('animaciones')">Animaciones</button>
+                        <button class="tab-btn" id="tab-btn-series" onclick="cambiarPestaóa('series')">Series</button>
+                        <button class="tab-btn" id="tab-btn-favs" onclick="cambiarPestaóa('favs')">Favoritos</button>
                     </div>
                 </div>
 
@@ -376,14 +380,14 @@
 
                     <div id="tab-favs" class="tab-content">
                         <div class="video-grid" id="fav-video-grid">
-                            <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>
+                            <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavóa.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             <footer style="text-align:center; padding:18px 10px; color:var(--text-muted); font-size:14px; background: rgba(4,6,12,0.6); border-top:1px solid rgba(255,255,255,0.03); margin-top:20px;"> 
-                © 2026 OsitoYT360. Todos los derechos reservados.
+                ó 2026 OsitoYT360. Todos los derechos reservados.
             </footer>
             <div class="social-links" id="social-links">
                 <a href="https://www.youtube.com/@OsitoYT360" target="_blank">YouTube</a>
@@ -400,7 +404,7 @@
             </a>
 
             <div class="sidebar-card settings-section" id="music-card">
-                <div class="sidebar-card-title">Música de fondo</div>
+                <div class="sidebar-card-title">🎵 Música de fondo</div>
                 <div class="settings-stack">
                     <div class="setting-row">
                         <label id="music-volume-label" for="music-volume">Volumen</label>
@@ -409,7 +413,7 @@
                         </div>
                     </div>
                     <div class="setting-row" style="gap:10px;">
-                        <input id="music-volume" type="range" min="0" max="100" value="30" aria-label="Volumen música" />
+                        <input id="music-volume" type="range" min="0" max="100" value="30" aria-label="Volumen mósica" />
                         <span id="music-volume-value" style="color: var(--text-muted); font-weight:800;">30%</span>
                     </div>
                     <div class="cd-date" style="opacity:1; text-align:left; padding: 0 4px; font-size: 11px;">
@@ -426,13 +430,13 @@
             </div>
 
             <div class="sidebar-card countdown-box">
-                <div class="cd-text">5 años en YouTube</div>
+                <div class="cd-text">5 aóos en YouTube</div>
                 <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
                 <div class="cd-date">2 de junio</div>
             </div>
 
             <div class="sidebar-card settings-section"> 
-                <div class="sidebar-card-title">Diseños personalizados</div>
+                <div class="sidebar-card-title">Diseóos personalizados</div>
                 <div class="preset-grid">
                     <button class="btn-action design-preset" data-p1="#ff007f" data-p2="#00f2fe">Synthwave</button>
                     <button class="btn-action design-preset" data-p1="#00ff66" data-p2="#025921">Matrix</button>
@@ -445,7 +449,7 @@
                 <div class="sidebar-card-title">Ajustes de Interfaz</div>
                 <div class="settings-stack">
                     <div class="setting-row">
-                        <label for="font-size-range">Tamaño fuente</label>
+                        <label for="font-size-range">Tamaóo fuente</label>
                         <input id="font-size-range" type="range" min="12" max="20" value="14">
                     </div>
                     <div class="setting-row">
@@ -468,11 +472,11 @@
                     <div class="ia-header-title">
                         <span class="ia-status-dot" aria-hidden="true"></span>
                         <div>
-                            <h3>Asistente de Inteligencia</h3>
+                            <h3><span aria-hidden="true">🤖</span> Asistente de Inteligencia</h3>
                             <p>Tu copiloto del sótano</p>
                         </div>
-                        <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
-                            <span class="live-dot"></span> 🔴 EN VIVO
+                        <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="óTransmitiendo en directo!">
+                            <span class="live-dot"></span> ó EN VIVO
                         </a>
                     </div>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar Asistente">✕</button>
@@ -482,10 +486,10 @@
                         <div class="ai-profile-row">
                             <div class="ai-profile-actions">
                                 <button class="btn-action ai-gender-btn" data-gender="male" type="button">
-                                    <span class="btn-icon">♂</span> Osito
+                                    <span class="btn-icon">🐻</span> Osito
                                 </button>
                                 <button class="btn-action ai-gender-btn" data-gender="female" type="button">
-                                    <span class="btn-icon">♀</span> Osita
+                                    <span class="btn-icon">🐻</span> Osita
                                 </button>
                                 <button class="btn-action" id="ai-voice-toggle" type="button">
                                     <span class="btn-icon">🔊</span> Voz On
@@ -497,11 +501,11 @@
                             </div>
                         </div>
                         <div class="ia-messages" id="ai-messages" role="log" aria-live="polite"> 
-                            <div class="msg bot">Identidad requerida: ¿Eres Osito o Osita?</div>
+                            <div class="msg bot">🤖 Identidad requerida: ¿Eres Osito o Osita?</div>
                         </div>
                         <div class="ai-suggestions" aria-label="Preguntas rápidas" style="margin-top:10px;">
                             <button class="btn-action ai-suggestion" data-question="¿Qué puedo hacer aquí?">
-                                <span>ℹ️</span> Info del sitio
+                                <span>💡</span> Info del sitio
                             </button>
                             <button class="btn-action ai-suggestion" data-question="¿Cuándo hay directo?">
                                 <span>🔴</span> Directos
@@ -571,7 +575,7 @@
         let ultimoVideoNotificado = localStorage.getItem('osito_ultimo_video_notificado') || '';
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Cargar configuración de diseño guardada
+            // Cargar configuración de diseóo guardada
             const temaVersion = 'verde-profesional-2026-06-18';
             if (localStorage.getItem('osito_theme_version') !== temaVersion) {
                 localStorage.setItem('theme_primary', '#58ff9a');
@@ -675,7 +679,7 @@
             const btn = document.getElementById('btn-ultra-performance');
             if (btn) {
                 btn.classList.add('active');
-                btn.innerHTML = '<span>⚡</span>Modo ultra activo';
+                btn.innerHTML = '<span>ó</span>Modo ultra activo';
             }
             if (animacionesActivas) iniciarEspacio();
         }
@@ -687,7 +691,7 @@
                 const btn = document.getElementById('btn-ultra-performance');
                 if (btn) {
                     btn.classList.remove('active');
-                    btn.innerHTML = '<span>⚡</span>Modo ultra';
+                    btn.innerHTML = '<span>ó</span>Modo ultra';
                 }
                 advancedAnimacionesEnabled = false;
                 if (animacionesActivas) iniciarEspacio();
@@ -758,14 +762,14 @@
             if (!animacionesActivas) {
                 document.body.classList.add('no-animations');
                 btn.classList.add('active');
-                btn.innerHTML = "<span>🎬</span> Activar Animaciones"; 
+                btn.innerHTML = "<span>ó</span> Activar Animaciones"; 
                 localStorage.setItem('osito_no_anim', 'true');
                 if(animationFrameId) cancelAnimationFrame(animationFrameId);
                 if(intervaloPromo) clearInterval(intervaloPromo);
             } else {
                 document.body.classList.remove('no-animations');
                 btn.classList.remove('active'); 
-                btn.innerHTML = "<span>🎬</span> Quitar Animaciones";
+                btn.innerHTML = "<span>ó</span> Quitar Animaciones";
                 localStorage.setItem('osito_no_anim', 'false');
                 iniciarEspacio();
                 iniciarSecuenciaPublicitaria();
@@ -816,7 +820,7 @@
 
                 renderizarCategoria(categoria);
                 if (videosPorCategoria[categoria].length === 0) {
-                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción está vacía.</p>';
+                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción estó vacóa.</p>';
                 }
             } catch (error) {
                 console.error("Error al conectar con YouTube API:", error);
@@ -847,12 +851,25 @@
         function formatearTiempoRelativo(timestamp) {
             if (!timestamp) return "Fecha desconocida";
             const fecha = new Date(timestamp);
-            return fecha.toLocaleDateString('es-SV', {
+            return fecha.toLocaleString('es-SV', {
                 timeZone: 'America/El_Salvador',
                 day: '2-digit',
                 month: '2-digit',
-                year: 'numeric'
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
             });
+        }
+
+        function escaparTextoBanner(value) {
+            return String(value || '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
         }
 
         function actualizarTimestamps() {
@@ -860,7 +877,7 @@
             timestampsElements.forEach(el => {
                 const timestamp = Number(el.getAttribute('data-timestamp'));
                 if (Number.isFinite(timestamp) && timestamp > 0) {
-                    el.textContent = `Actualizado ${formatearTiempoRelativo(timestamp)}`;
+                     el.textContent = `Actualizado el ${formatearTiempoRelativo(timestamp)}`;
                 }
             });
 
@@ -880,7 +897,7 @@
                         const m = Math.floor((diff % 3600000) / 60000);
                         const s = Math.floor((diff % 60000) / 1000);
                         liveCounter.textContent = `Celebrando hace: ${h}h ${m}m ${s}s`;
-                        return; // Salir después de establecer el contador de aniversario
+                        return; // Salir despuós de establecer el contador de aniversario
                     }
                 }
                 liveCounter.textContent = "Estado: Sincronizado en tiempo real";
@@ -902,21 +919,21 @@
             const list = [];
              
             // Inyectamos la actualización de aniversario si es la fecha
-            // Novedades específicas de HOY 2 de Junio
+            // Novedades especóficas de HOY 2 de Junio
             if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026) {
                 list.push({
                     badge: 'HOY',
-                    titulo: 'Celebración de 4 Años Activada',
-                    descripcion: 'Se agregó lluvia de confeti infinita, banner dinámico y contador de aniversario persistente.',
+                     titulo: 'Celebración de 4 Años Activada',
+                     descripcion: 'Se agregó lluvia de confeti infinita, banner dinámico y contador de aniversario persistente.',
                     timestamp: ahora // Tiempo real de la sesión actual 
                 });
             }
 
-            // Música de fondo: control de volumen en la barra lateral
+            // Mósica de fondo: control de volumen en la barra lateral
             // (usamos un timestamp fijo para que se vea con la fecha en el banner)
             list.push({
-                badge: 'Música',
-                titulo: 'Volumen de música de fondo (Snowfall)',
+                 badge: 'Música',
+                 titulo: 'Volumen de música de fondo (Snowfall)',
                 descripcion: 'Ahora puedes bajar o subir el volumen del audio de fondo desde la barra lateral. Se inicia al entrar al sótano.',
                 timestamp: Date.UTC(2026, 5, 18, 12, 0, 0) // 18/06/2026 (UTC)
             });
@@ -930,17 +947,17 @@
                 },
                 {
                     badge: 'Videos',
-                    titulo: 'Reproducción dentro de la página',
+                     titulo: 'Reproducción dentro de la página',
                     descripcion: 'Los videos cargan con miniaturas ligeras y se abren dentro de cada tarjeta al tocar reproducir.', 
                     timestamp: inicioHoy - (24 * 60 * 60 * 1000) // Ayer 
                 },
                 {
-                    badge: 'Correccion',
+                     badge: 'Corrección',
                     titulo: 'Modo sin animaciones corregido', 
-                    timestamp: inicioHoy - (48 * 60 * 60 * 1000) // Hace 2 días
+                    timestamp: inicioHoy - (48 * 60 * 60 * 1000) // Hace 2 dóas
                 },
                 {
-                    badge: 'Diseño',
+                     badge: 'Diseño',
                     titulo: 'Panel profesional actualizado',
                     descripcion: 'Videos en 3 columnas, actualizaciones compactas, tema verde, logo del canal y aviso de directos en vivo.',
                     timestamp: Date.now()
@@ -966,11 +983,11 @@
             if (promoContainer) {
                 promoContainer.innerHTML = lista.map(act => `
                     <div class="promo-update-card">
-                        <span class="promo-update-badge">${act.badge}</span>
+                        <span class="promo-update-badge">${escaparTextoBanner(act.badge)}</span>
                         <div class="promo-update-copy">
-                            <h3 class="promo-update-title">${act.titulo}</h3>
+                            <h3 class="promo-update-title">${escaparTextoBanner(act.titulo)}</h3>
                             <div class="promo-update-time update-timestamp" data-timestamp="${act.timestamp}">
-                                Actualizado ${formatearTiempoRelativo(act.timestamp)}
+                                Actualizado el ${formatearTiempoRelativo(act.timestamp)}
                             </div>
                         </div>
                     </div>
@@ -1030,7 +1047,7 @@
                 const ahoraUTC = new Date().getTime(); 
                 const distancia = fechaProximaNovedadUTC - ahoraUTC;
                 if (distancia < 0) {
-                    document.getElementById("countdown-timer").innerHTML = "¡EN DIRECTO!";
+                    document.getElementById("countdown-timer").innerHTML = "óEN DIRECTO!";
                     return;
                 }
                 const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
@@ -1047,7 +1064,7 @@
             const ahora = new Date();
             let anioDestino = ahora.getFullYear();
             
-            // Si ya pasó el 2 de junio de este año, apuntar al próximo
+            // Si ya pasó el 2 de junio de este aóo, apuntar al próximo
             if (ahora.getMonth() > 5 || (ahora.getMonth() === 5 && ahora.getDate() >= 2)) {
                 anioDestino++;
             }
@@ -1059,13 +1076,13 @@
             const label = timer?.previousElementSibling;
             const dateLabel = timer?.nextElementSibling;
  
-            if (label) label.innerText = `${numAnos} años en YouTube`;
+            if (label) label.innerText = `${numAnos} aóos en YouTube`;
             if (dateLabel) dateLabel.innerText = `2 de junio ${anioDestino}`;
 
             setInterval(() => {
                 const ahoraUTC = new Date().getTime();
                 const distancia = fechaAniversarioUTC - ahoraUTC;
-                if (distancia <= 0) { timer.innerHTML = `¡${numAnos} AÑOS EN YOUTUBE!`; return; }
+                if (distancia <= 0) { timer.innerHTML = `ó${numAnos} AóOS EN YOUTUBE!`; return; }
 
                 const totalMs = distancia;
                 const days = Math.floor(totalMs / 86400000);
@@ -1074,8 +1091,8 @@
                 const seconds = Math.floor((totalMs % 60000) / 1000);
 
                 let displayDays = days;
-                // Si hay horas, minutos o segundos restantes, y no es ya 0 días,
-                // se redondea el número de días para la visualización.
+                // Si hay horas, minutos o segundos restantes, y no es ya 0 dóas,
+                // se redondea el nómero de dóas para la visualización.
                 if (days > 0 && (hours > 0 || minutes > 0 || seconds > 0)) {
                     displayDays++; 
                 }
@@ -1095,7 +1112,7 @@
             const esperaBienvenida = document.body.classList.contains('ultra-performance') ? 80 : 300;
             setTimeout(() => {
                 document.getElementById('progress-bar').style.width = "100%";
-                document.getElementById('progress-text').innerText = "¡Sótano Desbloqueado!";
+                document.getElementById('progress-text').innerText = "¡Sótano desbloqueado!";
                 setTimeout(entrarAlSitio, document.body.classList.contains('ultra-performance') ? 60 : 200);
             }, esperaBienvenida);
         }
@@ -1103,24 +1120,24 @@
         function entrarAlSitio() {
             document.getElementById('welcome-screen').classList.add('welcome-fade-out');
             setTimeout(() => { document.getElementById('welcome-screen').remove(); }, 400);
-            setTimeout(() => { document.getElementById('sidebar-panel').classList.add('sidebar-show'); }, 100);
+            setTimeout(() => { document.getElementById('sidebar-panel')?.classList.add('sidebar-show'); }, 100);
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
-            // Autoplay permitido después del gesto del usuario
+            // Autoplay permitido despuós del gesto del usuario
             iniciarMusicaFondo();
         }
 
         // ================================
-        // Música de fondo (Snowfall)
+        // Mósica de fondo (Snowfall)
         // ================================
         const MUSIC_VOLUME_KEY = 'osito_music_volume';
 
         function actualizarEstadoMusica(audio, toggleBtn) {
             if (!audio || !toggleBtn) return;
             const isPlaying = !audio.paused;
-            toggleBtn.textContent = isPlaying ? '⏸️' : '▶️';
+            toggleBtn.textContent = isPlaying ? 'ó' : 'ó';
             toggleBtn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
-            toggleBtn.title = isPlaying ? 'Pausar música de fondo' : 'Reproducir música de fondo';
+            toggleBtn.title = isPlaying ? 'Pausar mósica de fondo' : 'Reproducir mósica de fondo';
         }
 
         function iniciarMusicaFondo() {
@@ -1175,7 +1192,7 @@
                     });
                 }
             } catch (e) {
-                console.warn('Música: no se pudo iniciar', e);
+                console.warn('Mósica: no se pudo iniciar', e);
             }
 
             actualizarEstadoMusica(audio, toggleBtn);
@@ -1234,12 +1251,12 @@
             const hoy = new Date();
             // 2 de Junio (Mes 5 en JS) de 2026
             if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2027) { 
-                mostrarNotificacion("¡Feliz 5to Aniversario de OsitoYT360! 🥳🎉");
+                mostrarNotificacion("óFeliz 5to Aniversario de OsitoYT360! ó");
                 renderizarActualizaciones(actualizacionesDemo(2027, 5));
             }
         }
 
-        function cambiarPestaña(tabName) {
+        function cambiarPestaóa(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             if(document.getElementById('tab-btn-' + tabName)) document.getElementById('tab-btn-' + tabName).classList.add('active');
@@ -1280,7 +1297,7 @@
                 btn.classList.remove('active');
                 if (vigilanciaVideosId) clearInterval(vigilanciaVideosId);
                 vigilanciaVideosId = null;
-                mostrarNotificacion('Alertas silenciadas 🔕');
+                mostrarNotificacion('Alertas silenciadas ó');
                 return;
             }
 
@@ -1293,7 +1310,7 @@
                 localStorage.setItem('osito_alertas', 'true');
                 btn.classList.add('active');
                 iniciarVigilanciaVideos();
-                mostrarNotificacion('Permiso concedido. Te avisaremos si sale video nuevo 🔔');
+                mostrarNotificacion('Permiso concedido. Te avisaremos si sale video nuevo ó');
             });
         }
 
@@ -1368,7 +1385,7 @@
             const miniatura = obtenerMiniaturaVideo(id);
             return `
                 <div class="video-card">
-                    <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
+                    <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Aóadir a favoritos">ó</div>
                     <div class="video-thumbnail">
                         <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
                         <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
@@ -1473,7 +1490,7 @@
             const grid = document.getElementById('fav-video-grid');
             if(!grid) return;
             if(listaFavoritos.length === 0) { 
-                grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>';
+                grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavóa.</p>';
                 return;
             }
             grid.innerHTML = listaFavoritos.map(id => crearTarjetaVideo(id)).join('');
@@ -1489,11 +1506,11 @@
             if (index === -1) {
                 listaFavoritos.push(id);
                 event.target.classList.add('active'); 
-                mostrarNotificacion("Añadido a favoritos ⭐");
+                mostrarNotificacion("Aóadido a favoritos ó");
             } else {
                 listaFavoritos.splice(index, 1); 
                 event.target.classList.remove('active');
-                mostrarNotificacion("Eliminado de favoritos ❌");
+                mostrarNotificacion("Eliminado de favoritos ó");
             }
             localStorage.setItem('osito_favs', JSON.stringify(listaFavoritos));
             if(document.getElementById('tab-btn-favs').classList.contains('active')) renderizarFavoritos();
@@ -1509,7 +1526,7 @@
             const starCount = !animacionesActivas || document.body.classList.contains('ultra-performance')
                 ? 0
                 : (advancedAnimacionesEnabled ? 120 : 40);
-            const connectionDist = 150; // Distancia para dibujar líneas
+            const connectionDist = 150; // Distancia para dibujar lóneas
 
             for (let i = 0; i < starCount; i++) {
                 stars.push({
@@ -1621,7 +1638,7 @@
             const aiNameSave = document.getElementById('ai-name-save');
             let vozActiva = localStorage.getItem('osito_ai_voz') !== 'false';
             let bienvenidaReproducida = false;
-            const bienvenidaSitio = 'Bienvenido al Sotano de Osito. Aqui puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo y hablar con la inteligencia del sitio. Ahora tu cuenta se guarda en Firebase para que puedas entrar sin repetir el registro y mantener tu chat e historial. Para usar la IA, primero elige tu identidad y dime como quieres que te llame; despues podras preguntar cualquier cosa del canal o de la pagina.';
+            const bienvenidaSitio = 'Bienvenido al Sótano de Osito. Aquí puedes ver videos recientes, directos, canciones, favoritos, novedades en vivo y hablar con la inteligencia del sitio. Tu cuenta se guarda en Firebase para que puedas entrar sin repetir el registro y mantener tu chat e historial. Primero elige si eres Osito u Osita y dime cómo quieres que te llame.';
 
             const infoCanal = {
                 canal: 'OsitoYT360',
@@ -1640,6 +1657,18 @@
                 reglasDirectos: 'no insultos, no humillar a la gente y mantener todo humildemente',
                 meta: 'terminar sus estudios, seguir con el canal y hacer crecer mas la comunidad'
             };
+
+            function normalizarPreguntaIA(value) {
+                return String(value || '')
+                    .normalize('NFD')
+                    .split('')
+                    .filter((char) => {
+                        const code = char.charCodeAt(0);
+                        return code < 0x300 || code > 0x36f;
+                    })
+                    .join('')
+                    .toLowerCase();
+            }
 
             function agregarMensajeIA(texto, tipo) {
                 if (!aiMessages) return;
@@ -1675,7 +1704,7 @@
                 aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
                 actualizarBloqueoIA();
                 const apodo = apodoIA();
-                agregarMensajeIA(`¡Qué onda, ${apodo}! 😄 Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
+                agregarMensajeIA(`¡Qué onda, ${apodo}! Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
             }
 
             function guardarNombreIA() {
@@ -1690,7 +1719,7 @@
                 }
                 if (aiNameSave) {
                     aiNameSave.disabled = true;
-                    aiNameSave.innerHTML = '<span aria-hidden="true">✓</span> Nombre guardado';
+                    aiNameSave.innerHTML = '<span aria-hidden="true">✅</span> Nombre guardado';
                 }
                 agregarMensajeIA(`Perfecto, desde ahora te llamare ${aiNombre}.`, 'bot');
             }
@@ -1698,7 +1727,7 @@
             function hablarIA(texto) {
                 if (!vozActiva || !('speechSynthesis' in window)) return;
                 window.speechSynthesis.cancel();
-                const limpio = texto.replace(/[^\w\s.,;:!?¿¡áéíóúÁÉÍÓÚñÑ]/g, ' ');
+                const limpio = texto.replace(/[^\w\s.,;:!?ó]/g, ' ');
                 const utterance = new SpeechSynthesisUtterance(limpio);
                 utterance.lang = 'es-419';
                 utterance.rate = 1;
@@ -1709,7 +1738,7 @@
             function actualizarBotonVoz() {
                 if (!aiVoiceToggle) return;
                 aiVoiceToggle.classList.toggle('active', vozActiva);
-                aiVoiceToggle.innerHTML = vozActiva ? '<span class="btn-icon">🔊</span> Voz On' : '<span class="btn-icon">🔇</span> Voz Off';
+                aiVoiceToggle.innerHTML = vozActiva ? '<span class="btn-icon">ó</span> Voz On' : '<span class="btn-icon">ó</span> Voz Off';
             }
 
             function actualizarBloqueoIA() {
@@ -1756,13 +1785,13 @@
                 const ahora = new Date();
                 const fechaObjetivo = new Date(infoCanal.cumpleCanal.anioInicio + targetYears, infoCanal.cumpleCanal.mes, infoCanal.cumpleCanal.dia);
                 if (ahora >= fechaObjetivo) {
-                    return `¡El canal ya cumplió los ${targetYears} años en YouTube! 🥳`;
+                    return `¡El canal ya cumplió los ${targetYears} años en YouTube! 🎉`;
                 }
                 const diffMs = fechaObjetivo - ahora;
                 const diffDiasTotal = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
                 const meses = Math.floor(diffDiasTotal / 30.4375);
                 const diasRestantes = Math.floor(diffDiasTotal % 30.4375);
-                return `El aniversario del canal es el 2 de junio. Para cumplir ${targetYears} años en YouTube (el 2 de junio de 2027) faltan aproximadamente ${meses} meses y ${diasRestantes} días. 🎂🎉`;
+                return `El aniversario del canal es el 2 de junio. Para cumplir ${targetYears} años en YouTube (el 2 de junio de 2027) faltan aproximadamente ${meses} meses y ${diasRestantes} días. 🎂`;
             }
 
             function horaElSalvador() {
@@ -1775,14 +1804,14 @@
             }
 
             async function buscarRespuestaDinamica(pregunta) {
-                const texto = pregunta.toLowerCase();
+                const texto = normalizarPreguntaIA(pregunta);
                 const ahora = new Date();
 
-                if (/\b(hora|que hora|qué hora|hora es)\b/.test(texto)) {
+                if (/\b(hora|que hora|quó hora|hora es)\b/.test(texto)) {
                     return `En El Salvador son las ${horaElSalvador()}.`;
                 }
 
-                if (/\b(fecha|dia|día|hoy|que fecha|qué fecha)\b/.test(texto)) {
+                if (/\b(fecha|dia|dóa|hoy|que fecha|quó fecha)\b/.test(texto)) {
                     const fecha = new Intl.DateTimeFormat('es-SV', {
                         timeZone: 'America/El_Salvador',
                         dateStyle: 'full'
@@ -1825,16 +1854,30 @@
             }
 
             function responderIA(pregunta) {
-                const texto = pregunta.toLowerCase();
+                const texto = normalizarPreguntaIA(pregunta);
                 const respuestas = [];
                 const nombre = prefijoIA();
+
+                if (/quien es osito|quien es ositoyt360|informacion del canal|info del canal|que es osito/.test(texto)) {
+                    respuestas.push(
+                        `OsitoYT360 es un canal de ${infoCanal.pais} sobre videojuegos, ${nombre}. Publica gameplays, directos, shorts y series de Minecraft, Roblox, Free Fire y Craftman/Craftsman.`,
+                        `El Sótano de Osito reúne el contenido de OsitoYT360: videos, directos, canciones, favoritos y novedades de la comunidad.`
+                    );
+                }
+
+                if (/cuantos anos tiene osito|que edad tiene osito|edad de osito|cuando nacio osito|nacimiento de osito/.test(texto)) {
+                    respuestas.push(
+                        `El creador nació el 28 de septiembre de 2008 y actualmente tiene ${edadEnFecha(infoCanal.cumpleCreador)} años.`,
+                        `Osito nació el 28 de septiembre de 2008. La edad se calcula automáticamente según la fecha actual.`
+                    );
+                }
 
                 if (!aiGenero && /\b(hombre|masculino|varon|chico|soy hombre)\b/.test(texto)) {
                     aiGenero = 'male'; 
                     localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
                     actualizarBloqueoIA();
-                    return '¡Qué onda, osito! 😄 Todo bien. Ya te llamaré osito desde ahora. ¿Con qué te ayudo?';
+                    return '¡Qué onda, osito! Todo bien. Ya te llamaré osito desde ahora. ¿Con qué te ayudo?';
                 }
 
                 if (!aiGenero && /\b(mujer|femenino|chica|soy mujer)\b/.test(texto)) {
@@ -1842,70 +1885,70 @@
                     localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
                     actualizarBloqueoIA();
-                    return '¡Qué onda, osita! 😄 Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
+                    return '¡Qué onda, osita! Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
                 }
 
                 // 1. Navegación al Chat en Vivo
-                if (/\b(llevame a chat|llévame a chat|ir al chat|abrir chat|ver chat|chat en vivo|chat)\b/.test(texto)) {
+                if (/\b(llevame a chat|llóvame a chat|ir al chat|abrir chat|ver chat|chat en vivo|chat)\b/.test(texto)) {
                     if (typeof window.toggleLiveChatPanel === 'function') {
                         window.toggleLiveChatPanel();
                     }
-                    return `¡Con gusto, ${nombre}! Te he abierto la ventana del chat en vivo para que converses en tiempo real. 💬`;
+                    return `óCon gusto, ${nombre}! Te he abierto la ventana del chat en vivo para que converses en tiempo real. ó`;
                 }
 
                 // 2. Navegación al canal de YouTube
-                if (/\b(llevame al canal|llévame al canal|ir al canal|abrir canal|abrir el canal|ver canal|mostrar canal|muestrame el canal|muéstrame el canal|canal de youtube|abre youtube|ir a youtube)\b/.test(texto)) {
+                if (/\b(llevame al canal|llóvame al canal|ir al canal|abrir canal|abrir el canal|ver canal|mostrar canal|muestrame el canal|muóstrame el canal|canal de youtube|abre youtube|ir a youtube)\b/.test(texto)) {
                     window.open('https://www.youtube.com/@OsitoYT360', '_blank', 'noopener');
-                    return `¡Listo, ${nombre}! Te abrí el canal de YouTube.`;
+                    return `óListo, ${nombre}! Te abró el canal de YouTube.`;
                 }
 
-                // 3. Aniversario y Cuenta Regresiva de 5 Años del Canal
-                if (/5 años|cinco años|cumple.*canal|cumpla.*canal|compra.*canal|aniversario.*canal|años.*canal|cuanto falta.*canal|cuándo cumple|cuando cumple|cuanto falta.*youtube|cuánto falta.*youtube/.test(texto)) {
+                // 3. Aniversario y Cuenta Regresiva de 5 Aóos del Canal
+                if (/5 aóos|cinco aóos|cumple.*canal|cumpla.*canal|compra.*canal|aniversario.*canal|aóos.*canal|cuanto falta.*canal|cuóndo cumple|cuando cumple|cuanto falta.*youtube|cuónto falta.*youtube/.test(texto)) {
                     return obtenerTiempoFaltaCanal(5);
                 }
 
                 // 4. Edad del Creador
-                if (/edad|años tienes|cuántos años|cuantos años|cumpleaños|naciste|nacimiento/.test(texto)) {
+                if (/edad|anos tienes|cuantos anos|cumpleanos|naciste|nacimiento/.test(texto)) {
                     respuestas.push(
-                        `El creador nació el 28 de septiembre de 2008. Su edad actual es ${edadEnFecha(infoCanal.cumpleCreador)} años. 🎂`,
-                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} años.`
+                        `El creador nació el 28 de septiembre de 2008. Su edad actual es ${edadEnFecha(infoCanal.cumpleCreador)} aóos. ó`,
+                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} aóos.`
                     );
                 }
 
-                if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|dónde vive|casa|numero|número|whatsapp|telefono|teléfono|apellido|nombre completo|donde estudia|dónde estudia|colegio|instituto|escuela/.test(texto)) {
+                if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|dónde vive|casa|numero|nómero|whatsapp|telefono|telófono|apellido|nombre completo|donde estudia|dónde estudia|colegio|instituto|escuela/.test(texto)) {
                     respuestas.push(
-                        `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. 🔒`,
-                        `Eso sí que no, ${nombre}. Por seguridad no comparto mi ubicación, número, apellido completo ni lugar de estudio. 🔐`,
+                        `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. ó`,
+                        `Eso só que no, ${nombre}. Por seguridad no comparto mi ubicación, nómero, apellido completo ni lugar de estudio. ó`,
                         `No te puedo ayudar con datos privados. Puedo hablar del canal y del contenido, pero información personal no.`
                     );
                 }
 
-                if (/hora|qué hora|que hora|pais|país|salvador/.test(texto) && !/ubicacion|departamento|direccion|dirección|donde vive|dónde vive/.test(texto)) {
+                if (/hora|quó hora|que hora|pais|paós|salvador/.test(texto) && !/ubicacion|departamento|direccion|dirección|donde vive|dónde vive/.test(texto)) {
                     respuestas.push(
-                        `En El Salvador ahorita son las ${horaElSalvador()} 🇸🇻. Solo doy la hora del país, no ubicaciones personales.`,
-                        `La hora de El Salvador es: ${horaElSalvador()} 🇸🇻. Nada de departamentos ni datos privados, eso se cuida mucho.`
+                        `En El Salvador ahorita son las ${horaElSalvador()} ó. Solo doy la hora del paós, no ubicaciones personales.`,
+                        `La hora de El Salvador es: ${horaElSalvador()} ó. Nada de departamentos ni datos privados, eso se cuida mucho.`
                     );
                 }
 
                 if (/favorito|favoritos|estrella|guardar/.test(texto)) { 
                     respuestas.push(
-                        `Toca la estrella de una tarjeta, ${nombre}. Si ya estaba guardado, la misma estrella lo quita de favoritos ⭐`,
-                        'Los favoritos se guardan en este navegador con localStorage, así que aparecerán cuando entres otra vez.',
-                        'Entra a "Mis Favoritos" para ver lo guardado. ¡La estrella manda! Un toque agrega, otro toque elimina.'
+                        `Toca la estrella de una tarjeta, ${nombre}. Si ya estaba guardado, la misma estrella lo quita de favoritos ó`,
+                        'Los favoritos se guardan en este navegador con localStorage, asó que aparecerón cuando entres otra vez.',
+                        'Entra a "Mis Favoritos" para ver lo guardado. óLa estrella manda! Un toque agrega, otro toque elimina.'
                     );
                 }
 
-                if (/que puedo hacer|qué puedo hacer|pagina|página|sitio|funciones|para que sirve|para qué sirve/.test(texto)) {
+                if (/que puedo hacer|quó puedo hacer|pagina|pógina|sitio|funciones|para que sirve|para quó sirve/.test(texto)) {
                     respuestas.push(
-                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo y preguntarme lo que quieras, ${nombre}. 😄`,
+                        `Aquó puedes ver videos recientes, directos, favoritos, actualizaciones en vivo y preguntarme lo que quieras, ${nombre}. ó`,
                         'La pagina sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
-                        `Puedes moverte por las pestañas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.`
+                        `Puedes moverte por las pestaóas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.`
                     );
                 }
 
-                if (/de que trata|de qué trata|contenido|canal|youtube|video|videos|juego|juegos|minecraft|roblox|free fire|craftman|craftsman/.test(texto)) {
+                if (/de que trata|de quó trata|contenido|canal|youtube|video|videos|juego|juegos|minecraft|roblox|free fire|craftman|craftsman/.test(texto)) {
                     respuestas.push(
-                        `El canal trata de videojuegos: Minecraft, Roblox, Free Fire, Craftman/Craftsman y cualquier juego que se venga bueno. 🎮`,
+                        `El canal trata de videojuegos: Minecraft, Roblox, Free Fire, Craftman/Craftsman y cualquier juego que se venga bueno. ó`,
                         `OsitoYT360 es de gameplays, directos, shorts y series. Los juegos favoritos son Minecraft, Roblox y Craftman/Craftsman.`,
                         `Por aqui vas a ver contenido variado de videojuegos, ${nombre}: Roblox, Minecraft, Free Fire, Craftman/Craftsman y mas.`
                     );
@@ -1913,24 +1956,24 @@
 
                 if (/directo|live|stream|transmision/.test(texto)) { 
                     respuestas.push(
-                        `Los directos salen en la pestaña "Directos", ${nombre}. Normalmente hay un en vivo por semana entre viernes, sábado o domingo. 🔴`,
+                        `Los directos salen en la pestaóa "Directos", ${nombre}. Normalmente hay un en vivo por semana entre viernes, sóbado o domingo. ó`,
                         'Si una semana no se puede hacer directo, puede pasar para la siguiente. La idea es mantenerlo constante sin forzarlo.',
-                        `Regla de los en vivo: nada de insultos ni humillar a los demás. Todo con humildad. 🤝`
+                        `Regla de los en vivo: nada de insultos ni humillar a los demós. Todo con humildad. ó`
                     );
                 }
 
                 if (/expo|evento|fecha|cuando|horario/.test(texto)) { 
                     respuestas.push(
-                        `Muy pronto habrá novedades y anuncios especiales del canal, ${nombre}. 🎬`,
-                        'Cuando haya una fecha confirmada, aparecerá en las actualizaciones del sitio.',
+                        `Muy pronto habró novedades y anuncios especiales del canal, ${nombre}. ó`,
+                        'Cuando haya una fecha confirmada, apareceró en las actualizaciones del sitio.',
                         `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}.`
                     );
                 }
 
-                if (/cancion|canciones|musica|música|navidad|24 de diciembre|especial/.test(texto)) { 
+                if (/cancion|canciones|musica|mósica|navidad|24 de diciembre|especial/.test(texto)) { 
                     respuestas.push(
-                        'Si, van a venir mas canciones en el futuro. 🎵',
-                        'Para Navidad, el 24 de diciembre, esta planeado un especial con en vivo y una cancion. 🎄',
+                        'Si, van a venir mas canciones en el futuro. ó',
+                        'Para Navidad, el 24 de diciembre, esta planeado un especial con en vivo y una cancion. ó',
                         `Si preguntas por musica: si, ${nombre}, hay planes de sacar mas canciones.`
                     );
                 }
@@ -1938,7 +1981,7 @@
                 if (/serie|series|temporada|temporadas|survivalang/.test(texto)) { 
                     respuestas.push(
                         'Si, van a haber mas series y mas temporadas de las series actuales. Survivalang va para largo.',
-                        'Survivalang va a durar un monton; ni el creador sabe exactamente cuantos capitulos van a salir 😄',
+                        'Survivalang va a durar un monton; ni el creador sabe exactamente cuantos capitulos van a salir ó',
                         `Sobre series, ${nombre}: si hay planes de seguir con mas temporadas y nuevos proyectos.`
                     );
                 }
@@ -1946,15 +1989,15 @@
                 if (/colaboracion|colaboraciones|colab|allay|alay|mrbeast|mikecrack|compas|max wish|maxwish/.test(texto)) { 
                     respuestas.push(
                         'Si van a haber colaboraciones futuras, aunque por ahora no hay planes exactos. El colaborador mas reciente fue Allay MC.',
-                        'Al creador le gustaria algun dia colaborar con MrBeast y Mikecrack. Son metas grandes, pero soñar tambien cuenta 😄',
+                        'Al creador le gustaria algun dia colaborar con MrBeast y Mikecrack. Son metas grandes, pero soóar tambien cuenta ó',
                         'La inspiracion viene de Max Wish, Los Compas y creadores grandes de videojuegos.'
                     );
                 }
 
-                if (/por que osito|por qué osito|nombre|origen|peluche|inspir/.test(texto) && !/apellido|completo/.test(texto)) { 
+                if (/por que osito|por quó osito|nombre|origen|peluche|inspir/.test(texto) && !/apellido|completo/.test(texto)) { 
                     respuestas.push(
                         'El nombre Osito viene de un peluche. La historia empezo en 2019, cuando se grababa con un panda chiquito de peluche.',
-                        'La idea del nombre nacio por un peluche y por esa inspiracion de empezar a grabar contenido desde pequeño.',
+                        'La idea del nombre nacio por un peluche y por esa inspiracion de empezar a grabar contenido desde pequeóo.',
                         `Se llama Osito por esa historia del peluche, ${nombre}. El apellido o datos completos no se comparten.`
                     );
                 }
@@ -1970,7 +2013,7 @@
                 if (/meta|futuro|dejar el canal|seguir el canal|estudio|estudios|software|ingenier/.test(texto)) { 
                     respuestas.push(
                         'Su meta es terminar los estudios, seguir con el canal y hacer crecer mas la comunidad. Todavia no sabe si en el futuro sera mas desarrollador de software o creador de contenido.',
-                        'Esta estudiando enfocado en ingenieria de desarrollo de software, pero no se comparte donde estudia. Eso es privado. 🔒',
+                        'Esta estudiando enfocado en ingenieria de desarrollo de software, pero no se comparte donde estudia. Eso es privado. ó',
                         `Sobre el futuro, ${nombre}: quiere crecer, estudiar y seguir mejorando, pero todavia hay cosas que se van a decidir con el tiempo.`
                     );
                 }
@@ -1991,15 +2034,15 @@
                     );
                 }
 
-                if (/logro|mil suscriptores|1000|suscriptores|video favorito|vlog|arbol|árbol/.test(texto)) { 
+                if (/logro|mil suscriptores|1000|suscriptores|video favorito|vlog|arbol|órbol/.test(texto)) { 
                     respuestas.push(
-                        'Uno de sus logros mas grandes fue llegar a 1000 suscriptores. Eso marco bastante al canal. 🏆',
+                        'Uno de sus logros mas grandes fue llegar a 1000 suscriptores. Eso marco bastante al canal. ó',
                         'Su video favorito fue un vlog armando el arbol de Navidad.',
                         `Llegar a los 1000 suscriptores fue un logro enorme, ${nombre}.`
                     );
                 }
 
-                if (/consejo|creador|empezando|empezar|youtube no es facil|youtube no es fácil|vici/.test(texto)) { 
+                if (/consejo|creador|empezando|empezar|youtube no es facil|youtube no es fócil|vici/.test(texto)) { 
                     respuestas.push(
                         'Consejo para creadores: no se rindan. YouTube no es facil con videos ni vistas, pero hay que seguir y no parar.',
                         'Tambien recomienda no viciarse mucho con los juegos y tener horarios especificos para estudiar y jugar.',
@@ -2024,16 +2067,16 @@
 
                 if (/diseno|boton|botones|tema|color|estilo|destello/.test(texto)) {
                     respuestas.push( 
-                        `El diseño usa paneles oscuros, brillo controlado y botones con destello, ${nombre}. Se ve pro sin ponerse pesado.`,
+                        `El diseóo usa paneles oscuros, brillo controlado y botones con destello, ${nombre}. Se ve pro sin ponerse pesado.`,
                         'Puedes cambiar colores desde los temas o los selectores. Los botones heredan esos colores para mantener todo consistente.',
                         'El destello de los botones es CSS liviano: no usa imagenes ni librerias pesadas.'
                     );
                 }
 
-                if (/hola|buenas|hey|saludos|que onda|qué onda/.test(texto)) {
+                if (/hola|buenas|hey|saludos|que onda|quó onda/.test(texto)) {
                     respuestas.push( 
-                        `Que onda, ${nombre} 😄 Todo bien. Con que te ayudo hoy?`,
-                        `Hey, ${nombre}. Aqui ando, tirame la pregunta y vemos. ✨`,
+                        `Que onda, ${nombre} ó Todo bien. Con que te ayudo hoy?`,
+                        `Hey, ${nombre}. Aqui ando, tirame la pregunta y vemos. ó`,
                         `Buenas, ${nombre}. Dale, preguntame lo que quieras del canal o del sitio.`
                     );
                 }
@@ -2050,7 +2093,7 @@
                 }
                 if (!aiGenero && !/\b(hombre|masculino|varon|chico|soy hombre|mujer|femenino|chica|soy mujer)\b/i.test(limpia)) {
                     if (aiInput) aiInput.value = '';
-                    setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer 😄 Asi te hablo como osito u osita.', 'bot'), 160);
+                    setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer ó Asi te hablo como osito u osita.', 'bot'), 160);
                     return;
                 }
                 agregarMensajeIA(limpia, 'user'); 
@@ -2075,7 +2118,7 @@
                 aiNameInput.value = aiNombre;
                 aiNameInput.disabled = true;
                 aiNameSave.disabled = true;
-                aiNameSave.innerHTML = '<span aria-hidden="true">✓</span> Nombre guardado';
+                aiNameSave.innerHTML = '<span aria-hidden="true">ó</span> Nombre guardado';
             }
             window.aiNombreActual = aiNombre;
             if (aiNameSave) aiNameSave.addEventListener('click', guardarNombreIA);
@@ -2143,7 +2186,7 @@
         }
     </script>
 
-    <!-- WIDGET DE CHAT EN VIVO PROPIO (NODE.JS + WEBSOCKETS) -->
+        <!-- CHAT EN VIVO REHECHO DESDE CERO -->
     <div class="livechat-floating-container">
         <button class="livechat-toggle-bubble" id="livechat-bubble" onclick="toggleLiveChatPanel()" type="button" aria-label="Abrir Chat en Vivo" aria-expanded="false">
             <span class="livechat-bubble-icon" aria-hidden="true">💬</span>
@@ -2156,1471 +2199,658 @@
                 <div class="livechat-header-info">
                     <span class="livechat-status-dot" id="livechat-status-dot" title="Estado de conexión"></span>
                     <div>
-                        <h3>Chat del Sótano</h3>
+                        <h3><span aria-hidden="true">💬</span> Chat en Vivo</h3>
                         <p id="livechat-status-text"><span id="livechat-online-count">1</span> en línea</p>
                     </div>
                 </div>
                 <div class="livechat-header-actions">
-                    <button class="livechat-btn-icon livechat-admin-trigger" type="button" onclick="toggleLiveChatAdmin()" title="Panel Admin">⚙️</button>
+                    <span class="livechat-live-pill">Tiempo real</span>
                     <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatPanel()" title="Minimizar">✕</button>
                 </div>
             </div>
 
             <div class="livechat-user-banner">
+                <img id="livechat-current-avatar" class="livechat-current-avatar" src="" alt="Foto de perfil">
                 <span>Conectado como: <strong id="livechat-current-user">Invitado</strong></span>
-                <span id="livechat-sync-hint" style="font-size: 10px; opacity: 0.8;">(Sincronizado en la nube)</span>
+                <span id="livechat-sync-hint" style="font-size: 10px; opacity: 0.8;">Visto al momento</span>
             </div>
 
-            <div class="livechat-messages" id="livechat-messages" role="log" aria-live="polite">
-                <!-- Mensajes renderizados dinámicamente -->
-            </div>
+            <div class="livechat-mute-note" id="livechat-mute-note" style="display:none;"></div>
+
+            <div class="livechat-messages" id="livechat-messages" role="log" aria-live="polite"></div>
 
             <div class="livechat-typing-bar" id="livechat-typing-bar" style="display: none;">
-                <span id="livechat-typing-text">Alguien está escribiendo</span>
+                <span id="livechat-typing-text">Alguien estó escribiendo</span>
                 <div class="lc-typing-dots">
                     <span></span><span></span><span></span>
                 </div>
             </div>
 
             <form class="livechat-input-area" id="livechat-form">
-                <input id="livechat-input" class="input-gamer" autocomplete="off" maxlength="400" placeholder="Escribe un mensaje en vivo..." aria-label="Mensaje para el chat">
+                <input id="livechat-input" class="input-gamer" autocomplete="off" maxlength="400" placeholder="Escribe un mensaje..." aria-label="Mensaje para el chat">
                 <button class="btn-send-lc" type="submit" aria-label="Enviar mensaje">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
                     </svg>
                 </button>
             </form>
-
-            <!-- Panel Admin Integrado -->
-            <div class="livechat-admin-panel" id="livechat-admin-panel">
-                <div class="livechat-admin-title">
-                    <span>🛡️ Panel de Moderación</span>
-                    <button class="livechat-btn-icon livechat-admin-trigger" type="button" onclick="toggleLiveChatAdmin()">✕</button>
-                </div>
-
-                <!-- Bloque de Login Admin -->
-                <div id="admin-auth-box">
-                    <div class="livechat-admin-field">
-                        <label for="admin-pass">Contraseña de Administrador:</label>
-                        <input type="password" id="admin-pass" placeholder="Escribe tu clave..." onkeyup="if(event.key==='Enter') verificarClaveAdmin()">
-                    </div>
-                    <button class="livechat-admin-btn btn-admin-broadcast" type="button" onclick="verificarClaveAdmin()" style="width: 100%; margin-top: 8px;">🔑 Entrar como Admin</button>
-                    <div id="admin-auth-status" style="font-size: 12px; margin-top: 10px; font-weight: 800; text-align: center;"></div>
-                </div>
-
-                <!-- Opciones de Moderación (Desbloqueado al verificar clave) -->
-                <div id="admin-controls-box" style="display: none; flex-direction: column; gap: 12px;">
-                    <div style="background: rgba(88, 255, 154, 0.1); border: 1px solid rgba(88, 255, 154, 0.3); padding: 8px 12px; border-radius: 8px; font-size: 11px; color: #58ff9a; font-weight: 800; display: flex; justify-content: space-between; align-items: center;">
-                        <span>✅ Modo Admin Activo</span>
-                        <button type="button" onclick="cerrarSesionAdmin()" style="background: rgba(255,77,77,0.2); border: 1px solid rgba(255,77,77,0.4); color: #ff6b6b; cursor: pointer; font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 4px;">Cerrar Sesión</button>
-                    </div>
-
-                    <div class="livechat-admin-field">
-                        <label for="admin-broadcast-msg">📢 Emitir Anuncio Global:</label>
-                        <input type="text" id="admin-broadcast-msg" placeholder="Ej: ¡Nuevo directo iniciado!">
-                        <button class="livechat-admin-btn btn-admin-broadcast" type="button" onclick="ejecutarAdminBroadcast()">Emitir Anuncio</button>
-                    </div>
-
-                    <div class="livechat-admin-field">
-                        <label for="admin-mute-user">🔇 Silenciar Usuario (segundos):</label>
-                        <input type="text" id="admin-mute-user" placeholder="Nombre exacto del usuario">
-                        <input type="number" id="admin-mute-secs" value="60" placeholder="Segundos (ej: 60)">
-                        <button class="livechat-admin-btn btn-admin-mute" type="button" onclick="ejecutarAdminMute()">Silenciar Usuario</button>
-                    </div>
-
-                    <div style="margin-top: 4px;">
-                        <button class="livechat-admin-btn btn-admin-clear" type="button" onclick="ejecutarAdminClear()" style="width: 100%;">🗑️ VACIAR CHAT COMPLETO</button>
-                    </div>
-                </div>
-            </div>
         </section>
     </div>
 
     <script>
-        // ============================================================
-        // SISTEMA DE CHAT EN VIVO EN TIEMPO REAL (SERVER.JS NATIVO)
-        // ============================================================
         (function() {
-            (function() {
-                const CLAVE_ADMIN = '240625';
-                const LIVECHAT_ROOT = 'livechat';
-                const MAX_HISTORY = 200;
-                const CLIENT_ID = `client_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-
-                let unreadCount = 0;
-                let chatAbierto = false;
-                let typingTimeout = null;
-                let esEscribiendoPropio = false;
-                let esAdminKeyGuardada = '';
-                let historialCargado = false;
-                let livechatDb = null;
-                let messagesRef = null;
-                let messagesQuery = null;
-                let typingRef = null;
-                let mutedUsersRef = null;
-                let seenMessageIds = new Set();
-                let typingState = {};
-                let mutedUsers = {};
-                let unsubscribers = [];
-
-                function obtenerNombreActual() {
-                    const nombre = (window.aiNombreActual || '').trim();
-                    if (nombre) return nombre.slice(0, 24);
-                    return 'Invitado';
-                }
-
-                function actualizarNombreEnPantalla() {
-                    const el = document.getElementById('livechat-current-user');
-                    if (el) el.textContent = obtenerNombreActual();
-                }
-
-                function formatearHoraFecha(timestamp) {
-                    const fecha = new Date(timestamp || Date.now());
-                    const horaStr = fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit', hour12: true });
-                    const fechaStr = fecha.toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    return { horaStr, fechaStr };
-                }
-
-                function normalizarUsuario(usuario) {
-                    return (usuario || '').trim().toLowerCase();
-                }
-
-                function obtenerDb() {
-                    return window.livechatDbFirebase || window.dbFirebase || null;
-                }
-
-                function obtenerRefs() {
-                    const db = obtenerDb();
-                    if (!db || !window.livechatRefFirebase || !window.livechatQueryFirebase) return false;
-
-                    livechatDb = db;
-                    messagesRef = window.livechatRefFirebase(livechatDb, `${LIVECHAT_ROOT}/messages`);
-                    messagesQuery = window.livechatQueryFirebase(
-                        messagesRef,
-                        window.livechatOrderByChildFirebase('timestamp'),
-                        window.livechatLimitToLastFirebase(MAX_HISTORY)
-                    );
-                    typingRef = window.livechatRefFirebase(livechatDb, `${LIVECHAT_ROOT}/typing`);
-                    mutedUsersRef = window.livechatRefFirebase(livechatDb, `${LIVECHAT_ROOT}/mutedUsers`);
-                    return true;
-                }
-
-                function limpiarSubscripciones() {
-                    while (unsubscribers.length > 0) {
-                        const off = unsubscribers.pop();
-                        try {
-                            if (typeof off === 'function') off();
-                        } catch (e) {}
-                    }
-                }
-
-                function establecerEstadoConexion(online, texto = null) {
-                    const dot = document.getElementById('livechat-status-dot');
-                    const textEl = document.getElementById('livechat-status-text');
-                    const hintEl = document.getElementById('livechat-sync-hint');
-                    if (dot) dot.classList.toggle('offline', !online);
-                    if (textEl) textEl.innerHTML = texto || '';
-                    if (hintEl && texto) hintEl.textContent = `(${texto})`;
-                }
-
-                function actualizarBadgeNotificacion() {
-                    const badge = document.getElementById('livechat-unread-badge');
-                    if (!badge) return;
-                    if (unreadCount > 0) {
-                        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                        badge.classList.add('show');
-                    } else {
-                        badge.classList.remove('show');
-                    }
-                }
-
-                function reproducirSonidoNotificacion() {
-                    try {
-                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-                        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-                        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start();
-                        osc.stop(ctx.currentTime + 0.2);
-                    } catch (e) {}
-                }
-
-                function renderizarMensaje(msg, esHistorial = false) {
-                    const container = document.getElementById('livechat-messages');
-                    if (!container || !msg || !msg.id) return;
-                    if (document.getElementById(msg.id)) return;
-
-                    const miNombre = obtenerNombreActual();
-                    const usuario = msg.user || 'Invitado';
-                    const esMio = normalizarUsuario(usuario) === normalizarUsuario(miNombre);
-                    const esSistema = Boolean(msg.isSystem);
-
-                    const msgDiv = document.createElement('div');
-                    msgDiv.id = msg.id;
-
-                    if (esSistema) {
-                        msgDiv.className = 'lc-msg system';
-                        msgDiv.innerHTML = `<div class="lc-msg-bubble">${escaparHTML(msg.text || '')}</div>`;
-                    } else {
-                        const { horaStr, fechaStr } = formatearHoraFecha(msg.timestamp);
-                        const adminOption = esAdminKeyGuardada ? `<span class="lc-del-btn" onclick="eliminarMensajeAdmin('${msg.id}')" title="Eliminar mensaje">✕</span>` : '';
-
-                        msgDiv.className = `lc-msg ${esMio ? 'own' : 'other'}`;
-                        msgDiv.innerHTML = `
-                            <div class="lc-msg-header">
-                                <span class="lc-msg-user">${escaparHTML(usuario)}${adminOption}</span>
-                                <span class="lc-msg-time" title="${fechaStr}">${horaStr} • ${fechaStr}</span>
-                            </div>
-                            <div class="lc-msg-bubble">${escaparHTML(msg.text || '')}</div>
-                        `;
-                    }
-
-                    container.appendChild(msgDiv);
-                    container.scrollTop = container.scrollHeight;
-
-                    if (!chatAbierto && !esMio && !esHistorial) {
-                        unreadCount++;
-                        actualizarBadgeNotificacion();
-                        reproducirSonidoNotificacion();
-                    }
-                }
-
-                function limpiarChatEnPantalla() {
-                    const container = document.getElementById('livechat-messages');
-                    if (container) container.innerHTML = '';
-                }
-
-                function esUsuarioSilenciado(usuario) {
-                    const data = mutedUsers[normalizarUsuario(usuario)];
-                    return Boolean(data && Number(data.mutedUntil) > Date.now());
-                }
-
-                function actualizarIndicadorEscribiendoRemoto() {
-                    const activos = [];
-                    const ahora = Date.now();
-
-                    Object.values(typingState || {}).forEach((entry) => {
-                        if (!entry || !entry.isTyping) return;
-                        if (ahora - Number(entry.updatedAt || 0) > 3500) return;
-
-                        const usuario = (entry.user || '').trim();
-                        if (!usuario) return;
-                        if (normalizarUsuario(usuario) === normalizarUsuario(obtenerNombreActual())) return;
-                        activos.push(usuario);
-                    });
-
-                    const bar = document.getElementById('livechat-typing-bar');
-                    const txt = document.getElementById('livechat-typing-text');
-                    if (!bar || !txt) return;
-
-                    if (activos.length > 0) {
-                        txt.textContent = `${activos[0]} está escribiendo`;
-                        bar.style.display = 'flex';
-                    } else {
-                        bar.style.display = 'none';
-                    }
-                }
-
-                function publicarMensajeEnFirebase(payload) {
-                    if (!messagesRef || !window.livechatPushFirebase) {
-                        return Promise.reject(new Error('Firebase RTDB no está listo.'));
-                    }
-
-                    const user = (payload.user || obtenerNombreActual()).trim().slice(0, 24) || 'Invitado';
-                    const text = (payload.text || '').trim();
-                    if (!text) {
-                        return Promise.reject(new Error('El mensaje no puede estar vacío.'));
-                    }
-                    if (text.length > 400) {
-                        return Promise.reject(new Error('El mensaje supera el límite máximo de 400 caracteres.'));
-                    }
-
-                    if (!payload.isSystem && esUsuarioSilenciado(user)) {
-                        return Promise.reject(new Error('Este usuario está silenciado temporalmente.'));
-                    }
-
-                    const messageData = {
-                        user,
-                        text,
-                        timestamp: Date.now(),
-                        isSystem: Boolean(payload.isSystem),
-                        isAdmin: Boolean(payload.isAdmin),
-                        clientId: CLIENT_ID
-                    };
-
-                    if (!window.livechatSetFirebase) {
-                        return Promise.reject(new Error('Firebase RTDB no esta listo para escribir.'));
-                    }
-
-                    const pendingId = `pending_${CLIENT_ID}_${Date.now()}`;
-                    renderizarMensaje({ id: pendingId, ...messageData }, false);
-
-                    try {
-                        const newMessageRef = window.livechatPushFirebase(messagesRef);
-                        return window.livechatSetFirebase(newMessageRef, messageData).then(() => {
-                            // Reemplazamos el mensaje temporal por el confirmado en la nube.
-                            document.getElementById(pendingId)?.remove();
-                            const msg = { id: newMessageRef.key, ...messageData };
-                            if (!seenMessageIds.has(msg.id)) {
-                                seenMessageIds.add(msg.id);
-                                renderizarMensaje(msg, false);
-                            }
-                            return newMessageRef;
-                        }).catch((error) => {
-                            document.getElementById(pendingId)?.remove();
-                            throw error;
-                        });
-                    } catch (error) {
-                        document.getElementById(pendingId)?.remove();
-                        return Promise.reject(error);
-                    }
-                }
-
-                function describirErrorFirebase(error) {
-                    const codigo = error?.code || '';
-                    if (codigo.includes('PERMISSION_DENIED')) {
-                        return 'Firebase rechazo el mensaje. Publica database.rules.json en Realtime Database > Rules.';
-                    }
-                    if (codigo.includes('NETWORK')) return 'No hay conexion con Firebase. Revisa tu internet.';
-                    return error?.message || 'No se pudo enviar el mensaje a Firebase.';
-                }
-
-                window.publicarMensajeLiveChat = function(texto, usuario = 'IA Osito', opciones = {}) {
-                    return publicarMensajeEnFirebase({
-                        user: usuario,
-                        text: texto,
-                        isSystem: Boolean(opciones.isSystem ?? true),
-                        isAdmin: Boolean(opciones.isAdmin ?? true)
-                    });
-                };
-
-                function escucharHistorialInicial() {
-                    if (!messagesQuery || !window.livechatGetFirebase) return Promise.reject(new Error('Query no disponible.'));
-
-                    limpiarChatEnPantalla();
-                    seenMessageIds = new Set();
-
-                    return window.livechatGetFirebase(messagesQuery).then((snapshot) => {
-                        snapshot.forEach((child) => {
-                            const data = child.val() || {};
-                            const msg = {
-                                id: child.key,
-                                user: data.user || 'Invitado',
-                                text: data.text || '',
-                                timestamp: Number(data.timestamp) || Date.now(),
-                                isSystem: Boolean(data.isSystem),
-                                isAdmin: Boolean(data.isAdmin)
-                            };
-                            seenMessageIds.add(msg.id);
-                            renderizarMensaje(msg, true);
-                        });
-                        historialCargado = true;
-                    });
-                }
-
-                function escucharCambiosEnTiempoReal() {
-                    limpiarSubscripciones();
-
-                    const offMessages = window.livechatOnValueFirebase(messagesRef, (snapshot) => {
-                        const mensajes = [];
-                        snapshot.forEach((child) => {
-                            const data = child.val() || {};
-                            mensajes.push({
-                                id: child.key,
-                                user: data.user || 'Invitado',
-                                text: data.text || '',
-                                timestamp: Number(data.timestamp) || Date.now(),
-                                isSystem: Boolean(data.isSystem),
-                                isAdmin: Boolean(data.isAdmin)
-                            });
-                        });
-
-                        mensajes.sort((a, b) => a.timestamp - b.timestamp);
-                        limpiarChatEnPantalla();
-                        seenMessageIds = new Set();
-                        mensajes.slice(-MAX_HISTORY).forEach((msg) => {
-                            seenMessageIds.add(msg.id);
-                            renderizarMensaje(msg, true);
-                        });
-                    }, (error) => {
-                        console.error('No se pudo escuchar el chat de Firebase:', error);
-                        establecerEstadoConexion(false, describirErrorFirebase(error));
-                        mostrarNotificacion(`No se pudo sincronizar el chat: ${describirErrorFirebase(error)}`);
-                    });
-                    unsubscribers.push(offMessages);
-
-                    const offRemoved = window.livechatOnChildRemovedFirebase(messagesRef, (snapshot) => {
-                        const el = document.getElementById(snapshot.key);
-                        if (el) el.remove();
-                        seenMessageIds.delete(snapshot.key);
-                    });
-                    unsubscribers.push(offRemoved);
-
-                    const offTyping = window.livechatOnValueFirebase(typingRef, (snapshot) => {
-                        typingState = snapshot.val() || {};
-                        actualizarIndicadorEscribiendoRemoto();
-                    });
-                    unsubscribers.push(offTyping);
-
-                    const offMuted = window.livechatOnValueFirebase(mutedUsersRef, (snapshot) => {
-                        mutedUsers = snapshot.val() || {};
-                    });
-                    unsubscribers.push(offMuted);
-                }
-
-                function iniciarChatFirebase() {
-                    if (!obtenerRefs()) {
-                        return;
-                    }
-
-                    establecerEstadoConexion(true, 'Sincronizado con Firebase RTDB');
-                    escucharHistorialInicial()
-                        .then(() => {
-                            escucharCambiosEnTiempoReal();
-                        })
-                        .catch((error) => {
-                            console.error('No se pudo cargar el historial del chat:', error);
-                            establecerEstadoConexion(false, describirErrorFirebase(error));
-                            mostrarNotificacion(`No se pudo cargar el chat: ${describirErrorFirebase(error)}`);
-                        });
-                }
-
-                function notificarEscribiendo(estado) {
-                    if (esEscribiendoPropio === estado) return;
-                    esEscribiendoPropio = estado;
-
-                    if (!typingRef || !window.livechatSetFirebase) return;
-
-                    const usuario = obtenerNombreActual();
-                    const entryRef = window.livechatRefFirebase(livechatDb, `${LIVECHAT_ROOT}/typing/${CLIENT_ID}`);
-
-                    if (estado) {
-                        window.livechatSetFirebase(entryRef, {
-                            user: usuario,
-                            isTyping: true,
-                            updatedAt: Date.now()
-                        }).catch(() => {});
-                    } else {
-                        window.livechatRemoveFirebase(entryRef).catch(() => {});
-                    }
-                }
-
-                function enviarMensajeChat(texto) {
-                    const limpia = (texto || '').trim();
-                    if (!limpia) return;
-
-                    if (typeof window.publicarMensajeLiveChat === 'function') {
-                        window.publicarMensajeLiveChat(limpia, obtenerNombreActual(), {
-                            isSystem: false,
-                            isAdmin: false
-                        }).catch((error) => {
-                            console.error('No se pudo enviar el mensaje a Firebase:', error);
-                            mostrarNotificacion(describirErrorFirebase(error));
-                        });
-                        return;
-                    }
-
-                    mostrarNotificacion('El chat en vivo no esta listo todavia.');
-                }
-
-                // El controlador antiguo de Realtime Database queda desactivado.
-                // El segundo controlador usa Firestore y es el unico que escucha el formulario.
-                return;
-
-                window.addEventListener('DOMContentLoaded', () => {
-                    actualizarNombreEnPantalla();
-                    iniciarChatFirebase();
-
-                    const form = document.getElementById('livechat-form');
-                    const input = document.getElementById('livechat-input');
-
-                    if (form && input) {
-                        form.addEventListener('submit', (e) => {
-                            e.preventDefault();
-                            enviarMensajeChat(input.value);
-                            input.value = '';
-                            notificarEscribiendo(false);
-                        });
-
-                        input.addEventListener('input', () => {
-                            notificarEscribiendo(true);
-                            if (typingTimeout) clearTimeout(typingTimeout);
-                            typingTimeout = setTimeout(() => notificarEscribiendo(false), 2000);
-                        });
-                    }
-
-                    const aiNameSave = document.getElementById('ai-name-save');
-                    if (aiNameSave) {
-                        aiNameSave.addEventListener('click', () => {
-                            setTimeout(actualizarNombreEnPantalla, 200);
-                        });
-                    }
-                });
-
-                window.toggleLiveChatPanel = function() {
-                    const section = document.getElementById('livechat-section');
-                    const bubble = document.getElementById('livechat-bubble');
-                    if (!section) return;
-                    chatAbierto = section.classList.toggle('active');
-                    if (bubble) bubble.classList.toggle('open', chatAbierto);
-
-                    if (chatAbierto) {
-                        unreadCount = 0;
-                        actualizarBadgeNotificacion();
-                        actualizarNombreEnPantalla();
-                        const messagesContainer = document.getElementById('livechat-messages');
-                        if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    }
-                };
-
-            window.toggleLiveChatAdmin = function() {
-                if (!window.ositoEsCreador) {
-                    mostrarNotificacion('Solo el creador puede abrir la moderacion.');
-                    return;
-                }
-                const panel = document.getElementById('livechat-admin-panel');
-                    if (!panel) return;
-                    const isOpening = panel.classList.toggle('active');
-                    if (isOpening) {
-                        if (esAdminKeyGuardada === CLAVE_ADMIN) {
-                            desbloquearPanelAdmin();
-                        } else {
-                            const controlsBox = document.getElementById('admin-controls-box');
-                            const authBox = document.getElementById('admin-auth-box');
-                            if (controlsBox) controlsBox.style.display = 'none';
-                            if (authBox) authBox.style.display = 'block';
-                        }
-                    }
-                };
-
-                window.verificarClaveAdmin = function() {
-                    const passInput = document.getElementById('admin-pass');
-                    const pass = (passInput ? passInput.value : '').trim();
-                    const statusEl = document.getElementById('admin-auth-status');
-
-                    if (!pass) {
-                        if (statusEl) {
-                            statusEl.style.color = '#ff4757';
-                            statusEl.textContent = '❌ Escribe una contraseña primero.';
-                        }
-                        return;
-                    }
-
-                    if (pass === CLAVE_ADMIN) {
-                        esAdminKeyGuardada = pass;
-                        desbloquearPanelAdmin();
-                        if (statusEl) {
-                            statusEl.style.color = '#58ff9a';
-                            statusEl.textContent = 'Clave correcta. Sesión iniciada.';
-                        }
-                        mostrarNotificacion('Modo Administrador activado');
-                        return;
-                    }
-
-                    if (statusEl) {
-                        statusEl.style.color = '#ff4757';
-                        statusEl.textContent = '❌ Contraseña incorrecta. Inténtalo de nuevo.';
-                    }
-                    mostrarNotificacion('Contraseña de admin incorrecta ❌');
-                };
-
-                function desbloquearPanelAdmin() {
-                    const controlsBox = document.getElementById('admin-controls-box');
-                    const authBox = document.getElementById('admin-auth-box');
-                    if (controlsBox) controlsBox.style.display = 'flex';
-                    if (authBox) authBox.style.display = 'none';
-                }
-
-                window.cerrarSesionAdmin = function() {
-                    esAdminKeyGuardada = '';
-                    const controlsBox = document.getElementById('admin-controls-box');
-                    const authBox = document.getElementById('admin-auth-box');
-                    const statusEl = document.getElementById('admin-auth-status');
-                    const passInput = document.getElementById('admin-pass');
-                    if (controlsBox) controlsBox.style.display = 'none';
-                    if (authBox) authBox.style.display = 'block';
-                    if (statusEl) statusEl.textContent = '';
-                    if (passInput) passInput.value = '';
-                    mostrarNotificacion('Sesión de administrador cerrada.');
-                };
-
-                window.ejecutarAdminBroadcast = function() {
-                    const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
-                    const text = document.getElementById('admin-broadcast-msg')?.value;
-                    if (!pass || pass !== CLAVE_ADMIN) return mostrarNotificacion('Sesión de admin no válida.');
-                    if (!text) return mostrarNotificacion('Ingresa el mensaje del anuncio.');
-
-                    publicarMensajeEnFirebase({
-                        user: '⚡ ANUNCIO OFICIAL',
-                        text,
-                        isSystem: true,
-                        isAdmin: true
-                    })
-                    .then(() => {
-                        mostrarNotificacion('Anuncio emitido');
-                        const box = document.getElementById('admin-broadcast-msg');
-                        if (box) box.value = '';
-                    })
-                    .catch((error) => mostrarNotificacion(error.message || 'No se pudo publicar el anuncio.'));
-                };
-
-                window.ejecutarAdminClear = function() {
-                    const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
-                    if (!pass || pass !== CLAVE_ADMIN) return mostrarNotificacion('Sesión de admin no válida.');
-                    if (!confirm('¿Seguro que deseas borrar todo el historial del chat?')) return;
-                    if (!messagesRef || !window.livechatRemoveFirebase) return mostrarNotificacion('Firebase no está listo.');
-
-                    window.livechatRemoveFirebase(messagesRef)
-                        .then(() => publicarMensajeEnFirebase({
-                            user: 'Sistema Admin',
-                            text: '🛡️ El historial de chat ha sido vaciado por el administrador.',
-                            isSystem: true,
-                            isAdmin: true
-                        }))
-                        .then(() => mostrarNotificacion('Historial vaciado'))
-                        .catch(() => mostrarNotificacion('No se pudo vaciar el historial.'));
-                };
-
-                window.ejecutarAdminMute = function() {
-                    const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
-                    const user = document.getElementById('admin-mute-user')?.value;
-                    const secs = Number(document.getElementById('admin-mute-secs')?.value || 60);
-                    if (!pass || pass !== CLAVE_ADMIN) return mostrarNotificacion('Sesión de admin no válida.');
-                    if (!user) return mostrarNotificacion('Ingresa el usuario a silenciar.');
-                    if (!mutedUsersRef || !window.livechatSetFirebase) return mostrarNotificacion('Firebase no está listo.');
-
-                    const userKey = normalizarUsuario(user);
-                    const mutedUntil = Date.now() + (secs * 1000);
-                    const entryRef = window.livechatRefFirebase(livechatDb, `${LIVECHAT_ROOT}/mutedUsers/${userKey}`);
-
-                    window.livechatSetFirebase(entryRef, {
-                        user: user.trim(),
-                        mutedUntil
-                    })
-                    .then(() => mostrarNotificacion(`Usuario ${user} silenciado por ${secs} segundos`))
-                    .catch(() => mostrarNotificacion(`No se pudo silenciar a ${user}.`));
-                };
-
-                window.eliminarMensajeAdmin = function(msgId) {
-                    const pass = esAdminKeyGuardada || prompt('Ingresa clave admin:');
-                    if (pass !== CLAVE_ADMIN) return;
-                    if (!messagesRef || !window.livechatRemoveFirebase) return;
-
-                    const msgRef = window.livechatRefFirebase(livechatDb, `${LIVECHAT_ROOT}/messages/${msgId}`);
-                    window.livechatRemoveFirebase(msgRef)
-                        .catch(() => mostrarNotificacion('No se pudo eliminar el mensaje.'));
-                };
-            })();
-            let ws = null;
-            let esFallbackPoll = false;
-            let pollInterval = null;
-            let firebaseUnsubscribe = null;
-            let ultimoTimestampPoll = 0;
+            window.ositoDisableFirebaseChat = false;
+            window.ositoLivechatTransport = 'firebase';
+
+            const CLIENT_ID_KEY = 'osito_livechat_client_id';
+            const MUTE_KEY = 'osito_livechat_muted_until';
+            const CLIENT_ID = localStorage.getItem(CLIENT_ID_KEY) || `client_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            localStorage.setItem(CLIENT_ID_KEY, CLIENT_ID);
+
+            let socket = null;
+            let reconnectTimer = null;
+            let pollTimer = null;
+            let typingTimer = null;
+            let chatOpen = false;
             let unreadCount = 0;
-            let chatAbierto = false;
-            let typingTimeout = null;
-            let esEscribiendoPropio = false;
-            let esAdminKeyGuardada = localStorage.getItem('osito_chat_admin_key') || '';
-            let modoOfflineLocal = false;
-            let modoFirebaseChat = false;
-            let forzarFirestoreChat = false;
-            window.ositoLivechatTransport = window.ositoLivechatTransport || 'server';
-            const CLAVE_ADMIN = '240625';
+            let lastTimestamp = 0;
+            let mutedUntil = Number(localStorage.getItem(MUTE_KEY) || 0);
+            let typingState = false;
+            let firebaseChatReady = false;
+            let firebaseFallbackTimer = null;
 
-            function obtenerServerBaseUrl() {
-                if (window.location.protocol === 'file:') {
-                    return 'http://localhost:3000';
-                }
-                const origin = window.location.origin;
-                if (!origin || origin === 'null') {
-                    return 'http://localhost:3000';
-                }
-                if (window.location.port && window.location.port !== '3000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-                    return `${window.location.protocol}//${window.location.hostname}:3000`;
-                }
-                return origin;
+            const BAD_WORDS = ['puta', 'puto', 'mierda', 'cabron', 'cabrona', 'imbecil', 'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'cono', 'joder', 'huevon', 'baboso'];
+
+            const messageStore = new Map();
+
+            function getUserName() {
+                const nombre = (window.aiNombreActual || '').trim();
+                return nombre ? nombre.slice(0, 24) : 'Invitado';
             }
 
-            function obtenerWsBaseUrl() {
-                return obtenerServerBaseUrl().replace(/^http/, 'ws');
+            function normalize(value) {
+                return String(value || '').trim().toLowerCase();
             }
 
-            function obtenerNombreActual() {
-                const nombreGuardado = (localStorage.getItem('osito_ai_nombre') || '').trim();
-                if (nombreGuardado) return nombreGuardado;
-                const genero = localStorage.getItem('osito_ai_genero');
-                if (genero === 'female') return 'Osita';
-                if (genero === 'male') return 'Osito';
-                return 'Invitado';
+            function hasBadWords(value) {
+                const normalized = String(value || '').normalize('NFD')
+                    .split('')
+                    .filter((char) => {
+                        const code = char.charCodeAt(0);
+                        return code < 0x300 || code > 0x36f;
+                    })
+                    .join('')
+                    .toLowerCase();
+                return BAD_WORDS.some((word) => new RegExp(`(^|[^a-z0-9])${word}($|[^a-z0-9])`).test(normalized));
             }
 
-            function actualizarNombreEnPantalla() {
-                const el = document.getElementById('livechat-current-user');
-                if (el) el.textContent = obtenerNombreActual();
+            function escapeHtml(text) {
+                if (typeof window.escaparHTML === 'function') return window.escaparHTML(text);
+                return String(text || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
             }
 
-            function formatearHoraFecha(timestamp) {
-                const fecha = new Date(timestamp || Date.now());
-                const horaStr = fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit', hour12: true });
-                const fechaStr = fecha.toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                return { horaStr, fechaStr };
+            function baseUrl() {
+                return window.location.origin;
             }
 
-            function renderizarMensaje(msg, esHistorial = false) {
-                const container = document.getElementById('livechat-messages');
-                if (!container) return;
-
-                if (document.getElementById(msg.id)) return; // Evitar duplicados
-
-                const miNombre = obtenerNombreActual();
-                const currentUid = window.firebaseAuth?.currentUser?.uid || window.ositoCurrentUser?.uid || '';
-                const esMio = currentUid && msg.uid
-                    ? msg.uid === currentUid
-                    : msg.user.toLowerCase() === miNombre.toLowerCase();
-                const esSistema = msg.isSystem;
-
-                const msgDiv = document.createElement('div');
-                msgDiv.id = msg.id;
-
-                if (esSistema) {
-                    msgDiv.className = 'lc-msg system';
-                    msgDiv.innerHTML = `<div class="lc-msg-bubble">${escaparHTML(msg.text)}</div>`;
-                } else {
-                    msgDiv.className = `lc-msg ${esMio ? 'own' : 'other'}`;
-                    const { horaStr, fechaStr } = formatearHoraFecha(msg.timestamp);
-                    const photoURL = msg.photoURL || (msg.uid === window.ositoCurrentUser?.uid ? window.ositoCurrentUserProfile?.photoURL : '');
-                    const esCreador = Boolean(msg.isCreator) || normalizarUsuario(msg.user) === 'ositoyt360';
-                    const avatar = photoURL
-                        ? `<img class="lc-msg-avatar" src="${escaparHTML(photoURL)}" alt="Foto de ${escaparHTML(msg.user)}" loading="lazy">`
-                        : '<span class="lc-msg-avatar lc-msg-avatar-fallback">OS</span>';
-                    const creatorClass = esCreador ? 'lc-creator-name' : '';
-                    const creatorBadge = esCreador ? '<span class="lc-creator-badge">CREADOR</span>' : '';
-
-                    const adminOption = (esAdminKeyGuardada) ? `<span class="lc-del-btn" onclick="eliminarMensajeAdmin('${msg.id}')" title="Eliminar mensaje">✕</span>` : '';
-
-                    msgDiv.innerHTML = `
-                        <div class="lc-msg-header">
-                            ${avatar}
-                            <span class="lc-msg-user ${creatorClass}">${escaparHTML(msg.user)}${creatorBadge}${adminOption}</span>
-                            <span class="lc-msg-time" title="${fechaStr}">${horaStr} • ${fechaStr}</span>
-                        </div>
-                        <div class="lc-msg-bubble">${escaparHTML(msg.text)}</div>
-                    `;
-                }
-
-                container.appendChild(msgDiv);
-                container.scrollTop = container.scrollHeight;
-
-                if (!chatAbierto && !esMio && !esHistorial) {
-                    unreadCount++;
-                    actualizarBadgeNotificacion();
-                    reproducirSonidoNotificacion();
-                }
+            function wsUrl() {
+                return `${window.location.origin.replace(/^http/, 'ws')}?clientId=${encodeURIComponent(CLIENT_ID)}`;
             }
 
-            function actualizarBadgeNotificacion() {
+            function formatTime(timestamp) {
+                const date = new Date(timestamp || Date.now());
+                return date.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+
+            function formatDate(timestamp) {
+                const date = new Date(timestamp || Date.now());
+                return date.toLocaleDateString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            function isOwnMessage(msg) {
+                const currentUid = window.firebaseAuth?.currentUser?.uid || window.ositoCurrentUserProfile?.uid || '';
+                return (currentUid && String(msg.uid || '') === currentUid)
+                    || normalize(msg.user) === normalize(getUserName())
+                    || String(msg.clientId || '') === CLIENT_ID;
+            }
+
+            function setConnectionState(online, text) {
+                const dot = document.getElementById('livechat-status-dot');
+                const status = document.getElementById('livechat-status-text');
+                if (dot) dot.classList.toggle('offline', !online);
+                if (status && text) status.innerHTML = text;
+            }
+
+            function updateBadge() {
                 const badge = document.getElementById('livechat-unread-badge');
                 if (!badge) return;
                 if (unreadCount > 0) {
-                    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
                     badge.classList.add('show');
                 } else {
                     badge.classList.remove('show');
                 }
             }
 
-            function reproducirSonidoNotificacion() {
+            function showMuteNote() {
+                const note = document.getElementById('livechat-mute-note');
+                const input = document.getElementById('livechat-input');
+                if (!note || !input) return;
+
+                if (mutedUntil > Date.now()) {
+                    const remaining = Math.ceil((mutedUntil - Date.now()) / 1000);
+                    note.style.display = 'block';
+                    note.textContent = `Estás silenciado por malas palabras. Espera ${remaining} segundos.`;
+                    input.disabled = true;
+                } else {
+                    note.style.display = 'none';
+                    note.textContent = '';
+                    input.disabled = false;
+                }
+            }
+
+            function setMutedUntil(timestamp) {
+                mutedUntil = Number(timestamp) || 0;
+                if (mutedUntil > Date.now()) localStorage.setItem(MUTE_KEY, String(mutedUntil));
+                else localStorage.removeItem(MUTE_KEY);
+                showMuteNote();
+            }
+
+            function playPing() {
                 try {
                     const ctx = new (window.AudioContext || window.webkitAudioContext)();
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                    osc.frequency.setValueAtTime(660, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(990, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     osc.start();
-                    osc.stop(ctx.currentTime + 0.2);
-                } catch(e) {}
+                    osc.stop(ctx.currentTime + 0.18);
+                } catch (e) {}
             }
 
-            function establecerEstadoConexion(online, texto = null) {
-                const dot = document.getElementById('livechat-status-dot');
-                const textEl = document.getElementById('livechat-status-text');
-                if (dot) {
-                    dot.classList.toggle('offline', !online);
-                }
-                if (textEl) {
-                    textEl.innerHTML = texto || '';
-                }
+            function ensureScrollBottom() {
+                const container = document.getElementById('livechat-messages');
+                if (container) container.scrollTop = container.scrollHeight;
             }
 
-            function detenerChatServidor() {
-                forzarFirestoreChat = true;
-                if (pollInterval) {
-                    clearInterval(pollInterval);
-                    pollInterval = null;
-                }
-                esFallbackPoll = false;
+            function updateMessageStatus(message) {
+                const el = document.getElementById(message.id);
+                if (!el) return;
+                const status = el.querySelector('.lc-msg-status');
+                if (!status) return;
 
-                if (ws) {
-                    const socket = ws;
-                    ws = null;
-                    try {
-                        socket.onclose = null;
-                        socket.onerror = null;
-                        socket.close();
-                    } catch (e) {}
+                const seenCount = Array.isArray(message.seenBy) ? new Set(message.seenBy.filter(Boolean)).size : 0;
+                if (isOwnMessage(message)) {
+                    status.textContent = seenCount > 0 ? '✓✓ Visto' : '✓ Enviado';
+                    status.classList.toggle('seen', seenCount > 0);
+                } else {
+                    status.textContent = '';
                 }
             }
 
-            function conectarWebSocket() {
-                if (forzarFirestoreChat) return;
-                const wsUrl = obtenerWsBaseUrl();
-
-                try {
-                    ws = new WebSocket(wsUrl);
-
-                    ws.onopen = () => {
-                        console.log('Chat en vivo: WebSocket conectado a ' + wsUrl);
-                        esFallbackPoll = false;
-                        modoOfflineLocal = false;
-                        window.ositoLivechatTransport = 'server';
-                        if (pollInterval) clearInterval(pollInterval);
-                        establecerEstadoConexion(true);
-
-                        ws.send(JSON.stringify({
-                            type: 'join',
-                            user: obtenerNombreActual()
-                        }));
-                    };
-
-                    ws.onmessage = (event) => {
-                        try {
-                            const data = JSON.parse(event.data);
-
-                            if (data.type === 'init') {
-                                const container = document.getElementById('livechat-messages');
-                                if (container) container.innerHTML = '';
-                                (data.history || []).forEach(m => renderizarMensaje(m, true));
-                                if (data.onlineCount) {
-                                    establecerEstadoConexion(true, `<span id="livechat-online-count">${data.onlineCount}</span> en línea`);
-                                }
-                            } else if (data.type === 'new_message') {
-                                renderizarMensaje(data.message);
-                            } else if (data.type === 'online_count') {
-                                establecerEstadoConexion(true, `<span id="livechat-online-count">${data.count}</span> en línea`);
-                            } else if (data.type === 'typing') {
-                                mostrarIndicadorEscribiendo(data.user, data.isTyping);
-                            } else if (data.type === 'delete_message') {
-                                const msgEl = document.getElementById(data.msgId);
-                                if (msgEl) msgEl.remove();
-                            } else if (data.type === 'clear_chat') {
-                                const container = document.getElementById('livechat-messages');
-                                if (container) container.innerHTML = '';
-                            } else if (data.type === 'error') {
-                                mostrarNotificacion(data.message || 'Error en el chat');
-                            } else if (data.type === 'admin_success') {
-                                mostrarNotificacion(data.message);
-                            }
-                        } catch (err) {
-                            console.error('Error parseando websocket:', err);
-                        }
-                    };
-
-                    ws.onerror = () => {
-                        if (forzarFirestoreChat) return;
-                        iniciarFallbackPolling();
-                    };
-
-                    ws.onclose = () => {
-                        if (forzarFirestoreChat) return;
-                        iniciarFallbackPolling();
-                    };
-
-                } catch (e) {
-                    if (forzarFirestoreChat) return;
-                    iniciarFallbackPolling();
+            function markSeen(messageOrTimestamp) {
+                const payload = {};
+                if (typeof messageOrTimestamp === 'object' && messageOrTimestamp) {
+                    if (messageOrTimestamp.isSystem || isOwnMessage(messageOrTimestamp)) return;
+                    payload.messageId = messageOrTimestamp.id;
+                    payload.uptoTimestamp = Number(messageOrTimestamp.timestamp) || 0;
+                } else {
+                    payload.uptoTimestamp = Number(messageOrTimestamp) || 0;
                 }
-            }
 
-            function iniciarFallbackPolling() {
-                if (forzarFirestoreChat) return;
-                if (esFallbackPoll) return;
-                esFallbackPoll = true;
-                const baseUrl = obtenerServerBaseUrl();
+                if (!payload.uptoTimestamp && !payload.messageId) return;
 
-                fetch(`${baseUrl}/api/chat/init`)
-                    .then(r => {
-                        if (!r.ok) throw new Error('Servidor HTTP no disponible');
-                        return r.json();
-                    })
-                    .then(data => {
-                        modoOfflineLocal = false;
-                        window.ositoLivechatTransport = 'server';
-                        establecerEstadoConexion(true, 'Modo en vivo (HTTP)');
-                        const container = document.getElementById('livechat-messages');
-                        if (container) container.innerHTML = '';
-                        (data.history || []).forEach(m => {
-                            renderizarMensaje(m, true);
-                            if (m.timestamp > ultimoTimestampPoll) ultimoTimestampPoll = m.timestamp;
-                        });
-                        if (pollInterval) clearInterval(pollInterval);
-                        pollInterval = setInterval(ejecutarPollCycle, 2000);
-                    })
-                    .catch(e => {
-                        if (window.dbFirebase && window.collectionFirebase && window.onSnapshotFirebase && window.addDocFirebase) {
-                            iniciarModoFirebaseChat();
-                            return;
-                        }
-                        iniciarModoOfflineLocal();
-                    });
-            }
-
-            function iniciarModoFirebaseChat() {
-                if (!window.dbFirebase || !window.collectionFirebase || !window.onSnapshotFirebase) {
-                    iniciarModoOfflineLocal();
+                if (firebaseChatReady && payload.messageId && window.updateDocFirebase && window.docFirebase && window.dbFirebase) {
+                    const uid = window.firebaseAuth?.currentUser?.uid || CLIENT_ID;
+                    window.updateDocFirebase(
+                        window.docFirebase(window.dbFirebase, 'livechat', payload.messageId),
+                        { seenBy: window.arrayUnionFirebase ? window.arrayUnionFirebase(uid) : [uid] }
+                    ).catch(() => {});
                     return;
                 }
 
-                try {
-                    if (typeof firebaseUnsubscribe === 'function') {
-                        firebaseUnsubscribe();
-                        firebaseUnsubscribe = null;
-                    }
-                } catch (e) {}
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ type: 'seen', ...payload, clientId: CLIENT_ID }));
+                    return;
+                }
 
-                detenerChatServidor();
-                modoFirebaseChat = true;
-                modoOfflineLocal = false;
-                window.ositoLivechatTransport = 'firestore';
-                establecerEstadoConexion(true, 'Modo Firebase');
+                fetch(`${baseUrl()}/api/chat/seen`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId: CLIENT_ID, ...payload })
+                }).catch(() => {});
+            }
 
+            function syncVisibleMessages() {
+                if (!chatOpen) return;
+                const container = document.getElementById('livechat-messages');
+                if (!container) return;
+                const latest = Array.from(container.querySelectorAll('.lc-msg'))
+                    .map((el) => Number(el.dataset.timestamp) || 0)
+                    .reduce((max, value) => Math.max(max, value), 0);
+                if (latest > 0) markSeen(latest);
+            }
+
+            function clearMessages() {
                 const container = document.getElementById('livechat-messages');
                 if (container) container.innerHTML = '';
-
-                if (pollInterval) clearInterval(pollInterval);
-
-                window.dispatchEvent(new CustomEvent('osito:livechat-snapshot', {
-                    detail: Array.isArray(window.ositoLastLivechatSnapshot) ? window.ositoLastLivechatSnapshot : []
-                }));
-
-                try {
-                    firebaseUnsubscribe = window.onSnapshotFirebase(
-                        window.collectionFirebase(window.dbFirebase, 'livechat'),
-                        (snapshot) => {
-                            const firebaseMsgs = [];
-                            snapshot.forEach((doc) => {
-                                const data = doc.data() || {};
-                                firebaseMsgs.push({
-                                    id: doc.id,
-                                    user: data.user || 'Invitado',
-                                    text: data.text || '',
-                                    photoURL: data.photoURL || '',
-                                    uid: data.uid || '',
-                                    isCreator: Boolean(data.isCreator) || String(data.user || '').toLowerCase() === 'ositoyt360',
-                                    timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : (Number(data.timestamp) || Date.now()),
-                                    isSystem: Boolean(data.isSystem),
-                                    isAdmin: Boolean(data.isAdmin)
-                                });
-                            });
-
-                            firebaseMsgs
-                                .sort((a, b) => a.timestamp - b.timestamp)
-                                .slice(-100)
-                                .forEach((m) => renderizarMensaje(m, true));
-
-                            if (firebaseMsgs.length > 0) {
-                                const last = firebaseMsgs[firebaseMsgs.length - 1];
-                                if (last.timestamp > ultimoTimestampPoll) {
-                                    ultimoTimestampPoll = last.timestamp;
-                                }
-                            }
-                        },
-                        (error) => {
-                            modoFirebaseChat = false;
-                            establecerEstadoConexion(false, 'Error de Firebase');
-                            console.error('No se pudo leer el chat de Firebase:', error);
-                            mostrarNotificacion('Firebase no permite leer el chat. Revisa las reglas de Firestore.');
-                        }
-                    );
-                } catch (e) {
-                    console.warn('No se pudo iniciar el chat con Firebase', e);
-                    forzarFirestoreChat = false;
-                    conectarWebSocket();
-                }
+                messageStore.clear();
+                lastTimestamp = 0;
             }
 
-            function iniciarModoOfflineLocal() {
-                modoFirebaseChat = false;
-                modoOfflineLocal = true;
-                window.ositoLivechatTransport = 'local';
-                establecerEstadoConexion(true, 'Modo local');
-                
+            function renderMessage(message, options) {
+                options = options || {};
+                if (!message || !message.id) return;
+                if (!message.isSystem && hasBadWords(message.text || '')) return;
+
                 const container = document.getElementById('livechat-messages');
-                if (container && container.children.length === 0) {
-                    const localMsgs = JSON.parse(localStorage.getItem('osito_chat_local_msgs') || '[]');
-                    if (localMsgs.length === 0) {
-                        localMsgs.push({
-                            id: 'welcome_sys',
-                            user: 'Sistema Chat',
-                            text: '💬 ¡Bienvenido al Chat del Sótano! Escribe cualquier mensaje para probarlo.',
-                            timestamp: Date.now(),
-                            isSystem: true
-                        });
-                    }
-                    localMsgs.forEach(m => renderizarMensaje(m, true));
+                if (!container) return;
+
+                messageStore.set(message.id, message);
+                if (typeof message.timestamp === 'number') {
+                    lastTimestamp = Math.max(lastTimestamp, message.timestamp);
                 }
 
-                if (pollInterval) clearInterval(pollInterval);
-                pollInterval = setInterval(intentarReconectarServidor, 5000);
+                const existing = document.getElementById(message.id);
+                if (existing) {
+                    updateMessageStatus(message);
+                    return;
+                }
+
+                const mine = isOwnMessage(message);
+                const wrapper = document.createElement('div');
+                wrapper.className = `lc-msg ${message.isSystem ? 'system' : mine ? 'own' : 'other'}`;
+                wrapper.id = message.id;
+                wrapper.dataset.messageId = message.id;
+                wrapper.dataset.timestamp = String(message.timestamp || Date.now());
+                wrapper.dataset.user = message.user || 'Invitado';
+
+                if (message.isSystem) {
+                    wrapper.innerHTML = `<div class="lc-msg-bubble">${escapeHtml(message.text || '')}</div>`;
+                } else {
+                    const initials = (message.user || 'I')
+                        .split(' ')
+                        .map((part) => part.charAt(0))
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase() || 'I';
+                    const seenCount = Array.isArray(message.seenBy) ? new Set(message.seenBy.filter(Boolean)).size : 0;
+                    const statusText = mine ? (seenCount > 0 ? '✓✓ Visto' : '✓ Enviado') : '';
+                    const photoURL = String(message.photoURL || '');
+                    const avatarMarkup = /^(https?:|data:image\/)/i.test(photoURL)
+                        ? `<img class="lc-msg-avatar" src="${escapeHtml(photoURL)}" alt="Foto de ${escapeHtml(message.user || 'Invitado')}" loading="lazy">`
+                        : `<span class="lc-msg-avatar">${escapeHtml(initials)}</span>`;
+
+                    wrapper.innerHTML = `
+                        <div class="lc-msg-header">
+                            <div class="lc-msg-user-wrap">
+                                ${avatarMarkup}
+                                <span class="lc-msg-user">${escapeHtml(message.user || 'Invitado')}</span>
+                            </div>
+                            <span class="lc-msg-time" title="${escapeHtml(formatDate(message.timestamp))}">${escapeHtml(formatTime(message.timestamp))}</span>
+                        </div>
+                        <div class="lc-msg-bubble">${escapeHtml(message.text || '')}</div>
+                        <div class="lc-msg-status ${seenCount > 0 ? 'seen' : ''}">${escapeHtml(statusText)}</div>
+                    `;
+                }
+
+                container.appendChild(wrapper);
+                if (!options.preserveScroll) ensureScrollBottom();
+
+                if (!chatOpen && !message.isSystem && !mine && !options.history) {
+                    unreadCount++;
+                    updateBadge();
+                    playPing();
+                }
+
+                updateMessageStatus(message);
+                if (chatOpen && !message.isSystem) markSeen(message);
             }
 
-            function intentarReconectarServidor() {
-                const baseUrl = obtenerServerBaseUrl();
-                fetch(`${baseUrl}/api/chat/init`)
-                    .then(r => {
-                        if (r.ok) {
-                            esFallbackPoll = false;
-                            modoOfflineLocal = false;
-                            conectarWebSocket();
-                        }
-                    })
-                    .catch(() => {});
-            }
-
-            function ejecutarPollCycle() {
-                if (modoOfflineLocal || modoFirebaseChat) return;
-                const baseUrl = obtenerServerBaseUrl();
-                fetch(`${baseUrl}/api/chat/poll?since=${ultimoTimestampPoll}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        establecerEstadoConexion(true, `<span id="livechat-online-count">${data.onlineCount || 1}</span> en línea`);
-                        (data.messages || []).forEach(m => {
-                            renderizarMensaje(m);
-                            if (m.timestamp > ultimoTimestampPoll) ultimoTimestampPoll = m.timestamp;
-                        });
-                        const otrosTyping = (data.typing || []).filter(u => u.toLowerCase() !== obtenerNombreActual().toLowerCase());
-                        if (otrosTyping.length > 0) {
-                            mostrarIndicadorEscribiendo(otrosTyping[0], true);
-                        } else {
-                            mostrarIndicadorEscribiendo('', false);
-                        }
-                    })
-                    .catch(e => iniciarModoOfflineLocal());
-            }
-
-            function mostrarIndicadorEscribiendo(usuario, isTyping) {
+            function updateTypingIndicator(user, isTyping) {
                 const bar = document.getElementById('livechat-typing-bar');
-                const txt = document.getElementById('livechat-typing-text');
-                if (!bar || !txt) return;
-
-                if (isTyping && usuario && usuario.toLowerCase() !== obtenerNombreActual().toLowerCase()) {
-                    txt.textContent = `${usuario} está escribiendo`;
+                const text = document.getElementById('livechat-typing-text');
+                if (!bar || !text) return;
+                if (isTyping && normalize(user) !== normalize(getUserName())) {
+                    text.textContent = `${user} está escribiendo`;
                     bar.style.display = 'flex';
                 } else {
                     bar.style.display = 'none';
                 }
             }
 
-            function notificarEscribiendo(estado) {
-                if (esEscribiendoPropio === estado || modoOfflineLocal) return;
-                esEscribiendoPropio = estado;
-
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'typing',
-                        user: obtenerNombreActual(),
-                        isTyping: estado
-                    }));
-                } else if (esFallbackPoll) {
-                    const baseUrl = obtenerServerBaseUrl();
-                    fetch(`${baseUrl}/api/chat/typing`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user: obtenerNombreActual(), isTyping: estado })
-                    }).catch(() => {});
-                }
-            }
-
-            function enviarMensajeChat(texto) {
-                const limpia = (texto || '').trim();
-                if (!limpia) return;
-
-                const miNombre = obtenerNombreActual();
-
-                if (typeof window.publicarMensajeLiveChat === 'function' && (window.ositoCurrentUser || (window.ositoLivechatTransport || '').toLowerCase() === 'firestore')) {
-                    window.publicarMensajeLiveChat(limpia, miNombre, {
-                        isSystem: false,
-                        isAdmin: false
-                    }).catch((error) => {
-                        console.error('No se pudo guardar el mensaje en Firebase:', error);
-                        mostrarNotificacion('No se pudo guardar el mensaje. Revisa las reglas de Firestore.');
-                    });
-                    return;
-                }
-
-                const baseUrl = obtenerServerBaseUrl();
-
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'message',
-                        user: miNombre,
-                        text: limpia
-                    }));
-                    return;
-                }
-
-                if (!modoOfflineLocal) {
-                    fetch(`${baseUrl}/api/chat/send`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user: miNombre, text: limpia })
-                    })
-                    .then(async (r) => {
-                        const res = await r.json().catch(() => ({}));
-                        if (!r.ok || res.error) {
-                            mostrarNotificacion(res.error || `Error: No se pudo enviar el mensaje.`);
-                        } else if (res.message) {
-                            renderizarMensaje(res.message);
-                        }
-                    })
-                    .catch(e => {
-                        enviarMensajeLocalFallback(miNombre, limpia);
-                    });
-                } else {
-                    enviarMensajeLocalFallback(miNombre, limpia);
-                }
-            }
-
-            function enviarMensajeLocalFallback(user, text) {
-                const newMsg = {
-                    id: 'msg_local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-                    user: user,
-                    text: text,
-                    timestamp: Date.now(),
-                    isSystem: false
-                };
-
-                renderizarMensaje(newMsg);
-
-                const localMsgs = JSON.parse(localStorage.getItem('osito_chat_local_msgs') || '[]');
-                localMsgs.push(newMsg);
-                if (localMsgs.length > 50) localMsgs.shift();
-                localStorage.setItem('osito_chat_local_msgs', JSON.stringify(localMsgs));
-            }
-
-            window.addEventListener('DOMContentLoaded', () => {
-                actualizarNombreEnPantalla();
-
-                // Firebase Integration controla el unico listener en vivo del chat.
-                window.addEventListener('osito:livechat-message', (event) => {
-                    if (event.detail) renderizarMensaje(event.detail, false);
+            function handleReadReceipt(detail) {
+                if (!detail || !Array.isArray(detail.messageIds)) return;
+                detail.messageIds.forEach((messageId) => {
+                    const cached = messageStore.get(messageId);
+                    if (!cached) return;
+                    if (!Array.isArray(cached.seenBy)) cached.seenBy = [];
+                    if (detail.clientId && !cached.seenBy.includes(detail.clientId)) cached.seenBy.push(detail.clientId);
+                    updateMessageStatus(cached);
                 });
-                window.addEventListener('osito:livechat-snapshot', (event) => {
-                    if ((window.ositoLivechatTransport || '').toLowerCase() !== 'firestore') return;
-                    const container = document.getElementById('livechat-messages');
-                    if (!container || !Array.isArray(event.detail)) return;
-                    // Reconciliamos el snapshot sin vaciar primero para no perder mensajes
-                    // visibles si el update llega parcial o llega varias veces seguido.
-                    event.detail.forEach((message) => renderizarMensaje(message, true));
-                    establecerEstadoConexion(true, 'En vivo con Firestore');
-                });
-                window.addEventListener('osito:livechat-error', () => {
-                    if (forzarFirestoreChat) {
-                        forzarFirestoreChat = false;
-                        conectarWebSocket();
-                        return;
+            }
+
+            function handleIncoming(payload) {
+                if (!payload || !payload.type) return;
+
+                if (payload.type === 'init') {
+                    setConnectionState(true, `<span id="livechat-online-count">${payload.onlineCount || 1}</span> en línea`);
+                    if (Array.isArray(payload.history)) {
+                        clearMessages();
+                        payload.history.forEach((msg) => renderMessage(msg, { history: true, preserveScroll: true }));
+                        ensureScrollBottom();
                     }
-                    establecerEstadoConexion(false, 'Error de sincronizacion');
-                    mostrarNotificacion('No se pudo sincronizar el chat. Revisa las reglas de Firestore.');
+                    return;
+                }
+
+                if (payload.type === 'online_count') {
+                    setConnectionState(true, `<span id="livechat-online-count">${payload.count || 1}</span> en línea`);
+                    return;
+                }
+
+                if (payload.type === 'new_message' && payload.message) {
+                    renderMessage(payload.message, { history: false });
+                    return;
+                }
+
+                if (payload.type === 'typing') {
+                    updateTypingIndicator(payload.user || '', Boolean(payload.isTyping));
+                    return;
+                }
+
+                if (payload.type === 'clear_chat') {
+                    clearMessages();
+                    return;
+                }
+
+                if (payload.type === 'delete_message' && payload.msgId) {
+                    const el = document.getElementById(payload.msgId);
+                    if (el) el.remove();
+                    messageStore.delete(payload.msgId);
+                    return;
+                }
+
+                if (payload.type === 'read_receipt') {
+                    handleReadReceipt(payload);
+                    return;
+                }
+
+                if (payload.type === 'error') {
+                    if (payload.mutedUntil) setMutedUntil(payload.mutedUntil);
+                    if (typeof window.mostrarNotificacion === 'function') {
+                        window.mostrarNotificacion(payload.message || 'No se pudo enviar el mensaje.');
+                    }
+                }
+            }
+
+            function renderFirebaseSnapshot(messages) {
+                clearMessages();
+                (Array.isArray(messages) ? messages : []).forEach((message) => {
+                    renderMessage(message, { history: true, preserveScroll: true });
                 });
+                ensureScrollBottom();
+                setConnectionState(true, 'Firebase conectado');
+            }
 
-                const form = document.getElementById('livechat-form');
-                const input = document.getElementById('livechat-input');
+            function useFirebaseChat() {
+                firebaseChatReady = true;
+                if (firebaseFallbackTimer) clearTimeout(firebaseFallbackTimer);
+                setConnectionState(true, 'Conectando Firebase...');
+            }
 
-                if (form && input) {
-                    form.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        enviarMensajeChat(input.value);
-                        input.value = '';
-                        notificarEscribiendo(false);
-                    });
-
-                    input.addEventListener('input', () => {
-                        notificarEscribiendo(true);
-                        if (typingTimeout) clearTimeout(typingTimeout);
-                        typingTimeout = setTimeout(() => notificarEscribiendo(false), 2000);
-                    });
-                }
-
-                const aiNameSave = document.getElementById('ai-name-save');
-                if (aiNameSave) {
-                    aiNameSave.addEventListener('click', () => {
-                        setTimeout(actualizarNombreEnPantalla, 200);
-                    });
-                }
-
-                window.addEventListener('osito:firebase-auth-ready', () => {
-                    iniciarModoFirebaseChat();
-                });
-
-                // Si Firestore está disponible, lo usamos aunque el visitante no haya iniciado sesión.
-                // Así el chat queda realmente sincronizado entre dispositivos.
-                if (window.dbFirebase && window.collectionFirebase && window.onSnapshotFirebase) {
-                    iniciarModoFirebaseChat();
-                } else if ((window.ositoLivechatTransport || 'server').toLowerCase() !== 'firestore') {
-                    conectarWebSocket();
-                }
+            window.addEventListener('osito:firebase-auth-ready', useFirebaseChat);
+            window.addEventListener('osito:livechat-snapshot', (event) => {
+                if (!firebaseChatReady) useFirebaseChat();
+                renderFirebaseSnapshot(event.detail);
             });
 
-            window.toggleLiveChatPanel = function() {
+            window.addEventListener('osito:livechat-error', () => {
+                firebaseChatReady = false;
+                startServerFallback();
+            });
+
+            function connectSocket() {
+                if (!('WebSocket' in window)) {
+                    startPolling();
+                    return;
+                }
+
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+
+                setConnectionState(true, 'Conectando...');
+                socket = new WebSocket(wsUrl());
+
+                socket.addEventListener('open', () => {
+                    setConnectionState(true, `<span id="livechat-online-count">1</span> en línea`);
+                    socket.send(JSON.stringify({ type: 'join', user: getUserName(), clientId: CLIENT_ID }));
+                    if (pollTimer) {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                    }
+                    if (chatOpen) syncVisibleMessages();
+                });
+
+                socket.addEventListener('message', (event) => {
+                    try {
+                        handleIncoming(JSON.parse(event.data));
+                    } catch (e) {}
+                });
+
+                socket.addEventListener('close', () => {
+                    socket = null;
+                    startPolling();
+                    reconnectTimer = setTimeout(connectSocket, 3500);
+                });
+
+                socket.addEventListener('error', () => {
+                    try { socket.close(); } catch (e) {}
+                });
+            }
+
+            function startPolling() {
+                if (pollTimer) return;
+                setConnectionState(true, 'Sincronizando...');
+                pollOnce();
+                pollTimer = setInterval(pollOnce, 3000);
+            }
+
+            function startServerFallback() {
+                if (firebaseChatReady) return;
+                connectSocket();
+            }
+
+            async function sendFirebaseMessage(text, user, options) {
+                const currentUser = window.firebaseAuth?.currentUser;
+                if (!window.dbFirebase || !window.collectionFirebase || !window.addDocFirebase) {
+                    throw new Error('Firebase todavía no está listo.');
+                }
+                const profile = window.ositoCurrentUserProfile || {};
+                const messageData = {
+                    user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
+                    text: String(text || '').trim().slice(0, 400),
+                    timestamp: Date.now(),
+                    isSystem: Boolean(options && options.isSystem),
+                    isAdmin: Boolean(options && options.isAdmin),
+                    uid: currentUser?.uid || profile.uid || CLIENT_ID,
+                    email: currentUser?.email || profile.email || '',
+                    photoURL: profile.photoURL || '',
+                    isCreator: Boolean(window.ositoEsCreador),
+                    seenBy: []
+                };
+                const ref = await window.addDocFirebase(window.collectionFirebase(window.dbFirebase, 'livechat'), messageData);
+                return { ...messageData, id: ref.id };
+            }
+
+            function pollOnce() {
+                fetch(`${baseUrl()}/api/chat/poll?since=${lastTimestamp}&clientId=${encodeURIComponent(CLIENT_ID)}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        setConnectionState(true, `<span id="livechat-online-count">${data.onlineCount || 1}</span> en línea`);
+                        if (Array.isArray(data.messages)) {
+                            data.messages.forEach((msg) => renderMessage(msg, { history: false }));
+                        }
+                        if (Array.isArray(data.typing) && data.typing.length > 0) {
+                            updateTypingIndicator(data.typing[0], true);
+                        } else {
+                            updateTypingIndicator('', false);
+                        }
+                        if (chatOpen) syncVisibleMessages();
+                    })
+                    .catch(() => setConnectionState(false, 'Sin conexión'));
+            }
+
+            function sendTypingState(state) {
+                if (typingState === state) return;
+                typingState = state;
+
+                const payload = {
+                    type: 'typing',
+                    user: getUserName(),
+                    isTyping: state,
+                    clientId: CLIENT_ID
+                };
+
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify(payload));
+                    return;
+                }
+
+                fetch(`${baseUrl()}/api/chat/typing`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
+            }
+
+            function scheduleTypingStop() {
+                if (typingTimer) clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => sendTypingState(false), 1800);
+            }
+
+            function sendMessage(text, user, options) {
+                const cleanText = String(text || '').trim();
+                if (!cleanText) return Promise.resolve(null);
+                if (mutedUntil > Date.now()) {
+                    showMuteNote();
+                    return Promise.resolve(null);
+                }
+
+                if (hasBadWords(cleanText)) {
+                    setMutedUntil(Date.now() + (2 * 60 * 1000));
+                    showMuteNote();
+                    if (typeof window.mostrarNotificacion === 'function') window.mostrarNotificacion('No se permiten malas palabras. Quedaste silenciado por 2 minutos.');
+                    return Promise.reject(new Error('No se permiten malas palabras. Quedaste silenciado por 2 minutos.'));
+                }
+
+                const payload = {
+                    type: 'message',
+                    user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
+                    text: cleanText,
+                    clientId: CLIENT_ID,
+                    isSystem: Boolean(options && options.isSystem),
+                    isAdmin: Boolean(options && options.isAdmin)
+                };
+
+                if (firebaseChatReady) {
+                    return sendFirebaseMessage(cleanText, payload.user, options);
+                }
+
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify(payload));
+                    return Promise.resolve(null);
+                }
+
+                return fetch(`${baseUrl()}/api/chat/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(async (response) => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data.error) {
+                        if (data.mutedUntil) setMutedUntil(data.mutedUntil);
+                        throw new Error(data.error || 'No se pudo enviar el mensaje.');
+                    }
+                    if (data.message) renderMessage(data.message, { history: false });
+                    return data.message || null;
+                });
+            }
+
+            window.publicarMensajeLiveChat = function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
+                return sendMessage(texto, usuario, opciones);
+            };
+
+            window.toggleLiveChatPanel = function toggleLiveChatPanel() {
                 const section = document.getElementById('livechat-section');
                 const bubble = document.getElementById('livechat-bubble');
                 if (!section) return;
-                chatAbierto = section.classList.toggle('active');
-                if (bubble) {
-                    bubble.classList.toggle('open', chatAbierto);
-                }
-                if (chatAbierto) {
+                chatOpen = section.classList.toggle('active');
+                if (bubble) bubble.classList.toggle('open', chatOpen);
+                if (chatOpen) {
                     unreadCount = 0;
-                    actualizarBadgeNotificacion();
-                    actualizarNombreEnPantalla();
-                    const messagesContainer = document.getElementById('livechat-messages');
-                    if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    updateBadge();
+                    ensureScrollBottom();
+                    syncVisibleMessages();
                 }
             };
 
-            window.toggleLiveChatAdmin = function() {
-                if (!window.ositoEsCreador) {
-                    mostrarNotificacion('Solo el creador puede abrir la moderacion.');
-                    return;
-                }
-                const panel = document.getElementById('livechat-admin-panel');
-                if (!panel) return;
-                const isOpening = panel.classList.toggle('active');
-                if (isOpening) {
-                    const savedKey = localStorage.getItem('osito_chat_admin_key');
-                    if (savedKey === '240625') {
-                        esAdminKeyGuardada = savedKey;
-                        desbloquearPanelAdmin();
-                    } else {
-                        const controlsBox = document.getElementById('admin-controls-box');
-                        const authBox = document.getElementById('admin-auth-box');
-                        if (controlsBox) controlsBox.style.display = 'none';
-                        if (authBox) authBox.style.display = 'block';
-                    }
-                }
-            };
+            window.toggleLiveChatAdmin = function() {};
+            window.verificarClaveAdmin = function() {};
+            window.cerrarSesionAdmin = function() {};
+            window.ejecutarAdminBroadcast = function() {};
+            window.ejecutarAdminClear = function() {};
+            window.ejecutarAdminMute = function() {};
+            window.eliminarMensajeAdmin = function() {};
 
-            window.verificarClaveAdmin = function() {
-                if (!window.ositoEsCreador) {
-                    mostrarNotificacion('Solo el creador puede validar la moderacion.');
-                    return;
-                }
-                const passInput = document.getElementById('admin-pass');
-                const pass = (passInput ? passInput.value : '').trim();
-                const statusEl = document.getElementById('admin-auth-status');
+            document.addEventListener('DOMContentLoaded', () => {
+                const form = document.getElementById('livechat-form');
+                const input = document.getElementById('livechat-input');
+                const userEl = document.getElementById('livechat-current-user');
 
-                if (!pass) {
-                    if (statusEl) {
-                        statusEl.style.color = '#ff4757';
-                        statusEl.textContent = '❌ Escribe una contraseña primero.';
-                    }
-                    return;
-                }
+                if (userEl) userEl.textContent = getUserName();
+                showMuteNote();
+                firebaseFallbackTimer = setTimeout(() => {
+                    if (!firebaseChatReady) startServerFallback();
+                }, 7000);
 
-                if (pass === CLAVE_ADMIN) {
-                    localStorage.setItem('osito_chat_admin_key', pass);
-                    esAdminKeyGuardada = pass;
-                    desbloquearPanelAdmin();
-                    if (statusEl) {
-                        statusEl.style.color = '#58ff9a';
-                        statusEl.textContent = 'Clave correcta. Sesion iniciada.';
-                    }
-                    mostrarNotificacion('Modo Administrador activado');
-                    return;
-                }
-
-                const baseUrl = obtenerServerBaseUrl();
-                fetch(`${baseUrl}/api/chat/admin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminKey: pass, action: 'verify' })
-                })
-                .then(async (r) => {
-                    const res = await r.json().catch(() => ({}));
-                    if (r.ok && res.success) {
-                        localStorage.setItem('osito_chat_admin_key', pass);
-                        esAdminKeyGuardada = pass;
-                        desbloquearPanelAdmin();
-                        if (statusEl) {
-                            statusEl.style.color = '#58ff9a';
-                            statusEl.textContent = '✅ Contraseña correcta. ¡Sesión iniciada!';
-                        }
-                        mostrarNotificacion('Modo Administrador activado ⭐');
-                    } else {
-                        if (statusEl) {
-                            statusEl.style.color = '#ff4757';
-                            statusEl.textContent = '❌ Contraseña incorrecta. Inténtalo de nuevo.';
-                        }
-                        mostrarNotificacion('Contraseña de admin incorrecta ❌');
-                    }
-                })
-                .catch(() => {
-                    if (pass === CLAVE_ADMIN) {
-                        localStorage.setItem('osito_chat_admin_key', pass);
-                        esAdminKeyGuardada = pass;
-                        desbloquearPanelAdmin();
-                        if (statusEl) {
-                            statusEl.style.color = '#58ff9a';
-                            statusEl.textContent = '✅ Contraseña correcta. ¡Sesión iniciada!';
-                        }
-                        mostrarNotificacion('Modo Administrador activado ⭐');
-                    } else {
-                        if (statusEl) {
-                            statusEl.style.color = '#ff4757';
-                            statusEl.textContent = '❌ Contraseña incorrecta. Inténtalo de nuevo.';
-                        }
-                        mostrarNotificacion('Contraseña de admin incorrecta ❌');
-                    }
-                });
-            };
-
-            function desbloquearPanelAdmin() {
-                const controlsBox = document.getElementById('admin-controls-box');
-                const authBox = document.getElementById('admin-auth-box');
-                if (controlsBox) controlsBox.style.display = 'flex';
-                if (authBox) authBox.style.display = 'none';
-            }
-
-            window.cerrarSesionAdmin = function() {
-                localStorage.removeItem('osito_chat_admin_key');
-                esAdminKeyGuardada = '';
-                const controlsBox = document.getElementById('admin-controls-box');
-                const authBox = document.getElementById('admin-auth-box');
-                const statusEl = document.getElementById('admin-auth-status');
-                const passInput = document.getElementById('admin-pass');
-                if (controlsBox) controlsBox.style.display = 'none';
-                if (authBox) authBox.style.display = 'block';
-                if (statusEl) statusEl.textContent = '';
-                if (passInput) passInput.value = '';
-                mostrarNotificacion('Sesión de administrador cerrada.');
-            };
-
-            window.ejecutarAdminBroadcast = function() {
-                const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
-                const text = document.getElementById('admin-broadcast-msg')?.value;
-                if (!pass || !text) return mostrarNotificacion('Ingresa el mensaje del anuncio.');
-
-                const baseUrl = obtenerServerBaseUrl();
-
-                fetch(`${baseUrl}/api/chat/admin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminKey: pass, action: 'broadcast', text })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.error) mostrarNotificacion(res.error);
-                    else {
-                        mostrarNotificacion('Anuncio emitido');
-                        document.getElementById('admin-broadcast-msg').value = '';
-                    }
-                })
-                .catch(() => {
-                    renderizarMensaje({
-                        id: 'sys_' + Date.now(),
-                        user: '⚡ ANUNCIO OFICIAL',
-                        text: text,
-                        timestamp: Date.now(),
-                        isSystem: true
+                if (form && input) {
+                    form.addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        const text = input.value;
+                        input.value = '';
+                        sendTypingState(false);
+                        sendMessage(text, getUserName(), { isSystem: false, isAdmin: false }).catch((error) => {
+                            if (typeof window.mostrarNotificacion === 'function') {
+                                window.mostrarNotificacion(error.message || 'No se pudo enviar el mensaje.');
+                            }
+                        });
                     });
-                    mostrarNotificacion('Anuncio emitido en modo local');
-                    document.getElementById('admin-broadcast-msg').value = '';
-                });
-            };
 
-            window.ejecutarAdminClear = function() {
-                const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
-                if (!pass) return mostrarNotificacion('Sesión de admin no válida.');
+                    input.addEventListener('input', () => {
+                        sendTypingState(true);
+                        scheduleTypingStop();
+                    });
+                }
 
-                if (!confirm('¿Seguro que deseas borrar todo el historial del chat?')) return;
-
-                const baseUrl = obtenerServerBaseUrl();
-
-                fetch(`${baseUrl}/api/chat/admin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminKey: pass, action: 'clear_chat' })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.error) mostrarNotificacion(res.error);
-                    else mostrarNotificacion('Historial vaciado');
-                })
-                .catch(() => {
-                    localStorage.removeItem('osito_chat_local_msgs');
-                    const container = document.getElementById('livechat-messages');
-                    if (container) container.innerHTML = '';
-                    mostrarNotificacion('Historial local vaciado');
-                });
-            };
-
-            window.ejecutarAdminMute = function() {
-                const pass = esAdminKeyGuardada || document.getElementById('admin-pass')?.value;
-                const user = document.getElementById('admin-mute-user')?.value;
-                const secs = document.getElementById('admin-mute-secs')?.value || 60;
-                if (!pass || !user) return mostrarNotificacion('Ingresa el usuario a silenciar.');
-
-                const baseUrl = obtenerServerBaseUrl();
-
-                fetch(`${baseUrl}/api/chat/admin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminKey: pass, action: 'mute_user', targetUser: user, seconds: secs })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.error) mostrarNotificacion(res.error);
-                    else mostrarNotificacion(res.message || 'Usuario silenciado');
-                })
-                .catch(() => mostrarNotificacion(`Usuario ${user} silenciado`));
-            };
-
-            window.eliminarMensajeAdmin = function(msgId) {
-                const pass = esAdminKeyGuardada || prompt('Ingresa clave admin:');
-                if (!pass) return;
-                const baseUrl = obtenerServerBaseUrl();
-
-                fetch(`${baseUrl}/api/chat/admin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminKey: pass, action: 'delete_message', msgId })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.error) mostrarNotificacion(res.error);
-                    else {
-                        const msgEl = document.getElementById(msgId);
-                        if (msgEl) msgEl.remove();
-                    }
-                })
-                .catch(() => {
-                    const msgEl = document.getElementById(msgId);
-                    if (msgEl) msgEl.remove();
-                });
-            };
+                setInterval(() => {
+                    if (mutedUntil && mutedUntil <= Date.now()) mutedUntil = 0;
+                    showMuteNote();
+                }, 1000);
+            });
         })();
     </script>
-    <script src="firebase-integration.js"></script>
+    <script src="firebase-integration.js?v=profile-chat-fix-20260907"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

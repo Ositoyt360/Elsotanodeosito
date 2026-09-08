@@ -27,6 +27,20 @@
         return String(value || '').trim();
     }
 
+    const BAD_CHAT_WORDS = ['puta', 'puto', 'mierda', 'cabron', 'cabrona', 'imbecil', 'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'cono', 'joder', 'huevon', 'baboso'];
+
+    function hasBadChatWords(value) {
+        const normalized = String(value || '').normalize('NFD')
+            .split('')
+            .filter((char) => {
+                const code = char.charCodeAt(0);
+                return code < 0x300 || code > 0x36f;
+            })
+            .join('')
+            .toLowerCase();
+        return BAD_CHAT_WORDS.some((word) => new RegExp(`(^|[^a-z0-9])${word}($|[^a-z0-9])`).test(normalized));
+    }
+
     function safeEmailName(email) {
         const local = String(email || '').split('@')[0].replace(/[^a-z0-9_-]/gi, '');
         return local || 'osito';
@@ -101,6 +115,8 @@
             avatarPreview,
             photoThumb
         } = getAuthElements();
+        const headerAvatar = el('header-profile-avatar');
+        const livechatAvatar = el('livechat-current-avatar');
 
         const isGuest = !user;
         const displayName = isGuest ? 'Invitado' : (profile?.displayName || safeEmailName(user?.email));
@@ -111,6 +127,15 @@
         if (previewEmail) previewEmail.textContent = email;
         if (avatarPreview) avatarPreview.src = avatarUrl;
         if (photoThumb) photoThumb.src = avatarUrl;
+        if (headerAvatar) {
+            headerAvatar.src = avatarUrl;
+            headerAvatar.alt = `Foto de perfil de ${displayName}`;
+            headerAvatar.style.display = isGuest ? 'none' : 'inline-block';
+        }
+        if (livechatAvatar) {
+            livechatAvatar.src = avatarUrl;
+            livechatAvatar.alt = `Foto de perfil de ${displayName}`;
+        }
 
         window.aiNombreActual = displayName;
         const accountName = String(user?.email || '').split('@')[0].toLowerCase();
@@ -262,17 +287,45 @@
         }
     }
 
+    async function photoFileToDataUrl(file) {
+        if (!file) return '';
+        try {
+            const bitmap = await createImageBitmap(file);
+            const maxSide = 320;
+            const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+            canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            bitmap.close();
+            return canvas.toDataURL('image/jpeg', 0.75);
+        } catch (error) {
+            return await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ''));
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+
     async function uploadPhotoIfNeeded(user, file) {
-        if (!file || !storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
-            return '';
+        if (!file) return '';
+        if (!storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
+            return photoFileToDataUrl(file);
         }
 
-        const optimizedFile = await optimizeImage(file);
-        const ref = window.storageRefFirebase(storage, `users/${user.uid}/profile.jpg`);
-        await window.uploadBytesFirebase(ref, optimizedFile, {
-            contentType: optimizedFile.type || 'image/jpeg'
-        });
-        return window.getDownloadURLFirebase(ref);
+        try {
+            const optimizedFile = await optimizeImage(file);
+            const ref = window.storageRefFirebase(storage, `users/${user.uid}/profile.jpg`);
+            await window.uploadBytesFirebase(ref, optimizedFile, {
+                contentType: optimizedFile.type || 'image/jpeg'
+            });
+            return window.getDownloadURLFirebase(ref);
+        } catch (error) {
+            console.warn('[FirebaseProfilePhoto] Storage no disponible; se usará respaldo en el perfil.', error);
+            return photoFileToDataUrl(file);
+        }
     }
 
     function renderAiMessages(messages) {
@@ -384,7 +437,8 @@
                         photoURL: data.photoURL || (data.uid === state.currentUser?.uid ? state.profile?.photoURL || '' : ''),
                         isCreator: Boolean(data.isCreator),
                         isSystem: Boolean(data.isSystem),
-                        isAdmin: Boolean(data.isAdmin)
+                        isAdmin: Boolean(data.isAdmin),
+                        seenBy: Array.isArray(data.seenBy) ? data.seenBy : []
                     });
                 });
 
@@ -634,7 +688,7 @@
                 }, user);
             }
 
-            // El chat puede conectarse aunque el perfil tarde en terminar de cargar.
+            // El chat usa Firestore para sincronizar mensajes entre cuentas en tiempo real.
             startLiveChatListener();
             window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
         });
@@ -751,6 +805,7 @@
     window.salirDeSesion = handleSignOut;
     window.entrarComoInvitado = enterAsGuest;
 
+    if (!window.ositoDisableFirebaseChat && !window.publicarMensajeLiveChat) {
     window.publicarMensajeLiveChat = async function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
         if (!state.currentUser || !db || !window.collectionFirebase || !window.addDocFirebase) {
             throw new Error('Firebase no esta listo.');
@@ -760,6 +815,9 @@
         if (!cleanText) {
             throw new Error('El mensaje no puede estar vacio.');
         }
+        if (hasBadChatWords(cleanText)) {
+            throw new Error('No se permiten malas palabras. Quedaste silenciado por 2 minutos.');
+        }
 
         const messageData = {
             user: escapeText(usuario).slice(0, 24) || 'Invitado',
@@ -767,6 +825,7 @@
             timestamp: Date.now(),
             isSystem: Boolean(opciones?.isSystem),
             isAdmin: Boolean(opciones?.isAdmin),
+            seenBy: [],
             uid: state.currentUser.uid,
             email: state.currentUser.email || '',
             photoURL: state.profile?.photoURL || '',
@@ -784,6 +843,7 @@
         }));
         return messageRef;
     };
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         bindUi();

@@ -2167,6 +2167,30 @@ body.compact-layout .promo-title-main {
     gap: 6px;
 }
 
+.header-profile-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(88, 255, 154, 0.65);
+    box-shadow: 0 0 16px rgba(88, 255, 154, 0.24);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.livechat-live-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(88, 255, 154, 0.14);
+    border: 1px solid rgba(88, 255, 154, 0.28);
+    color: #8fffb6;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
 .livechat-btn-icon {
     width: 28px;
     height: 28px;
@@ -2201,6 +2225,25 @@ body.compact-layout .promo-title-main {
 
 .livechat-user-banner strong {
     color: var(--primary-color);
+}
+
+.livechat-current-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(88, 255, 154, 0.45);
+    flex: 0 0 24px;
+}
+
+.livechat-mute-note {
+    padding: 8px 14px;
+    background: rgba(255, 77, 77, 0.12);
+    border-top: 1px solid rgba(255, 77, 77, 0.2);
+    border-bottom: 1px solid rgba(255, 77, 77, 0.2);
+    color: #ffb3b3;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .livechat-admin-trigger {
@@ -2249,6 +2292,13 @@ body.creator-mode .livechat-admin-trigger {
     gap: 8px;
     margin-bottom: 3px;
     font-size: 10px;
+}
+
+.lc-msg-user-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
 }
 
 .lc-msg-avatar {
@@ -2305,6 +2355,18 @@ body.creator-mode .livechat-admin-trigger {
 .lc-msg-time {
     color: var(--text-muted);
     font-size: 9px;
+}
+
+.lc-msg-status {
+    margin-top: 4px;
+    font-size: 9px;
+    color: rgba(201, 214, 224, 0.72);
+    text-align: right;
+    min-height: 12px;
+}
+
+.lc-msg-status.seen {
+    color: #58ff9a;
 }
 
 .lc-msg-bubble {

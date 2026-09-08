@@ -20,7 +20,8 @@ service cloud.firestore {
       // Chat público del sitio: cualquiera puede leer y publicar mensajes.
       // Los datos privados del usuario siguen protegidos en /users y /aiChats.
       allow read, create: if true;
-      allow update, delete: if false;
+      allow update: if true;
+      allow delete: if false;
     }
   }
 }

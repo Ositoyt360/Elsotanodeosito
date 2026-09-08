@@ -12,12 +12,20 @@ try {
   WebSocket = require('ws');
   wss = new WebSocket.Server({ server });
 } catch (e) {
-  console.log('Módulo "ws" no instalado. El chat funcionará con el sistema de transporte HTTP fallback integrado en server.js.');
+  console.log('Module "ws" not installed. Chat will fall back to HTTP polling.');
 }
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'chat-data.json');
 const ADMIN_KEY = process.env.ADMIN_KEY || '240625';
+const MAX_MESSAGES = 200;
+const PROFANITY_MUTE_MS = 2 * 60 * 1000;
+
+const BAD_WORDS = [
+  'puta', 'puto', 'mierda', 'mierdas', 'cabron', 'cabrona', 'imbecil',
+  'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'coño', 'joder',
+  'huevon', 'baboso'
+];
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
@@ -26,14 +34,116 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Historial persistente de mensajes
 let messages = [];
-const MAX_MESSAGES = 100;
+const clientStats = new Map();
+const clientSessions = new Map();
+const activePollClients = new Set();
+const typingUsers = new Map();
+
+function sanitizeText(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+    .trim();
+}
+
+function normalizeForModeration(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function containsBadWords(text) {
+  const normalized = normalizeForModeration(text);
+  return BAD_WORDS.some((word) => new RegExp(`(^|[^a-z0-9])${word}($|[^a-z0-9])`).test(normalized));
+}
+
+function getClientKey(clientId, ip) {
+  const cleanClientId = String(clientId || '').trim();
+  if (cleanClientId) return `client:${cleanClientId}`;
+  const cleanIp = String(ip || '').trim();
+  if (cleanIp) return `ip:${cleanIp}`;
+  return 'ip:unknown';
+}
+
+function getClientState(clientId, ip) {
+  const key = getClientKey(clientId, ip);
+  let stat = clientStats.get(key);
+  if (!stat) {
+    stat = { lastMsgTime: 0, mutedUntil: 0 };
+    clientStats.set(key, stat);
+  }
+  return { key, stat };
+}
+
+function getClientSession(clientId, ip, user = 'Invitado') {
+  const key = getClientKey(clientId, ip);
+  let session = clientSessions.get(key);
+  if (!session) {
+    session = {
+      key,
+      clientId: String(clientId || key),
+      ip: String(ip || ''),
+      user: String(user || 'Invitado').slice(0, 24) || 'Invitado',
+      lastMsgTime: 0,
+      mutedUntil: 0
+    };
+    clientSessions.set(key, session);
+  }
+  if (clientId) session.clientId = String(clientId);
+  if (ip) session.ip = String(ip);
+  if (user) session.user = String(user).slice(0, 24) || session.user;
+  return session;
+}
+
+function muteSession(session, durationMs = PROFANITY_MUTE_MS) {
+  if (!session) return 0;
+  const mutedUntil = Date.now() + durationMs;
+  session.mutedUntil = mutedUntil;
+  const stat = clientStats.get(session.key);
+  if (stat) stat.mutedUntil = mutedUntil;
+  return mutedUntil;
+}
+
+function checkMuteAndRateLimit(clientId, ip) {
+  const { stat } = getClientState(clientId, ip);
+  const now = Date.now();
+
+  if (stat.mutedUntil && now < stat.mutedUntil) {
+    const remainingSecs = Math.ceil((stat.mutedUntil - now) / 1000);
+    return { error: `Estás silenciado temporalmente (${remainingSecs}s restantes).`, mutedUntil: stat.mutedUntil };
+  }
+
+  if (now - stat.lastMsgTime < 1200) {
+    return { error: 'Escribes demasiado rápido. Espera un segundo antes de enviar otro mensaje.' };
+  }
+
+  stat.lastMsgTime = now;
+  return { ok: true };
+}
+
+function ensureMessageShape(message) {
+  if (!message || typeof message !== 'object') return message;
+  if (!Array.isArray(message.seenBy)) message.seenBy = [];
+  if (typeof message.timestamp !== 'number') message.timestamp = Date.now();
+  if (typeof message.clientId !== 'string') message.clientId = '';
+  return message;
+}
+
+function normalizeLoadedMessages(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => ensureMessageShape(item)).filter(Boolean);
+}
 
 try {
   if (fs.existsSync(DATA_FILE)) {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    messages = JSON.parse(raw);
+    messages = normalizeLoadedMessages(JSON.parse(raw));
   }
 } catch (e) {
   console.warn('No se pudo cargar el historial de chat:', e.message);
@@ -51,64 +161,113 @@ function saveMessages() {
   }
 }
 
-function sanitizeText(str) {
-  if (typeof str !== 'string') return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-    .trim();
-}
-
-// Control anti-spam por IP/identificador
-const ipStats = new Map();
-
-function checkMuteAndRateLimit(ip) {
-  const now = Date.now();
-  let stat = ipStats.get(ip);
-  if (!stat) {
-    stat = { lastMsgTime: 0, isMuted: false, mutedUntil: 0 };
-    ipStats.set(ip, stat);
-  }
-
-  if (stat.isMuted && now < stat.mutedUntil) {
-    const remainingSecs = Math.ceil((stat.mutedUntil - now) / 1000);
-    return { error: `Estás silenciado temporalmente (${remainingSecs}s restantes).` };
-  } else if (stat.isMuted && now >= stat.mutedUntil) {
-    stat.isMuted = false;
-  }
-
-  if (now - stat.lastMsgTime < 1200) {
-    return { error: 'Escribes demasiado rápido. Espera un segundo antes de enviar otro mensaje.' };
-  }
-
-  stat.lastMsgTime = now;
-  return { ok: true };
-}
-
-// Contadores y eventos en tiempo real
-let activePollClients = new Set();
-let typingUsers = new Map();
-
-function getOnlineCount() {
-  const wsCount = wss ? wss.clients.size : 0;
-  const pollCount = activePollClients.size;
-  return Math.max(1, wsCount + pollCount);
-}
-
-function broadcastWS(data) {
+function broadcastWS(data, exceptWs = null) {
   if (!wss) return;
   const payload = JSON.stringify(data);
   wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(payload);
-    }
+    if (client.readyState !== WebSocket.OPEN) return;
+    if (exceptWs && client === exceptWs) return;
+    client.send(payload);
   });
 }
 
-// Endpoints HTTP REST & Polling para el chat (para máxima compatibilidad sin dependencias externas)
+function getOnlineCount() {
+  const wsCount = wss ? wss.clients.size : 0;
+  return Math.max(1, wsCount + activePollClients.size);
+}
+
+function cleanTypingUsers() {
+  const now = Date.now();
+  for (const [user, timestamp] of typingUsers.entries()) {
+    if (now - timestamp > 3000) typingUsers.delete(user);
+  }
+}
+
+function markMessagesSeen(clientId, uptoTimestamp) {
+  if (!clientId || !uptoTimestamp) return [];
+  const updated = [];
+  messages.forEach((msg) => {
+    if (!msg || msg.isSystem) return;
+    if (msg.timestamp > uptoTimestamp) return;
+    if (msg.clientId && msg.clientId === clientId) return;
+    ensureMessageShape(msg);
+    if (!msg.seenBy.includes(clientId)) {
+      msg.seenBy.push(clientId);
+      updated.push(msg.id);
+    }
+  });
+  if (updated.length) {
+    saveMessages();
+    broadcastWS({ type: 'read_receipt', clientId, messageIds: updated, uptoTimestamp });
+  }
+  return updated;
+}
+
+function markMessageSeenByMessageId(clientId, messageId) {
+  if (!clientId || !messageId) return false;
+  const msg = messages.find((item) => item && item.id === messageId);
+  if (!msg) return false;
+  if (msg.clientId && msg.clientId === clientId) return false;
+  ensureMessageShape(msg);
+  if (msg.seenBy.includes(clientId)) return false;
+  msg.seenBy.push(clientId);
+  saveMessages();
+  broadcastWS({ type: 'read_receipt', clientId, messageIds: [messageId], uptoTimestamp: msg.timestamp });
+  return true;
+}
+
+function createMessage({ user, text, clientId = '', isSystem = false, isAdmin = false }) {
+  const now = Date.now();
+  return {
+    id: 'msg_' + now + '_' + Math.random().toString(36).slice(2, 7),
+    user: sanitizeText(user).slice(0, 24) || 'Invitado',
+    text: sanitizeText(text),
+    timestamp: now,
+    isSystem: Boolean(isSystem),
+    isAdmin: Boolean(isAdmin),
+    clientId: String(clientId || ''),
+    seenBy: []
+  };
+}
+
+function sendMessageFromClient({ user, text, clientId, ip, isSystem = false, isAdmin = false }) {
+  const session = getClientSession(clientId, ip, user);
+  const moderation = checkMuteAndRateLimit(clientId, ip);
+  if (moderation.error) {
+    return { error: moderation.error, mutedUntil: moderation.mutedUntil || session.mutedUntil || 0 };
+  }
+
+  const cleanText = sanitizeText(text);
+  if (!cleanText) {
+    return { error: 'El mensaje no puede estar vacío.' };
+  }
+  if (cleanText.length > 400) {
+    return { error: 'El mensaje supera el límite máximo de 400 caracteres.' };
+  }
+
+  if (!isSystem && containsBadWords(cleanText)) {
+    const mutedUntil = muteSession(session, PROFANITY_MUTE_MS);
+    return {
+      error: 'No se permiten malas palabras. Quedaste silenciado por 2 minutos.',
+      mutedUntil
+    };
+  }
+
+  session.user = sanitizeText(user).slice(0, 24) || session.user;
+  const newMsg = createMessage({
+    user: session.user,
+    text: cleanText,
+    clientId: session.clientId,
+    isSystem,
+    isAdmin
+  });
+
+  messages.push(newMsg);
+  saveMessages();
+  broadcastWS({ type: 'new_message', message: newMsg });
+  return { success: true, message: newMsg };
+}
+
 app.get('/api/chat/init', (req, res) => {
   res.json({
     type: 'init',
@@ -119,16 +278,11 @@ app.get('/api/chat/init', (req, res) => {
 
 app.get('/api/chat/poll', (req, res) => {
   const clientId = req.query.clientId || req.ip;
-  activePollClients.add(clientId);
+  activePollClients.add(String(clientId || req.ip || 'poll'));
+  cleanTypingUsers();
 
-  const since = parseInt(req.query.since) || 0;
-  const newMsgs = messages.filter(m => m.timestamp > since);
-
-  // Limpiar typing expirados (> 3s)
-  const now = Date.now();
-  for (const [u, t] of typingUsers.entries()) {
-    if (now - t > 3000) typingUsers.delete(u);
-  }
+  const since = parseInt(req.query.since, 10) || 0;
+  const newMsgs = messages.filter((m) => m.timestamp > since);
 
   res.json({
     onlineCount: getOnlineCount(),
@@ -138,63 +292,58 @@ app.get('/api/chat/poll', (req, res) => {
 });
 
 app.post('/api/chat/send', (req, res) => {
-  const clientIp = req.ip || '127.0.0.1';
-  const limitCheck = checkMuteAndRateLimit(clientIp);
-  if (limitCheck.error) {
-    return res.status(429).json({ error: limitCheck.error });
+  const { user, text, clientId, isSystem, isAdmin } = req.body || {};
+  const result = sendMessageFromClient({
+    user,
+    text,
+    clientId: clientId || req.ip,
+    ip: req.ip || '127.0.0.1',
+    isSystem: Boolean(isSystem),
+    isAdmin: Boolean(isAdmin)
+  });
+
+  if (result.error) {
+    return res.status(result.mutedUntil ? 403 : 429).json(result);
   }
 
-  const { user, text } = req.body;
-  const cleanText = sanitizeText(text);
-
-  if (!cleanText) {
-    return res.status(400).json({ error: 'El mensaje no puede estar vacío.' });
-  }
-  if (cleanText.length > 400) {
-    return res.status(400).json({ error: 'El mensaje supera el límite máximo de 400 caracteres.' });
-  }
-
-  const cleanUser = sanitizeText(user).slice(0, 24) || 'Invitado';
-
-  const newMsg = {
-    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-    user: cleanUser,
-    text: cleanText,
-    timestamp: Date.now(),
-    isSystem: false,
-    isAdmin: false
-  };
-
-  messages.push(newMsg);
-  saveMessages();
-
-  broadcastWS({ type: 'new_message', message: newMsg });
-
-  res.json({ success: true, message: newMsg });
+  res.json(result);
 });
 
 app.post('/api/chat/typing', (req, res) => {
-  const { user, isTyping } = req.body;
+  const { user, isTyping, clientId } = req.body || {};
   const cleanUser = sanitizeText(user).slice(0, 24);
   if (!cleanUser) return res.json({ ok: true });
 
-  if (isTyping) {
-    typingUsers.set(cleanUser, Date.now());
-  } else {
-    typingUsers.delete(cleanUser);
-  }
+  if (isTyping) typingUsers.set(cleanUser, Date.now());
+  else typingUsers.delete(cleanUser);
 
   broadcastWS({
     type: 'typing',
     user: cleanUser,
-    isTyping: Boolean(isTyping)
+    isTyping: Boolean(isTyping),
+    clientId: String(clientId || '')
   });
 
   res.json({ ok: true });
 });
 
+app.post('/api/chat/seen', (req, res) => {
+  const { clientId, uptoTimestamp, messageId } = req.body || {};
+  const cleanClientId = String(clientId || '').trim();
+  if (!cleanClientId) return res.json({ ok: true });
+
+  if (messageId) {
+    markMessageSeenByMessageId(cleanClientId, String(messageId));
+    return res.json({ ok: true });
+  }
+
+  const ts = Number(uptoTimestamp) || 0;
+  const updated = markMessagesSeen(cleanClientId, ts);
+  res.json({ ok: true, updated });
+});
+
 app.post('/api/chat/admin', (req, res) => {
-  const { adminKey, action, msgId, text, targetUser, seconds } = req.body;
+  const { adminKey, action, msgId, text, targetUser, seconds } = req.body || {};
 
   if (adminKey !== ADMIN_KEY) {
     return res.status(401).json({ error: 'Clave de administración incorrecta.' });
@@ -208,13 +357,11 @@ app.post('/api/chat/admin', (req, res) => {
     messages = [];
     saveMessages();
     broadcastWS({ type: 'clear_chat' });
-    const sysMsg = {
-      id: 'sys_' + Date.now(),
+    const sysMsg = createMessage({
       user: 'Sistema Admin',
-      text: '🛡️ El historial de chat ha sido vaciado por el administrador.',
-      timestamp: Date.now(),
+      text: 'El historial de chat ha sido vaciado por el administrador.',
       isSystem: true
-    };
+    });
     messages.push(sysMsg);
     saveMessages();
     broadcastWS({ type: 'new_message', message: sysMsg });
@@ -222,7 +369,7 @@ app.post('/api/chat/admin', (req, res) => {
   }
 
   if (action === 'delete_message') {
-    messages = messages.filter(m => m.id !== msgId);
+    messages = messages.filter((m) => m.id !== msgId);
     saveMessages();
     broadcastWS({ type: 'delete_message', msgId });
     return res.json({ success: true, message: 'Mensaje eliminado correctamente.' });
@@ -232,14 +379,12 @@ app.post('/api/chat/admin', (req, res) => {
     const cleanText = sanitizeText(text);
     if (!cleanText) return res.status(400).json({ error: 'El mensaje del anuncio no puede estar vacío.' });
 
-    const systemMsg = {
-      id: 'sys_' + Date.now(),
-      user: '⚡ ANUNCIO OFICIAL',
+    const systemMsg = createMessage({
+      user: 'ANUNCIO OFICIAL',
       text: cleanText,
-      timestamp: Date.now(),
       isSystem: true,
       isAdmin: true
-    };
+    });
     messages.push(systemMsg);
     saveMessages();
     broadcastWS({ type: 'new_message', message: systemMsg });
@@ -247,32 +392,37 @@ app.post('/api/chat/admin', (req, res) => {
   }
 
   if (action === 'mute_user') {
-    const cleanTarget = sanitizeText(targetUser);
-    const durationMs = (parseInt(seconds) || 60) * 1000;
+    const cleanTarget = sanitizeText(targetUser).toLowerCase();
+    const durationMs = (parseInt(seconds, 10) || 60) * 1000;
+    let mutedCount = 0;
 
-    for (const [ip, stat] of ipStats.entries()) {
-      stat.isMuted = true;
-      stat.mutedUntil = Date.now() + durationMs;
+    for (const session of clientSessions.values()) {
+      if (!cleanTarget || (session.user || '').toLowerCase() === cleanTarget) {
+        muteSession(session, durationMs);
+        mutedCount++;
+      }
     }
 
-    return res.json({ success: true, message: `Instrucción de silencio enviada para el usuario ${cleanTarget}.` });
+    return res.json({
+      success: true,
+      message: `Instruccion de silencio enviada para ${cleanTarget || 'todos los usuarios'} (${mutedCount} sesiones).`
+    });
   }
 
   res.status(400).json({ error: 'Acción no válida.' });
 });
 
-// Lógica WebSocket nativa si 'ws' está disponible
 if (wss) {
-  wss.on('connection', (ws) => {
-    const socketState = {
-      lastMsgTime: 0,
-      userName: 'Invitado',
-      isMuted: false,
-      mutedUntil: 0
-    };
+  wss.on('connection', (ws, req) => {
+    const url = new URL(req.url, 'http://localhost');
+    const clientId = url.searchParams.get('clientId') || `ws_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const session = getClientSession(clientId, req.socket.remoteAddress || req.ip || '127.0.0.1');
+
+    ws._clientId = clientId;
 
     ws.send(JSON.stringify({
       type: 'init',
+      clientId,
       history: messages,
       onlineCount: getOnlineCount()
     }));
@@ -284,65 +434,54 @@ if (wss) {
         const data = JSON.parse(rawMessage.toString());
 
         if (data.type === 'join') {
-          if (data.user && typeof data.user === 'string') {
-            socketState.userName = sanitizeText(data.user).slice(0, 24) || 'Invitado';
-          }
+          const user = sanitizeText(data.user).slice(0, 24) || 'Invitado';
+          session.user = user;
+          getClientSession(clientId, req.socket.remoteAddress || req.ip || '127.0.0.1', user);
           broadcastWS({ type: 'online_count', count: getOnlineCount() });
           return;
         }
 
         if (data.type === 'typing') {
-          const isTyping = Boolean(data.isTyping);
-          const name = socketState.userName || 'Usuario';
-          if (isTyping) typingUsers.set(name, Date.now());
-          else typingUsers.delete(name);
+          const user = sanitizeText(data.user).slice(0, 24) || session.user || 'Invitado';
+          if (data.isTyping) typingUsers.set(user, Date.now());
+          else typingUsers.delete(user);
 
-          const typingPayload = JSON.stringify({ type: 'typing', user: name, isTyping });
-          wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(typingPayload);
-            }
-          });
+          broadcastWS({
+            type: 'typing',
+            user,
+            isTyping: Boolean(data.isTyping),
+            clientId
+          }, ws);
+          return;
+        }
+
+        if (data.type === 'seen') {
+          if (data.messageId) {
+            markMessageSeenByMessageId(clientId, String(data.messageId));
+            return;
+          }
+          const uptoTimestamp = Number(data.uptoTimestamp) || 0;
+          markMessagesSeen(clientId, uptoTimestamp);
           return;
         }
 
         if (data.type === 'message') {
-          const now = Date.now();
-          if (socketState.isMuted && now < socketState.mutedUntil) {
-            const remainingSecs = Math.ceil((socketState.mutedUntil - now) / 1000);
-            ws.send(JSON.stringify({ type: 'error', message: `Estás silenciado temporalmente (${remainingSecs}s restantes).` }));
-            return;
-          } else if (socketState.isMuted && now >= socketState.mutedUntil) {
-            socketState.isMuted = false;
-          }
-
-          if (now - socketState.lastMsgTime < 1200) {
-            ws.send(JSON.stringify({ type: 'error', message: 'Escribes demasiado rápido. Espera un segundo.' }));
-            return;
-          }
-
-          const cleanText = sanitizeText(data.text);
-          if (!cleanText || cleanText.length > 400) return;
-
-          if (data.user && typeof data.user === 'string') {
-            socketState.userName = sanitizeText(data.user).slice(0, 24) || socketState.userName;
-          }
-
-          socketState.lastMsgTime = now;
-
-          const newMsg = {
-            id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-            user: socketState.userName,
-            text: cleanText,
-            timestamp: now,
+          const result = sendMessageFromClient({
+            user: data.user || session.user,
+            text: data.text,
+            clientId,
+            ip: req.socket.remoteAddress || req.ip || '127.0.0.1',
             isSystem: Boolean(data.isSystem),
             isAdmin: Boolean(data.isAdmin)
-          };
+          });
 
-          messages.push(newMsg);
-          saveMessages();
-
-          broadcastWS({ type: 'new_message', message: newMsg });
+          if (result.error) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: result.error,
+              mutedUntil: result.mutedUntil || 0
+            }));
+          }
           return;
         }
 
@@ -352,35 +491,53 @@ if (wss) {
             ws.send(JSON.stringify({ type: 'error', message: 'Clave de administración incorrecta.' }));
             return;
           }
+
           if (data.action === 'clear_chat') {
             messages = [];
             saveMessages();
             broadcastWS({ type: 'clear_chat' });
-            const sysMsg = { id: 'sys_' + Date.now(), user: 'Sistema Admin', text: '🛡️ El historial de chat ha sido vaciado.', timestamp: Date.now(), isSystem: true };
+            const sysMsg = createMessage({
+              user: 'Sistema Admin',
+              text: 'El historial de chat ha sido vaciado.',
+              isSystem: true
+            });
             messages.push(sysMsg);
             saveMessages();
             broadcastWS({ type: 'new_message', message: sysMsg });
           } else if (data.action === 'delete_message') {
-            messages = messages.filter(m => m.id !== data.msgId);
+            messages = messages.filter((m) => m.id !== data.msgId);
             saveMessages();
             broadcastWS({ type: 'delete_message', msgId: data.msgId });
           } else if (data.action === 'broadcast') {
             const cleanText = sanitizeText(data.text);
             if (cleanText) {
-              const systemMsg = { id: 'sys_' + Date.now(), user: '⚡ ANUNCIO OFICIAL', text: cleanText, timestamp: Date.now(), isSystem: true, isAdmin: true };
+              const systemMsg = createMessage({
+                user: 'ANUNCIO OFICIAL',
+                text: cleanText,
+                isSystem: true,
+                isAdmin: true
+              });
               messages.push(systemMsg);
               saveMessages();
               broadcastWS({ type: 'new_message', message: systemMsg });
             }
+          } else if (data.action === 'mute_user') {
+            const cleanTarget = sanitizeText(data.targetUser).toLowerCase();
+            const durationMs = (parseInt(data.seconds, 10) || 60) * 1000;
+            for (const s of clientSessions.values()) {
+              if (!cleanTarget || (s.user || '').toLowerCase() === cleanTarget) {
+                muteSession(s, durationMs);
+              }
+            }
           }
         }
-
       } catch (e) {
         console.error('Error procesando mensaje websocket:', e.message);
       }
     });
 
     ws.on('close', () => {
+      cleanTypingUsers();
       broadcastWS({ type: 'online_count', count: getOnlineCount() });
     });
   });

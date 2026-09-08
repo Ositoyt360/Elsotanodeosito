@@ -10,6 +10,7 @@
         aiUnsubscribe: null,
         livechatUnsubscribe: null,
         profileUnsubscribe: null,
+        rankUnsubscribe: null,
         aiSeededFromDom: false,
         authSubmitting: false,
     };
@@ -364,7 +365,21 @@
             state.profileUnsubscribe();
             state.profileUnsubscribe = null;
         }
+        if (typeof state.rankUnsubscribe === 'function') {
+            state.rankUnsubscribe();
+            state.rankUnsubscribe = null;
+        }
         if (!user || !db || !window.docFirebase || !window.onSnapshotFirebase) return;
+
+        const applyRank = (data) => {
+            if (!data) return;
+            state.profile = {
+                ...(state.profile || {}),
+                rankLabel: sanitizeRankLabel(data.rankLabel || ''),
+                rankColor: sanitizeRankColor(data.rankColor || '#00f2fe')
+            };
+            setPreview(state.profile, user);
+        };
 
         state.profileUnsubscribe = window.onSnapshotFirebase(
             window.docFirebase(db, 'users', user.uid),
@@ -382,6 +397,15 @@
             },
             (error) => console.warn('[FirebaseAuth] No se pudo sincronizar el rango.', error)
         );
+
+        // Copia publica del rango para mantener la sincronizacion del chat.
+        state.rankUnsubscribe = window.onSnapshotFirebase(
+            window.docFirebase(db, 'livechat', `rank_${user.uid}`),
+            (snapshot) => {
+                if (snapshot.exists()) applyRank(snapshot.data() || {});
+            },
+            (error) => console.warn('[FirebaseLiveChat] No se pudo sincronizar la etiqueta.', error)
+        );
     }
 
     window.asignarRangoUsuario = async function asignarRangoUsuario(uid, label, color) {
@@ -391,7 +415,18 @@
 
         const rankLabel = sanitizeRankLabel(label);
         const rankColor = sanitizeRankColor(color);
-        await window.setDocFirebase(window.docFirebase(db, 'users', String(uid)), {
+        try {
+            await window.setDocFirebase(window.docFirebase(db, 'users', String(uid)), {
+                rankLabel,
+                rankColor,
+                updatedAt: Date.now()
+            }, { merge: true });
+        } catch (error) {
+            console.warn('[FirebaseAuth] No se pudo actualizar users; se usara la copia del chat.', error);
+        }
+
+        await window.setDocFirebase(window.docFirebase(db, 'livechat', `rank_${uid}`), {
+            uid: String(uid),
             rankLabel,
             rankColor,
             updatedAt: Date.now()
@@ -870,6 +905,10 @@
                 if (typeof state.profileUnsubscribe === 'function') {
                     state.profileUnsubscribe();
                     state.profileUnsubscribe = null;
+                }
+                if (typeof state.rankUnsubscribe === 'function') {
+                    state.rankUnsubscribe();
+                    state.rankUnsubscribe = null;
                 }
                 showUnauthenticatedView();
                 return;

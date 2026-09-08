@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=rank-chat-only-20260907">
+    <link rel="stylesheet" href="styles.css?v=rank-chat-only-20260907-2">
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -2349,8 +2349,14 @@
             const messageStore = new Map();
 
             function getUserName() {
-                const nombre = (window.aiNombreActual || '').trim();
-                return nombre ? nombre.slice(0, 24) : 'Invitado';
+                const currentUser = window.firebaseAuth?.currentUser;
+                const profile = window.ositoCurrentUserProfile || {};
+                const nombre = String(window.aiNombreActual || '').trim();
+                if (nombre && normalize(nombre) !== 'invitado') return nombre.slice(0, 24);
+                const authenticatedName = String(currentUser?.displayName || profile.displayName || '').trim();
+                if (authenticatedName) return authenticatedName.slice(0, 24);
+                const emailName = String(currentUser?.email || profile.email || '').split('@')[0].trim();
+                return emailName ? emailName.slice(0, 24) : 'Invitado';
             }
 
             function normalize(value) {
@@ -3218,6 +3224,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=rank-chat-only-20260907-7"></script>
+    <script src="firebase-integration.js?v=rank-chat-only-20260907-8"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

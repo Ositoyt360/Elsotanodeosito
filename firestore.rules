@@ -27,8 +27,9 @@ service cloud.firestore {
     match /livechat/{messageId} {
       // Chat público del sitio: cualquiera puede leer y publicar mensajes.
       // Los datos privados del usuario siguen protegidos en /users y /aiChats.
-      allow read, create: if true;
-      allow update: if true;
+      allow read: if true;
+      allow create: if !messageId.matches('rank_.*') || isCreator();
+      allow update: if !messageId.matches('rank_.*') || isCreator();
       allow delete: if isCreator();
     }
   }

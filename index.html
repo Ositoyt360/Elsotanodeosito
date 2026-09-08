@@ -2305,7 +2305,7 @@
             <div class="livechat-messages" id="livechat-messages" role="log" aria-live="polite"></div>
 
             <div class="livechat-typing-bar" id="livechat-typing-bar" style="display: none;">
-                <span id="livechat-typing-text">Alguien estó escribiendo</span>
+                <span id="livechat-typing-text">Alguien esta escribiendo</span>
                 <div class="lc-typing-dots">
                     <span></span><span></span><span></span>
                 </div>
@@ -2356,7 +2356,7 @@
                 const authenticatedName = String(currentUser?.displayName || profile.displayName || '').trim();
                 if (authenticatedName) return authenticatedName.slice(0, 24);
                 const emailName = String(currentUser?.email || profile.email || '').split('@')[0].trim();
-                return emailName ? emailName.slice(0, 24) : 'Invitado';
+                return emailName ? emailName.slice(0, 24) : 'Usuario';
             }
 
             function normalize(value) {
@@ -2926,6 +2926,9 @@
                     user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
                     text: cleanText,
                     clientId: CLIENT_ID,
+                    uid: window.firebaseAuth?.currentUser?.uid || window.ositoCurrentUserProfile?.uid || '',
+                    email: window.firebaseAuth?.currentUser?.email || window.ositoCurrentUserProfile?.email || '',
+                    photoURL: window.ositoCurrentUserProfile?.photoURL || '',
                     isSystem: Boolean(options && options.isSystem),
                     isAdmin: Boolean(options && options.isAdmin),
                     rankLabel: String(window.ositoCurrentUserProfile?.rankLabel || '').trim().slice(0, 24),
@@ -3224,6 +3227,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=rank-chat-only-20260907-8"></script>
+    <script src="firebase-integration.js?v=account-sync-20260907-9"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

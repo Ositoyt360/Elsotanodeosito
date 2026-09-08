@@ -90,7 +90,7 @@ function getClientState(clientId, ip) {
   return { key, stat };
 }
 
-function getClientSession(clientId, ip, user = 'Invitado') {
+function getClientSession(clientId, ip, user = 'Usuario') {
   const key = getClientKey(clientId, ip);
   let session = clientSessions.get(key);
   if (!session) {
@@ -98,7 +98,7 @@ function getClientSession(clientId, ip, user = 'Invitado') {
       key,
       clientId: String(clientId || key),
       ip: String(ip || ''),
-      user: String(user || 'Invitado').slice(0, 24) || 'Invitado',
+      user: String(user || 'Usuario').slice(0, 24) || 'Usuario',
       lastMsgTime: 0,
       mutedUntil: 0
     };
@@ -225,15 +225,18 @@ function markMessageSeenByMessageId(clientId, messageId) {
   return true;
 }
 
-function createMessage({ user, text, clientId = '', isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
+function createMessage({ user, text, clientId = '', uid = '', email = '', photoURL = '', isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
   const now = Date.now();
   return {
     id: 'msg_' + now + '_' + Math.random().toString(36).slice(2, 7),
-    user: sanitizeText(user).slice(0, 24) || 'Invitado',
+    user: sanitizeText(user).slice(0, 24) || 'Usuario',
     text: sanitizeText(text),
     timestamp: now,
     isSystem: Boolean(isSystem),
     isAdmin: Boolean(isAdmin),
+    uid: String(uid || ''),
+    email: String(email || ''),
+    photoURL: String(photoURL || ''),
     rankLabel: sanitizeRankLabel(rankLabel),
     rankColor: sanitizeRankColor(rankColor),
     clientId: String(clientId || ''),
@@ -241,7 +244,7 @@ function createMessage({ user, text, clientId = '', isSystem = false, isAdmin = 
   };
 }
 
-function sendMessageFromClient({ user, text, clientId, ip, isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
+function sendMessageFromClient({ user, text, clientId, ip, uid = '', email = '', photoURL = '', isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
   const session = getClientSession(clientId, ip, user);
   const moderation = checkMuteAndRateLimit(clientId, ip);
   if (moderation.error) {
@@ -269,6 +272,9 @@ function sendMessageFromClient({ user, text, clientId, ip, isSystem = false, isA
     user: session.user,
     text: cleanText,
     clientId: session.clientId,
+    uid,
+    email,
+    photoURL,
     isSystem,
     isAdmin,
     rankLabel,
@@ -305,12 +311,15 @@ app.get('/api/chat/poll', (req, res) => {
 });
 
 app.post('/api/chat/send', (req, res) => {
-  const { user, text, clientId, isSystem, isAdmin, rankLabel, rankColor } = req.body || {};
+  const { user, text, clientId, uid, email, photoURL, isSystem, isAdmin, rankLabel, rankColor } = req.body || {};
   const result = sendMessageFromClient({
     user,
     text,
     clientId: clientId || req.ip,
     ip: req.ip || '127.0.0.1',
+    uid,
+    email,
+    photoURL,
     isSystem: Boolean(isSystem),
     isAdmin: Boolean(isAdmin),
     rankLabel,
@@ -449,7 +458,7 @@ if (wss) {
         const data = JSON.parse(rawMessage.toString());
 
         if (data.type === 'join') {
-          const user = sanitizeText(data.user).slice(0, 24) || 'Invitado';
+          const user = sanitizeText(data.user).slice(0, 24) || 'Usuario';
           session.user = user;
           getClientSession(clientId, req.socket.remoteAddress || req.ip || '127.0.0.1', user);
           broadcastWS({ type: 'online_count', count: getOnlineCount() });
@@ -457,7 +466,7 @@ if (wss) {
         }
 
         if (data.type === 'typing') {
-          const user = sanitizeText(data.user).slice(0, 24) || session.user || 'Invitado';
+          const user = sanitizeText(data.user).slice(0, 24) || session.user || 'Usuario';
           if (data.isTyping) typingUsers.set(user, Date.now());
           else typingUsers.delete(user);
 
@@ -486,6 +495,9 @@ if (wss) {
             text: data.text,
             clientId,
             ip: req.socket.remoteAddress || req.ip || '127.0.0.1',
+            uid: data.uid,
+            email: data.email,
+            photoURL: data.photoURL,
             isSystem: Boolean(data.isSystem),
             isAdmin: Boolean(data.isAdmin),
             rankLabel: data.rankLabel,

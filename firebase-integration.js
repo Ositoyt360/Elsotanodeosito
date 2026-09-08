@@ -783,14 +783,20 @@
             setStatus('Guardando tu foto de perfil...', 'neutral');
             const photoURL = await uploadPhotoIfNeeded(state.currentUser, file);
 
-            if (window.updateProfileFirebase) {
-                await window.updateProfileFirebase(state.currentUser, { photoURL });
-            }
             if (db && window.docFirebase && window.setDocFirebase) {
                 await window.setDocFirebase(window.docFirebase(db, 'users', state.currentUser.uid), {
                     photoURL,
                     updatedAt: Date.now()
                 }, { merge: true });
+            }
+
+            // Auth solo acepta URLs validas; Firestore conserva tambien el respaldo local.
+            if (window.updateProfileFirebase && /^https?:\/\//i.test(photoURL)) {
+                try {
+                    await window.updateProfileFirebase(state.currentUser, { photoURL });
+                } catch (error) {
+                    console.warn('[FirebaseProfilePhoto] Auth no actualizo la foto; Firestore si la conserva.', error);
+                }
             }
 
             state.profile = { ...(state.profile || {}), photoURL };

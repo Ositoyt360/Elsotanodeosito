@@ -1040,44 +1040,27 @@
         }
 
         function conectarActualizacionesEnVivo() {
-            fetch('/api/actualizaciones')
-                .then(res => {
-                    if (!res.ok) throw new Error('Endpoint no disponible');
-                    return res.json();
-                })
-                .then(actualizaciones => {
-                    renderizarActualizaciones(actualizaciones);
-                })
-                .catch(err => {
-                    console.warn('Usando actualizaciones alternativas', err);
-
-                    if (!window.dbFirebase) {
-                        renderizarActualizaciones(actualizacionesDemo(2027, 5));
-                        return;
-                    }
-
-                    try {
-                        window.onSnapshotFirebase(
-                            window.collectionFirebase(window.dbFirebase, 'actualizaciones'),
-                            (snapshot) => {
-                                const actualizacionesFB = [];
-                                snapshot.forEach(doc => {
-                                    const data = doc.data();
-                                    actualizacionesFB.push({
-                                        badge: data.badge || 'Nuevo',
-                                        titulo: data.titulo || 'Actualizacion',
-                                        descripcion: data.descripcion || '', 
-                                        timestamp: normalizarTimestamp(data.timestamp)
-                                    });
-                                });
-                                renderizarActualizaciones(actualizacionesFB);
-                            }
-                        );
-                    } catch (e) {
-                        console.warn('No se pudo conectar a actualizaciones en Firebase', e);
-                        renderizarActualizaciones(actualizacionesDemo(2027, 5));
-                    }
-                });
+            if (!window.dbFirebase || !window.onSnapshotFirebase || !window.collectionFirebase) {
+                renderizarActualizaciones(actualizacionesDemo(2027, 5));
+                return;
+            }
+            window.onSnapshotFirebase(
+                window.collectionFirebase(window.dbFirebase, 'actualizaciones'),
+                (snapshot) => {
+                    const actualizacionesFB = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data() || {};
+                        actualizacionesFB.push({
+                            badge: data.badge || 'Nuevo',
+                            titulo: data.titulo || 'Actualizacion',
+                            descripcion: data.descripcion || '',
+                            timestamp: normalizarTimestamp(data.timestamp)
+                        });
+                    });
+                    renderizarActualizaciones(actualizacionesFB);
+                },
+                () => renderizarActualizaciones(actualizacionesDemo(2027, 5))
+            );
         }
 
         function iniciarContador() {
@@ -2343,6 +2326,7 @@
             let typingState = false;
             let firebaseChatReady = false;
             let firebaseFallbackTimer = null;
+            let firebaseSnapshotReceived = false;
 
             const BAD_WORDS = ['puta', 'puto', 'mierda', 'cabron', 'cabrona', 'imbecil', 'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'cono', 'joder', 'huevon', 'baboso'];
 
@@ -2509,17 +2493,6 @@
                     ).catch(() => {});
                     return;
                 }
-
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({ type: 'seen', ...payload, clientId: CLIENT_ID }));
-                    return;
-                }
-
-                fetch(`${baseUrl()}/api/chat/seen`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ clientId: CLIENT_ID, ...payload })
-                }).catch(() => {});
             }
 
             function syncVisibleMessages() {
@@ -2730,6 +2703,11 @@
             }
 
             function renderFirebaseSnapshot(messages) {
+                firebaseSnapshotReceived = true;
+                if (firebaseFallbackTimer) {
+                    clearTimeout(firebaseFallbackTimer);
+                    firebaseFallbackTimer = null;
+                }
                 clearMessages();
                 (Array.isArray(messages) ? messages : []).forEach((message) => {
                     renderMessage(message, { history: true, preserveScroll: true });
@@ -2742,6 +2720,7 @@
                 firebaseChatReady = true;
                 if (firebaseFallbackTimer) clearTimeout(firebaseFallbackTimer);
                 setConnectionState(true, 'Conectando Firebase...');
+                firebaseSnapshotReceived = false;
             }
 
             window.addEventListener('osito:firebase-auth-ready', useFirebaseChat);
@@ -2752,7 +2731,7 @@
 
             window.addEventListener('osito:livechat-error', () => {
                 firebaseChatReady = false;
-                startServerFallback();
+                setConnectionState(false, 'Firebase no disponible');
             });
 
             function connectSocket() {
@@ -2804,8 +2783,8 @@
             }
 
             function startServerFallback() {
-                if (firebaseChatReady) return;
-                connectSocket();
+                firebaseChatReady = false;
+                setConnectionState(false, 'Firebase no disponible');
             }
 
             async function sendFirebaseMessage(text, user, options) {
@@ -2881,24 +2860,6 @@
             function sendTypingState(state) {
                 if (typingState === state) return;
                 typingState = state;
-
-                const payload = {
-                    type: 'typing',
-                    user: getUserName(),
-                    isTyping: state,
-                    clientId: CLIENT_ID
-                };
-
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify(payload));
-                    return;
-                }
-
-                fetch(`${baseUrl()}/api/chat/typing`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(() => {});
             }
 
             function scheduleTypingStop() {
@@ -2940,25 +2901,7 @@
                 if (firebaseChatReady) {
                     return sendFirebaseMessage(cleanText, payload.user, options);
                 }
-
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify(payload));
-                    return Promise.resolve(null);
-                }
-
-                return fetch(`${baseUrl()}/api/chat/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).then(async (response) => {
-                    const data = await response.json().catch(() => ({}));
-                    if (!response.ok || data.error) {
-                        if (data.mutedUntil) setMutedUntil(data.mutedUntil);
-                        throw new Error(data.error || 'No se pudo enviar el mensaje.');
-                    }
-                    if (data.message) renderMessage(data.message, { history: false });
-                    return data.message || null;
-                });
+                return Promise.reject(new Error('Firebase no esta listo. Recarga la pagina e inicia sesion.'));
             }
 
             window.publicarMensajeLiveChat = function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {
@@ -3197,10 +3140,6 @@
 
                 if (userEl) userEl.textContent = getUserName();
                 showMuteNote();
-                firebaseFallbackTimer = setTimeout(() => {
-                    if (!firebaseChatReady) startServerFallback();
-                }, 7000);
-
                 if (form && input) {
                     form.addEventListener('submit', (event) => {
                         event.preventDefault();
@@ -3227,6 +3166,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=account-sync-20260907-9"></script>
+    <script src="firebase-integration.js?v=firebase-spark-20260908-11"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

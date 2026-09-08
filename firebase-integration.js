@@ -493,21 +493,8 @@
 
     async function uploadPhotoIfNeeded(user, file) {
         if (!file) return '';
-        if (!storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
-            return photoFileToDataUrl(file);
-        }
-
-        try {
-            const optimizedFile = await optimizeImage(file);
-            const ref = window.storageRefFirebase(storage, `users/${user.uid}/profile.jpg`);
-            await window.uploadBytesFirebase(ref, optimizedFile, {
-                contentType: optimizedFile.type || 'image/jpeg'
-            });
-            return window.getDownloadURLFirebase(ref);
-        } catch (error) {
-            console.warn('[FirebaseProfilePhoto] Storage no disponible; se usará respaldo en el perfil.', error);
-            return photoFileToDataUrl(file);
-        }
+        // Spark no necesita Storage: guardamos una version comprimida en Firestore.
+        return photoFileToDataUrl(file);
     }
 
     async function previewProfilePhoto(file) {
@@ -618,6 +605,7 @@
             (snapshot) => {
                 const messages = [];
                 snapshot.forEach((docSnap) => {
+                    if (String(docSnap.id).startsWith('rank_')) return;
                     const data = docSnap.data() || {};
                     const timestamp = data.timestamp?.toMillis
                         ? data.timestamp.toMillis()

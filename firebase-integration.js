@@ -441,6 +441,13 @@
 
         const rankLabel = sanitizeRankLabel(label);
         const rankColor = sanitizeRankColor(color);
+        await window.setDocFirebase(window.docFirebase(db, 'livechat', `profile_${uid}`), {
+            uid: String(uid),
+            rankLabel,
+            rankColor,
+            updatedAt: Date.now()
+        }, { merge: true });
+
         try {
             await window.setDocFirebase(window.docFirebase(db, 'users', String(uid)), {
                 rankLabel,
@@ -451,18 +458,16 @@
             console.warn('[FirebaseAuth] No se pudo actualizar users; se usara la copia del chat.', error);
         }
 
-        await window.setDocFirebase(window.docFirebase(db, 'livechat', `rank_${uid}`), {
-            uid: String(uid),
-            rankLabel,
-            rankColor,
-            updatedAt: Date.now()
-        }, { merge: true });
-        await window.setDocFirebase(window.docFirebase(db, 'livechat', `profile_${uid}`), {
-            uid: String(uid),
-            rankLabel,
-            rankColor,
-            updatedAt: Date.now()
-        }, { merge: true });
+        try {
+            await window.setDocFirebase(window.docFirebase(db, 'livechat', `rank_${uid}`), {
+                uid: String(uid),
+                rankLabel,
+                rankColor,
+                updatedAt: Date.now()
+            }, { merge: true });
+        } catch (error) {
+            console.warn('[FirebaseLiveChat] No se pudo actualizar el documento secundario del rango.', error);
+        }
 
         // Actualiza tambien el historial para que el rango sea visible de inmediato.
         if (window.collectionFirebase && window.getDocsFirebase && window.updateDocFirebase) {

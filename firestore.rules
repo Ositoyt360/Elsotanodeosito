@@ -11,7 +11,12 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, create, update: if signedIn() && request.auth.uid == userId;
+      allow read, create: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn() && (
+        request.auth.uid == userId ||
+        (isCreator() && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['rankLabel', 'rankColor', 'updatedAt']))
+      );
       allow delete: if false;
     }
 

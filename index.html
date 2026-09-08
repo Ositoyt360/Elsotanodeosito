@@ -863,7 +863,7 @@
 
                 renderizarCategoria(categoria);
                 if (videosPorCategoria[categoria].length === 0) {
-                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción estó vacóa.</p>';
+                    grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción está vacía.</p>';
                 }
             } catch (error) {
                 console.error("Error al conectar con YouTube API:", error);
@@ -1951,7 +1951,7 @@
 
                 if (/hora|quó hora|que hora|pais|paós|salvador/.test(texto) && !/ubicacion|departamento|direccion|dirección|donde vive|dónde vive/.test(texto)) {
                     respuestas.push(
-                        `En El Salvador ahorita son las ${horaElSalvador()} ó. Solo doy la hora del paós, no ubicaciones personales.`,
+                        `En El Salvador ahorita son las ${horaElSalvador()}. Solo doy la hora del país, no ubicaciones personales.`,
                         `La hora de El Salvador es: ${horaElSalvador()} ó. Nada de departamentos ni datos privados, eso se cuida mucho.`
                     );
                 }
@@ -1964,11 +1964,11 @@
                     );
                 }
 
-                if (/que puedo hacer|quó puedo hacer|pagina|pógina|sitio|funciones|para que sirve|para quó sirve/.test(texto)) {
+                if (/que puedo hacer|qué puedo hacer|pagina|página|sitio|funciones|para que sirve|para qué sirve/.test(texto)) {
                     respuestas.push(
-                        `Aquó puedes ver videos recientes, directos, favoritos, actualizaciones en vivo y preguntarme lo que quieras, ${nombre}. ó`,
-                        'La pagina sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
-                        `Puedes moverte por las pestaóas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.`
+                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo y preguntarme lo que quieras, ${nombre}.`,
+                        'La página sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
+                        'Puedes moverte por las pestañas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.'
                     );
                 }
 
@@ -1990,7 +1990,7 @@
 
                 if (/expo|evento|fecha|cuando|horario/.test(texto)) { 
                     respuestas.push(
-                        `Muy pronto habró novedades y anuncios especiales del canal, ${nombre}. ó`,
+                        `Muy pronto habrá novedades y anuncios especiales del canal, ${nombre}.`,
                         'Cuando haya una fecha confirmada, apareceró en las actualizaciones del sitio.',
                         `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}.`
                     );
@@ -2078,8 +2078,8 @@
 
                 if (/actualizacion|actualizaciones|nuevo|tiempo real|reciente/.test(texto)) { 
                     respuestas.push(
-                        'Cada actualizacion con fecha aparece como "Actualizado hace..." y se mantiene viva sin recargar la pagina.',
-                        'El sistema intenta leer actualizaciones del endpoint local, luego Firebase, y si nada responde usa datos de respaldo.'
+                    'Cada actualización con fecha aparece como "Actualizado hace..." y se mantiene viva sin recargar la página.',
+                    'El sistema lee las actualizaciones en tiempo real desde Firebase y usa datos de respaldo si todavía no hay publicaciones.'
                     );
                 }
 
@@ -2526,6 +2526,7 @@
             function renderMessage(message, options) {
                 options = options || {};
                 if (!message || !message.id) return;
+                if (!message.isSystem && normalize(message.user) === 'invitado') return;
                 if (!message.isSystem && hasBadWords(message.text || '')) return;
 
                 const container = document.getElementById('livechat-messages');
@@ -2564,11 +2565,13 @@
                         .toUpperCase() || 'I';
                     const seenCount = Array.isArray(message.seenBy) ? new Set(message.seenBy.filter(Boolean)).size : 0;
                     const statusText = mine ? (seenCount > 0 ? '✓✓ Visto' : '✓ Enviado') : '';
-                    const photoURL = String(message.photoURL || '');
+                    const currentProfile = isOwnMessage(message) ? (window.ositoCurrentUserProfile || {}) : {};
+                    const photoURL = String(message.photoURL || currentProfile.photoURL || '');
                     const isCreator = Boolean(message.isCreator) || normalize(message.email) === 'ositoyt360@elsotanodeosito.com';
-                    const rankLabel = String(message.rankLabel || message.rank || message.rankName || '').trim().slice(0, 24);
-                    const rankColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(message.rankColor || '').trim())
-                        ? String(message.rankColor).trim()
+                    const rankLabel = String(message.rankLabel || message.rank || message.rankName || currentProfile.rankLabel || '').trim().slice(0, 24);
+                    const rankColorValue = String(message.rankColor || currentProfile.rankColor || '').trim();
+                    const rankColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(rankColorValue)
+                        ? rankColorValue
                         : '#00f2fe';
                     const avatarMarkup = /^(https?:|data:image\/)/i.test(photoURL)
                         ? `<img class="lc-msg-avatar" src="${escapeHtml(photoURL)}" alt="Foto de ${escapeHtml(message.user || 'Invitado')}" loading="lazy">`
@@ -2806,6 +2809,17 @@
                     } catch (error) {
                         console.warn('[LiveChat] No se pudo leer el rango actualizado.', error);
                     }
+                    try {
+                        const rankSnapshot = await window.getDocFirebase(
+                            window.docFirebase(window.dbFirebase, 'livechat', `rank_${currentUser.uid}`)
+                        );
+                        if (rankSnapshot.exists()) {
+                            profile = { ...profile, ...(rankSnapshot.data() || {}) };
+                            window.ositoCurrentUserProfile = profile;
+                        }
+                    } catch (error) {
+                        console.warn('[LiveChat] No se pudo leer la etiqueta sincronizada.', error);
+                    }
                 }
                 const messageData = {
                     user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
@@ -2870,6 +2884,9 @@
             function sendMessage(text, user, options) {
                 const cleanText = String(text || '').trim();
                 if (!cleanText) return Promise.resolve(null);
+                if (!window.firebaseAuth?.currentUser) {
+                    return Promise.reject(new Error('Inicia sesion para enviar mensajes.'));
+                }
                 if (mutedUntil > Date.now()) {
                     showMuteNote();
                     return Promise.resolve(null);
@@ -3166,6 +3183,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=firebase-spark-20260908-11"></script>
+    <script src="firebase-integration.js?v=firebase-spark-20260908-12"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

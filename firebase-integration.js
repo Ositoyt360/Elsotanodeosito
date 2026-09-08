@@ -142,6 +142,11 @@
         document.body.classList.toggle('guest-mode', Boolean(isGuest));
         const mainLogout = el('main-logout');
         if (mainLogout) mainLogout.style.display = isGuest ? 'inline-flex' : 'none';
+        const chatInput = el('livechat-input');
+        if (chatInput) {
+            chatInput.disabled = Boolean(isGuest);
+            chatInput.placeholder = isGuest ? 'Inicia sesion para escribir...' : 'Escribe un mensaje...';
+        }
     }
 
     function setPreview(profile, user) {
@@ -390,8 +395,8 @@
                     ...(state.profile || {}),
                     ...data,
                     uid: user.uid,
-                    rankLabel: sanitizeRankLabel(data.rankLabel || data.rank || data.rankName || ''),
-                    rankColor: sanitizeRankColor(data.rankColor || '#00f2fe')
+                    rankLabel: sanitizeRankLabel(data.rankLabel || data.rank || data.rankName || state.profile?.rankLabel || ''),
+                    rankColor: sanitizeRankColor(data.rankColor || state.profile?.rankColor || '#00f2fe')
                 };
                 setPreview(state.profile, user);
             },

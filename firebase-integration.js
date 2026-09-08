@@ -19,6 +19,11 @@
     let db = null;
     let auth = null;
     let storage = null;
+    const CREATOR_EMAIL = 'ositoyt360@elsotanodeosito.com';
+
+    function isCreatorAccount(user) {
+        return String(user?.email || '').trim().toLowerCase() === CREATOR_EMAIL;
+    }
 
     function el(id) {
         return document.getElementById(id);
@@ -145,6 +150,7 @@
             avatarPreview,
             photoThumb,
             creatorBadge,
+            rankForm,
             rankInput,
             rankColorInput,
             rankPreview
@@ -173,11 +179,10 @@
         }
 
         window.aiNombreActual = displayName;
-        const accountName = String(user?.email || '').split('@')[0].toLowerCase();
-        const profileName = String(profile?.displayName || '').toLowerCase();
-        const isCreator = Boolean(user && (accountName === 'ositoyt360' || profileName === 'ositoyt360'));
+        const isCreator = isCreatorAccount(user);
         window.ositoEsCreador = isCreator;
         document.body.classList.toggle('creator-mode', isCreator);
+        if (rankForm) rankForm.style.display = isCreator ? 'grid' : 'none';
         if (creatorBadge) {
             creatorBadge.style.display = isCreator ? 'inline-flex' : 'none';
             creatorBadge.textContent = '✨ Creador';
@@ -323,7 +328,7 @@
     }
 
     async function saveRankProfile() {
-        if (!state.currentUser || !db || !window.docFirebase || !window.setDocFirebase) return;
+        if (!isCreatorAccount(state.currentUser) || !db || !window.docFirebase || !window.setDocFirebase) return;
         const { rankInput, rankColorInput } = getAuthElements();
         const rankLabel = sanitizeRankLabel(rankInput?.value || '');
         const rankColor = sanitizeRankColor(rankColorInput?.value || '#00f2fe');
@@ -380,7 +385,7 @@
     }
 
     window.asignarRangoUsuario = async function asignarRangoUsuario(uid, label, color) {
-        if (!window.ositoEsCreador || !uid || !db || !window.docFirebase || !window.setDocFirebase) {
+        if (!isCreatorAccount(state.currentUser) || !uid || !db || !window.docFirebase || !window.setDocFirebase) {
             throw new Error('No tienes permiso para asignar rangos.');
         }
 

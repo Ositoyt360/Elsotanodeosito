@@ -51,6 +51,15 @@ function sanitizeText(str) {
     .trim();
 }
 
+function sanitizeRankLabel(value) {
+  return String(value || '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, 24);
+}
+
+function sanitizeRankColor(value) {
+  const color = String(value || '').trim();
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : '#00f2fe';
+}
+
 function normalizeForModeration(text) {
   return String(text || '')
     .normalize('NFD')
@@ -216,7 +225,7 @@ function markMessageSeenByMessageId(clientId, messageId) {
   return true;
 }
 
-function createMessage({ user, text, clientId = '', isSystem = false, isAdmin = false }) {
+function createMessage({ user, text, clientId = '', isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
   const now = Date.now();
   return {
     id: 'msg_' + now + '_' + Math.random().toString(36).slice(2, 7),
@@ -225,12 +234,14 @@ function createMessage({ user, text, clientId = '', isSystem = false, isAdmin = 
     timestamp: now,
     isSystem: Boolean(isSystem),
     isAdmin: Boolean(isAdmin),
+    rankLabel: sanitizeRankLabel(rankLabel),
+    rankColor: sanitizeRankColor(rankColor),
     clientId: String(clientId || ''),
     seenBy: []
   };
 }
 
-function sendMessageFromClient({ user, text, clientId, ip, isSystem = false, isAdmin = false }) {
+function sendMessageFromClient({ user, text, clientId, ip, isSystem = false, isAdmin = false, rankLabel = '', rankColor = '#00f2fe' }) {
   const session = getClientSession(clientId, ip, user);
   const moderation = checkMuteAndRateLimit(clientId, ip);
   if (moderation.error) {
@@ -259,7 +270,9 @@ function sendMessageFromClient({ user, text, clientId, ip, isSystem = false, isA
     text: cleanText,
     clientId: session.clientId,
     isSystem,
-    isAdmin
+    isAdmin,
+    rankLabel,
+    rankColor
   });
 
   messages.push(newMsg);
@@ -292,14 +305,16 @@ app.get('/api/chat/poll', (req, res) => {
 });
 
 app.post('/api/chat/send', (req, res) => {
-  const { user, text, clientId, isSystem, isAdmin } = req.body || {};
+  const { user, text, clientId, isSystem, isAdmin, rankLabel, rankColor } = req.body || {};
   const result = sendMessageFromClient({
     user,
     text,
     clientId: clientId || req.ip,
     ip: req.ip || '127.0.0.1',
     isSystem: Boolean(isSystem),
-    isAdmin: Boolean(isAdmin)
+    isAdmin: Boolean(isAdmin),
+    rankLabel,
+    rankColor
   });
 
   if (result.error) {
@@ -472,7 +487,9 @@ if (wss) {
             clientId,
             ip: req.socket.remoteAddress || req.ip || '127.0.0.1',
             isSystem: Boolean(data.isSystem),
-            isAdmin: Boolean(data.isAdmin)
+            isAdmin: Boolean(data.isAdmin),
+            rankLabel: data.rankLabel,
+            rankColor: data.rankColor
           });
 
           if (result.error) {

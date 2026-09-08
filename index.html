@@ -2404,7 +2404,11 @@
             }
 
             function isCreatorView() {
-                return Boolean(window.ositoEsCreador);
+                const currentEmail = normalize(window.firebaseAuth?.currentUser?.email || window.ositoCurrentUserProfile?.email);
+                const currentName = normalize(getUserName());
+                return Boolean(window.ositoEsCreador)
+                    || currentEmail === 'ositoy360@elsotanodeosito.com'
+                    || currentName === 'ositoy360';
             }
 
             function getMessageAgeMs(message) {
@@ -2439,14 +2443,17 @@
 
                 const actions = [];
                 if (canEditOwnMessage(message)) {
-                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-edit-btn" data-action="edit">Editar</button>');
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-edit-btn" data-action="edit"><span aria-hidden="true">✎</span> Editar</button>');
                 }
                 if (isOwnMessage(message) && !isDeletedMessage(message)) {
-                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-delete-btn" data-action="delete">Borrar</button>');
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-delete-btn" data-action="delete"><span aria-hidden="true">🗑</span> Borrar</button>');
+                }
+                if (isCreatorView() && !isOwnMessage(message) && !isDeletedMessage(message)) {
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-mod-delete-btn" data-action="mod-delete"><span aria-hidden="true">🛡</span> Mod borrar</button>');
                 }
                 if (isDeletedMessage(message) && isCreatorView()) {
                     const revealed = revealedDeletedMessages.has(message.id);
-                    actions.push(`<button type="button" class="lc-msg-action-btn lc-msg-reveal-btn" data-action="reveal">${revealed ? 'Ocultar' : 'Ver mensaje'}</button>`);
+                    actions.push(`<button type="button" class="lc-msg-action-btn lc-msg-reveal-btn" data-action="reveal"><span aria-hidden="true">${revealed ? '🙈' : '👁'}</span> ${revealed ? 'Ocultar' : 'Ver mensaje'}</button>`);
                 }
                 if (!actions.length) return '';
                 return `<div class="lc-msg-actions">${actions.join('')}</div>`;
@@ -2517,12 +2524,16 @@
                 if (actionsRoot) {
                     const editBtn = actionsRoot.querySelector('[data-action="edit"]');
                     const deleteBtn = actionsRoot.querySelector('[data-action="delete"]');
+                    const modDeleteBtn = actionsRoot.querySelector('[data-action="mod-delete"]');
                     const revealBtn = actionsRoot.querySelector('[data-action="reveal"]');
                     if (editBtn) {
                         editBtn.addEventListener('click', () => requestEditMessage(message));
                     }
                     if (deleteBtn) {
                         deleteBtn.addEventListener('click', () => requestDeleteMessage(message));
+                    }
+                    if (modDeleteBtn) {
+                        modDeleteBtn.addEventListener('click', () => requestModeratorDeleteMessage(message));
                     }
                     if (revealBtn) {
                         revealBtn.addEventListener('click', () => toggleDeletedMessageReveal(message.id));
@@ -2693,13 +2704,15 @@
                 const updated = {
                     ...message,
                     text: cleanText,
-                    editedAt: Date.now()
+                    editedAt: Date.now(),
+                    updatedAt: Date.now()
                 };
                 updateLocalMessage(message.id, updated);
                 if (firebaseChatReady) {
                     await updateFirebaseMessage(message.id, {
                         text: cleanText,
-                        editedAt: updated.editedAt
+                        editedAt: updated.editedAt,
+                        updatedAt: updated.updatedAt
                     });
                 }
             }
@@ -2714,7 +2727,8 @@
                     deletedAt: Date.now(),
                     deletedBy: window.firebaseAuth?.currentUser?.uid || CLIENT_ID,
                     deletedByUser: getUserName(),
-                    deletedText
+                    deletedText,
+                    updatedAt: Date.now()
                 };
                 revealedDeletedMessages.delete(message.id);
                 updateLocalMessage(message.id, updated);
@@ -2726,6 +2740,35 @@
                         deletedBy: updated.deletedBy,
                         deletedByUser: updated.deletedByUser,
                         deletedText
+                    });
+                }
+            }
+
+            async function requestModeratorDeleteMessage(message) {
+                if (!message || message.isSystem || !isCreatorView() || isDeletedMessage(message)) return;
+                if (!window.confirm(`¿Borrar el mensaje de ${message.user || 'este usuario'} para todos?`)) return;
+                const deletedText = String(message.text || '').trim();
+                const updated = {
+                    ...message,
+                    text: 'Mensaje eliminado',
+                    isDeleted: true,
+                    deletedAt: Date.now(),
+                    deletedBy: window.firebaseAuth?.currentUser?.uid || 'creator',
+                    deletedByUser: getUserName(),
+                    deletedText,
+                    updatedAt: Date.now()
+                };
+                revealedDeletedMessages.delete(message.id);
+                updateLocalMessage(message.id, updated);
+                if (firebaseChatReady) {
+                    await updateFirebaseMessage(message.id, {
+                        text: 'Mensaje eliminado',
+                        isDeleted: true,
+                        deletedAt: updated.deletedAt,
+                        deletedBy: updated.deletedBy,
+                        deletedByUser: updated.deletedByUser,
+                        deletedText,
+                        updatedAt: updated.updatedAt
                     });
                 }
             }
@@ -3274,7 +3317,7 @@
             window.ejecutarAdminBroadcast = publishFirebaseAnnouncement;
             window.ejecutarAdminClear = clearFirebaseChat;
             window.ejecutarAdminMute = function() {};
-            window.eliminarMensajeAdmin = requestDeleteMessage;
+            window.eliminarMensajeAdmin = requestModeratorDeleteMessage;
 
             document.addEventListener('DOMContentLoaded', () => {
                 const form = document.getElementById('livechat-form');

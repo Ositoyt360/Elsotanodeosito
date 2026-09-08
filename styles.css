@@ -2605,40 +2605,56 @@ body.creator-mode .livechat-admin-trigger {
 
 .lc-msg-actions {
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 7px;
     justify-content: flex-end;
-    margin-top: 6px;
+    margin-top: 7px;
     flex-wrap: wrap;
 }
 
 .lc-msg-action-btn {
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid rgba(139, 230, 255, 0.32) !important;
     border-radius: 999px;
-    padding: 3px 8px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #e5eff5;
-    font-size: 9px;
+    min-height: 26px;
+    padding: 5px 10px !important;
+    background: linear-gradient(135deg, rgba(27, 48, 59, 0.98), rgba(11, 24, 31, 0.98)) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    color: #e5eff5 !important;
+    font-family: inherit;
+    font-size: 10px !important;
     font-weight: 800;
+    line-height: 1;
     cursor: pointer;
-    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .lc-msg-action-btn:hover {
     transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(88, 255, 154, 0.28);
+    background: linear-gradient(135deg, rgba(34, 69, 79, 1), rgba(15, 42, 48, 1)) !important;
+    border-color: rgba(88, 255, 154, 0.7) !important;
+    box-shadow: 0 5px 14px rgba(0, 242, 254, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .lc-msg-edit-btn {
-    color: #ffe36e;
+    border-color: rgba(255, 227, 110, 0.5) !important;
+    color: #ffe36e !important;
 }
 
 .lc-msg-delete-btn {
-    color: #ff8d8d;
+    border-color: rgba(255, 141, 141, 0.52) !important;
+    color: #ff9f9f !important;
+}
+
+.lc-msg-mod-delete-btn {
+    border-color: rgba(255, 103, 151, 0.62) !important;
+    color: #ff91bc !important;
 }
 
 .lc-msg-reveal-btn {
-    color: #8be6ff;
+    border-color: rgba(139, 230, 255, 0.62) !important;
+    color: #8be6ff !important;
 }
 
 .lc-msg.other {

@@ -2443,6 +2443,8 @@ body.creator-mode .livechat-admin-trigger {
     display: inline-flex;
     align-items: center;
     gap: 7px;
+    row-gap: 5px;
+    flex-wrap: wrap;
     min-width: 0;
 }
 
@@ -2517,18 +2519,54 @@ body.creator-mode .livechat-admin-trigger {
 }
 
 .lc-creator-badge {
+    position: relative;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
-    margin-left: 5px;
-    padding: 2px 5px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #ffe36e, #ff9f1a);
-    color: #251600;
+    gap: 4px;
+    margin-left: 2px;
+    padding: 4px 9px 4px 7px;
+    border: 1px solid rgba(255, 225, 119, 0.9);
+    border-radius: 7px 12px 7px 12px;
+    background: linear-gradient(135deg, #fff2a8 0%, #ffc928 42%, #ed7a00 100%);
+    color: #321b00;
     font-size: 8px;
     font-weight: 900;
-    letter-spacing: 0.5px;
-    animation: creatorBadgePulse 1.8s ease-in-out infinite;
+    letter-spacing: 0.8px;
+    line-height: 1;
+    text-transform: uppercase;
+    box-shadow: 0 0 7px rgba(255, 190, 44, 0.75), 0 0 16px rgba(255, 142, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    animation: creatorBadgeFloat 2.2s ease-in-out infinite;
     vertical-align: middle;
+}
+
+.lc-creator-badge::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.75) 47%, transparent 68%);
+    transform: translateX(-135%);
+    animation: creatorBadgeShine 3.2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.lc-creator-badge-icon {
+    position: relative;
+    z-index: 1;
+    display: inline-grid;
+    width: 13px;
+    height: 13px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(71, 35, 0, 0.2);
+    color: #fff8c9;
+    font-size: 9px;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+}
+
+.lc-creator-badge-label {
+    position: relative;
+    z-index: 1;
 }
 
 @keyframes creatorNameGlow {
@@ -2536,9 +2574,14 @@ body.creator-mode .livechat-admin-trigger {
     50% { text-shadow: 0 0 12px rgba(255, 174, 0, 0.8); color: #fff3ad; }
 }
 
-@keyframes creatorBadgePulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 174, 0, 0); }
-    50% { transform: scale(1.06); box-shadow: 0 0 10px rgba(255, 174, 0, 0.55); }
+@keyframes creatorBadgeFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-2px) rotate(-1deg); }
+}
+
+@keyframes creatorBadgeShine {
+    0%, 35% { transform: translateX(-135%); }
+    65%, 100% { transform: translateX(135%); }
 }
 
 @keyframes rankBadgePulse {
@@ -2591,7 +2634,7 @@ body.creator-mode .livechat-admin-trigger {
 .lc-deleted-badge {
     display: inline-flex;
     align-items: center;
-    margin-left: 5px;
+    margin-left: 1px;
     padding: 2px 6px;
     border-radius: 999px;
     border: 1px solid rgba(255, 107, 107, 0.35);

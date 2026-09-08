@@ -11,6 +11,7 @@
         livechatUnsubscribe: null,
         profileUnsubscribe: null,
         rankUnsubscribe: null,
+        publicProfileUnsubscribe: null,
         aiSeededFromDom: false,
         authSubmitting: false,
     };
@@ -374,6 +375,10 @@
             state.rankUnsubscribe();
             state.rankUnsubscribe = null;
         }
+        if (typeof state.publicProfileUnsubscribe === 'function') {
+            state.publicProfileUnsubscribe();
+            state.publicProfileUnsubscribe = null;
+        }
         if (!user || !db || !window.docFirebase || !window.onSnapshotFirebase) return;
 
         const applyRank = (data) => {
@@ -411,6 +416,22 @@
             },
             (error) => console.warn('[FirebaseLiveChat] No se pudo sincronizar la etiqueta.', error)
         );
+
+        state.publicProfileUnsubscribe = window.onSnapshotFirebase(
+            window.docFirebase(db, 'livechat', `profile_${user.uid}`),
+            (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.data() || {};
+                state.profile = {
+                    ...(state.profile || {}),
+                    photoURL: data.photoURL || state.profile?.photoURL || '',
+                    rankLabel: sanitizeRankLabel(data.rankLabel || state.profile?.rankLabel || ''),
+                    rankColor: sanitizeRankColor(data.rankColor || state.profile?.rankColor || '#00f2fe')
+                };
+                setPreview(state.profile, user);
+            },
+            (error) => console.warn('[FirebaseLiveChat] No se pudo sincronizar el perfil publico.', error)
+        );
     }
 
     window.asignarRangoUsuario = async function asignarRangoUsuario(uid, label, color) {
@@ -431,6 +452,12 @@
         }
 
         await window.setDocFirebase(window.docFirebase(db, 'livechat', `rank_${uid}`), {
+            uid: String(uid),
+            rankLabel,
+            rankColor,
+            updatedAt: Date.now()
+        }, { merge: true });
+        await window.setDocFirebase(window.docFirebase(db, 'livechat', `profile_${uid}`), {
             uid: String(uid),
             rankLabel,
             rankColor,
@@ -781,6 +808,11 @@
                     photoURL,
                     updatedAt: Date.now()
                 }, { merge: true });
+                await window.setDocFirebase(window.docFirebase(db, 'livechat', `profile_${state.currentUser.uid}`), {
+                    uid: state.currentUser.uid,
+                    photoURL,
+                    updatedAt: Date.now()
+                }, { merge: true });
             }
 
             // Auth solo acepta URLs validas; Firestore conserva tambien el respaldo local.
@@ -908,6 +940,10 @@
                 if (typeof state.rankUnsubscribe === 'function') {
                     state.rankUnsubscribe();
                     state.rankUnsubscribe = null;
+                }
+                if (typeof state.publicProfileUnsubscribe === 'function') {
+                    state.publicProfileUnsubscribe();
+                    state.publicProfileUnsubscribe = null;
                 }
                 showUnauthenticatedView();
                 return;

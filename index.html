@@ -2820,6 +2820,17 @@
                     } catch (error) {
                         console.warn('[LiveChat] No se pudo leer la etiqueta sincronizada.', error);
                     }
+                    try {
+                        const publicProfileSnapshot = await window.getDocFirebase(
+                            window.docFirebase(window.dbFirebase, 'livechat', `profile_${currentUser.uid}`)
+                        );
+                        if (publicProfileSnapshot.exists()) {
+                            profile = { ...profile, ...(publicProfileSnapshot.data() || {}) };
+                            window.ositoCurrentUserProfile = profile;
+                        }
+                    } catch (error) {
+                        console.warn('[LiveChat] No se pudo leer el perfil publico.', error);
+                    }
                 }
                 const messageData = {
                     user: String(user || getUserName()).trim().slice(0, 24) || 'Invitado',
@@ -3183,6 +3194,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=firebase-spark-20260908-12"></script>
+    <script src="firebase-integration.js?v=firebase-profile-sync-20260908-13"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

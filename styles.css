@@ -217,6 +217,23 @@ body {
     margin-top: 2px;
 }
 
+.auth-creator-badge {
+    width: fit-content;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffe36e, #ff9f1a);
+    color: #251600 !important;
+    font-size: 10px !important;
+    font-weight: 900;
+    letter-spacing: .4px;
+    animation: creatorBadgePulse 1.8s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(255, 174, 0, .35);
+}
+
+.creator-preview-name {
+    animation: creatorNameGlow 2.4s ease-in-out infinite;
+}
+
 .auth-avatar-preview,
 .auth-photo-thumb {
     width: 54px;
@@ -282,6 +299,68 @@ body {
 .auth-field select:focus {
     border-color: rgba(0, 242, 254, 0.55);
     box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.12);
+}
+
+.password-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.password-control input {
+    flex: 1;
+    min-width: 0;
+}
+
+.password-toggle {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .06);
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    border-color: rgba(88, 255, 154, .55);
+    box-shadow: 0 0 12px rgba(88, 255, 154, .18);
+}
+
+.account-tools {
+    max-width: 560px;
+    margin: 18px auto 0;
+    padding: 16px;
+    border: 1px solid rgba(88, 255, 154, .22);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(88, 255, 154, .08), rgba(0, 242, 254, .04));
+    animation: accountToolsReveal .35s ease both;
+}
+
+.account-tools-heading {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 12px;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.account-tools-heading small {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.change-password-form {
+    display: grid;
+    gap: 12px;
+}
+
+@keyframes accountToolsReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .auth-register-only {
@@ -2103,7 +2182,7 @@ body.compact-layout .promo-title-main {
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
     box-shadow: 0 30px 100px -20px rgba(0, 0, 0, 1), 0 0 25px rgba(88, 255, 154, 0.12);
-    overflow: hidden;
+    overflow: visible;
     animation: chatFloatIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -2248,6 +2327,19 @@ body.compact-layout .promo-title-main {
 
 .livechat-admin-trigger {
     display: none;
+    border: 1px solid rgba(255, 211, 91, .45);
+    border-radius: 999px;
+    padding: 5px 8px;
+    background: rgba(255, 211, 91, .12);
+    color: #ffe36e;
+    font-size: 9px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.livechat-admin-trigger:hover {
+    background: rgba(255, 211, 91, .24);
+    box-shadow: 0 0 12px rgba(255, 211, 91, .28);
 }
 
 body.creator-mode .livechat-admin-trigger {
@@ -2515,16 +2607,29 @@ body.creator-mode .livechat-admin-trigger {
 /* Modal Admin Chat */
 .livechat-admin-panel {
     display: none;
-    position: absolute;
-    inset: 0;
-    background: rgba(8, 10, 15, 0.95);
+    position: relative;
+    background: rgba(8, 10, 15, 0.72);
+    border-bottom: 1px solid rgba(88, 255, 154, .2);
     backdrop-filter: blur(16px);
     padding: 16px;
-    z-index: 10;
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
     animation: lcAdminIn 0.25s ease forwards;
+}
+
+@media (min-width: 577px) {
+    .livechat-admin-panel {
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 0;
+        width: 350px;
+        max-height: 100%;
+        box-sizing: border-box;
+        border: 1px solid rgba(88, 255, 154, .25);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 30px 100px -20px rgba(0, 0, 0, .9), 0 0 25px rgba(88, 255, 154, .12);
+    }
 }
 
 .livechat-admin-panel.active {
@@ -2567,6 +2672,75 @@ body.creator-mode .livechat-admin-trigger {
     font-size: 12px;
 }
 
+.livechat-admin-panel > .livechat-admin-title:first-child {
+    display: none;
+}
+
+.livechat-admin-close {
+    border: 0;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .08);
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.livechat-admin-field textarea {
+    min-height: 62px;
+    resize: vertical;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+}
+
+.livechat-admin-field input[type="file"] {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.livechat-admin-image-preview {
+    width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(88, 255, 154, .3);
+}
+
+.lc-publication-image {
+    display: block;
+    width: 100%;
+    max-height: 260px;
+    margin-top: 8px;
+    object-fit: cover;
+    border-radius: 9px;
+}
+
+.livechat-admin-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.lc-del-btn {
+    align-self: flex-end;
+    margin-top: 3px;
+    border: 0;
+    border-radius: 6px;
+    padding: 2px 5px;
+    background: rgba(255, 71, 87, .14);
+    color: #ff9ca5;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.lc-del-btn:hover {
+    background: rgba(255, 71, 87, .3);
+}
+
 .livechat-admin-btn {
     padding: 10px;
     border-radius: 8px;
@@ -2601,6 +2775,16 @@ body.creator-mode .livechat-admin-trigger {
     .livechat-section {
         width: calc(100vw - 28px);
         height: calc(100vh - 86px);
+        overflow: hidden;
+    }
+
+    .livechat-admin-panel {
+        position: relative;
+        left: auto;
+        top: auto;
+        width: auto;
+        max-height: 48%;
+        border-radius: 0;
     }
 
     .lc-msg {

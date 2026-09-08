@@ -81,6 +81,12 @@
             status: el('auth-status'),
             email: el('auth-email'),
             password: el('auth-password'),
+            passwordToggle: el('auth-password-toggle'),
+            creatorBadge: el('auth-creator-badge'),
+            accountTools: el('account-tools'),
+            changePasswordForm: el('change-password-form'),
+            newPassword: el('new-password'),
+            newPasswordToggle: el('new-password-toggle'),
             registerOnly: el('auth-register-only'),
             gender: el('auth-gender'),
             photoButton: el('auth-photo-button'),
@@ -113,7 +119,8 @@
             previewName,
             previewEmail,
             avatarPreview,
-            photoThumb
+            photoThumb,
+            creatorBadge
         } = getAuthElements();
         const headerAvatar = el('header-profile-avatar');
         const livechatAvatar = el('livechat-current-avatar');
@@ -143,6 +150,11 @@
         const isCreator = Boolean(user && (accountName === 'ositoyt360' || profileName === 'ositoyt360'));
         window.ositoEsCreador = isCreator;
         document.body.classList.toggle('creator-mode', isCreator);
+        if (creatorBadge) {
+            creatorBadge.style.display = isCreator ? 'inline-flex' : 'none';
+            creatorBadge.textContent = '✨ Creador';
+        }
+        if (previewName) previewName.classList.toggle('creator-preview-name', isCreator);
         if (!isCreator && window.localStorage) {
             localStorage.removeItem('osito_chat_admin_key');
         }
@@ -176,7 +188,7 @@
     }
 
     function showUnauthenticatedView() {
-        const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
         setGuestMode(false);
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
@@ -185,6 +197,7 @@
         if (profilePhotoButton) profilePhotoButton.style.display = 'none';
         if (previewPhotoButton) previewPhotoButton.style.display = 'none';
         if (readyButton) readyButton.style.display = 'none';
+        if (accountTools) accountTools.style.display = 'none';
         setStatus('Listo para entrar.', 'neutral');
         setMode(state.mode);
         setPreview(null, null);
@@ -196,7 +209,7 @@
     }
 
     function showAuthenticatedView(profile, user) {
-        const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton } = getAuthElements();
+        const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
         setGuestMode(false);
         if (form) form.style.display = 'none';
         if (logout) logout.style.display = 'inline-flex';
@@ -205,6 +218,7 @@
         if (profilePhotoButton) profilePhotoButton.style.display = 'inline-flex';
         if (previewPhotoButton) previewPhotoButton.style.display = 'inline-flex';
         if (readyButton) readyButton.style.display = 'inline-flex';
+        if (accountTools) accountTools.style.display = 'block';
         setPreview(profile, user);
         setStatus(`Sesion activa: ${user?.email || 'usuario autenticado'}.`, 'success');
         if (typeof window.mostrarNotificacion === 'function') {
@@ -328,16 +342,29 @@
         }
     }
 
+    async function previewProfilePhoto(file) {
+        const previewURL = await photoFileToDataUrl(file);
+        if (!previewURL || !state.currentUser) return;
+        state.profile = { ...(state.profile || {}), photoURL: previewURL };
+        window.ositoCurrentUserProfile = { ...(window.ositoCurrentUserProfile || {}), photoURL: previewURL };
+        setPreview(state.profile, state.currentUser);
+    }
+
     function renderAiMessages(messages) {
         const container = document.getElementById('ai-messages');
         if (!container) return;
 
+        const visibleMessages = messages.filter((item) => {
+            const text = String(item?.text || '').toLowerCase();
+            return !text.includes('esto encontre sobre rosebud');
+        });
+
         container.innerHTML = '';
-        if (!messages.length) {
+        if (!visibleMessages.length) {
             return;
         }
 
-        messages.forEach((item) => {
+        visibleMessages.forEach((item) => {
             const row = document.createElement('div');
             row.className = `msg ${item.role === 'user' ? 'user' : 'bot'}`;
             row.textContent = item.text || '';
@@ -438,6 +465,7 @@
                         isCreator: Boolean(data.isCreator),
                         isSystem: Boolean(data.isSystem),
                         isAdmin: Boolean(data.isAdmin),
+                        imageURL: data.imageURL || '',
                         seenBy: Array.isArray(data.seenBy) ? data.seenBy : []
                     });
                 });
@@ -579,11 +607,6 @@
 
     async function updateProfilePhoto(file) {
         if (!file || !state.currentUser) return;
-        if (!storage || !window.storageRefFirebase || !window.uploadBytesFirebase || !window.getDownloadURLFirebase) {
-            setStatus('Storage no esta disponible para guardar la foto.', 'error');
-            return;
-        }
-
         try {
             setStatus('Guardando tu foto de perfil...', 'neutral');
             const photoURL = await uploadPhotoIfNeeded(state.currentUser, file);
@@ -608,6 +631,41 @@
         } catch (error) {
             console.error('[FirebaseProfilePhoto]', error);
             setStatus('No se pudo guardar la foto. Revisa Storage y sus reglas.', 'error');
+        }
+    }
+
+    function togglePasswordVisibility(input, button) {
+        if (!input || !button) return;
+        const visible = input.type === 'text';
+        input.type = visible ? 'password' : 'text';
+        button.textContent = visible ? '👁️' : '🙈';
+        button.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    }
+
+    async function handleChangePassword(event) {
+        event.preventDefault();
+        const { newPassword } = getAuthElements();
+        const password = String(newPassword?.value || '');
+        if (!state.currentUser || !password) return;
+        if (password.length < 6) {
+            setStatus('La contraseña debe tener al menos 6 caracteres.', 'error');
+            return;
+        }
+        if (!window.updatePasswordFirebase) {
+            setStatus('La función para cambiar la contraseña no está disponible.', 'error');
+            return;
+        }
+        try {
+            await window.updatePasswordFirebase(state.currentUser, password);
+            if (newPassword) newPassword.value = '';
+            setStatus('Contraseña actualizada correctamente.', 'success');
+        } catch (error) {
+            console.error('[FirebaseAuth] Cambio de contraseña', error);
+            if (String(error?.code || '').includes('auth/requires-recent-login')) {
+                setStatus('Por seguridad, vuelve a iniciar sesión para cambiarla.', 'error');
+            } else {
+                setStatus('No se pudo cambiar la contraseña.', 'error');
+            }
         }
     }
 
@@ -706,6 +764,11 @@
             previewPhotoInput,
             photoButton,
             photoInput,
+            password,
+            passwordToggle,
+            changePasswordForm,
+            newPassword,
+            newPasswordToggle,
             modeButtons
         } = getAuthElements();
 
@@ -718,6 +781,10 @@
         if (form) {
             form.addEventListener('submit', handleAuthSubmit);
         }
+
+        if (passwordToggle) passwordToggle.addEventListener('click', () => togglePasswordVisibility(password, passwordToggle));
+        if (newPasswordToggle) newPasswordToggle.addEventListener('click', () => togglePasswordVisibility(newPassword, newPasswordToggle));
+        if (changePasswordForm) changePasswordForm.addEventListener('submit', handleChangePassword);
 
         if (logout) {
             logout.addEventListener('click', handleSignOut);
@@ -740,6 +807,7 @@
                     profilePhotoInput.value = '';
                     return;
                 }
+                previewProfilePhoto(file);
                 updateProfilePhoto(file);
                 profilePhotoInput.value = '';
             });
@@ -754,6 +822,7 @@
                     previewPhotoInput.value = '';
                     return;
                 }
+                previewProfilePhoto(file);
                 updateProfilePhoto(file);
                 previewPhotoInput.value = '';
             });

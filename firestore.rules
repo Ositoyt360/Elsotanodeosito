@@ -6,6 +6,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isCreator() {
+      return signedIn() && request.auth.token.email == 'ositoyt360@elsotanodeosito.com';
+    }
+
     match /users/{userId} {
       allow read, create, update: if signedIn() && request.auth.uid == userId;
       allow delete: if false;
@@ -21,7 +25,7 @@ service cloud.firestore {
       // Los datos privados del usuario siguen protegidos en /users y /aiChats.
       allow read, create: if true;
       allow update: if true;
-      allow delete: if false;
+      allow delete: if isCreator();
     }
   }
 }

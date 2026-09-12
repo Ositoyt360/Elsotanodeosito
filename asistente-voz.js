@@ -571,6 +571,16 @@
             : '<span class="btn-icon">🔇</span> Voz Off';
     }
 
+    // Tiempos de espera del micrófono (en milisegundos).
+    const ESPERA_SIN_HABLAR_MS = 15000; // Si nadie dice nada, se apaga a los 15s.
+    const ESPERA_TRAS_HABLAR_MS = 2000; // Al terminar de hablar, espera 2s de silencio y corta.
+
+    function esModoInvitado() {
+        if (typeof window.osEsInvitado === 'function') return window.osEsInvitado();
+        if (window.ositoGuestMode) return true;
+        return document.body.classList.contains('solo-invitado');
+    }
+
     class PushToTalkAssistant {
         constructor() {
             this.state = State.IDLE;
@@ -578,6 +588,13 @@
             this.isListening = false;
             this.voiceOutputEnabled = localStorage.getItem('osito_ai_voz') !== 'false';
             this.pendingSpeech = null;
+            this.accumulatedTranscript = '';
+            this.hasHeardSpeech = false;
+            this.sessionStartTime = 0;
+            this.lastSpeechTime = 0;
+            this.deadlineTimeoutId = null;
+            this.manualStop = false;
+            this.intentionalStop = false;
             this.setupRecognition();
             this.syncUI();
         }
@@ -599,27 +616,55 @@
 
             this.recognition = new SpeechRecognition();
             this.recognition.lang = 'es-SV';
-            this.recognition.continuous = false;
-            this.recognition.interimResults = false;
+            // continuous + interimResults nos deja controlar nosotros mismos cuándo
+            // cortar el micrófono, en vez de depender del corte automático del
+            // navegador (que suele cerrar el audio a los pocos segundos aunque
+            // digamos "continuous"). Además, si el navegador lo corta antes de
+            // tiempo, lo reiniciamos nosotros mismos de forma transparente.
+            this.recognition.continuous = true;
+            this.recognition.interimResults = true;
             this.recognition.maxAlternatives = 1;
 
             this.recognition.onstart = () => {
                 this.isListening = true;
                 this.setState(State.LISTENING, { label: 'Escuchando... habla ahora' });
+                this.scheduleDeadlineCheck();
             };
 
             this.recognition.onresult = (event) => {
-                const transcript = Array.from(event.results)
-                    .map((result) => result[0].transcript)
-                    .join(' ')
-                    .trim();
+                let finalText = '';
+                let interimText = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        finalText += `${result[0].transcript} `;
+                    } else {
+                        interimText += `${result[0].transcript} `;
+                    }
+                }
+                finalText = finalText.trim();
+                interimText = interimText.trim();
 
-                if (transcript) {
-                    this.process(transcript);
+                if (finalText) this.accumulatedTranscript = finalText;
+                else if (interimText) this.pendingSpeech = interimText;
+
+                if (finalText || interimText) {
+                    this.hasHeardSpeech = true;
+                    this.lastSpeechTime = Date.now();
+                    setStatusLabel('Escuchando... habla ahora');
+                    this.scheduleDeadlineCheck();
                 }
             };
 
             this.recognition.onerror = (event) => {
+                // "no-speech" y "aborted" ocurren seguido como parte normal del
+                // reinicio silencioso del micrófono; dejamos que "onend" decida
+                // si hay que reiniciar o finalizar, sin mostrar error alguno.
+                if (event.error === 'no-speech' || event.error === 'aborted') {
+                    return;
+                }
+                this.manualStop = true;
+                this.detenerTemporizadorDeadline();
                 this.isListening = false;
                 const label = event.error === 'not-allowed'
                     ? 'Permiso de microfono denegado'
@@ -633,11 +678,92 @@
 
             this.recognition.onend = () => {
                 this.isListening = false;
+                this.detenerTemporizadorDeadline();
+
+                const fueUnCorteIntencional = this.intentionalStop || this.manualStop;
+                this.intentionalStop = false;
+
+                if (!fueUnCorteIntencional) {
+                    // El navegador cortó el micrófono por su cuenta. Si todavía no
+                    // se cumplen nuestros tiempos de espera (15s sin hablar o 2s
+                    // de silencio tras la última palabra), lo reiniciamos solo.
+                    const ahora = Date.now();
+                    const siguePendienteDeHablar = !this.hasHeardSpeech
+                        && (ahora - this.sessionStartTime) < ESPERA_SIN_HABLAR_MS;
+                    const siguePendienteDeSilencioFinal = this.hasHeardSpeech
+                        && (ahora - this.lastSpeechTime) < ESPERA_TRAS_HABLAR_MS;
+
+                    if (siguePendienteDeHablar || siguePendienteDeSilencioFinal) {
+                        try {
+                            this.recognition.start();
+                            return;
+                        } catch (error) {
+                            console.warn('[VoiceAssistant] No se pudo reiniciar el micrófono', error);
+                        }
+                    }
+                }
+
+                const transcript = (this.accumulatedTranscript || this.pendingSpeech || '').trim();
+                this.accumulatedTranscript = '';
+                this.pendingSpeech = null;
+                if (transcript) {
+                    this.process(transcript);
+                    return;
+                }
                 if (this.state === State.LISTENING) {
                     this.setState(State.IDLE, { label: DEFAULT_HINT });
                 }
                 setStatusLabel(DEFAULT_HINT);
             };
+        }
+
+        // Calcula cuánto falta para el próximo límite de tiempo (15s sin hablar,
+        // o 2s de silencio tras la última palabra) y programa una sola revisión
+        // en ese momento. Se reprograma cada vez que llega audio nuevo, así que
+        // sobrevive sin problema a los reinicios silenciosos del micrófono.
+        scheduleDeadlineCheck() {
+            this.detenerTemporizadorDeadline();
+            const deadline = this.hasHeardSpeech
+                ? this.lastSpeechTime + ESPERA_TRAS_HABLAR_MS
+                : this.sessionStartTime + ESPERA_SIN_HABLAR_MS;
+            const delay = Math.max(0, deadline - Date.now());
+            this.deadlineTimeoutId = setTimeout(() => this.checkDeadline(), delay);
+        }
+
+        checkDeadline() {
+            if (!this.isListening) return;
+            const ahora = Date.now();
+            if (this.hasHeardSpeech) {
+                if ((ahora - this.lastSpeechTime) >= ESPERA_TRAS_HABLAR_MS) {
+                    this.finalizarEscucha();
+                } else {
+                    this.scheduleDeadlineCheck();
+                }
+            } else if ((ahora - this.sessionStartTime) >= ESPERA_SIN_HABLAR_MS) {
+                setStatusLabel('No escuché nada, inténtalo de nuevo.');
+                this.finalizarEscucha();
+            } else {
+                this.scheduleDeadlineCheck();
+            }
+        }
+
+        // Corte "a propósito": ya se cumplió el tiempo de espera que corresponde,
+        // así que aquí sí terminamos de verdad (a diferencia de un corte
+        // inesperado del navegador, que se reinicia solo).
+        finalizarEscucha() {
+            this.intentionalStop = true;
+            try {
+                this.recognition?.stop();
+            } catch (error) {
+                console.warn('[VoiceAssistant]', error);
+            }
+        }
+
+        detenerTemporizadorDeadline() {
+            if (this.deadlineTimeoutId) {
+                clearTimeout(this.deadlineTimeoutId);
+                this.deadlineTimeoutId = null;
+            }
         }
 
         openPanel() {
@@ -668,7 +794,14 @@
             }
 
             if (this.isListening) {
+                this.manualStop = true;
                 this.recognition?.stop();
+                return;
+            }
+
+            if (esModoInvitado()) {
+                showToast('Inicia sesión para usar el micrófono del asistente.');
+                setStatusLabel('Micrófono disponible solo con cuenta');
                 return;
             }
 
@@ -676,6 +809,14 @@
                 showToast('Este navegador no admite reconocimiento de voz.');
                 return;
             }
+
+            this.manualStop = false;
+            this.intentionalStop = false;
+            this.hasHeardSpeech = false;
+            this.sessionStartTime = Date.now();
+            this.lastSpeechTime = 0;
+            this.accumulatedTranscript = '';
+            this.pendingSpeech = null;
 
             try {
                 this.recognition.start();
@@ -685,7 +826,8 @@
         }
 
         async process(rawText) {
-            this.recognition?.stop();
+            this.manualStop = true;
+            try { this.recognition?.stop(); } catch (error) { /* ya estaba detenido */ }
             this.setState(State.PROCESSING, { label: 'Procesando...', text: rawText });
             setStatusLabel('Procesando...');
             document.dispatchEvent(new CustomEvent('voiceassistant:recognized', { detail: { text: rawText } }));
@@ -700,10 +842,37 @@
                 response = 'No pude completar esa accion. Revisa la conexion con YouTube.';
             }
 
-            await this.speak(response);
+            if (response) {
+                await this.speak(response);
+            } else {
+                // La respuesta ya la habla el panel de IA (index.html).
+                this.setState(State.IDLE, { label: DEFAULT_HINT });
+                setStatusLabel(DEFAULT_HINT);
+            }
         }
 
         async executeCommand(command, rawText) {
+            if (window.OsitoConocimiento && typeof window.OsitoConocimiento.buscarEnBaseConocimiento === 'function') {
+                const ans = window.OsitoConocimiento.buscarEnBaseConocimiento(rawText);
+                if (ans) {
+                    const input = getEl('ai-input');
+                    const form = getEl('ai-form');
+                    if (input && form) {
+                        input.value = rawText;
+                        if (typeof form.requestSubmit === 'function') {
+                            form.requestSubmit();
+                        } else {
+                            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                        }
+                    }
+                    // No hablamos aquí: el panel de IA (index.html) ya muestra y
+                    // lee en voz alta la respuesta al procesar el envío del
+                    // formulario. Hablar también aquí provocaba que ambas voces
+                    // se cancelaran entre sí y no se escuchara nada.
+                    return '';
+                }
+            }
+
             if (command.type === 'open_ai') {
                 this.openPanel();
                 return 'Abrí el panel de inteligencia. Usa el microfono dentro del panel para hablar.';
@@ -860,7 +1029,10 @@
                         form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                     }
                 }
-                return 'Envié tu consulta al panel de inteligencia.';
+                // Igual que arriba: la respuesta real la habla el panel de IA
+                // cuando procese la pregunta, para evitar que dos voces se
+                // corten entre sí y no se escuche ninguna.
+                return '';
             }
 
             return 'No entendi esa orden. Prueba con otra frase.';

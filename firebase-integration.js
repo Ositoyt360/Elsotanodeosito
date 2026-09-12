@@ -1,8 +1,16 @@
 (function () {
     'use strict';
 
+    let modoInicialAuth = 'login';
+    try {
+        if (sessionStorage.getItem('osito_open_register') === '1') {
+            modoInicialAuth = 'register';
+            sessionStorage.removeItem('osito_open_register');
+        }
+    } catch (e) { /* sessionStorage no disponible */ }
+
     const state = {
-        mode: 'login',
+        mode: modoInicialAuth,
         authReady: false,
         currentUser: null,
         profile: null,
@@ -256,6 +264,7 @@
         window.ositoTutorialPendiente = false;
         state.aiSeededFromDom = false;
         state.selectedPhotoFile = null;
+        window.actualizarVisibilidadSeccionesCuenta?.();
     }
 
     function showAuthenticatedView(profile, user) {
@@ -274,6 +283,7 @@
         if (typeof window.mostrarNotificacion === 'function') {
             window.mostrarNotificacion('Conectado: Tu cuenta se sincroniza en la nube.');
         }
+        window.actualizarVisibilidadSeccionesCuenta?.();
     }
 
     function enterAsGuest() {
@@ -288,6 +298,7 @@
         if (readyButton) readyButton.style.display = 'inline-flex';
         setPreview(null, null);
         setStatus('Entraste como invitado. Algunas funciones estan bloqueadas.', 'neutral');
+        window.actualizarVisibilidadSeccionesCuenta?.();
     }
 
     async function loadOrCreateProfile(user, fromRegister = false, registerGender = '', registerPhotoURL = '') {
@@ -1149,6 +1160,16 @@
 
     window.salirDeSesion = handleSignOut;
     window.entrarComoInvitado = enterAsGuest;
+
+    // Permite abrir la pantalla de registro desde cualquier parte del sitio
+    // (por ejemplo, desde el botón "Registrarse" que aparece cuando un
+    // invitado agota el límite de preguntas de la IA).
+    window.irARegistroDesdeIA = function irARegistroDesdeIA() {
+        try {
+            sessionStorage.setItem('osito_open_register', '1');
+        } catch (e) { /* sessionStorage no disponible */ }
+        location.reload();
+    };
 
     if (!window.ositoDisableFirebaseChat && !window.publicarMensajeLiveChat) {
     window.publicarMensajeLiveChat = async function publicarMensajeLiveChat(texto, usuario = 'IA Osito', opciones = {}) {

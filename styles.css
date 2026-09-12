@@ -501,9 +501,7 @@ body {
     border-color: rgba(88, 255, 154, 0.35);
 }
 
-body.guest-mode .livechat-floating-container,
-body.guest-mode #ai-section,
-body.guest-mode #voice-assistant-badge {
+body.guest-mode .livechat-floating-container {
     display: none !important;
 }
 
@@ -677,10 +675,30 @@ header {
     flex-wrap: wrap; gap: 15px; 
 }
 
-.logo { 
-    font-size: 24px; font-weight: 900; letter-spacing: 2px; 
-    background: linear-gradient(45deg, var(--primary-color), #ffffff); 
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+.logo{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    font-size:24px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+.logo span{
+    display:inline-block;
+    background:linear-gradient(45deg,var(--primary-color),#ffffff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:logoFloat 2.5s ease-in-out infinite;
+}
+.logo span:nth-child(1){animation-delay:0s;}
+.logo span:nth-child(2){animation-delay:.25s;}
+.logo span:nth-child(3){animation-delay:.5s;}
+.logo span:nth-child(4){animation-delay:.75s;}
+@keyframes logoFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px) scale(1.05)}
 }
 
 .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -906,6 +924,49 @@ header {
 
 .tab-content.active {
     display: block;
+}
+
+/* Acordeón de secciones exclusivas para cuenta: en vez de mostrar
+   todos los botones en fila, se muestra un solo botón que al tocarlo
+   despliega el resto con animación. */
+.tab-btn-mas {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-expand-chevron {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 12px;
+}
+
+.tab-btn-mas[aria-expanded="true"] .tab-expand-chevron {
+    transform: rotate(180deg);
+}
+
+.tabs-cuenta-extra {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 100%;
+    order: 99;
+}
+
+.tabs-cuenta-extra.expanded {
+    grid-template-rows: 1fr;
+}
+
+.tabs-cuenta-extra-inner {
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 0;
+}
+
+.tabs-cuenta-extra.expanded .tabs-cuenta-extra-inner {
+    padding-top: 10px;
 }
 
 .preset-grid,
@@ -1177,7 +1238,86 @@ header {
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .msg { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
+/* ===== Animación de entrada y salida para todos los botones ===== */
+@keyframes botonEntrada {
+    from { opacity: 0; transform: translateY(8px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+button,
+a.btn-directos-nav {
+    animation: botonEntrada 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.25s ease,
+                filter 0.25s ease,
+                opacity 0.25s ease;
+}
+
+@media (hover: hover) {
+    button:not(:disabled):hover,
+    a.btn-directos-nav:hover {
+        transform: translateY(-2px) scale(1.03);
+        filter: brightness(1.06);
+    }
+}
+
+button:not(:disabled):active,
+a.btn-directos-nav:active {
+    transform: scale(0.92);
+    transition-duration: 0.1s;
+    filter: brightness(0.96);
+}
+
+button:disabled {
+    animation: none;
+}
+
+/* Los iconos/emoji dentro de los botones reaccionan un poco más para
+   que se sientan "vivos" al entrar y salir del botón. */
+.btn-icon {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+    button:hover .btn-icon,
+    a.btn-directos-nav:hover .btn-icon {
+        transform: scale(1.18) rotate(-6deg);
+    }
+}
+
+button:active .btn-icon {
+    transform: scale(0.9) rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    button,
+    a.btn-directos-nav,
+    .btn-icon {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
 body.no-animations * { animation: none !important; transition: none !important; box-shadow: none !important; }
+
+/* Efecto escalonado de entrada para grupos de botones */
+.tabs-container .tab-btn:nth-child(1) { animation-delay: 0s; }
+.tabs-container .tab-btn:nth-child(2) { animation-delay: 0.05s; }
+.preset-grid .btn-action:nth-child(1) { animation-delay: 0s; }
+.preset-grid .btn-action:nth-child(2) { animation-delay: 0.05s; }
+.preset-grid .btn-action:nth-child(3) { animation-delay: 0.1s; }
+.preset-grid .btn-action:nth-child(4) { animation-delay: 0.15s; }
+.ai-suggestions .ai-suggestion:nth-child(1) { animation-delay: 0s; }
+.ai-suggestions .ai-suggestion:nth-child(2) { animation-delay: 0.06s; }
+.ai-suggestions .ai-suggestion:nth-child(3) { animation-delay: 0.12s; }
+.ai-suggestions .ai-suggestion:nth-child(4) { animation-delay: 0.18s; }
+.tabs-cuenta-extra-inner .tab-btn:nth-child(1) { animation-delay: 0s; }
+.tabs-cuenta-extra-inner .tab-btn:nth-child(2) { animation-delay: 0.05s; }
+.tabs-cuenta-extra-inner .tab-btn:nth-child(3) { animation-delay: 0.1s; }
+.tabs-cuenta-extra-inner .tab-btn:nth-child(4) { animation-delay: 0.15s; }
+.tabs-cuenta-extra-inner .tab-btn:nth-child(5) { animation-delay: 0.2s; }
+.tabs-cuenta-extra-inner .tab-btn:nth-child(6) { animation-delay: 0.25s; }
 
 body.ultra-performance .ambient-glow,
 body.ultra-performance .gamer-grid,
@@ -1189,6 +1329,28 @@ body.ultra-performance * {
     animation: none !important;
     transition-duration: 0.01ms !important;
     box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+    will-change: auto !important;
+    background-attachment: scroll !important;
+}
+
+/* Modo ultra: pensado para celulares con 1GB de RAM o menos.
+   Se apaga todo lo que exige GPU (blur, sombras, degradados animados)
+   para intentar superar los 1000 FPS en equipos de gama muy baja. */
+body.ultra-performance .video-card:hover,
+body.ultra-performance .social-links a:hover,
+body.ultra-performance .btn-action:hover,
+body.ultra-performance .tab-btn:hover {
+    transform: none !important;
+}
+
+body.ultra-performance #btn-ultra-performance,
+body.ultra-performance #header-btn-ultra-performance {
+    background: linear-gradient(135deg, #00c86e, #00875a) !important;
+    color: #04140c !important;
 }
 
 /* REGLAS MÓVILES */
@@ -3237,3 +3399,106 @@ body.creator-mode .livechat-admin-trigger {
         margin-top: 16px;
     }
 }
+
+.ai-limite-registro-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    background: linear-gradient(135deg, #ff6a6a, #ff3d3d);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ai-limite-registro-btn:hover {
+    filter: brightness(1.08);
+}
+
+/* Secciones exclusivas para usuarios con cuenta (Directos, Canciones,
+   Videos populares, Animaciones, Series, Favoritos). En modo invitado
+   solo se muestra la pestaña "Videos". */
+body.solo-invitado .tab-solo-cuenta {
+    display: none !important;
+}
+
+/* En modo invitado tampoco se puede personalizar colores ni elegir
+   temas/diseños predefinidos; eso queda solo para cuentas con sesión. */
+body.solo-invitado .cuenta-personalizacion {
+    display: none !important;
+}
+
+/* El micrófono del asistente de IA solo funciona con cuenta iniciada;
+   en modo invitado se muestra apagado/deshabilitado visualmente. */
+body.solo-invitado .ai-mic-btn {
+    opacity: 0.4;
+    filter: grayscale(1);
+    cursor: not-allowed;
+}
+
+/* ===== Decoración estacional (Halloween / Navidad) ===== */
+.temporada-decoracion {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+}
+
+.temporada-item {
+    position: absolute;
+    top: -60px;
+    will-change: transform;
+    animation-name: caerTemporada;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+@keyframes caerTemporada {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+
+.temporada-badge {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 6;
+    background: rgba(10, 12, 20, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #fff;
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+}
+
+body.tema-halloween header {
+    box-shadow: 0 2px 18px rgba(255, 106, 0, 0.35);
+}
+
+body.tema-navidad header {
+    box-shadow: 0 2px 18px rgba(0, 200, 120, 0.35);
+}
+
+@media (max-width: 768px) {
+    .temporada-badge {
+        top: auto;
+        bottom: 14px;
+        right: 14px;
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+}
+
+.logo span{display:inline-block;animation:logoFloat 3s ease-in-out infinite;}
+.logo span:nth-child(1){animation-delay:0s;}
+.logo span:nth-child(2){animation-delay:.2s;}
+.logo span:nth-child(3){animation-delay:.4s;}
+.logo span:nth-child(4){animation-delay:.6s;}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}

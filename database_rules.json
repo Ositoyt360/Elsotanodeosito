@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "livechat": {
+      ".read": true,
+      ".write": true,
+      "messages": {
+        "$messageId": {
+          ".validate": "newData.hasChildren(['user', 'text', 'timestamp']) && newData.child('user').isString() && newData.child('user').val().length <= 24 && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 400 && newData.child('timestamp').isNumber()"
+        }
+      },
+      "typing": {
+        "$clientId": {
+          ".validate": "newData.hasChildren(['user', 'isTyping', 'updatedAt']) && newData.child('user').isString() && newData.child('user').val().length <= 24 && newData.child('isTyping').isBoolean() && newData.child('updatedAt').isNumber()"
+        }
+      },
+      "mutedUsers": {
+        "$userId": {
+          ".validate": "newData.hasChildren(['user', 'mutedUntil']) && newData.child('user').isString() && newData.child('mutedUntil').isNumber()"
+        }
+      }
+    }
+  }
+}

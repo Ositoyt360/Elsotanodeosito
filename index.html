@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=creator-badge-motion-20260908-2">
+    <link rel="stylesheet" href="styles.css?v=ultra-fps-botones-secciones-20260912-1">
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -268,7 +268,7 @@
                                     <button class="password-toggle" id="new-password-toggle" type="button" aria-label="Mostrar nueva contraseña">👁️</button>
                                 </div>
                             </label>
-                            <button class="btn-action" type="submit">🔑 Cambiar contraseña</button>
+                            <button class="btn-action" type="submit"><span class="btn-icon">🔑</span> Cambiar contraseña</button>
                         </form>
                         <form id="rank-form" class="rank-form">
                             <div class="account-tools-heading">
@@ -286,7 +286,7 @@
                                     <span id="profile-rank-preview" class="rank-preview-chip">Moderador</span>
                                 </div>
                             </label>
-                            <button class="btn-action" type="submit">✨ Guardar rango</button>
+                            <button class="btn-action" type="submit"><span class="btn-icon">✨</span> Guardar rango</button>
                         </form>
                     </section>
                 </div>
@@ -300,14 +300,14 @@
     </div>
 
     <header>
-        <div class="logo">EL_SÓTANO</div>
+        <div class="logo"><span>EL</span><span>SÓTANO</span><span>DE</span><span>OSITO</span></div>
         <div class="header-actions"> 
             <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
                 <span>⚡</span> Mejorar Rendimiento
             </button>
 
-            <button class="btn-action btn-anim" id="btn-ultra-performance" onclick="toggleModoUltra()">
-                <span>🚀</span> Modo ultra
+            <button class="btn-action cuenta-personalizacion" id="header-btn-ultra-performance" type="button" onclick="toggleModoUltra()" title="Apaga efectos pesados para máximo rendimiento">
+                <span class="btn-icon">🚀</span> Modo ultra (+1000 FPS)
             </button>
 
             <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
@@ -325,7 +325,7 @@
             <button class="btn-action auth-profile-photo" id="profile-photo-change-button" type="button" style="display:none;">Cambiar foto</button>
             <input id="profile-photo-change-input" type="file" accept="image/*" hidden>
             
-            <div class="theme-selector">
+            <div class="theme-selector cuenta-personalizacion">
                 <span class="theme-label">Personalizar Colores:</span>
                 <div class="color-picker-container">
                     <input type="color" id="picker-primario" class="color-picker" title="Color Principal" onchange="aplicarColoresPersonalizados()">
@@ -381,14 +381,23 @@
             <section class="content-section content-tabs-shell">
                 <div class="dashboard-section-header">
                     <h2 class="section-heading">Explorar Contenido</h2>
-                    <div class="tabs-container">
-                        <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaóa('videos')">Videos</button>
-                        <button class="tab-btn" id="tab-btn-directos" onclick="cambiarPestaóa('directos')">Directos</button>
-                        <button class="tab-btn" id="tab-btn-canciones" onclick="cambiarPestaóa('canciones')">Canciones</button>
-                        <button class="tab-btn" id="tab-btn-populares" onclick="cambiarPestaóa('populares')">Videos populares</button>
-                        <button class="tab-btn" id="tab-btn-animaciones" onclick="cambiarPestaóa('animaciones')">Animaciones</button>
-                        <button class="tab-btn" id="tab-btn-series" onclick="cambiarPestaóa('series')">Series</button>
-                        <button class="tab-btn" id="tab-btn-favs" onclick="cambiarPestaóa('favs')">Favoritos</button>
+                    <div class="tabs-container" id="tabs-container">
+                        <button class="tab-btn active" id="tab-btn-videos" onclick="cambiarPestaña('videos')">Videos</button>
+                        <button class="tab-btn tab-solo-cuenta tab-btn-mas" id="tab-btn-mas-secciones" type="button" onclick="toggleSeccionesCuenta()" aria-expanded="false" aria-controls="tabs-cuenta-extra">
+                            <span class="btn-icon">📂</span>
+                            <span id="tab-mas-label">Más secciones</span>
+                            <span class="tab-expand-chevron" aria-hidden="true">▾</span>
+                        </button>
+                        <div class="tabs-cuenta-extra tab-solo-cuenta" id="tabs-cuenta-extra">
+                            <div class="tabs-cuenta-extra-inner">
+                                <button class="tab-btn tab-solo-cuenta" id="tab-btn-directos" onclick="cambiarPestaña('directos')">Directos</button>
+                                <button class="tab-btn tab-solo-cuenta" id="tab-btn-canciones" onclick="cambiarPestaña('canciones')">Canciones</button>
+                                <button class="tab-btn tab-solo-cuenta" id="tab-btn-populares" onclick="cambiarPestaña('populares')">Videos populares</button>
+                                <button class="tab-btn tab-solo-cuenta" id="tab-btn-animaciones" onclick="cambiarPestaña('animaciones')">Animaciones</button>
+                                <button class="tab-btn tab-solo-cuenta" id="tab-btn-series" onclick="cambiarPestaña('series')">Series</button>
+                                <button class="tab-btn tab-solo-cuenta" id="tab-btn-favs" onclick="cambiarPestaña('favs')">Favoritos</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -399,46 +408,46 @@
                         </div>
                     </div>
 
-                    <div id="tab-directos" class="tab-content">
+                    <div id="tab-directos" class="tab-content tab-solo-cuenta">
                         <div class="video-grid" id="main-directos-grid">
                             <p style="color: var(--text-muted); padding: 20px;">Sincronizando transmisiones de respaldo...</p>
                         </div>
                     </div>
 
-                    <div id="tab-canciones" class="tab-content">
+                    <div id="tab-canciones" class="tab-content tab-solo-cuenta">
                         <div class="video-grid" id="main-canciones-grid">
                             <p style="color: var(--text-muted); padding: 20px;">Cargando canciones...</p>
                         </div>
                     </div>
 
-                    <div id="tab-populares" class="tab-content">
+                    <div id="tab-populares" class="tab-content tab-solo-cuenta">
                         <div class="video-grid" id="main-populares-grid">
                             <p style="color: var(--text-muted); padding: 20px;">Cargando videos populares...</p>
                         </div>
                     </div>
 
-                    <div id="tab-animaciones" class="tab-content">
+                    <div id="tab-animaciones" class="tab-content tab-solo-cuenta">
                         <div class="video-grid" id="main-animaciones-grid">
                             <p style="color: var(--text-muted); padding: 20px;">Cargando animaciones...</p>
                         </div>
                     </div>
 
-                    <div id="tab-series" class="tab-content">
+                    <div id="tab-series" class="tab-content tab-solo-cuenta">
                         <div class="series-board" id="series-board">
                             <p style="color: var(--text-muted); padding: 20px;">Cargando series...</p>
                         </div>
                     </div>
 
-                    <div id="tab-favs" class="tab-content">
+                    <div id="tab-favs" class="tab-content tab-solo-cuenta">
                         <div class="video-grid" id="fav-video-grid">
-                            <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavóa.</p>
+                            <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             <footer style="text-align:center; padding:18px 10px; color:var(--text-muted); font-size:14px; background: rgba(4,6,12,0.6); border-top:1px solid rgba(255,255,255,0.03); margin-top:20px;"> 
-                ó 2026 OsitoYT360. Todos los derechos reservados.
+                © 2026 OsitoYT360. Todos los derechos reservados.
             </footer>
             <div class="social-links" id="social-links">
                 <a href="https://www.youtube.com/@OsitoYT360" target="_blank">YouTube</a>
@@ -464,7 +473,7 @@
                         </div>
                     </div>
                     <div class="setting-row" style="gap:10px;">
-                        <input id="music-volume" type="range" min="0" max="100" value="30" aria-label="Volumen mósica" />
+                        <input id="music-volume" type="range" min="0" max="100" value="30" aria-label="Volumen música" />
                         <span id="music-volume-value" style="color: var(--text-muted); font-weight:800;">30%</span>
                     </div>
                     <div class="cd-date" style="opacity:1; text-align:left; padding: 0 4px; font-size: 11px;">
@@ -481,13 +490,13 @@
             </div>
 
             <div class="sidebar-card countdown-box">
-                <div class="cd-text">5 aóos en YouTube</div>
+                <div class="cd-text">5 años en YouTube</div>
                 <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
                 <div class="cd-date">2 de junio</div>
             </div>
 
-            <div class="sidebar-card settings-section"> 
-                <div class="sidebar-card-title">Diseóos personalizados</div>
+            <div class="sidebar-card settings-section cuenta-personalizacion"> 
+                <div class="sidebar-card-title">Diseños personalizados</div>
                 <div class="preset-grid">
                     <button class="btn-action design-preset" data-p1="#ff007f" data-p2="#00f2fe">Synthwave</button>
                     <button class="btn-action design-preset" data-p1="#00ff66" data-p2="#025921">Matrix</button>
@@ -496,11 +505,23 @@
                 </div>
             </div>
 
+            <div class="sidebar-card settings-section cuenta-personalizacion" id="ultra-performance-card">
+                <div class="sidebar-card-title"><span class="btn-icon">⚙️</span> Rendimiento Ultra</div>
+                <div class="settings-stack">
+                    <button class="btn-action" id="btn-ultra-performance" type="button" onclick="toggleModoUltra()">
+                        <span class="btn-icon">⚡</span> Modo ultra (+1000 FPS)
+                    </button>
+                    <div class="cd-date" style="opacity:1; text-align:left; padding: 0 4px; font-size: 11px;">
+                        Exclusivo para cuentas. Apaga efectos pesados para que la página vuele incluso en celulares con 1GB de RAM o menos.
+                    </div>
+                </div>
+            </div>
+
             <div class="sidebar-card settings-section"> 
                 <div class="sidebar-card-title">Ajustes de Interfaz</div>
                 <div class="settings-stack">
                     <div class="setting-row">
-                        <label for="font-size-range">Tamaóo fuente</label>
+                        <label for="font-size-range">Tamaño fuente</label>
                         <input id="font-size-range" type="range" min="12" max="20" value="14">
                     </div>
                     <div class="setting-row">
@@ -526,8 +547,8 @@
                             <h3><span aria-hidden="true">🤖</span> Asistente de Inteligencia</h3>
                             <p>Tu copiloto del sótano</p>
                         </div>
-                        <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="óTransmitiendo en directo!">
-                            <span class="live-dot"></span> ó EN VIVO
+                        <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
+                            <span class="live-dot"></span> 🔴 EN VIVO
                         </a>
                     </div>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar Asistente">✕</button>
@@ -558,11 +579,14 @@
                             <button class="btn-action ai-suggestion" data-question="¿Qué puedo hacer aquí?">
                                 <span>💡</span> Info del sitio
                             </button>
-                            <button class="btn-action ai-suggestion" data-question="¿Cuándo hay directo?">
+                            <button class="btn-action ai-suggestion" data-question="¿Vas a volver a hacer directos?">
                                 <span>🔴</span> Directos
                             </button>
-                            <button class="btn-action ai-suggestion" data-question="¿Qué canciones hay?">
-                                <span>🎵</span> Canciones
+                            <button class="btn-action ai-suggestion" data-question="¿Cuáles son tus juegos favoritos para grabar?">
+                                <span>🎮</span> Juegos
+                            </button>
+                            <button class="btn-action ai-suggestion" data-question="¿Cuál fue tu primer canal?">
+                                <span>📺</span> Primer canal
                             </button>
                         </div>
                         <form class="ai-input-row" id="ai-form" style="padding-top: 10px; border-top: 1px solid var(--glass-border); display: flex; gap: 8px; align-items: center;">
@@ -625,8 +649,92 @@
         let vigilanciaVideosId = null;
         let ultimoVideoNotificado = localStorage.getItem('osito_ultimo_video_notificado') || '';
 
+        // Las secciones Directos, Canciones, Videos populares, Animaciones,
+        // Series y Favoritos son exclusivas para usuarios con cuenta.
+        // En modo invitado solo se muestra la pestaña "Videos".
+        // Helper global reutilizable (usado también por asistente-voz.js) para
+        // saber si la sesión actual es de invitado o de cuenta.
+        window.osEsInvitado = function osEsInvitado() {
+            const tienePerfil = localStorage.getItem('osito_user_profile');
+            const authUser = window.firebaseAuth?.currentUser || window.currentUser;
+            return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser);
+        };
+
+        window.actualizarVisibilidadSeccionesCuenta = function actualizarVisibilidadSeccionesCuenta() {
+            const esInvitadoActual = window.osEsInvitado();
+
+            document.body.classList.toggle('solo-invitado', esInvitadoActual);
+
+            if (esInvitadoActual) {
+                const tabActivo = document.querySelector('.tab-btn.tab-solo-cuenta.active');
+                if (tabActivo && typeof cambiarPestaña === 'function') {
+                    cambiarPestaña('videos');
+                }
+            }
+        };
+
+        // Decoración estacional: Halloween del 1 al 31 de octubre y
+        // decoración navideña del 15 de noviembre al 7 de enero.
+        function obtenerTemporadaActual(fecha = new Date()) {
+            const mes = fecha.getMonth() + 1; // 1 = enero ... 12 = diciembre
+            const dia = fecha.getDate();
+
+            if (mes === 10) return 'halloween'; // 1 - 31 de octubre (se quita el 1 de noviembre)
+
+            if (mes === 11 && dia >= 15) return 'navidad'; // 15 de noviembre en adelante
+            if (mes === 12) return 'navidad'; // todo diciembre
+            if (mes === 1 && dia <= 7) return 'navidad'; // hasta el 7 de enero
+
+            return null;
+        }
+
+        function aplicarDecoracionEstacional() {
+            const temporada = obtenerTemporadaActual();
+
+            document.body.classList.remove('tema-halloween', 'tema-navidad');
+            const contenedorExistente = document.getElementById('temporada-decoracion');
+            if (contenedorExistente) contenedorExistente.remove();
+            const badgeExistente = document.getElementById('temporada-badge');
+            if (badgeExistente) badgeExistente.remove();
+
+            if (!temporada) return;
+
+            document.body.classList.add(temporada === 'halloween' ? 'tema-halloween' : 'tema-navidad');
+
+            const emojisPorTemporada = {
+                halloween: ['🎃', '👻', '🕸️', '🦇', '🕷️'],
+                navidad: ['❄️', '🎄', '🎅', '⭐', '🔔']
+            };
+            const emojis = emojisPorTemporada[temporada];
+
+            const contenedor = document.createElement('div');
+            contenedor.className = 'temporada-decoracion';
+            contenedor.id = 'temporada-decoracion';
+
+            const cantidad = 18;
+            for (let i = 0; i < cantidad; i++) {
+                const item = document.createElement('span');
+                item.className = 'temporada-item';
+                item.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                item.style.left = (Math.random() * 100) + 'vw';
+                item.style.fontSize = (14 + Math.random() * 18) + 'px';
+                item.style.animationDuration = (8 + Math.random() * 10) + 's';
+                item.style.animationDelay = (Math.random() * 10) + 's';
+                contenedor.appendChild(item);
+            }
+            document.body.appendChild(contenedor);
+
+            const badge = document.createElement('div');
+            badge.className = 'temporada-badge';
+            badge.id = 'temporada-badge';
+            badge.textContent = temporada === 'halloween'
+                ? '🎃 Edición especial de Halloween'
+                : '🎄 Edición especial de Navidad';
+            document.body.appendChild(badge);
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
-            // Cargar configuración de diseóo guardada
+            // Cargar configuración de diseño guardada
             const temaVersion = 'verde-profesional-2026-06-18';
             if (localStorage.getItem('osito_theme_version') !== temaVersion) {
                 localStorage.setItem('theme_primary', '#58ff9a');
@@ -656,6 +764,9 @@
             // detect low-end devices and user preferences
             detectDeviceAndPreferences();
             configurarAlertas();
+            actualizarVisibilidadSeccionesCuenta();
+            window.addEventListener('osito:firebase-auth-ready', actualizarVisibilidadSeccionesCuenta);
+            aplicarDecoracionEstacional();
 
             if(localStorage.getItem('osito_no_anim') === 'true') toggleAnimaciones();
             else iniciarSecuenciaPublicitaria();
@@ -724,14 +835,16 @@
         function activarModoUltra(guardar = true) {
             document.body.classList.add('ultra-performance');
             advancedAnimacionesEnabled = false;
-            promoIntervalMs = 12000;
+            promoIntervalMs = 20000;
             document.body.classList.remove('advanced-anim');
             if (guardar) localStorage.setItem('osito_ultra_performance', 'true');
-            const btn = document.getElementById('btn-ultra-performance');
-            if (btn) {
-                btn.classList.add('active');
-                btn.innerHTML = '<span>ó</span>Modo ultra activo';
-            }
+            ['btn-ultra-performance', 'header-btn-ultra-performance'].forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.classList.add('active');
+                    btn.innerHTML = '<span class="btn-icon">✅</span> Modo ultra activo (+1000 FPS)';
+                }
+            });
             if (animacionesActivas) iniciarEspacio();
         }
 
@@ -739,11 +852,13 @@
             if (document.body.classList.contains('ultra-performance')) {
                 document.body.classList.remove('ultra-performance');
                 localStorage.setItem('osito_ultra_performance', 'false');
-                const btn = document.getElementById('btn-ultra-performance');
-                if (btn) {
-                    btn.classList.remove('active');
-                    btn.innerHTML = '<span>ó</span>Modo ultra';
-                }
+                ['btn-ultra-performance', 'header-btn-ultra-performance'].forEach(btnId => {
+                    const btn = document.getElementById(btnId);
+                    if (btn) {
+                        btn.classList.remove('active');
+                        btn.innerHTML = '<span class="btn-icon">🚀</span> Modo ultra (+1000 FPS)';
+                    }
+                });
                 advancedAnimacionesEnabled = false;
                 if (animacionesActivas) iniciarEspacio();
                 return;
@@ -813,14 +928,14 @@
             if (!animacionesActivas) {
                 document.body.classList.add('no-animations');
                 btn.classList.add('active');
-                btn.innerHTML = "<span>ó</span> Activar Animaciones"; 
+                btn.innerHTML = "<span>✨</span> Activar Animaciones"; 
                 localStorage.setItem('osito_no_anim', 'true');
                 if(animationFrameId) cancelAnimationFrame(animationFrameId);
                 if(intervaloPromo) clearInterval(intervaloPromo);
             } else {
                 document.body.classList.remove('no-animations');
                 btn.classList.remove('active'); 
-                btn.innerHTML = "<span>ó</span> Quitar Animaciones";
+                btn.innerHTML = "<span>🚫</span> Quitar Animaciones";
                 localStorage.setItem('osito_no_anim', 'false');
                 iniciarEspacio();
                 iniciarSecuenciaPublicitaria();
@@ -948,7 +1063,7 @@
                         const m = Math.floor((diff % 3600000) / 60000);
                         const s = Math.floor((diff % 60000) / 1000);
                         liveCounter.textContent = `Celebrando hace: ${h}h ${m}m ${s}s`;
-                        return; // Salir despuós de establecer el contador de aniversario
+                        return; // Salir después de establecer el contador de aniversario
                     }
                 }
                 liveCounter.textContent = "Estado: Sincronizado en tiempo real";
@@ -968,9 +1083,31 @@
             const hoy = new Date();
             const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0).getTime();
             const list = [];
-             
+
+            // Últimos cambios realizados (quedan siempre arriba por ser los más recientes).
+            list.push(
+                {
+                    badge: 'IA',
+                    titulo: 'Micrófono del asistente mejorado',
+                    descripcion: 'Ahora espera hasta 15s si no hablas y se corta 2s después de que terminas de hablar, sin apagarse de golpe. El micrófono es exclusivo para cuentas con sesión iniciada.',
+                    timestamp: ahora + 3
+                },
+                {
+                    badge: 'Nuevo',
+                    titulo: 'Botón "Modo Ultra" en el encabezado',
+                    descripcion: 'El Modo Ultra (+1000 FPS) ahora también está disponible arriba, junto a los demás botones, sincronizado con el de ajustes.',
+                    timestamp: ahora + 2
+                },
+                {
+                    badge: 'Corrección',
+                    titulo: 'Íconos y acentos reparados en toda la página',
+                    descripcion: 'Se corrigieron emojis y letras (ñ, í, ú, é) que se mostraban mal en botones, notificaciones, favoritos y avisos de aniversario.',
+                    timestamp: ahora + 1
+                }
+            );
+
             // Inyectamos la actualización de aniversario si es la fecha
-            // Novedades especóficas de HOY 2 de Junio
+            // Novedades específicas de HOY 2 de Junio
             if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2026) {
                 list.push({
                     badge: 'HOY',
@@ -980,7 +1117,7 @@
                 });
             }
 
-            // Mósica de fondo: control de volumen en la barra lateral
+            // Música de fondo: control de volumen en la barra lateral
             // (usamos un timestamp fijo para que se vea con la fecha en el banner)
             list.push({
                  badge: 'Música',
@@ -1005,7 +1142,7 @@
                 {
                      badge: 'Corrección',
                     titulo: 'Modo sin animaciones corregido', 
-                    timestamp: inicioHoy - (48 * 60 * 60 * 1000) // Hace 2 dóas
+                    timestamp: inicioHoy - (48 * 60 * 60 * 1000) // Hace 2 días
                 },
                 {
                      badge: 'Diseño',
@@ -1081,7 +1218,7 @@
                 const ahoraUTC = new Date().getTime(); 
                 const distancia = fechaProximaNovedadUTC - ahoraUTC;
                 if (distancia < 0) {
-                    document.getElementById("countdown-timer").innerHTML = "óEN DIRECTO!";
+                    document.getElementById("countdown-timer").innerHTML = "¡EN DIRECTO!";
                     return;
                 }
                 const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
@@ -1098,7 +1235,7 @@
             const ahora = new Date();
             let anioDestino = ahora.getFullYear();
             
-            // Si ya pasó el 2 de junio de este aóo, apuntar al próximo
+            // Si ya pasó el 2 de junio de este año, apuntar al próximo
             if (ahora.getMonth() > 5 || (ahora.getMonth() === 5 && ahora.getDate() >= 2)) {
                 anioDestino++;
             }
@@ -1110,13 +1247,13 @@
             const label = timer?.previousElementSibling;
             const dateLabel = timer?.nextElementSibling;
  
-            if (label) label.innerText = `${numAnos} aóos en YouTube`;
+            if (label) label.innerText = `${numAnos} años en YouTube`;
             if (dateLabel) dateLabel.innerText = `2 de junio ${anioDestino}`;
 
             setInterval(() => {
                 const ahoraUTC = new Date().getTime();
                 const distancia = fechaAniversarioUTC - ahoraUTC;
-                if (distancia <= 0) { timer.innerHTML = `ó${numAnos} AóOS EN YOUTUBE!`; return; }
+                if (distancia <= 0) { timer.innerHTML = `¡${numAnos} AÑOS EN YOUTUBE!`; return; }
 
                 const totalMs = distancia;
                 const days = Math.floor(totalMs / 86400000);
@@ -1125,8 +1262,8 @@
                 const seconds = Math.floor((totalMs % 60000) / 1000);
 
                 let displayDays = days;
-                // Si hay horas, minutos o segundos restantes, y no es ya 0 dóas,
-                // se redondea el nómero de dóas para la visualización.
+                // Si hay horas, minutos o segundos restantes, y no es ya 0 días,
+                // se redondea el nómero de días para la visualización.
                 if (days > 0 && (hours > 0 || minutes > 0 || seconds > 0)) {
                     displayDays++; 
                 }
@@ -1157,21 +1294,21 @@
             setTimeout(() => { document.getElementById('sidebar-panel')?.classList.add('sidebar-show'); }, 100);
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
-            // Autoplay permitido despuós del gesto del usuario
+            // Autoplay permitido después del gesto del usuario
             iniciarMusicaFondo();
         }
 
         // ================================
-        // Mósica de fondo (Snowfall)
+        // Música de fondo (Snowfall)
         // ================================
         const MUSIC_VOLUME_KEY = 'osito_music_volume';
 
         function actualizarEstadoMusica(audio, toggleBtn) {
             if (!audio || !toggleBtn) return;
             const isPlaying = !audio.paused;
-            toggleBtn.textContent = isPlaying ? 'ó' : 'ó';
+            toggleBtn.textContent = isPlaying ? '⏸️' : '▶️';
             toggleBtn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
-            toggleBtn.title = isPlaying ? 'Pausar mósica de fondo' : 'Reproducir mósica de fondo';
+            toggleBtn.title = isPlaying ? 'Pausar música de fondo' : 'Reproducir música de fondo';
         }
 
         function iniciarMusicaFondo() {
@@ -1226,7 +1363,7 @@
                     });
                 }
             } catch (e) {
-                console.warn('Mósica: no se pudo iniciar', e);
+                console.warn('Música: no se pudo iniciar', e);
             }
 
             actualizarEstadoMusica(audio, toggleBtn);
@@ -1285,18 +1422,52 @@
             const hoy = new Date();
             // 2 de Junio (Mes 5 en JS) de 2026
             if (hoy.getDate() === 2 && hoy.getMonth() === 5 && hoy.getFullYear() === 2027) { 
-                mostrarNotificacion("óFeliz 5to Aniversario de OsitoYT360! ó");
+                mostrarNotificacion("¡Feliz 5to Aniversario de OsitoYT360! 🎉");
                 renderizarActualizaciones(actualizacionesDemo(2027, 5));
             }
         }
 
-        function cambiarPestaóa(tabName) {
+        const NOMBRES_SECCION_CUENTA = {
+            directos: 'Directos',
+            canciones: 'Canciones',
+            populares: 'Videos populares',
+            animaciones: 'Animaciones',
+            series: 'Series',
+            favs: 'Favoritos'
+        };
+
+        function cambiarPestaña(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             if(document.getElementById('tab-btn-' + tabName)) document.getElementById('tab-btn-' + tabName).classList.add('active');
             document.getElementById('tab-' + tabName).classList.add('active');
             if(tabName === 'favs') renderizarFavoritos();
             if(PLAYLISTS[tabName] && videosPorCategoria[tabName].length === 0) cargarVideosDesdePlaylist(tabName);
+
+            // Al elegir una sección exclusiva de cuenta, el botón "Más secciones"
+            // se convierte en la etiqueta de la sección activa y la lista se pliega sola.
+            const btnMas = document.getElementById('tab-btn-mas-secciones');
+            const extra = document.getElementById('tabs-cuenta-extra');
+            const labelMas = document.getElementById('tab-mas-label');
+            if (btnMas && extra && labelMas) {
+                if (NOMBRES_SECCION_CUENTA[tabName]) {
+                    labelMas.textContent = NOMBRES_SECCION_CUENTA[tabName];
+                    btnMas.classList.add('active');
+                } else {
+                    labelMas.textContent = 'Más secciones';
+                    btnMas.classList.remove('active');
+                }
+                extra.classList.remove('expanded');
+                btnMas.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function toggleSeccionesCuenta() {
+            const extra = document.getElementById('tabs-cuenta-extra');
+            const btn = document.getElementById('tab-btn-mas-secciones');
+            if (!extra || !btn) return;
+            const expandido = extra.classList.toggle('expanded');
+            btn.setAttribute('aria-expanded', expandido ? 'true' : 'false');
         }
 
         function cambiarFondo(c1, c2) {
@@ -1331,7 +1502,7 @@
                 btn.classList.remove('active');
                 if (vigilanciaVideosId) clearInterval(vigilanciaVideosId);
                 vigilanciaVideosId = null;
-                mostrarNotificacion('Alertas silenciadas ó');
+                mostrarNotificacion('Alertas silenciadas 🔕');
                 return;
             }
 
@@ -1344,7 +1515,7 @@
                 localStorage.setItem('osito_alertas', 'true');
                 btn.classList.add('active');
                 iniciarVigilanciaVideos();
-                mostrarNotificacion('Permiso concedido. Te avisaremos si sale video nuevo ó');
+                mostrarNotificacion('Permiso concedido. Te avisaremos si sale video nuevo 🔔');
             });
         }
 
@@ -1419,7 +1590,7 @@
             const miniatura = obtenerMiniaturaVideo(id);
             return `
                 <div class="video-card">
-                    <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Aóadir a favoritos">ó</div>
+                    <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
                     <div class="video-thumbnail">
                         <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
                         <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
@@ -1524,7 +1695,7 @@
             const grid = document.getElementById('fav-video-grid');
             if(!grid) return;
             if(listaFavoritos.length === 0) { 
-                grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavóa.</p>';
+                grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>';
                 return;
             }
             grid.innerHTML = listaFavoritos.map(id => crearTarjetaVideo(id)).join('');
@@ -1540,14 +1711,15 @@
             if (index === -1) {
                 listaFavoritos.push(id);
                 event.target.classList.add('active'); 
-                mostrarNotificacion("Aóadido a favoritos ó");
+                mostrarNotificacion("Añadido a favoritos ⭐");
             } else {
                 listaFavoritos.splice(index, 1); 
                 event.target.classList.remove('active');
-                mostrarNotificacion("Eliminado de favoritos ó");
+                mostrarNotificacion("Eliminado de favoritos 🗑️");
             }
             localStorage.setItem('osito_favs', JSON.stringify(listaFavoritos));
-            if(document.getElementById('tab-btn-favs').classList.contains('active')) renderizarFavoritos();
+            const tabFavsBtn = document.getElementById('tab-btn-favs');
+            if(tabFavsBtn && tabFavsBtn.classList.contains('active')) renderizarFavoritos();
         }
 
         function iniciarEspacio() {
@@ -1560,7 +1732,7 @@
             const starCount = !animacionesActivas || document.body.classList.contains('ultra-performance')
                 ? 0
                 : (advancedAnimacionesEnabled ? 120 : 40);
-            const connectionDist = 150; // Distancia para dibujar lóneas
+            const connectionDist = 150; // Distancia para dibujar líneas
 
             for (let i = 0; i < starCount; i++) {
                 stars.push({
@@ -1656,6 +1828,7 @@
         }); 
     </script> 
 
+    <script src="base-conocimiento.js"></script>
     <script>
         (function(){
             const aiMessages = document.getElementById('ai-messages');
@@ -1722,6 +1895,39 @@
                 }
             }
 
+            function mostrarLimiteInvitadoConBoton(texto) {
+                if (!aiMessages) return;
+                const msg = document.createElement('div');
+                msg.className = 'msg bot';
+
+                const parrafo = document.createElement('p');
+                parrafo.style.margin = '0 0 10px 0';
+                parrafo.textContent = texto;
+                msg.appendChild(parrafo);
+
+                const btnRegistro = document.createElement('button');
+                btnRegistro.type = 'button';
+                btnRegistro.className = 'btn-action ai-limite-registro-btn';
+                btnRegistro.textContent = '📝 Registrarse';
+                btnRegistro.onclick = function () {
+                    if (typeof window.irARegistroDesdeIA === 'function') {
+                        window.irARegistroDesdeIA();
+                    }
+                };
+                msg.appendChild(btnRegistro);
+
+                aiMessages.appendChild(msg);
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+                hablarIA(texto);
+
+                if (aiInput) {
+                    aiInput.disabled = true;
+                    aiInput.placeholder = 'Límite de invitado alcanzado. Regístrate para continuar.';
+                }
+                const btnEnviar = document.querySelector('.btn-send');
+                if (btnEnviar) btnEnviar.disabled = true;
+            }
+
             function apodoIA() {
                 return aiGenero === 'female' ? 'osita' : 'osito';
             }
@@ -1740,27 +1946,53 @@
                 agregarMensajeIA(`¡Qué onda, ${apodo}! Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
             }
 
+            function msParaProximoCambioNombre() {
+                const ts = parseInt(localStorage.getItem('osito_ai_nombre_ts') || '0', 10);
+                if (!ts) return 0;
+                const restante = ts + 24 * 60 * 60 * 1000 - Date.now();
+                return restante > 0 ? restante : 0;
+            }
+
+            function actualizarEstadoNombreIA() {
+                if (!aiNameInput || !aiNameSave) return;
+                const restante = aiNombre ? msParaProximoCambioNombre() : 0;
+                aiNameInput.value = aiNombre;
+                if (restante > 0) {
+                    const horas = Math.ceil(restante / (60 * 60 * 1000));
+                    aiNameInput.disabled = true;
+                    aiNameSave.disabled = true;
+                    aiNameSave.innerHTML = `<span aria-hidden="true">⏳</span> Podrás cambiarlo en ${horas}h`;
+                } else {
+                    aiNameInput.disabled = false;
+                    aiNameSave.disabled = false;
+                    aiNameSave.innerHTML = aiNombre
+                        ? '<span aria-hidden="true">✏️</span> Cambiar nombre'
+                        : '<span aria-hidden="true">✓</span> Guardar mi nombre';
+                }
+            }
+
             function guardarNombreIA() {
+                if (aiNombre && msParaProximoCambioNombre() > 0) return;
                 const nombre = (aiNameInput?.value || '').trim().replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 24);
-                if (!nombre || aiNombre) return;
+                if (!nombre) return;
+                const esCambio = Boolean(aiNombre) && aiNombre !== nombre;
                 aiNombre = nombre;
                 window.aiNombreActual = aiNombre;
                 localStorage.setItem('osito_ai_nombre', aiNombre);
-                if (aiNameInput) {
-                    aiNameInput.value = aiNombre;
-                    aiNameInput.disabled = true;
-                }
-                if (aiNameSave) {
-                    aiNameSave.disabled = true;
-                    aiNameSave.innerHTML = '<span aria-hidden="true">✅</span> Nombre guardado';
-                }
-                agregarMensajeIA(`Perfecto, desde ahora te llamare ${aiNombre}.`, 'bot');
+                localStorage.setItem('osito_ai_nombre_ts', Date.now().toString());
+                actualizarEstadoNombreIA();
+                agregarMensajeIA(
+                    esCambio
+                        ? `Listo, ahora te llamaré ${aiNombre}. Podrás volver a cambiarlo en 24 horas.`
+                        : `Perfecto, desde ahora te llamare ${aiNombre}.`,
+                    'bot'
+                );
             }
 
             function hablarIA(texto) {
                 if (!vozActiva || !('speechSynthesis' in window)) return;
                 window.speechSynthesis.cancel();
-                const limpio = texto.replace(/[^\w\s.,;:!?ó]/g, ' ');
+                const limpio = texto.replace(/[^\p{L}\p{N}\s.,;:!?¡¿"'-]/gu, ' ');
                 const utterance = new SpeechSynthesisUtterance(limpio);
                 utterance.lang = 'es-419';
                 utterance.rate = 1;
@@ -1771,7 +2003,7 @@
             function actualizarBotonVoz() {
                 if (!aiVoiceToggle) return;
                 aiVoiceToggle.classList.toggle('active', vozActiva);
-                aiVoiceToggle.innerHTML = vozActiva ? '<span class="btn-icon">ó</span> Voz On' : '<span class="btn-icon">ó</span> Voz Off';
+                aiVoiceToggle.innerHTML = vozActiva ? '<span class="btn-icon">🔊</span> Voz On' : '<span class="btn-icon">🔇</span> Voz Off';
             }
 
             function actualizarBloqueoIA() {
@@ -1795,7 +2027,19 @@
             function reproducirBienvenidaSitio() {
                 if (bienvenidaReproducida) return;
                 bienvenidaReproducida = true;
-                hablarIA(bienvenidaSitio);
+                const nombreUsuario = window.aiNombreActual || localStorage.getItem('osito_ai_nombre') || aiNombre || '';
+                let bienvenida = (window.OsitoConocimiento && typeof window.OsitoConocimiento.generarMensajeBienvenidaLocal === 'function')
+                    ? window.OsitoConocimiento.generarMensajeBienvenidaLocal(nombreUsuario)
+                    : 'Bienvenido a El Sótano de Osito.';
+
+                const tienePerfil = localStorage.getItem('osito_user_profile');
+                const authUser = window.firebaseAuth?.currentUser || window.currentUser;
+                const esInvitadoActual = Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser);
+                if (esInvitadoActual) {
+                    bienvenida += ' Estás en modo invitado: por ahora solo puedes ver la pestaña de Videos y tienes 5 preguntas para la inteligencia artificial. Si inicias sesión o te registras, desbloqueas Directos, Canciones, Videos populares, Animaciones, Series, guardar tus Favoritos, personalizar los colores y temas del sitio, y preguntas ilimitadas a la inteligencia artificial.';
+                }
+
+                hablarIA(bienvenida);
             }
 
             window.reproducirBienvenidaSitio = reproducirBienvenidaSitio;
@@ -1836,47 +2080,8 @@
                 }).format(new Date());
             }
 
-            async function buscarRespuestaDinamica(pregunta) {
-                const texto = normalizarPreguntaIA(pregunta);
-                const ahora = new Date();
-
-                if (/\b(hora|que hora|quó hora|hora es)\b/.test(texto)) {
-                    return `En El Salvador son las ${horaElSalvador()}.`;
-                }
-
-                if (/\b(fecha|dia|dóa|hoy|que fecha|quó fecha)\b/.test(texto)) {
-                    const fecha = new Intl.DateTimeFormat('es-SV', {
-                        timeZone: 'America/El_Salvador',
-                        dateStyle: 'full'
-                    }).format(ahora);
-                    return `Hoy es ${fecha}.`;
-                }
-
-                try {
-                    const searchUrl = `https://es.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(pregunta)}&limit=1`;
-                    const searchResponse = await fetch(searchUrl, { headers: { Accept: 'application/json' } });
-                    if (!searchResponse.ok) return null;
-                    const searchData = await searchResponse.json();
-                    const page = searchData.pages?.[0];
-                    if (!page?.key) return null;
-
-                    const summaryUrl = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(page.key)}`;
-                    const summaryResponse = await fetch(summaryUrl, { headers: { Accept: 'application/json' } });
-                    if (!summaryResponse.ok) return null;
-                    const summary = await summaryResponse.json();
-                    const extract = String(summary.extract || '').trim();
-                    if (!extract) return null;
-
-                    const corto = extract.length > 700 ? `${extract.slice(0, 697)}...` : extract;
-                    return `Esto encontre sobre ${summary.title || page.title}: ${corto}`;
-                } catch (error) {
-                    console.warn('[Asistente] No se pudo consultar informacion externa.', error);
-                    return null;
-                }
-            }
-
             function elegirRespuesta(opciones) {
-                if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo base todavia. Dame mas contexto y te ayudo mejor.`;
+                if (!opciones.length) return `Mmm, ${prefijoIA()}, de eso no tengo base todavía. Dame más contexto y te ayudo mejor.`;
                 let respuesta = opciones[turnoIA % opciones.length];
                 if (respuesta === ultimaRespuestaIA && opciones.length > 1) {
                     respuesta = opciones[(turnoIA + 1) % opciones.length];
@@ -1888,23 +2093,9 @@
 
             function responderIA(pregunta) {
                 const texto = normalizarPreguntaIA(pregunta);
-                const respuestas = [];
                 const nombre = prefijoIA();
 
-                if (/quien es osito|quien es ositoyt360|informacion del canal|info del canal|que es osito/.test(texto)) {
-                    respuestas.push(
-                        `OsitoYT360 es un canal de ${infoCanal.pais} sobre videojuegos, ${nombre}. Publica gameplays, directos, shorts y series de Minecraft, Roblox, Free Fire y Craftman/Craftsman.`,
-                        `El Sótano de Osito reúne el contenido de OsitoYT360: videos, directos, canciones, favoritos y novedades de la comunidad.`
-                    );
-                }
-
-                if (/cuantos anos tiene osito|que edad tiene osito|edad de osito|cuando nacio osito|nacimiento de osito/.test(texto)) {
-                    respuestas.push(
-                        `El creador nació el 28 de septiembre de 2008 y actualmente tiene ${edadEnFecha(infoCanal.cumpleCreador)} años.`,
-                        `Osito nació el 28 de septiembre de 2008. La edad se calcula automáticamente según la fecha actual.`
-                    );
-                }
-
+                // 1. Configuración de género si aún no está elegido
                 if (!aiGenero && /\b(hombre|masculino|varon|chico|soy hombre)\b/.test(texto)) {
                     aiGenero = 'male'; 
                     localStorage.setItem('osito_ai_genero', aiGenero);
@@ -1921,225 +2112,118 @@
                     return '¡Qué onda, osita! Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
                 }
 
-                // 1. Navegación al Chat en Vivo
-                if (/\b(llevame a chat|llóvame a chat|ir al chat|abrir chat|ver chat|chat en vivo|chat)\b/.test(texto)) {
+                // 2. Navegación al Chat en Vivo
+                if (/\b(llevame a chat|llevame al chat|llevarme al chat|ir al chat|abrir chat|ver chat|chat en vivo|chat)\b/.test(texto)) {
                     if (typeof window.toggleLiveChatPanel === 'function') {
                         window.toggleLiveChatPanel();
                     }
-                    return `óCon gusto, ${nombre}! Te he abierto la ventana del chat en vivo para que converses en tiempo real. ó`;
+                    return `¡Con gusto, ${nombre}! Te he abierto la ventana del chat en vivo para que converses en tiempo real. 💬`;
                 }
 
-                // 2. Navegación al canal de YouTube
-                if (/\b(llevame al canal|llóvame al canal|ir al canal|abrir canal|abrir el canal|ver canal|mostrar canal|muestrame el canal|muóstrame el canal|canal de youtube|abre youtube|ir a youtube)\b/.test(texto)) {
+                // 3. Navegación al canal de YouTube
+                if (/\b(llevame al canal|llevarme al canal|ir al canal|abrir canal|abrir el canal|ver canal|mostrar canal|muestrame el canal|canal de youtube|abre youtube|ir a youtube)\b/.test(texto)) {
                     window.open('https://www.youtube.com/@OsitoYT360', '_blank', 'noopener');
-                    return `óListo, ${nombre}! Te abró el canal de YouTube.`;
+                    return `¡Listo, ${nombre}! Te abrí el canal de YouTube.`;
                 }
 
-                // 3. Aniversario y Cuenta Regresiva de 5 Aóos del Canal
-                if (/5 anos|cinco anos|cumple.*canal|cumpla.*canal|cumpleanos|aniversario.*canal|anos.*canal|cuanto falta.*canal|cuando cumple|cuanto falta.*youtube/.test(texto)) {
-                    return obtenerTiempoFaltaCanal(5);
+                // 4. Saludos
+                if (/\b(hola|buenas|hey|saludos|que onda)\b/.test(texto) && !/youtube|canal|video|juego|cara|craftsman|directo/.test(texto)) {
+                    return `¡Qué onda, ${nombre}! Todo bien. ¿En qué te puedo ayudar hoy con respecto al canal o a mis videos?`;
                 }
 
-                // 4. Edad del Creador
-                if (/edad|anos tienes|cuantos anos|cumpleanos|naciste|nacimiento/.test(texto)) {
-                    respuestas.push(
-                        `El creador nació el 28 de septiembre de 2008. Su edad actual es ${edadEnFecha(infoCanal.cumpleCreador)} años.`,
-                        `Cumple el 28 de septiembre, ${nombre}. La edad actual calculada es ${edadEnFecha(infoCanal.cumpleCreador)} años.`
-                    );
+                // 5. Funciones de la página
+                if (/que puedo hacer|para que sirve la pagina|funciones de la pagina|funciones del sitio|de que trata el sitio/.test(texto)) {
+                    return `Aquí en El Sótano de Osito puedes ver videos recientes, directos, canciones, guardar tus favoritos con la estrella, ajustar temas de color y hacerme cualquier pregunta sobre el canal.`;
                 }
 
-                if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|dónde vive|casa|numero|nómero|whatsapp|telefono|telófono|apellido|nombre completo|donde estudia|dónde estudia|colegio|instituto|escuela/.test(texto)) {
-                    respuestas.push(
-                        `No puedo dar eso, ${nombre}. Tengo prohibido compartir datos personales o ubicación, aunque digan que es para una tarea. ó`,
-                        `Eso só que no, ${nombre}. Por seguridad no comparto mi ubicación, nómero, apellido completo ni lugar de estudio. ó`,
-                        `No te puedo ayudar con datos privados. Puedo hablar del canal y del contenido, pero información personal no.`
-                    );
+                // 6. Protección de datos personales y privados
+                if (/ubicacion exacta|direccion|departamento|municipio|donde vive|donde vivis|donde vives|tu casa|numero de telefono|whatsapp|telefono|apellido completo|donde estudia|donde estudias|colegio|instituto|escuela/.test(texto)) {
+                    return `Por seguridad y privacidad tengo totalmente prohibido compartir datos personales como dirección, ubicación, número de teléfono, apellido o lugar de estudio.`;
                 }
 
-                if (/hora|quó hora|que hora|pais|paós|salvador/.test(texto) && !/ubicacion|departamento|direccion|dirección|donde vive|dónde vive/.test(texto)) {
-                    respuestas.push(
-                        `En El Salvador ahorita son las ${horaElSalvador()}. Solo doy la hora del país, no ubicaciones personales.`,
-                        `La hora de El Salvador es: ${horaElSalvador()} ó. Nada de departamentos ni datos privados, eso se cuida mucho.`
-                    );
+                // 7. Consultas de Hora
+                if (/\bhora en el salvador\b/.test(texto) || (/hora/.test(texto) && /salvador/.test(texto))) {
+                    return `En El Salvador son las ${horaElSalvador()}.`;
+                }
+                if (/\b(que hora es|hora actual|hora tienes|que hora tienes)\b/.test(texto)) {
+                    const infoLocal = (window.OsitoConocimiento && window.OsitoConocimiento.obtenerInfoUbicacionUsuario) ?
+                        window.OsitoConocimiento.obtenerInfoUbicacionUsuario() : null;
+                    const horaLocalStr = new Date().toLocaleTimeString('es-SV', { hour: 'numeric', minute: '2-digit' });
+                    return `En tu ubicación son las ${horaLocalStr}${infoLocal?.pais ? ` (${infoLocal.pais})` : ''}. En El Salvador son las ${horaElSalvador()}.`;
                 }
 
-                if (/favorito|favoritos|estrella|guardar/.test(texto)) { 
-                    respuestas.push(
-                        `Toca la estrella de una tarjeta, ${nombre}. Si ya estaba guardado, la misma estrella lo quita de favoritos ó`,
-                        'Los favoritos se guardan en este navegador con localStorage, asó que aparecerón cuando entres otra vez.',
-                        'Entra a "Mis Favoritos" para ver lo guardado. óLa estrella manda! Un toque agrega, otro toque elimina.'
-                    );
+                // 8. Búsqueda en la Base de Conocimiento oficial (19 preguntas, extras y variaciones)
+                if (window.OsitoConocimiento && typeof window.OsitoConocimiento.buscarEnBaseConocimiento === 'function') {
+                    const respuestaConocimiento = window.OsitoConocimiento.buscarEnBaseConocimiento(pregunta);
+                    if (respuestaConocimiento) {
+                        return respuestaConocimiento;
+                    }
                 }
 
-                if (/que puedo hacer|qué puedo hacer|pagina|página|sitio|funciones|para que sirve|para qué sirve/.test(texto)) {
-                    respuestas.push(
-                        `Aquí puedes ver videos recientes, directos, favoritos, actualizaciones en vivo y preguntarme lo que quieras, ${nombre}.`,
-                        'La página sirve como centro del canal: videos, directos, favoritos, horarios, temas de color, actualizaciones y el asistente del final.',
-                        'Puedes moverte por las pestañas, guardar favoritos con la estrella, cambiar el tema y revisar las novedades en el banner principal.'
-                    );
-                }
-
-                if (/de que trata|de quó trata|contenido|canal|youtube|video|videos|juego|juegos|minecraft|roblox|free fire|craftman|craftsman/.test(texto)) {
-                    respuestas.push(
-                        `El canal trata de videojuegos: Minecraft, Roblox, Free Fire, Craftman/Craftsman y cualquier juego que se venga bueno. ó`,
-                        `OsitoYT360 es de gameplays, directos, shorts y series. Los juegos favoritos son Minecraft, Roblox y Craftman/Craftsman.`,
-                        `Por aqui vas a ver contenido variado de videojuegos, ${nombre}: Roblox, Minecraft, Free Fire, Craftman/Craftsman y mas.`
-                    );
-                }
-
-                if (/directo|live|stream|transmision/.test(texto)) { 
-                    respuestas.push(
-                        `Los directos salen en la pestaóa "Directos", ${nombre}. Normalmente hay un en vivo por semana entre viernes, sóbado o domingo. ó`,
-                        'Si una semana no se puede hacer directo, puede pasar para la siguiente. La idea es mantenerlo constante sin forzarlo.',
-                        `Regla de los en vivo: nada de insultos ni humillar a los demós. Todo con humildad. ó`
-                    );
-                }
-
-                if (/expo|evento|fecha|cuando|horario/.test(texto)) { 
-                    respuestas.push(
-                        `Muy pronto habrá novedades y anuncios especiales del canal, ${nombre}.`,
-                        'Cuando haya una fecha confirmada, apareceró en las actualizaciones del sitio.',
-                        `El boton de horarios te lleva a la pagina de horarios locales, ${nombre}.`
-                    );
-                }
-
-                if (/cancion|canciones|musica|mósica|navidad|24 de diciembre|especial/.test(texto)) { 
-                    respuestas.push(
-                        'Si, van a venir mas canciones en el futuro. ó',
-                        'Para Navidad, el 24 de diciembre, esta planeado un especial con en vivo y una cancion. ó',
-                        `Si preguntas por musica: si, ${nombre}, hay planes de sacar mas canciones.`
-                    );
-                }
-
-                if (/serie|series|temporada|temporadas|survivalang/.test(texto)) { 
-                    respuestas.push(
-                        'Si, van a haber mas series y mas temporadas de las series actuales. Survivalang va para largo.',
-                        'Survivalang va a durar un monton; ni el creador sabe exactamente cuantos capitulos van a salir ó',
-                        `Sobre series, ${nombre}: si hay planes de seguir con mas temporadas y nuevos proyectos.`
-                    );
-                }
-
-                if (/colaboracion|colaboraciones|colab|allay|alay|mrbeast|mikecrack|compas|max wish|maxwish/.test(texto)) { 
-                    respuestas.push(
-                        'Si van a haber colaboraciones futuras, aunque por ahora no hay planes exactos. El colaborador mas reciente fue Allay MC.',
-                        'Al creador le gustaria algun dia colaborar con MrBeast y Mikecrack. Son metas grandes, pero soóar tambien cuenta ó',
-                        'La inspiracion viene de Max Wish, Los Compas y creadores grandes de videojuegos.'
-                    );
-                }
-
-                if (/por que osito|por quó osito|nombre|origen|peluche|inspir/.test(texto) && !/apellido|completo/.test(texto)) { 
-                    respuestas.push(
-                        'El nombre Osito viene de un peluche. La historia empezo en 2019, cuando se grababa con un panda chiquito de peluche.',
-                        'La idea del nombre nacio por un peluche y por esa inspiracion de empezar a grabar contenido desde pequeóo.',
-                        `Se llama Osito por esa historia del peluche, ${nombre}. El apellido o datos completos no se comparten.`
-                    );
-                }
-
-                if (/como te conocieron|cómo te conocieron|shorts|bed wars|bedwars|grupos|whatsapp|craftman 0.14.3|craftsman 0.14.3/.test(texto)) { 
-                    respuestas.push(
-                        'Mucha gente lo conocio por Craftman/Craftsman Bed Wars 0.14.3, shorts de Roblox, en vivos de Bedwars y algunos grupos de WhatsApp.',
-                        'Parte de la comunidad llego por shorts, Roblox, Grotes, directos de Bedwars y ese servidor de Craftman/Craftsman que ya casi no tiene gente.',
-                        'Puede que algun dia saque un servidor parecido al Bed Wars de Craftman/Craftsman 0.14.3.'
-                    );
-                }
-
-                if (/meta|futuro|dejar el canal|seguir el canal|estudio|estudios|software|ingenier/.test(texto)) { 
-                    respuestas.push(
-                        'Su meta es terminar los estudios, seguir con el canal y hacer crecer mas la comunidad. Todavia no sabe si en el futuro sera mas desarrollador de software o creador de contenido.',
-                        'Esta estudiando enfocado en ingenieria de desarrollo de software, pero no se comparte donde estudia. Eso es privado. ó',
-                        `Sobre el futuro, ${nombre}: quiere crecer, estudiar y seguir mejorando, pero todavia hay cosas que se van a decidir con el tiempo.`
-                    );
-                }
-
-                if (/editor|editar|edicion|ediciones|miniatura|miniaturas|titulo|titulos|descripcion|descripciones/.test(texto)) { 
-                    respuestas.push(
-                        'Tiene un editor de video llamado Santiago. Tambien ha mejorado en ediciones, miniaturas, titulos, descripciones, videos y en vivos.',
-                        'Quiere que sus videos se vean cada vez mas profesionales y explorar nuevos contenidos en el futuro.',
-                        'Una de sus mejoras mas fuertes ha sido cuidar miniaturas, titulos, descripciones y la presentacion del canal.'
-                    );
-                }
-
-                if (/horario|graba|grabacion|grabación|cuando sube|cuando hace vivo|cuando hace en vivo/.test(texto)) { 
-                    respuestas.push(
-                        'Suele grabar o hacer contenido jueves, viernes, sabado o domingo, porque son dias donde puede tener mas tiempo.',
-                        'Normalmente intenta hacer un en vivo por semana entre viernes, sabado o domingo; si no se puede, queda para la siguiente semana.',
-                        `El horario depende del estudio y del tiempo libre, ${nombre}. La idea es organizarse sin descuidar responsabilidades.`
-                    );
-                }
-
-                if (/logro|mil suscriptores|1000|suscriptores|video favorito|vlog|arbol|órbol/.test(texto)) { 
-                    respuestas.push(
-                        'Uno de sus logros mas grandes fue llegar a 1000 suscriptores. Eso marco bastante al canal. ó',
-                        'Su video favorito fue un vlog armando el arbol de Navidad.',
-                        `Llegar a los 1000 suscriptores fue un logro enorme, ${nombre}.`
-                    );
-                }
-
-                if (/consejo|creador|empezando|empezar|youtube no es facil|youtube no es fócil|vici/.test(texto)) { 
-                    respuestas.push(
-                        'Consejo para creadores: no se rindan. YouTube no es facil con videos ni vistas, pero hay que seguir y no parar.',
-                        'Tambien recomienda no viciarse mucho con los juegos y tener horarios especificos para estudiar y jugar.',
-                        `Si quieres crear contenido, ${nombre}, constancia y humildad. Y los estudios tambien van primero.`
-                    );
-                }
-
-                if (/actualizacion|actualizaciones|nuevo|tiempo real|reciente/.test(texto)) { 
-                    respuestas.push(
-                    'Cada actualización con fecha aparece como "Actualizado hace..." y se mantiene viva sin recargar la página.',
-                    'El sistema lee las actualizaciones en tiempo real desde Firebase y usa datos de respaldo si todavía no hay publicaciones.'
-                    );
-                }
-
-                if (/animacion|animaciones|rendimiento|ram|lento|rapido|performance|4 gb/.test(texto)) {
-                    respuestas.push( 
-                        `Para 4 GB de RAM, ${nombre}, si notas lento el sitio apaga animaciones avanzadas y usa modo compacto.`,
-                        'Las animaciones usan transform y opacity porque son mas livianas. En movil tambien se reducen efectos pesados.',
-                        'Para mas fluidez: no reproduzcas muchos videos a la vez, baja animaciones avanzadas y deja el modo compacto si lo necesitas.'
-                    );
-                }
-
-                if (/diseno|boton|botones|tema|color|estilo|destello/.test(texto)) {
-                    respuestas.push( 
-                        `El diseóo usa paneles oscuros, brillo controlado y botones con destello, ${nombre}. Se ve pro sin ponerse pesado.`,
-                        'Puedes cambiar colores desde los temas o los selectores. Los botones heredan esos colores para mantener todo consistente.',
-                        'El destello de los botones es CSS liviano: no usa imagenes ni librerias pesadas.'
-                    );
-                }
-
-                if (/hola|buenas|hey|saludos|que onda|quó onda/.test(texto)) {
-                    respuestas.push( 
-                        `Que onda, ${nombre} ó Todo bien. Con que te ayudo hoy?`,
-                        `Hey, ${nombre}. Aqui ando, tirame la pregunta y vemos. ó`,
-                        `Buenas, ${nombre}. Dale, preguntame lo que quieras del canal o del sitio.`
-                    );
-                }
-
-                return respuestas.length ? elegirRespuesta(respuestas) : null;
+                // 9. REGLA ESTRICTA: NO INVENTAR INFORMACIÓN
+                // Si algo no está en esta base, responde que todavía no está disponible en la base de datos
+                const noDisponible = (window.OsitoConocimiento && window.OsitoConocimiento.MENSAJES_NO_DISPONIBLE) || [
+                    'Esa información todavía no está disponible en la base de datos y podría agregarse en el futuro.'
+                ];
+                return noDisponible[turnoIA % noDisponible.length];
             }
 
             async function enviarPreguntaIA(pregunta) {
                 const limpia = (pregunta || '').trim();
                 if (!limpia) return;
-                if (window.ositoGuestMode) {
-                    mostrarNotificacion('La inteligencia artificial solo esta disponible para usuarios con cuenta.');
-                    return;
+
+                function esInvitado() {
+                    if (window.ositoGuestMode) return true;
+                    const tienePerfil = localStorage.getItem('osito_user_profile');
+                    const authUser = window.firebaseAuth?.currentUser || window.currentUser;
+                    if (!tienePerfil && !authUser) return true;
+                    return false;
                 }
+
+                // LÍMITE DE 5 PREGUNTAS EN MODO INVITADO (se reinicia cada 5 horas)
+                const CINCO_HORAS_MS = 5 * 60 * 60 * 1000;
+                function obtenerConteoInvitadoIA() {
+                    const ahora = Date.now();
+                    const reiniciaEn = parseInt(localStorage.getItem('osito_guest_ia_reset_at') || '0', 10);
+                    if (!reiniciaEn || ahora >= reiniciaEn) {
+                        localStorage.setItem('osito_guest_ia_count', '0');
+                        localStorage.setItem('osito_guest_ia_reset_at', String(ahora + CINCO_HORAS_MS));
+                    }
+                    return parseInt(localStorage.getItem('osito_guest_ia_count') || '0', 10);
+                }
+
+                if (esInvitado()) {
+                    let conteo = obtenerConteoInvitadoIA();
+                    conteo += 1;
+                    localStorage.setItem('osito_guest_ia_count', conteo.toString());
+
+                    if (conteo > 5) {
+                        const mensajesInvitacion = (window.OsitoConocimiento && window.OsitoConocimiento.MENSAJES_LIMITE_INVITADO) || [
+                            'Has alcanzado el límite de 5 preguntas en modo invitado. Vuelve a intentarlo en 5 horas, o regístrate/inicia sesión para conversar con la IA sin límites.',
+                            'Llegaste al límite de 5 preguntas permitidas para invitados. El límite se reinicia cada 5 horas; también puedes iniciar sesión o crear tu cuenta para continuar ahora mismo.',
+                            'Has completado tus 5 preguntas de prueba como invitado. Podrás volver a preguntar en 5 horas, o inicia sesión/regístrate en El Sótano de Osito para seguir sin esperar.',
+                            'Se agotó el límite de 5 preguntas del modo invitado. Se reinicia automáticamente en 5 horas. ¡O únete a la comunidad iniciando sesión o registrándote para desbloquear acceso ilimitado!'
+                        ];
+                        const indice = (conteo - 6) % mensajesInvitacion.length;
+                        const msgLimite = mensajesInvitacion[indice];
+                        agregarMensajeIA(limpia, 'user');
+                        if (aiInput) aiInput.value = '';
+                        setTimeout(() => mostrarLimiteInvitadoConBoton(msgLimite), 180);
+                        return;
+                    }
+                }
+
                 if (!aiGenero && !/\b(hombre|masculino|varon|chico|soy hombre|mujer|femenino|chica|soy mujer)\b/i.test(limpia)) {
                     if (aiInput) aiInput.value = '';
-                    setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer ó Asi te hablo como osito u osita.', 'bot'), 160);
-                    return;
-                }
-                agregarMensajeIA(limpia, 'user'); 
-                if (aiInput) aiInput.value = '';
-                const respuestaLocal = responderIA(limpia);
-                if (respuestaLocal) {
-                    setTimeout(() => agregarMensajeIA(respuestaLocal, 'bot'), 180);
+                    setTimeout(() => agregarMensajeIA('Primero dime si eres hombre o mujer. Así te hablo como osito u osita.', 'bot'), 160);
                     return;
                 }
 
-                const respuestaDinamica = await buscarRespuestaDinamica(limpia);
-                const respuestaFinal = respuestaDinamica || 'No encontre una respuesta confiable. Prueba con una pregunta mas especifica.';
-                agregarMensajeIA(respuestaFinal, 'bot');
+                agregarMensajeIA(limpia, 'user'); 
+                if (aiInput) aiInput.value = '';
+
+                const respuestaLocal = responderIA(limpia);
+                setTimeout(() => agregarMensajeIA(respuestaLocal, 'bot'), 180);
             }
 
             aiGenderBtns.forEach(btn => {
@@ -2148,10 +2232,7 @@
             });
 
             if (aiNombre && aiNameInput && aiNameSave) {
-                aiNameInput.value = aiNombre;
-                aiNameInput.disabled = true;
-                aiNameSave.disabled = true;
-                aiNameSave.innerHTML = '<span aria-hidden="true">ó</span> Nombre guardado';
+                actualizarEstadoNombreIA();
             }
             window.aiNombreActual = aiNombre;
             if (aiNameSave) aiNameSave.addEventListener('click', guardarNombreIA);
@@ -2264,8 +2345,8 @@
                     <img id="livechat-admin-image-preview" class="livechat-admin-image-preview" alt="Vista previa de la publicacion" style="display:none;">
                 </div>
                 <div class="livechat-admin-actions">
-                    <button id="livechat-admin-publish" class="livechat-admin-btn btn-admin-broadcast" type="button">📣 Publicar</button>
-                    <button id="livechat-admin-clear" class="livechat-admin-btn btn-admin-clear" type="button">🧹 Vaciar chat</button>
+                    <button id="livechat-admin-publish" class="livechat-admin-btn btn-admin-broadcast" type="button"><span class="btn-icon">📣</span> Publicar</button>
+                    <button id="livechat-admin-clear" class="livechat-admin-btn btn-admin-clear" type="button"><span class="btn-icon">🧹</span> Vaciar chat</button>
                 </div>
             </div>
 
@@ -2443,17 +2524,17 @@
 
                 const actions = [];
                 if (canEditOwnMessage(message)) {
-                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-edit-btn" data-action="edit"><span aria-hidden="true">✎</span> Editar</button>');
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-edit-btn" data-action="edit"><span class="btn-icon" aria-hidden="true">✎</span> Editar</button>');
                 }
                 if (isOwnMessage(message) && !isDeletedMessage(message)) {
-                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-delete-btn" data-action="delete"><span aria-hidden="true">🗑</span> Borrar</button>');
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-delete-btn" data-action="delete"><span class="btn-icon" aria-hidden="true">🗑</span> Borrar</button>');
                 }
                 if (isCreatorView() && !isOwnMessage(message) && !isDeletedMessage(message)) {
-                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-mod-delete-btn" data-action="mod-delete"><span aria-hidden="true">🛡</span> Mod borrar</button>');
+                    actions.push('<button type="button" class="lc-msg-action-btn lc-msg-mod-delete-btn" data-action="mod-delete"><span class="btn-icon" aria-hidden="true">🛡</span> Mod borrar</button>');
                 }
                 if (isDeletedMessage(message) && isCreatorView()) {
                     const revealed = revealedDeletedMessages.has(message.id);
-                    actions.push(`<button type="button" class="lc-msg-action-btn lc-msg-reveal-btn" data-action="reveal"><span aria-hidden="true">${revealed ? '🙈' : '👁'}</span> ${revealed ? 'Ocultar' : 'Ver mensaje'}</button>`);
+                    actions.push(`<button type="button" class="lc-msg-action-btn lc-msg-reveal-btn" data-action="reveal"><span class="btn-icon" aria-hidden="true">${revealed ? '🙈' : '👁'}</span> ${revealed ? 'Ocultar' : 'Ver mensaje'}</button>`);
                 }
                 if (!actions.length) return '';
                 return `<div class="lc-msg-actions">${actions.join('')}</div>`;

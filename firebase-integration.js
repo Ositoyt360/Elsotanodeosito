@@ -284,6 +284,7 @@
             window.mostrarNotificacion('Conectado: Tu cuenta se sincroniza en la nube.');
         }
         window.actualizarVisibilidadSeccionesCuenta?.();
+        window.aiAnimarExitoAuth?.();
     }
 
     function enterAsGuest() {
@@ -299,6 +300,7 @@
         setPreview(null, null);
         setStatus('Entraste como invitado. Algunas funciones estan bloqueadas.', 'neutral');
         window.actualizarVisibilidadSeccionesCuenta?.();
+        window.aiAnimarExitoAuth?.();
     }
 
     async function loadOrCreateProfile(user, fromRegister = false, registerGender = '', registerPhotoURL = '') {

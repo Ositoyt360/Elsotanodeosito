@@ -185,7 +185,21 @@
         <div class="gamer-grid"></div>
         <div class="welcome-panel">
             <h1 class="welcome-title">El Sótano de Osito</h1>
-            <div class="auth-panel" id="auth-panel">
+
+            <div class="landing-gate" id="landing-gate">
+                <button class="landing-a11y-btn" id="landing-a11y-btn" type="button" onclick="toggleLandingTextoGrande()" title="Agrandar y aclarar el texto" aria-pressed="false">
+                    <span aria-hidden="true">🔎</span> Texto grande
+                </button>
+                <p class="landing-subtitle">Bienvenido al sótano. Elige cómo quieres entrar.</p>
+                <p class="landing-hint">Con una cuenta tienes chat en vivo e inteligencia artificial <strong>ilimitados</strong>. Como invitado puedes entrar sin registrarte, pero con límites: solo 5 preguntas a la IA y sin chat en vivo.</p>
+                <p class="landing-hint landing-hint-note">Para iniciar sesión no necesitas una cuenta de Google: la página tiene su propio registro con correo y contraseña.</p>
+                <div class="landing-buttons">
+                    <button class="btn-enter-hub landing-btn" id="landing-btn-login" type="button" onclick="mostrarFormularioLogin()">Iniciar sesión</button>
+                    <button class="btn-enter-hub landing-btn" id="landing-btn-guest" type="button" onclick="entrarInvitadoDesdeLanding()">Entrar como invitado</button>
+                </div>
+            </div>
+
+            <div class="auth-panel" id="auth-panel" style="display:none;">
                 <div class="auth-card">
                     <div class="auth-card-top">
                         <div>
@@ -298,6 +312,106 @@
             <div class="loading-text" id="progress-text" style="display: none;">Iniciando módulos...</div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            var TEXTO_BIENVENIDA_LANDING = 'Bienvenido al sótano, al Sótano de Osito. Si quieres entrar con una cuenta, necesitas registrarte, o si ya tienes cuenta, inicia sesión, para que tengas todo ilimitado: chat en vivo e inteligencia artificial sin límites. Para iniciar sesión no necesitas una cuenta de Google: la página tiene su propio registro con correo y contraseña. Si prefieres entrar como invitado, ten en cuenta que tendrás límites, como la inteligencia artificial, que solo te deja hacer cinco preguntas; después ya no vas a poder seguir preguntando, y tampoco vas a poder usar el chat en vivo, entre otras funciones.';
+            var vozYaSonada = false;
+
+            function vozLandingActiva() {
+                return localStorage.getItem('osito_ai_voz') !== 'false' && ('speechSynthesis' in window);
+            }
+
+            function hablarBienvenidaLanding() {
+                if (vozYaSonada || !vozLandingActiva()) return;
+                var gate = document.getElementById('landing-gate');
+                if (!gate || gate.style.display === 'none') return;
+                vozYaSonada = true;
+                try {
+                    window.speechSynthesis.cancel();
+                    var limpio = TEXTO_BIENVENIDA_LANDING.replace(/[^\p{L}\p{N}\s.,;:!?¡¿"'-]/gu, ' ');
+                    var utterance = new SpeechSynthesisUtterance(limpio);
+                    utterance.lang = 'es-419';
+                    utterance.rate = 1;
+                    utterance.pitch = 1;
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) { /* si el navegador bloquea la voz, seguimos sin ella */ }
+            }
+
+            function detenerVozLanding() {
+                if ('speechSynthesis' in window) {
+                    try { window.speechSynthesis.cancel(); } catch (e) {}
+                }
+            }
+
+            function reanimar(el, clase) {
+                if (!el) return;
+                el.classList.remove(clase);
+                void el.offsetWidth;
+                el.classList.add(clase);
+            }
+
+            window.mostrarFormularioLogin = function mostrarFormularioLogin() {
+                detenerVozLanding();
+                var gate = document.getElementById('landing-gate');
+                var panel = document.getElementById('auth-panel');
+                if (gate) {
+                    gate.classList.add('landing-gate-hide');
+                    setTimeout(function () { gate.style.display = 'none'; }, 300);
+                }
+                if (panel) {
+                    panel.style.display = 'block';
+                    reanimar(panel, 'auth-panel-visible');
+                }
+            };
+
+            window.entrarInvitadoDesdeLanding = function entrarInvitadoDesdeLanding() {
+                detenerVozLanding();
+                var gate = document.getElementById('landing-gate');
+                if (gate) {
+                    gate.classList.add('landing-gate-hide');
+                    setTimeout(function () { gate.style.display = 'none'; }, 300);
+                }
+                window.entrarComoInvitado?.();
+                reanimar(document.getElementById('btn-ready'), 'guest-enter-anim');
+            };
+
+            window.aiAnimarExitoAuth = function aiAnimarExitoAuth() {
+                reanimar(document.querySelector('.auth-card'), 'auth-success-pop');
+                reanimar(document.getElementById('btn-ready'), 'guest-enter-anim');
+            };
+
+            window.toggleLandingTextoGrande = function toggleLandingTextoGrande() {
+                var gate = document.getElementById('landing-gate');
+                var btn = document.getElementById('landing-a11y-btn');
+                if (!gate) return;
+                var activo = gate.classList.toggle('landing-text-big');
+                localStorage.setItem('osito_landing_texto_grande', activo ? 'true' : 'false');
+                if (btn) {
+                    btn.setAttribute('aria-pressed', activo ? 'true' : 'false');
+                    btn.classList.toggle('active', activo);
+                }
+            };
+
+            (function aplicarPreferenciaTextoGrande() {
+                if (localStorage.getItem('osito_landing_texto_grande') === 'true') {
+                    document.addEventListener('DOMContentLoaded', function () {
+                        var gate = document.getElementById('landing-gate');
+                        var btn = document.getElementById('landing-a11y-btn');
+                        if (gate) gate.classList.add('landing-text-big');
+                        if (btn) { btn.setAttribute('aria-pressed', 'true'); btn.classList.add('active'); }
+                    });
+                }
+            })();
+
+            document.addEventListener('DOMContentLoaded', function () {
+                setTimeout(hablarBienvenidaLanding, 400);
+            });
+            // Algunos navegadores bloquean la voz hasta el primer gesto del usuario;
+            // este respaldo la reproduce en cuanto haya un toque/clic si aún no sonó.
+            document.addEventListener('click', hablarBienvenidaLanding, { once: true, capture: true });
+        })();
+    </script>
 
     <header>
         <div class="logo"><span>EL</span><span>SÓTANO</span><span>DE</span><span>OSITO</span></div>

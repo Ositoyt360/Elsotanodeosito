@@ -140,6 +140,19 @@ body {
 }
 
 /* --- PANTALLA DE ELECCIÓN: iniciar sesión vs invitado --- */
+.landing-loading {
+    font-size: 0.85rem;
+    color: var(--text-muted, #9fb0c3);
+    letter-spacing: 0.5px;
+    margin: 4px 0 18px;
+    animation: landingLoadingPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes landingLoadingPulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.85; }
+}
+
 .landing-gate {
     display: flex;
     flex-direction: column;
@@ -347,7 +360,17 @@ body {
 
 .auth-preview strong {
     display: block;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.3px;
+    background: linear-gradient(90deg, #fff, var(--primary-color), var(--secondary-color), var(--primary-color), #fff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textShimmer 4s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.25));
 }
 
 .auth-preview span {

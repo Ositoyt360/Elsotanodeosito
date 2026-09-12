@@ -265,6 +265,7 @@
         state.aiSeededFromDom = false;
         state.selectedPhotoFile = null;
         window.actualizarVisibilidadSeccionesCuenta?.();
+        window.osMostrarEleccionLanding?.();
     }
 
     function showAuthenticatedView(profile, user) {
@@ -284,6 +285,7 @@
             window.mostrarNotificacion('Conectado: Tu cuenta se sincroniza en la nube.');
         }
         window.actualizarVisibilidadSeccionesCuenta?.();
+        window.osMostrarCuentaLanding?.();
         window.aiAnimarExitoAuth?.();
     }
 

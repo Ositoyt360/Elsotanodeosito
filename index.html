@@ -186,7 +186,9 @@
         <div class="welcome-panel">
             <h1 class="welcome-title">El Sótano de Osito</h1>
 
-            <div class="landing-gate" id="landing-gate">
+            <div class="landing-loading" id="landing-loading">Cargando tu sesión…</div>
+
+            <div class="landing-gate" id="landing-gate" style="display:none;">
                 <button class="landing-a11y-btn" id="landing-a11y-btn" type="button" onclick="toggleLandingTextoGrande()" title="Agrandar y aclarar el texto" aria-pressed="false">
                     <span aria-hidden="true">🔎</span> Texto grande
                 </button>
@@ -305,7 +307,7 @@
                     </section>
                 </div>
             </div>
-            <button class="btn-enter-hub" id="btn-ready" onclick="iniciarCarga()" style="display:none;">Entrar a la página principal</button>
+            <button class="btn-enter-hub" id="btn-ready" onclick="iniciarCarga()" style="display:none;">Entrar a la página</button>
             <div class="loading-container" id="loading-container" style="display: none;">
                 <div class="loading-bar" id="progress-bar"></div>
             </div>
@@ -316,17 +318,17 @@
     <script>
         (function () {
             var TEXTO_BIENVENIDA_LANDING = 'Bienvenido al sótano, al Sótano de Osito. Si quieres entrar con una cuenta, necesitas registrarte, o si ya tienes cuenta, inicia sesión, para que tengas todo ilimitado: chat en vivo e inteligencia artificial sin límites. Para iniciar sesión no necesitas una cuenta de Google: la página tiene su propio registro con correo y contraseña. Si prefieres entrar como invitado, ten en cuenta que tendrás límites, como la inteligencia artificial, que solo te deja hacer cinco preguntas; después ya no vas a poder seguir preguntando, y tampoco vas a poder usar el chat en vivo, entre otras funciones.';
-            var vozYaSonada = false;
+            var vozHablando = false;
 
             function vozLandingActiva() {
                 return localStorage.getItem('osito_ai_voz') !== 'false' && ('speechSynthesis' in window);
             }
 
             function hablarBienvenidaLanding() {
-                if (vozYaSonada || !vozLandingActiva()) return;
+                if (vozHablando || !vozLandingActiva()) return;
                 var gate = document.getElementById('landing-gate');
                 if (!gate || gate.style.display === 'none') return;
-                vozYaSonada = true;
+                vozHablando = true;
                 try {
                     window.speechSynthesis.cancel();
                     var limpio = TEXTO_BIENVENIDA_LANDING.replace(/[^\p{L}\p{N}\s.,;:!?¡¿"'-]/gu, ' ');
@@ -334,11 +336,14 @@
                     utterance.lang = 'es-419';
                     utterance.rate = 1;
                     utterance.pitch = 1;
+                    utterance.onend = function () { vozHablando = false; };
+                    utterance.onerror = function () { vozHablando = false; };
                     window.speechSynthesis.speak(utterance);
-                } catch (e) { /* si el navegador bloquea la voz, seguimos sin ella */ }
+                } catch (e) { vozHablando = false; /* si el navegador bloquea la voz, seguimos sin ella */ }
             }
 
             function detenerVozLanding() {
+                vozHablando = false;
                 if ('speechSynthesis' in window) {
                     try { window.speechSynthesis.cancel(); } catch (e) {}
                 }
@@ -351,7 +356,13 @@
                 el.classList.add(clase);
             }
 
+            function ocultarCargandoLanding() {
+                var cargando = document.getElementById('landing-loading');
+                if (cargando) cargando.style.display = 'none';
+            }
+
             window.mostrarFormularioLogin = function mostrarFormularioLogin() {
+                window.__osFormularioAbierto = true;
                 detenerVozLanding();
                 var gate = document.getElementById('landing-gate');
                 var panel = document.getElementById('auth-panel');
@@ -366,6 +377,7 @@
             };
 
             window.entrarInvitadoDesdeLanding = function entrarInvitadoDesdeLanding() {
+                window.__osAuthBootHandled = true;
                 detenerVozLanding();
                 var gate = document.getElementById('landing-gate');
                 if (gate) {
@@ -379,6 +391,44 @@
             window.aiAnimarExitoAuth = function aiAnimarExitoAuth() {
                 reanimar(document.querySelector('.auth-card'), 'auth-success-pop');
                 reanimar(document.getElementById('btn-ready'), 'guest-enter-anim');
+            };
+
+            window.osMostrarCuentaLanding = function osMostrarCuentaLanding() {
+                window.__osAuthBootHandled = true;
+                detenerVozLanding();
+                ocultarCargandoLanding();
+                var gate = document.getElementById('landing-gate');
+                var panel = document.getElementById('auth-panel');
+                if (gate && gate.style.display !== 'none') {
+                    gate.classList.add('landing-gate-hide');
+                    setTimeout(function () { gate.style.display = 'none'; }, 300);
+                } else if (gate) {
+                    gate.style.display = 'none';
+                }
+                if (panel) {
+                    var yaVisible = panel.style.display === 'block';
+                    panel.style.display = 'block';
+                    if (!yaVisible) reanimar(panel, 'auth-panel-visible');
+                }
+            };
+
+            window.osMostrarEleccionLanding = function osMostrarEleccionLanding() {
+                var esResolucionInicial = !window.__osAuthBootHandled;
+                if (esResolucionInicial) {
+                    window.__osAuthBootHandled = true;
+                    if (window.__osFormularioAbierto) return;
+                }
+                ocultarCargandoLanding();
+                var gate = document.getElementById('landing-gate');
+                var panel = document.getElementById('auth-panel');
+                var readyBtn = document.getElementById('btn-ready');
+                if (panel) panel.style.display = 'none';
+                if (readyBtn) readyBtn.style.display = 'none';
+                if (gate) {
+                    gate.classList.remove('landing-gate-hide');
+                    gate.style.display = 'flex';
+                }
+                setTimeout(hablarBienvenidaLanding, esResolucionInicial ? 250 : 100);
             };
 
             window.toggleLandingTextoGrande = function toggleLandingTextoGrande() {
@@ -404,12 +454,18 @@
                 }
             })();
 
-            document.addEventListener('DOMContentLoaded', function () {
-                setTimeout(hablarBienvenidaLanding, 400);
-            });
+            // Respaldo: si por alguna razón Firebase tarda demasiado en confirmar
+            // si hay sesión activa, mostramos la pantalla de elección de todas formas
+            // para no dejar al usuario viendo solo "Cargando...".
+            setTimeout(function () {
+                if (!window.__osAuthBootHandled) {
+                    window.osMostrarEleccionLanding();
+                }
+            }, 1500);
+
             // Algunos navegadores bloquean la voz hasta el primer gesto del usuario;
             // este respaldo la reproduce en cuanto haya un toque/clic si aún no sonó.
-            document.addEventListener('click', hablarBienvenidaLanding, { once: true, capture: true });
+            document.addEventListener('click', function () { hablarBienvenidaLanding(); }, { once: true, capture: true });
         })();
     </script>
 

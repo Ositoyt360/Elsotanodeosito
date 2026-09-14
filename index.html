@@ -7,7 +7,25 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=ultra-fps-botones-secciones-20260913-3">
+    <link rel="stylesheet" href="styles.css?v=ultra-fps-movil-pc-20260913-4">
+    <script>
+        /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
+           celular de gama de entrada no llegue a renderizar los efectos pesados. */
+        (function () {
+            try {
+                var ua = navigator.userAgent || '';
+                var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || Boolean(navigator.userAgentData && navigator.userAgentData.mobile);
+                var memory = Number(navigator.deviceMemory || 0);
+                var threads = Number(navigator.hardwareConcurrency || 0);
+                var lowEnd = memory > 0 ? memory <= 2 : threads > 0 && threads <= 2;
+                if (mobile) document.documentElement.classList.add('mobile-lite');
+                if (lowEnd) document.documentElement.classList.add('low-end-device');
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    document.documentElement.classList.add('mobile-lite');
+                }
+            } catch (e) {}
+        }());
+    </script>
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -479,6 +497,9 @@
                     <span aria-hidden="true">☰</span> Menú
                 </button>
                 <div class="header-menu-dropdown" id="header-menu-dropdown">
+                    <a class="btn-action header-channel-link" href="https://www.youtube.com/@OsitoYT360" target="_blank" rel="noopener noreferrer">
+                        <span aria-hidden="true">▶</span> Ir al canal
+                    </a>
                     <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
                         <span>⚡</span> Mejorar Rendimiento
                     </button>
@@ -636,7 +657,7 @@
         </main>
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
-            <audio id="bg-music" src="musica_snowfall.mp3" preload="auto" loop></audio>
+            <audio id="bg-music" src="musica_snowfall.mp3" preload="none" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
                 <img src="logo_yt.png" alt="" class="yt-channel-logo">
@@ -948,8 +969,9 @@
             window.addEventListener('osito:firebase-auth-ready', actualizarVisibilidadSeccionesCuenta);
             aplicarDecoracionEstacional();
 
-            if(localStorage.getItem('osito_no_anim') === 'true') toggleAnimaciones();
-            else iniciarSecuenciaPublicitaria();
+            if(localStorage.getItem('osito_no_anim') === 'true') {
+                if (!document.body.classList.contains('no-animations')) toggleAnimaciones();
+            } else if (animacionesActivas) iniciarSecuenciaPublicitaria();
 
             const promoContainer = document.querySelector('.promo-container');
             if (promoContainer) {
@@ -985,10 +1007,16 @@
                 const deviceMemory = navigator.deviceMemory || 4; // in GB
                 const hwThreads = navigator.hardwareConcurrency || 4;
                 const ua = navigator.userAgent || '';
-                const isMobile = /Mobi|Android/i.test(ua);
+                const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua) || document.documentElement.classList.contains('mobile-lite');
 
                 const ultraGuardado = localStorage.getItem('osito_ultra_performance') === 'true';
-                const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2) || isMobile && deviceMemory <= 2;
+                const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2) || isMobile;
+                document.documentElement.classList.toggle('mobile-lite', isMobile || lowEnd);
+                document.documentElement.classList.toggle('low-end-device', lowEnd);
+                if (isMobile) {
+                    animacionesActivas = false;
+                    document.body.classList.add('no-animations');
+                }
                 if (ultraGuardado || deviceMemory <= 1) activarModoUltra(false);
 
                 // Default advanced animations enabled unless low-end
@@ -997,7 +1025,7 @@
                     : !lowEnd;
 
                 // Set promo interval longer for low-end devices
-                promoIntervalMs = lowEnd ? 9000 : 6000;
+                promoIntervalMs = lowEnd ? 12000 : 6000;
 
                 // Reflect UI
                 const btnAdv = document.getElementById('btn-toggle-advanced');
@@ -1471,7 +1499,10 @@
         function entrarAlSitio() {
             document.getElementById('welcome-screen').classList.add('welcome-fade-out');
             setTimeout(() => { document.getElementById('welcome-screen').remove(); }, 400);
-            setTimeout(() => { document.getElementById('sidebar-panel')?.classList.add('sidebar-show'); }, 100);
+            setTimeout(() => {
+                const sidebar = document.getElementById('sidebar-panel');
+                if (sidebar) sidebar.classList.add('sidebar-show');
+            }, 100);
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
             // Autoplay permitido después del gesto del usuario
@@ -1921,6 +1952,11 @@
 
         function iniciarEspacio() {
             const canvas = document.getElementById('space-canvas');
+            if (document.documentElement.classList.contains('mobile-lite') || document.documentElement.classList.contains('low-end-device')) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                return;
+            }
             if(!canvas) return;
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;

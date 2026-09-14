@@ -987,6 +987,17 @@ header {
 .header-menu-dropdown .voice-assistant-badge {
     width: 100%;
     justify-content: center;
+    box-sizing: border-box;
+}
+
+.header-menu-dropdown .header-channel-link {
+    text-decoration: none;
+    color: var(--text-main);
+}
+
+.header-menu-dropdown .header-channel-link:hover {
+    color: #041009;
+    background: var(--primary-color);
 }
 
 .header-menu-dropdown .theme-selector {
@@ -3903,3 +3914,441 @@ button, a.btn-directos-nav { position: relative; overflow: hidden; }
 /* ===== CINEMÁTICA DE ACCESO ===== */
 #welcome-screen::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(0,242,254,.10),transparent 22%),radial-gradient(circle at 20% 30%,rgba(88,255,154,.08),transparent 25%),radial-gradient(circle at 80% 70%,rgba(157,0,255,.09),transparent 25%);filter:blur(8px);animation:welcomeAtmosphere 8s ease-in-out infinite alternate;z-index:0;pointer-events:none}.welcome-panel{animation:welcomePanelCinematic .9s cubic-bezier(.16,1,.3,1) both}.welcome-title{position:relative;text-shadow:0 0 18px rgba(0,242,254,.18),0 0 42px rgba(88,255,154,.08)}.landing-gate,.account-welcome{animation:welcomeContentCinematic .75s .16s cubic-bezier(.16,1,.3,1) both}.landing-btn,.account-welcome-btn{position:relative;overflow:hidden;border:1px solid rgba(0,242,254,.42)!important;background:linear-gradient(135deg,rgba(0,242,254,.13),rgba(88,255,154,.08))!important;box-shadow:0 10px 35px rgba(0,0,0,.3),0 0 22px rgba(0,242,254,.08),inset 0 1px 0 rgba(255,255,255,.15);transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,border-color .25s ease,filter .2s ease}.landing-btn::before,.account-welcome-btn::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);transform:translateX(-130%);transition:transform .55s ease}.landing-btn:hover::before,.account-welcome-btn:hover::before{transform:translateX(130%)}.landing-btn:hover,.account-welcome-btn:hover{transform:translateY(-4px) scale(1.025)!important;box-shadow:0 16px 40px rgba(0,0,0,.38),0 0 32px rgba(0,242,254,.22),inset 0 1px 0 rgba(255,255,255,.2)!important;border-color:rgba(117,255,209,.72)!important}.landing-btn:active,.account-welcome-btn:active{transform:scale(.95)!important}.welcome-fade-out{opacity:0!important;transform:scale(1.08)!important;filter:blur(8px);transition:opacity .65s cubic-bezier(.4,0,.2,1),transform .65s cubic-bezier(.4,0,.2,1),filter .65s ease!important}.welcome-fade-out .welcome-panel{transform:translateY(-18px) scale(1.04);opacity:0;transition:transform .5s ease,opacity .35s ease}.auth-panel.auth-panel-visible{animation:authCinematicIn .65s cubic-bezier(.16,1,.3,1) both}@keyframes welcomeAtmosphere{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.08) translate3d(0,-18px,0)}}@keyframes welcomePanelCinematic{from{opacity:0;transform:translateY(30px) scale(.95);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}@keyframes welcomeContentCinematic{from{opacity:0;transform:translateY(20px) scale(.96);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}@keyframes authCinematicIn{from{opacity:0;transform:translateY(28px) scale(.94);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
 .profile-open-cinematic{animation:profileOpenCinematic .45s cubic-bezier(.34,1.56,.64,1)}@keyframes profileOpenCinematic{0%{transform:scale(1)}45%{transform:scale(.91);filter:brightness(1.35)}100%{transform:scale(1)}}
+
+/* ===== OPTIMIZACIÓN REAL PARA MÓVILES / EQUIPOS DE GAMA DE ENTRADA ===== */
+html.mobile-lite #space-canvas,
+html.mobile-lite .ambient-glow,
+html.mobile-lite .gamer-grid,
+html.mobile-lite #welcome-screen::before {
+    display: none !important;
+}
+
+html.mobile-lite #welcome-screen {
+    perspective: none;
+    background: #03050a;
+}
+
+html.mobile-lite .welcome-title {
+    animation: none !important;
+    filter: none !important;
+    text-shadow: 0 0 6px rgba(57,255,106,.45), 0 0 18px rgba(57,255,106,.20) !important;
+    background: transparent !important;
+    background-image: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #39ff6a !important;
+    color: #39ff6a !important;
+}
+
+/* El barrido blanco era especialmente costoso y además generaba el "texto fantasma"
+   visible en teléfonos. En móvil queda completamente desactivado. */
+html.mobile-lite .welcome-title::after { display: none !important; }
+
+@media (max-width: 768px) {
+    .welcome-title::after { display: none !important; }
+}
+
+html.mobile-lite .welcome-panel,
+html.mobile-lite .landing-gate,
+html.mobile-lite .account-welcome,
+html.mobile-lite .auth-panel.auth-panel-visible {
+    animation: none !important;
+    filter: none !important;
+}
+
+html.mobile-lite header,
+html.mobile-lite .sidebar-subscribe,
+html.mobile-lite .content-section,
+html.mobile-lite .video-card,
+html.mobile-lite .account-welcome,
+html.mobile-lite .auth-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.22) !important;
+}
+
+html.mobile-lite .logo span,
+html.mobile-lite .btn-action,
+html.mobile-lite .tab-btn,
+html.mobile-lite .video-card,
+html.mobile-lite .social-links a,
+html.mobile-lite .live-corner,
+html.mobile-lite .ia-toggle-bubble {
+    animation: none !important;
+    filter: none !important;
+}
+
+html.mobile-lite button:not(:disabled):hover,
+html.mobile-lite a.btn-directos-nav:hover {
+    transform: none !important;
+}
+
+html.low-end-device * {
+    scroll-behavior: auto !important;
+}
+
+html.low-end-device .updates-strip,
+html.low-end-device .sidebar-subscribe,
+html.low-end-device .account-welcome,
+html.low-end-device .auth-card,
+html.low-end-device .content-section {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Menú móvil centrado de verdad: no depende del ancho del header ni se sale por un lado. */
+@media (max-width: 768px) {
+    .header-menu-wrap { position: static; }
+
+    .header-menu-dropdown {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        width: min(88vw, 360px);
+        min-width: 0;
+        max-width: calc(100vw - 24px);
+        max-height: calc(100vh - 36px);
+        overflow-y: auto;
+        box-sizing: border-box;
+        transform: translate(-50%, -50%);
+        z-index: 10050;
+        padding: 12px;
+        gap: 8px;
+        border-radius: 18px;
+        box-shadow: 0 22px 55px rgba(0,0,0,.72);
+    }
+
+    .header-menu-dropdown.open {
+        animation: headerMenuOpenMobile .2s ease-out both;
+    }
+
+    @keyframes headerMenuOpenMobile {
+        from { opacity: 0; transform: translate(-50%, -47%) scale(.97); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .header-menu-dropdown .btn-action,
+    .header-menu-dropdown .voice-assistant-badge {
+        min-height: 46px;
+        font-size: 12px;
+    }
+
+    /* El CTA del canal nunca debe quedar invisible por una animación que se haya
+       desactivado en Modo Ultra o por un fallo de JavaScript. */
+    .sidebar-subscribe .btn-directos-nav,
+    body.ultra-performance .sidebar-subscribe .btn-directos-nav,
+    body.no-animations .sidebar-subscribe .btn-directos-nav {
+        opacity: 1 !important;
+        animation: none !important;
+        transform: none !important;
+    }
+}
+
+/* En escritorio se conserva la animación de entrada, pero el CTA parte de visible. */
+.sidebar-subscribe .btn-directos-nav {
+    opacity: 1;
+}
+
+body.ultra-performance .sidebar-subscribe .btn-directos-nav,
+body.no-animations .sidebar-subscribe .btn-directos-nav {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* Menos trabajo de GPU en equipos lentos sin cambiar el diseño del PC normal. */
+html.low-end-device .logo span,
+html.low-end-device .page-title,
+html.low-end-device h1.big-glow,
+html.low-end-device h2.big-glow {
+    animation: none !important;
+    filter: none !important;
+}
+
+/* ===== FIX DEFINITIVO: TITULOS ESTATICOS + MENU CENTRADO ===== */
+/* El texto no debe duplicarse ni tener barridos/reflejos. */
+.welcome-title,
+.logo span,
+.hero-title,
+.section-title,
+.promo-title-main,
+.cd-text,
+.page-title,
+h1.big-glow,
+h2.big-glow {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #39ff6a !important;
+    color: #39ff6a !important;
+    text-shadow: 0 0 6px rgba(57,255,106,.45), 0 0 18px rgba(57,255,106,.20) !important;
+}
+
+/* El pseudo-elemento era el responsable del texto fantasma en la bienvenida. */
+.welcome-title::before,
+.welcome-title::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+}
+
+/* Logo del encabezado: verde neón sólido y sin movimiento. */
+.logo {
+    color: #39ff6a !important;
+}
+.logo span {
+    display: inline-block;
+    color: #39ff6a !important;
+}
+
+/* Menú: siempre centrado respecto a la pantalla, no respecto al borde derecho. */
+@media (min-width: 769px) {
+    header { position: sticky; }
+    .header-menu-wrap {
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        z-index: 200 !important;
+    }
+    .header-menu-dropdown {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        top: calc(100% + 10px) !important;
+    }
+    .header-menu-dropdown.open {
+        animation: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* El botón Menú queda en el centro del encabezado. */
+    header {
+        position: sticky !important;
+        min-height: 62px;
+    }
+    .header-menu-wrap {
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        z-index: 200 !important;
+    }
+    .header-actions {
+        width: 100% !important;
+        min-height: 48px;
+        justify-content: center !important;
+        pointer-events: none;
+    }
+    .header-menu-wrap,
+    .header-menu-wrap * {
+        pointer-events: auto;
+    }
+    .header-menu-dropdown,
+    .header-menu-dropdown.open {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        top: 50% !important;
+        width: min(88vw, 360px) !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: calc(100dvh - 36px) !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        animation: none !important;
+        opacity: 1 !important;
+    }
+
+    /* Nada de brillo/barrido en la pantalla de bienvenida del celular. */
+    #welcome-screen,
+    #welcome-screen::before,
+    .gamer-grid,
+    .welcome-overlay {
+        animation: none !important;
+    }
+    .welcome-title {
+        background: none !important;
+        -webkit-text-fill-color: #39ff6a !important;
+        color: #39ff6a !important;
+        text-shadow: 0 0 6px rgba(57,255,106,.38) !important;
+    }
+}
+
+
+/* ===== V3: LOGO LIMPIO Y ESTÁTICO ===== */
+.logo {
+    display: block !important;
+    width: auto !important;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent !important;
+    color: #39ff6a !important;
+    font-size: clamp(18px, 2.2vw, 28px) !important;
+    font-weight: 900 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 1.5px !important;
+    text-align: left !important;
+    white-space: nowrap;
+    text-transform: uppercase;
+    text-shadow: 0 0 7px rgba(57,255,106,.7), 0 0 20px rgba(57,255,106,.25) !important;
+    -webkit-text-fill-color: #39ff6a !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    filter: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+.logo::before,
+.logo::after { content: none !important; display: none !important; }
+.logo span { display: inline !important; background: none !important; color: inherit !important; -webkit-text-fill-color: inherit !important; animation: none !important; filter: none !important; }
+
+/* ===== V3: TÍTULO DE BIENVENIDA SIN NINGÚN DUPLICADO ===== */
+.welcome-title {
+    position: relative !important;
+    background: transparent !important;
+    color: #39ff6a !important;
+    -webkit-text-fill-color: #39ff6a !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    text-shadow: 0 0 8px rgba(57,255,106,.65), 0 0 24px rgba(57,255,106,.22) !important;
+    filter: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+.welcome-title::before,
+.welcome-title::after { content: none !important; display: none !important; }
+
+/* ===== V3: MENÚ REALMENTE CENTRADO EN MÓVIL ===== */
+@media (max-width: 768px) {
+    header { position: sticky !important; }
+    header > .logo { position: relative; z-index: 1; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
+    .header-actions { position: static !important; width: 0 !important; min-height: 0 !important; }
+    .header-menu-wrap {
+        position: fixed !important;
+        left: 50vw !important;
+        top: 31px !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        z-index: 10060 !important;
+    }
+    .header-menu-dropdown,
+    .header-menu-dropdown.open {
+        position: fixed !important;
+        left: 50vw !important;
+        top: 50vh !important;
+        right: auto !important;
+        width: min(88vw, 360px) !important;
+        max-width: calc(100vw - 24px) !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        animation: none !important;
+        opacity: 1 !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .logo { font-size: 15px !important; letter-spacing: .8px !important; }
+}
+
+/* ==========================================================
+   V4 - LOGO/TÍTULO LIMPIO: SIN CUADRO, SIN DUPLICADO, SIN ANIMACIÓN
+   ========================================================== */
+.logo,
+.logo span,
+.welcome-title {
+    background: transparent !important;
+    background-image: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #39ff6a !important;
+    color: #39ff6a !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+}
+
+.logo::before,
+.logo::after,
+.logo span::before,
+.logo span::after,
+.welcome-title::before,
+.welcome-title::after {
+    content: none !important;
+    display: none !important;
+    background: none !important;
+    animation: none !important;
+}
+
+.logo {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-transform: uppercase !important;
+    font-weight: 900 !important;
+    text-shadow: 0 0 5px rgba(57,255,106,.55), 0 0 14px rgba(57,255,106,.20) !important;
+}
+
+.welcome-title {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 0 15px 0 !important;
+    overflow: visible !important;
+    text-transform: uppercase !important;
+    font-weight: 900 !important;
+    text-shadow: 0 0 6px rgba(57,255,106,.55), 0 0 16px rgba(57,255,106,.18) !important;
+}
+
+/* En móvil el título se adapta sin crear capas ni fondos. */
+@media (max-width: 768px) {
+    .welcome-title {
+        font-size: clamp(2rem, 10vw, 3.2rem) !important;
+        line-height: 1.08 !important;
+        letter-spacing: -0.8px !important;
+        white-space: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    .logo {
+        font-size: clamp(15px, 4vw, 22px) !important;
+        line-height: 1.1 !important;
+        letter-spacing: .7px !important;
+    }
+
+    /* Menú desplegable: centro físico de la pantalla. */
+    .header-menu-dropdown,
+    .header-menu-dropdown.open {
+        position: fixed !important;
+        left: 50vw !important;
+        top: 50vh !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: min(88vw, 360px) !important;
+        max-width: calc(100vw - 24px) !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        animation: none !important;
+    }
+}
+
+/* Pantalla de bienvenida: cero animaciones sobre el logo/título. */
+#welcome-screen .welcome-title,
+#welcome-screen .welcome-title * {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+}

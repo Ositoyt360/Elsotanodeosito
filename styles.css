@@ -1,5 +1,5 @@
 /* Importación de tipografía moderna para interfaces Web */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Baloo+2:wght@600;700;800&display=swap');
 
 :root {
     --bg-color: #080a0f;
@@ -82,30 +82,50 @@ body {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #03050a;
     display: flex; justify-content: center; align-items: center; z-index: 9999;
     transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    perspective: 1000px;
+    perspective: 500px;
+    perspective-origin: 50% 30%;
     overflow: hidden;
 }
 
+/* Piso 3D: bisagra fija en el borde inferior de la pantalla (como un suelo real)
+   que se aleja hacia un punto de fuga, con las líneas desplazándose hacia el
+   espectador para dar sensación de profundidad que "viene desde el fondo". */
 .gamer-grid {
-    position: absolute; bottom: -50%; left: -50%; width: 200%; height: 150%;
-    background-image: linear-gradient(rgba(0, 242, 254, 0.15) 2px, transparent 2px), 
-                      linear-gradient(90deg, rgba(0, 242, 254, 0.15) 2px, transparent 2px);
-    background-size: 50px 50px;
-    transform: rotateX(70deg);
-    animation: grid-scroll 2.5s linear infinite;
-    opacity: 0.3; z-index: 0;
+    position: absolute;
+    bottom: 0; left: -50%;
+    width: 200%; height: 65%;
+    background-image: linear-gradient(rgba(0, 242, 254, 0.35) 1px, transparent 1px), 
+                      linear-gradient(90deg, rgba(0, 242, 254, 0.35) 1px, transparent 1px);
+    background-size: 60px 60px;
+    transform-origin: 50% 100%;
+    transform: rotateX(78deg);
+    animation: grid-scroll 1.4s linear infinite;
+    opacity: 0.55; z-index: 0;
+    -webkit-mask-image: linear-gradient(to top, black 0%, black 35%, transparent 92%);
+    mask-image: linear-gradient(to top, black 0%, black 35%, transparent 92%);
     transition: background-image 0.5s ease;
+}
+
+/* Línea de horizonte con resplandor, marca el punto de fuga del piso 3D. */
+.gamer-grid::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--primary-color, #00f2fe);
+    box-shadow: 0 0 25px 3px rgba(0, 242, 254, 0.8);
+    opacity: 0.7;
 }
 
 .welcome-overlay { 
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-    background: linear-gradient(to bottom, #03050a 15%, transparent 85%, #03050a 100%); 
+    background: linear-gradient(to bottom, #03050a 15%, transparent 55%, transparent 80%, #03050a 100%); 
     z-index: 1; pointer-events: none; 
 }
 
 @keyframes grid-scroll { 
-    0% { transform: rotateX(70deg) translateY(0); } 
-    100% { transform: rotateX(70deg) translateY(50px); } 
+    0% { background-position: 0 0, 0 0; } 
+    100% { background-position: 0 60px, 0 0; } 
 }
 
 .welcome-panel { text-align: center; width: min(92vw, 720px); max-width: 720px; z-index: 2; position: relative; }
@@ -907,45 +927,57 @@ body.guest-mode .livechat-floating-container {
 .toast-notification.show { display: flex; opacity: 1; transform: translateY(0); }
 
 /* --- CABECERA --- */
+/* El encabezado se organiza en columna: primero el logo y, justo debajo
+   y centrado, el botón de menú. Así el menú siempre queda anclado al
+   logo en lugar de ir suelto a un costado. */
 header { 
-    display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm) 5%; 
+    display: flex; flex-direction: column; justify-content: center; align-items: center; 
+    padding: var(--space-sm) 5%; text-align: center;
     background: rgba(5, 7, 10, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; 
-    flex-wrap: wrap; gap: 15px; 
+    gap: 10px; 
 }
 
-.logo{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    flex-wrap:wrap;
-    font-size:24px;
-    font-weight:900;
-    letter-spacing:2px;
-}
-.logo span{
-    display:inline-block;
-    background:linear-gradient(45deg,#39ff6a,#eafff2);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    filter: drop-shadow(0 0 8px rgba(57,255,106,.55));
-    animation:logoFloat 2.5s ease-in-out infinite;
-}
-.logo span:nth-child(1){animation-delay:0s;}
-.logo span:nth-child(2){animation-delay:.25s;}
-.logo span:nth-child(3){animation-delay:.5s;}
-.logo span:nth-child(4){animation-delay:.75s;}
-@keyframes logoFloat{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-6px) scale(1.05)}
+/* Logo: verde neón, tipografía redondeada y propia (Baloo 2), en
+   formato "Título" (no todo en mayúsculas) y con una animación de
+   brillo muy sutil para no ser exagerada. */
+.logo {
+    display: inline-block;
+    font-family: 'Baloo 2', 'Inter', system-ui, sans-serif;
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.15;
+    color: #39ff6a;
+    text-shadow: 0 0 8px rgba(57, 255, 106, 0.55), 0 0 20px rgba(57, 255, 106, 0.22);
+    animation: logoGlowPulse 4s ease-in-out infinite;
 }
 
-.header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+@keyframes logoGlowPulse {
+    0%, 100% {
+        text-shadow: 0 0 6px rgba(57, 255, 106, 0.45), 0 0 16px rgba(57, 255, 106, 0.16);
+    }
+    50% {
+        text-shadow: 0 0 10px rgba(57, 255, 106, 0.75), 0 0 26px rgba(57, 255, 106, 0.32);
+    }
+}
+
+/* En celulares de gama baja o con "reducir movimiento" activado, el
+   logo se queda quieto para no gastar batería/CPU de más. */
+html.mobile-lite .logo,
+html.low-end-device .logo,
+body.ultra-performance .logo,
+body.no-animations .logo {
+    animation: none !important;
+}
+
+.header-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
 /* Menú desplegable del header: agrupa Mejorar Rendimiento, Modo ultra,
    Notificaciones, Asistente IA, Cerrar sesión, Mi perfil y Cambiar foto
-   detrás de un único botón "☰ Menú" en vez de mostrarlos todos sueltos. */
+   detrás de un único botón "☰ Menú" en vez de mostrarlos todos sueltos.
+   Se abre siempre centrado en la pantalla (como una ventana modal),
+   nunca pegado a un lado, tanto en celular como en computadora. */
 .header-menu-wrap {
     position: relative;
 }
@@ -955,22 +987,45 @@ header {
     letter-spacing: 0.4px;
 }
 
+/* Fondo oscuro detrás del menú centrado, para que se note que es una
+   ventana flotante y no un elemento más pegado al contenido. */
+.header-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 5, 8, 0.6);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10040;
+}
+
+.header-menu-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .header-menu-dropdown {
     display: none;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    min-width: 240px;
-    max-width: min(90vw, 320px);
-    padding: 14px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(90vw, 340px);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 16px;
     background: linear-gradient(180deg, rgba(13, 17, 23, 0.98), rgba(8, 10, 15, 0.98));
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg, 14px);
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
-    z-index: 60;
+    z-index: 10050;
 }
 
 .header-menu-dropdown.open {
@@ -979,8 +1034,8 @@ header {
 }
 
 @keyframes headerMenuOpen {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translate(-50%, -47%) scale(0.97); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .header-menu-dropdown .btn-action,
@@ -992,12 +1047,12 @@ header {
 
 .header-menu-dropdown .header-channel-link {
     text-decoration: none;
-    color: var(--text-main);
+    color: var(--primary-color);
 }
 
 .header-menu-dropdown .header-channel-link:hover {
-    color: #041009;
-    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 16px rgba(88, 255, 154, 0.28);
 }
 
 .header-menu-dropdown .theme-selector {
@@ -1007,8 +1062,11 @@ header {
     justify-content: center;
 }
 
+/* Botones de fondo oscuro: el texto siempre va en verde neón para que
+   se lea bien, y ese color NO cambia al pasar el mouse o tocar con el
+   dedo (solo se levanta un poco y brilla más el borde). */
 .btn-action { 
-    background: var(--surface); color: var(--text-main); 
+    background: var(--surface); color: var(--primary-color); 
     border: 1px solid var(--glass-border); padding: 8px 16px; 
     font-size: 11px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; 
     transition: var(--transition-premium); display: flex; align-items: center; gap: 8px;
@@ -1025,8 +1083,7 @@ header {
 
 .btn-action:hover:not(:disabled) { 
     border-color: var(--primary-color);
-    background: #000000;
-    color: #ffffff;
+    box-shadow: 0 0 16px rgba(88, 255, 154, 0.25);
     transform: translateY(-2px);
 }
 
@@ -1074,7 +1131,7 @@ header {
     gap: 8px;
     font-size: 11px;
     font-weight: 700;
-    color: var(--text-main);
+    color: var(--primary-color);
     box-shadow: 0 0 14px rgba(88, 255, 154, 0.12);
     transition: var(--transition-premium);
     user-select: none;
@@ -1093,9 +1150,8 @@ header {
 }
 
 .voice-assistant-badge:hover:not(:disabled) {
-    background: #000000;
     border-color: var(--primary-color);
-    color: #ffffff;
+    box-shadow: 0 0 20px rgba(88, 255, 154, 0.3);
 }
 
 .voice-assistant-badge.active {
@@ -1873,13 +1929,22 @@ body::before {
     background: rgba(0, 0, 0, 0.62);
     border: 1px solid rgba(255,255,255,0.14);
     cursor: pointer;
-    filter: grayscale(1);
+    /* Sin marcar: estrella en gris. */
+    filter: grayscale(1) brightness(1.15);
 }
 
-.fav-badge.active,
-.fav-badge:hover {
+/* Ya marcada como favorito: estrella en amarillo. El estado no cambia
+   por pasar el mouse o tocar, solo al hacer clic (clase .active). */
+.fav-badge.active {
     filter: none;
     box-shadow: 0 0 18px rgba(255, 210, 64, 0.28);
+}
+
+/* La estrella de favoritos es exclusiva de cuentas con sesión iniciada;
+   en modo invitado no debe aparecer. */
+body.solo-invitado .fav-badge,
+body.guest-mode .fav-badge {
+    display: none !important;
 }
 
 .promo-updates {
@@ -3916,15 +3981,16 @@ button, a.btn-directos-nav { position: relative; overflow: hidden; }
 .profile-open-cinematic{animation:profileOpenCinematic .45s cubic-bezier(.34,1.56,.64,1)}@keyframes profileOpenCinematic{0%{transform:scale(1)}45%{transform:scale(.91);filter:brightness(1.35)}100%{transform:scale(1)}}
 
 /* ===== OPTIMIZACIÓN REAL PARA MÓVILES / EQUIPOS DE GAMA DE ENTRADA ===== */
-html.mobile-lite #space-canvas,
-html.mobile-lite .ambient-glow,
-html.mobile-lite .gamer-grid,
-html.mobile-lite #welcome-screen::before {
+/* El fondo animado (grid en movimiento) se mantiene en celulares normales;
+   solo se apaga en equipos realmente de gama muy baja (low-end-device). */
+html.low-end-device #space-canvas,
+html.low-end-device .ambient-glow,
+html.low-end-device .gamer-grid,
+html.low-end-device #welcome-screen::before {
     display: none !important;
 }
 
 html.mobile-lite #welcome-screen {
-    perspective: none;
     background: #03050a;
 }
 
@@ -4058,7 +4124,6 @@ body.no-animations .sidebar-subscribe .btn-directos-nav {
 }
 
 /* Menos trabajo de GPU en equipos lentos sin cambiar el diseño del PC normal. */
-html.low-end-device .logo span,
 html.low-end-device .page-title,
 html.low-end-device h1.big-glow,
 html.low-end-device h2.big-glow {
@@ -4066,10 +4131,10 @@ html.low-end-device h2.big-glow {
     filter: none !important;
 }
 
-/* ===== FIX DEFINITIVO: TITULOS ESTATICOS + MENU CENTRADO ===== */
-/* El texto no debe duplicarse ni tener barridos/reflejos. */
+/* ===== TÍTULOS ESTÁTICOS (sin duplicados ni barridos raros) ===== */
+/* Nota: el logo del header (.logo) tiene sus propias reglas más arriba,
+   con su animación de brillo sutil; aquí NO se toca para no pisarla. */
 .welcome-title,
-.logo span,
 .hero-title,
 .section-title,
 .promo-title-main,
@@ -4077,7 +4142,6 @@ html.low-end-device h2.big-glow {
 .page-title,
 h1.big-glow,
 h2.big-glow {
-    animation: none !important;
     transform: none !important;
     filter: none !important;
     background: none !important;
@@ -4096,79 +4160,10 @@ h2.big-glow {
     animation: none !important;
 }
 
-/* Logo del encabezado: verde neón sólido y sin movimiento. */
-.logo {
-    color: #39ff6a !important;
-}
-.logo span {
-    display: inline-block;
-    color: #39ff6a !important;
-}
-
-/* Menú: siempre centrado respecto a la pantalla, no respecto al borde derecho. */
-@media (min-width: 769px) {
-    header { position: sticky; }
-    .header-menu-wrap {
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        z-index: 200 !important;
-    }
-    .header-menu-dropdown {
-        left: 50% !important;
-        right: auto !important;
-        transform: translateX(-50%) !important;
-        top: calc(100% + 10px) !important;
-    }
-    .header-menu-dropdown.open {
-        animation: none !important;
-    }
-}
-
 @media (max-width: 768px) {
-    /* El botón Menú queda en el centro del encabezado. */
-    header {
-        position: sticky !important;
-        min-height: 62px;
-    }
-    .header-menu-wrap {
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        z-index: 200 !important;
-    }
-    .header-actions {
-        width: 100% !important;
-        min-height: 48px;
-        justify-content: center !important;
-        pointer-events: none;
-    }
-    .header-menu-wrap,
-    .header-menu-wrap * {
-        pointer-events: auto;
-    }
-    .header-menu-dropdown,
-    .header-menu-dropdown.open {
-        position: fixed !important;
-        left: 50% !important;
-        right: auto !important;
-        top: 50% !important;
-        width: min(88vw, 360px) !important;
-        min-width: 0 !important;
-        max-width: calc(100vw - 24px) !important;
-        max-height: calc(100dvh - 36px) !important;
-        transform: translate(-50%, -50%) !important;
-        margin: 0 !important;
-        animation: none !important;
-        opacity: 1 !important;
-    }
-
-    /* Nada de brillo/barrido en la pantalla de bienvenida del celular. */
-    #welcome-screen,
+    /* Nada de brillo/barrido extra en la pantalla de bienvenida del celular,
+       pero el grid en movimiento del fondo se mantiene activo. */
     #welcome-screen::before,
-    .gamer-grid,
     .welcome-overlay {
         animation: none !important;
     }
@@ -4180,36 +4175,6 @@ h2.big-glow {
     }
 }
 
-
-/* ===== V3: LOGO LIMPIO Y ESTÁTICO ===== */
-.logo {
-    display: block !important;
-    width: auto !important;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
-    background: transparent !important;
-    color: #39ff6a !important;
-    font-size: clamp(18px, 2.2vw, 28px) !important;
-    font-weight: 900 !important;
-    line-height: 1.1 !important;
-    letter-spacing: 1.5px !important;
-    text-align: left !important;
-    white-space: nowrap;
-    text-transform: uppercase;
-    text-shadow: 0 0 7px rgba(57,255,106,.7), 0 0 20px rgba(57,255,106,.25) !important;
-    -webkit-text-fill-color: #39ff6a !important;
-    -webkit-background-clip: initial !important;
-    background-clip: initial !important;
-    filter: none !important;
-    animation: none !important;
-    transform: none !important;
-}
-.logo::before,
-.logo::after { content: none !important; display: none !important; }
-.logo span { display: inline !important; background: none !important; color: inherit !important; -webkit-text-fill-color: inherit !important; animation: none !important; filter: none !important; }
-
-/* ===== V3: TÍTULO DE BIENVENIDA SIN NINGÚN DUPLICADO ===== */
 .welcome-title {
     position: relative !important;
     background: transparent !important;
@@ -4221,97 +4186,15 @@ h2.big-glow {
     filter: none !important;
     animation: none !important;
     transform: none !important;
-}
-.welcome-title::before,
-.welcome-title::after { content: none !important; display: none !important; }
-
-/* ===== V3: MENÚ REALMENTE CENTRADO EN MÓVIL ===== */
-@media (max-width: 768px) {
-    header { position: sticky !important; }
-    header > .logo { position: relative; z-index: 1; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; }
-    .header-actions { position: static !important; width: 0 !important; min-height: 0 !important; }
-    .header-menu-wrap {
-        position: fixed !important;
-        left: 50vw !important;
-        top: 31px !important;
-        transform: translate(-50%, -50%) !important;
-        margin: 0 !important;
-        z-index: 10060 !important;
-    }
-    .header-menu-dropdown,
-    .header-menu-dropdown.open {
-        position: fixed !important;
-        left: 50vw !important;
-        top: 50vh !important;
-        right: auto !important;
-        width: min(88vw, 360px) !important;
-        max-width: calc(100vw - 24px) !important;
-        transform: translate(-50%, -50%) !important;
-        margin: 0 !important;
-        animation: none !important;
-        opacity: 1 !important;
-    }
-}
-
-@media (max-width: 420px) {
-    .logo { font-size: 15px !important; letter-spacing: .8px !important; }
-}
-
-/* ==========================================================
-   V4 - LOGO/TÍTULO LIMPIO: SIN CUADRO, SIN DUPLICADO, SIN ANIMACIÓN
-   ========================================================== */
-.logo,
-.logo span,
-.welcome-title {
-    background: transparent !important;
-    background-image: none !important;
-    -webkit-background-clip: initial !important;
-    background-clip: initial !important;
-    -webkit-text-fill-color: #39ff6a !important;
-    color: #39ff6a !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    filter: none !important;
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-}
-
-.logo::before,
-.logo::after,
-.logo span::before,
-.logo span::after,
-.welcome-title::before,
-.welcome-title::after {
-    content: none !important;
-    display: none !important;
-    background: none !important;
-    animation: none !important;
-}
-
-.logo {
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: auto !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
-    text-transform: uppercase !important;
-    font-weight: 900 !important;
-    text-shadow: 0 0 5px rgba(57,255,106,.55), 0 0 14px rgba(57,255,106,.20) !important;
-}
-
-.welcome-title {
     display: block !important;
     width: 100% !important;
     padding: 0 !important;
     margin: 0 0 15px 0 !important;
     overflow: visible !important;
-    text-transform: uppercase !important;
     font-weight: 900 !important;
-    text-shadow: 0 0 6px rgba(57,255,106,.55), 0 0 16px rgba(57,255,106,.18) !important;
 }
+.welcome-title::before,
+.welcome-title::after { content: none !important; display: none !important; }
 
 /* En móvil el título se adapta sin crear capas ni fondos. */
 @media (max-width: 768px) {
@@ -4322,30 +4205,9 @@ h2.big-glow {
         white-space: normal !important;
         overflow-wrap: normal !important;
     }
-
-    .logo {
-        font-size: clamp(15px, 4vw, 22px) !important;
-        line-height: 1.1 !important;
-        letter-spacing: .7px !important;
-    }
-
-    /* Menú desplegable: centro físico de la pantalla. */
-    .header-menu-dropdown,
-    .header-menu-dropdown.open {
-        position: fixed !important;
-        left: 50vw !important;
-        top: 50vh !important;
-        right: auto !important;
-        bottom: auto !important;
-        width: min(88vw, 360px) !important;
-        max-width: calc(100vw - 24px) !important;
-        transform: translate(-50%, -50%) !important;
-        margin: 0 !important;
-        animation: none !important;
-    }
 }
 
-/* Pantalla de bienvenida: cero animaciones sobre el logo/título. */
+/* Pantalla de bienvenida: cero animaciones sobre el título. */
 #welcome-screen .welcome-title,
 #welcome-screen .welcome-title * {
     animation: none !important;

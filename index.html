@@ -7,7 +7,11 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=ultra-fps-movil-pc-20260913-4">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    <link rel="stylesheet" href="styles.css?v=fondo-movimiento-20260914-2">
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -490,12 +494,13 @@
     </script>
 
     <header>
-        <div class="logo" aria-label="El Sótano de Osito">EL SÓTANO DE OSITO</div>
+        <div class="logo" aria-label="El Sótano de Osito">El Sótano De Osito</div>
         <div class="header-actions"> 
             <div class="header-menu-wrap">
                 <button class="btn-action header-menu-toggle" id="header-menu-toggle" type="button" onclick="toggleHeaderMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="header-menu-dropdown">
                     <span aria-hidden="true">☰</span> Menú
                 </button>
+                <div class="header-menu-backdrop" id="header-menu-backdrop" onclick="toggleHeaderMenu(false)"></div>
                 <div class="header-menu-dropdown" id="header-menu-dropdown">
                     <a class="btn-action header-channel-link" href="https://www.youtube.com/@OsitoYT360" target="_blank" rel="noopener noreferrer">
                         <span aria-hidden="true">▶</span> Ir al canal
@@ -660,7 +665,7 @@
             <audio id="bg-music" src="musica_snowfall.mp3" preload="none" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
-                <img src="logo_yt.png" alt="" class="yt-channel-logo">
+                <img src="logo_yt.png" alt="" class="yt-channel-logo" width="26" height="26" loading="lazy" decoding="async">
                 <span>Únete al Canal</span>
             </a>
 
@@ -1010,12 +1015,19 @@
                 const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua) || document.documentElement.classList.contains('mobile-lite');
 
                 const ultraGuardado = localStorage.getItem('osito_ultra_performance') === 'true';
-                const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2) || isMobile;
+                // "Gama baja" depende del hardware real (RAM/núcleos), no de ser simplemente un móvil.
+                // Así el fondo animado se mantiene en celulares normales y solo se apaga en equipos muy limitados.
+                const lowEnd = (deviceMemory <= 2) || (hwThreads <= 2);
                 document.documentElement.classList.toggle('mobile-lite', isMobile || lowEnd);
                 document.documentElement.classList.toggle('low-end-device', lowEnd);
-                if (isMobile) {
+                if (lowEnd) {
                     animacionesActivas = false;
                     document.body.classList.add('no-animations');
+                    const btnAnim = document.getElementById('btn-toggle-anim');
+                    if (btnAnim) {
+                        btnAnim.classList.add('active');
+                        btnAnim.innerHTML = "<span>✨</span> Activar Animaciones";
+                    }
                 }
                 if (ultraGuardado || deviceMemory <= 1) activarModoUltra(false);
 
@@ -1294,6 +1306,24 @@
 
             // Últimos cambios realizados (quedan siempre arriba por ser los más recientes).
             list.push(
+                {
+                    badge: 'Diseño',
+                    titulo: 'Logo y menú renovados',
+                    descripcion: 'Logo con nueva tipografía, formato "Título" y brillo neón suave. El menú ahora va debajo del logo y se abre centrado en pantalla.',
+                    timestamp: ahora + 6
+                },
+                {
+                    badge: 'Favoritos',
+                    titulo: 'Estrella de favoritos mejorada',
+                    descripcion: 'Ya no aparece en modo invitado. Con cuenta iniciada se ve gris si no está guardada y amarilla cuando ya la marcaste. Textos de botones más legibles y sin cambios de color al tocarlos.',
+                    timestamp: ahora + 5
+                },
+                {
+                    badge: 'Rendimiento',
+                    titulo: 'Carga más rápida al entrar',
+                    descripcion: 'Se comprimieron las imágenes pesadas y el audio de fondo, y se agregaron conexiones anticipadas para que la página entre más rápido.',
+                    timestamp: ahora + 4
+                },
                 {
                     badge: 'IA',
                     titulo: 'Micrófono del asistente mejorado',
@@ -1697,9 +1727,11 @@
         function toggleHeaderMenu(forzar) {
             const dropdown = document.getElementById('header-menu-dropdown');
             const toggle = document.getElementById('header-menu-toggle');
+            const backdrop = document.getElementById('header-menu-backdrop');
             if (!dropdown || !toggle) return;
             const abrir = typeof forzar === 'boolean' ? forzar : !dropdown.classList.contains('open');
             dropdown.classList.toggle('open', abrir);
+            if (backdrop) backdrop.classList.toggle('open', abrir);
             toggle.setAttribute('aria-expanded', abrir ? 'true' : 'false');
         }
         window.toggleHeaderMenu = toggleHeaderMenu;
@@ -1952,7 +1984,7 @@
 
         function iniciarEspacio() {
             const canvas = document.getElementById('space-canvas');
-            if (document.documentElement.classList.contains('mobile-lite') || document.documentElement.classList.contains('low-end-device')) {
+            if (document.documentElement.classList.contains('low-end-device')) {
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
                 return;
@@ -1962,9 +1994,10 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight; 
             const stars = [];
+            const isMobileLite = document.documentElement.classList.contains('mobile-lite');
             const starCount = !animacionesActivas || document.body.classList.contains('ultra-performance')
                 ? 0
-                : (advancedAnimacionesEnabled ? 120 : 40);
+                : (isMobileLite ? 35 : (advancedAnimacionesEnabled ? 120 : 40));
             const connectionDist = 150; // Distancia para dibujar líneas
 
             for (let i = 0; i < starCount; i++) {

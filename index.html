@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="stylesheet" href="styles.css?v=ultra-fps-botones-secciones-20260912-1">
+    <link rel="stylesheet" href="styles.css?v=ultra-fps-botones-secciones-20260913-3">
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -189,16 +189,18 @@
             <div class="landing-loading" id="landing-loading">Cargando tu sesión…</div>
 
             <div class="landing-gate" id="landing-gate" style="display:none;">
-                <button class="landing-a11y-btn" id="landing-a11y-btn" type="button" onclick="toggleLandingTextoGrande()" title="Agrandar y aclarar el texto" aria-pressed="false">
-                    <span aria-hidden="true">🔎</span> Texto grande
-                </button>
-                <p class="landing-subtitle">Bienvenido al sótano. Elige cómo quieres entrar.</p>
-                <p class="landing-hint">Con una cuenta tienes chat en vivo e inteligencia artificial <strong>ilimitados</strong>. Como invitado puedes entrar sin registrarte, pero con límites: solo 5 preguntas a la IA y sin chat en vivo.</p>
-                <p class="landing-hint landing-hint-note">Para iniciar sesión no necesitas una cuenta de Google: la página tiene su propio registro con correo y contraseña.</p>
+                <p class="landing-subtitle">Elige cómo quieres entrar</p>
                 <div class="landing-buttons">
                     <button class="btn-enter-hub landing-btn" id="landing-btn-login" type="button" onclick="mostrarFormularioLogin()">Iniciar sesión</button>
-                    <button class="btn-enter-hub landing-btn" id="landing-btn-guest" type="button" onclick="entrarInvitadoDesdeLanding()">Entrar como invitado</button>
+                    <button class="btn-enter-hub landing-btn" id="landing-btn-guest" type="button" onclick="entrarInvitadoDesdeLanding()">Modo invitado</button>
                 </div>
+            </div>
+
+            <div class="account-welcome" id="account-welcome" style="display:none;">
+                <div class="account-welcome-badge">✓ CUENTA RECONOCIDA</div>
+                <h2>Bienvenido al Sótano</h2>
+                <p>Tu cuenta ya está iniciada. Puedes entrar directamente.</p>
+                <button class="btn-enter-hub account-welcome-btn" id="account-welcome-enter" type="button" onclick="iniciarCarga()">Entrar al Sótano</button>
             </div>
 
             <div class="auth-panel" id="auth-panel" style="display:none;">
@@ -207,7 +209,7 @@
                         <div>
                             <p class="auth-eyebrow">Firebase Access</p>
                             <h2 class="auth-title">Entra con tu cuenta</h2>
-                            <p class="auth-copy">Guarda tu perfil, tu chat y la IA en la nube con una sola cuenta.</p>
+                            <p class="auth-copy">Guarda tu perfil y tu chat en la nube con una sola cuenta.</p>
                         </div>
                         <div class="auth-preview">
                             <img id="auth-avatar-preview" class="auth-avatar-preview" src="" alt="Foto de perfil">
@@ -317,7 +319,7 @@
 
     <script>
         (function () {
-            var TEXTO_BIENVENIDA_LANDING = 'Bienvenido al sótano, al Sótano de Osito. Si quieres entrar con una cuenta, necesitas registrarte, o si ya tienes cuenta, inicia sesión, para que tengas todo ilimitado: chat en vivo e inteligencia artificial sin límites. Para iniciar sesión no necesitas una cuenta de Google: la página tiene su propio registro con correo y contraseña. Si prefieres entrar como invitado, ten en cuenta que tendrás límites, como la inteligencia artificial, que solo te deja hacer cinco preguntas; después ya no vas a poder seguir preguntando, y tampoco vas a poder usar el chat en vivo, entre otras funciones.';
+            var TEXTO_BIENVENIDA_LANDING = 'Bienvenido al Sótano de Osito. Elige cómo quieres entrar.';
             var vozHablando = false;
 
             function vozLandingActiva() {
@@ -399,16 +401,14 @@
                 ocultarCargandoLanding();
                 var gate = document.getElementById('landing-gate');
                 var panel = document.getElementById('auth-panel');
-                if (gate && gate.style.display !== 'none') {
-                    gate.classList.add('landing-gate-hide');
-                    setTimeout(function () { gate.style.display = 'none'; }, 300);
-                } else if (gate) {
-                    gate.style.display = 'none';
-                }
-                if (panel) {
-                    var yaVisible = panel.style.display === 'block';
-                    panel.style.display = 'block';
-                    if (!yaVisible) reanimar(panel, 'auth-panel-visible');
+                var accountWelcome = document.getElementById('account-welcome');
+                var readyBtn = document.getElementById('btn-ready');
+                if (gate) gate.style.display = 'none';
+                if (panel) panel.style.display = 'none';
+                if (readyBtn) readyBtn.style.display = 'none';
+                if (accountWelcome) {
+                    accountWelcome.style.display = 'block';
+                    reanimar(accountWelcome, 'account-welcome-visible');
                 }
             };
 
@@ -421,8 +421,10 @@
                 ocultarCargandoLanding();
                 var gate = document.getElementById('landing-gate');
                 var panel = document.getElementById('auth-panel');
+                var accountWelcome = document.getElementById('account-welcome');
                 var readyBtn = document.getElementById('btn-ready');
                 if (panel) panel.style.display = 'none';
+                if (accountWelcome) accountWelcome.style.display = 'none';
                 if (readyBtn) readyBtn.style.display = 'none';
                 if (gate) {
                     gate.classList.remove('landing-gate-hide');
@@ -472,34 +474,42 @@
     <header>
         <div class="logo"><span>EL</span><span>SÓTANO</span><span>DE</span><span>OSITO</span></div>
         <div class="header-actions"> 
-            <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
-                <span>⚡</span> Mejorar Rendimiento
-            </button>
+            <div class="header-menu-wrap">
+                <button class="btn-action header-menu-toggle" id="header-menu-toggle" type="button" onclick="toggleHeaderMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="header-menu-dropdown">
+                    <span aria-hidden="true">☰</span> Menú
+                </button>
+                <div class="header-menu-dropdown" id="header-menu-dropdown">
+                    <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
+                        <span>⚡</span> Mejorar Rendimiento
+                    </button>
 
-            <button class="btn-action cuenta-personalizacion" id="header-btn-ultra-performance" type="button" onclick="toggleModoUltra()" title="Apaga efectos pesados para máximo rendimiento">
-                <span class="btn-icon">🚀</span> Modo ultra (+1000 FPS)
-            </button>
+                    <button class="btn-action cuenta-personalizacion" id="header-btn-ultra-performance" type="button" onclick="toggleModoUltra()" title="Apaga efectos pesados para máximo rendimiento">
+                        Modo ultra
+                    </button>
 
-            <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
-                <span>🔔</span> Activar Notificaciones
-            </button>
+                    <button class="btn-action btn-alertas" id="btn-notif" onclick="toggleAlertas()">
+                        <span>🔔</span> Activar Notificaciones
+                    </button>
 
-            <button class="voice-assistant-badge" id="voice-assistant-badge" type="button" onclick="toggleIAPanel()" title="Abrir panel de IA" aria-label="Abrir panel de IA">
-                <span class="voice-mic-dot" id="voice-mic-dot"></span>
-                <span aria-hidden="true">🤖</span>
-                <span id="voice-status-label">Asistente IA</span>
-            </button>
+                    <button class="voice-assistant-badge" id="voice-assistant-badge" type="button" onclick="toggleIAPanel()" title="Abrir panel de IA" aria-label="Abrir panel de IA">
+                        <span class="voice-mic-dot" id="voice-mic-dot"></span>
+                        <span aria-hidden="true">🤖</span>
+                        <span id="voice-status-label">Asistente IA</span>
+                    </button>
 
-            <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
-            <img class="header-profile-avatar" id="header-profile-avatar" src="" alt="Foto de perfil" style="display:none;">
-            <button class="btn-action auth-profile-photo" id="profile-photo-change-button" type="button" style="display:none;">Cambiar foto</button>
-            <input id="profile-photo-change-input" type="file" accept="image/*" hidden>
-            
-            <div class="theme-selector cuenta-personalizacion">
-                <span class="theme-label">Personalizar Colores:</span>
-                <div class="color-picker-container">
-                    <input type="color" id="picker-primario" class="color-picker" title="Color Principal" onchange="aplicarColoresPersonalizados()">
-                    <input type="color" id="picker-secundario" class="color-picker" title="Color Secundario" onchange="aplicarColoresPersonalizados()">
+                    <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
+                    <button class="btn-action profile-open-button" id="profile-open-button" type="button" style="display:none;" onclick="abrirMiPerfil()">Mi perfil</button>
+                    <img class="header-profile-avatar" id="header-profile-avatar" src="" alt="Foto de perfil" style="display:none;">
+                    <button class="btn-action auth-profile-photo" id="profile-photo-change-button" type="button" style="display:none;">Cambiar foto</button>
+                    <input id="profile-photo-change-input" type="file" accept="image/*" hidden>
+
+                    <div class="theme-selector cuenta-personalizacion">
+                        <span class="theme-label">Personalizar Colores:</span>
+                        <div class="color-picker-container">
+                            <input type="color" id="picker-primario" class="color-picker" title="Color Principal" onchange="aplicarColoresPersonalizados()">
+                            <input type="color" id="picker-secundario" class="color-picker" title="Color Secundario" onchange="aplicarColoresPersonalizados()">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -626,10 +636,10 @@
         </main>
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
-            <audio id="bg-music" src="musica snowfall.mp3" preload="auto" loop></audio>
+            <audio id="bg-music" src="musica_snowfall.mp3" preload="auto" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
-                <img src="logo yt.png" alt="" class="yt-channel-logo">
+                <img src="logo_yt.png" alt="" class="yt-channel-logo">
                 <span>Únete al Canal</span>
             </a>
 
@@ -679,7 +689,7 @@
                 <div class="sidebar-card-title"><span class="btn-icon">⚙️</span> Rendimiento Ultra</div>
                 <div class="settings-stack">
                     <button class="btn-action" id="btn-ultra-performance" type="button" onclick="toggleModoUltra()">
-                        <span class="btn-icon">⚡</span> Modo ultra (+1000 FPS)
+                        Modo ultra
                     </button>
                     <div class="cd-date" style="opacity:1; text-align:left; padding: 0 4px; font-size: 11px;">
                         Exclusivo para cuentas. Apaga efectos pesados para que la página vuele incluso en celulares con 1GB de RAM o menos.
@@ -687,7 +697,7 @@
                 </div>
             </div>
 
-            <div class="sidebar-card settings-section"> 
+            <div class="sidebar-card settings-section" id="interface-settings-card"> 
                 <div class="sidebar-card-title">Ajustes de Interfaz</div>
                 <div class="settings-stack">
                     <div class="setting-row">
@@ -1012,7 +1022,7 @@
                 const btn = document.getElementById(btnId);
                 if (btn) {
                     btn.classList.add('active');
-                    btn.innerHTML = '<span class="btn-icon">✅</span> Modo ultra activo (+1000 FPS)';
+                    btn.textContent = 'Modo ultra';
                 }
             });
             if (animacionesActivas) iniciarEspacio();
@@ -1026,7 +1036,7 @@
                     const btn = document.getElementById(btnId);
                     if (btn) {
                         btn.classList.remove('active');
-                        btn.innerHTML = '<span class="btn-icon">🚀</span> Modo ultra (+1000 FPS)';
+                        btn.innerHTML = 'Modo ultra';
                     }
                 });
                 advancedAnimacionesEnabled = false;
@@ -1653,6 +1663,23 @@
             cambiarFondo(document.getElementById('picker-primario').value, document.getElementById('picker-secundario').value);
         }
 
+        function toggleHeaderMenu(forzar) {
+            const dropdown = document.getElementById('header-menu-dropdown');
+            const toggle = document.getElementById('header-menu-toggle');
+            if (!dropdown || !toggle) return;
+            const abrir = typeof forzar === 'boolean' ? forzar : !dropdown.classList.contains('open');
+            dropdown.classList.toggle('open', abrir);
+            toggle.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+        }
+        window.toggleHeaderMenu = toggleHeaderMenu;
+
+        document.addEventListener('click', function (evento) {
+            const wrap = document.querySelector('.header-menu-wrap');
+            if (wrap && !wrap.contains(evento.target)) {
+                toggleHeaderMenu(false);
+            }
+        });
+
         function mostrarNotificacion(texto) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerText = texto;
@@ -1725,7 +1752,7 @@
                 const titulo = video.snippet?.title || 'Nuevo video del canal';
                 const aviso = new Notification('Nuevo video disponible', {
                     body: titulo,
-                    icon: 'logo yt.png'
+                    icon: 'logo_yt.png'
                 });
                 aviso.onclick = () => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
             } catch (error) {
@@ -2010,6 +2037,11 @@
             let ultimaRespuestaIA = '';
             let turnoIA = 0;
             let aiGenero = localStorage.getItem('osito_ai_genero') || '';
+            // Nota: para cuentas registradas, el género real (elegido al registrarse)
+            // llega un poco después vía firebase-integration.js y el evento
+            // 'osito:firebase-auth-ready'. Por eso NO se fuerza aquí ningún valor
+            // por defecto: hacerlo pisaba el género real y dejaba los botones
+            // Osito/Osita bloqueados sin motivo.
             let aiNombre = localStorage.getItem('osito_ai_nombre') || '';
             const aiNameInput = document.getElementById('ai-name-input');
             const aiNameSave = document.getElementById('ai-name-save');
@@ -2107,7 +2139,12 @@
             }
 
             function setGeneroIA(genero) {
-                if (aiGenero) return;
+                // En modo invitado se puede elegir/cambiar de género las veces
+                // que haga falta (antes quedaba bloqueado para siempre desde el
+                // primer click, incluso si venía guardado de una prueba vieja
+                // en localStorage, y entonces parecía que "no pasaba nada").
+                const esInvitadoAhora = typeof window.osEsInvitado === 'function' ? window.osEsInvitado() : true;
+                if (aiGenero && !esInvitadoAhora) return;
                 aiGenero = genero;
                 localStorage.setItem('osito_ai_genero', genero);
                 aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
@@ -2178,9 +2215,15 @@
 
             function actualizarBloqueoIA() {
                 const bloqueado = !aiGenero;
+                const esInvitadoAhora = typeof window.osEsInvitado === 'function' ? window.osEsInvitado() : true;
+                // Los botones Osito/Osita solo se deshabilitan para cuentas
+                // registradas (su género real ya viene fijo desde el perfil).
+                // En modo invitado siempre quedan disponibles por si quieren
+                // cambiar de opción.
                 aiGenderBtns.forEach(btn => {
-                    btn.disabled = Boolean(aiGenero);
-                    btn.setAttribute('aria-disabled', aiGenero ? 'true' : 'false');
+                    const bloquearBoton = Boolean(aiGenero) && !esInvitadoAhora;
+                    btn.disabled = bloquearBoton;
+                    btn.setAttribute('aria-disabled', bloquearBoton ? 'true' : 'false');
                 });
                 if (aiInput) {
                     aiInput.disabled = bloqueado;
@@ -2193,6 +2236,36 @@
                 });
                 if (aiForm) aiForm.classList.toggle('ai-locked', bloqueado);
             }
+
+            function actualizarMensajeInicialIA() {
+                if (!aiMessages) return;
+                // Solo se toca el mensaje mientras siga siendo el único mensaje
+                // (el de bienvenida por defecto); si ya hay conversación, no se altera.
+                if (aiMessages.children.length !== 1) return;
+                const primerMensaje = aiMessages.querySelector('.msg.bot');
+                if (!primerMensaje) return;
+                const esInvitado = typeof window.osEsInvitado === 'function' ? window.osEsInvitado() : true;
+                if (esInvitado && !aiGenero) {
+                    primerMensaje.textContent = '🤖 Identidad requerida: ¿Eres Osito o Osita?';
+                } else {
+                    primerMensaje.textContent = `🤖 ¡Qué onda, ${prefijoIA()}! Pregúntame lo que quieras.`;
+                }
+            }
+
+            function sincronizarGeneroDeCuenta() {
+                const generoGuardado = localStorage.getItem('osito_ai_genero') || '';
+                if (generoGuardado && generoGuardado !== aiGenero) {
+                    aiGenero = generoGuardado;
+                    aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
+                }
+                const nombreGuardado = localStorage.getItem('osito_ai_nombre') || '';
+                if (nombreGuardado && nombreGuardado !== aiNombre) {
+                    aiNombre = nombreGuardado;
+                }
+                actualizarBloqueoIA();
+                actualizarMensajeInicialIA();
+            }
+            window.addEventListener('osito:firebase-auth-ready', sincronizarGeneroDeCuenta);
 
             function reproducirBienvenidaSitio() {
                 if (bienvenidaReproducida) return;
@@ -2409,6 +2482,7 @@
 
             actualizarBotonVoz();
             actualizarBloqueoIA();
+            actualizarMensajeInicialIA();
             if (aiVoiceToggle) {
                 aiVoiceToggle.addEventListener('click', () => {
                     vozActiva = !vozActiva;

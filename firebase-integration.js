@@ -110,6 +110,7 @@
             guest: el('auth-guest'),
             mainLogout: el('main-logout'),
             profilePhotoButton: el('profile-photo-change-button'),
+            profileOpenButton: el('profile-open-button'),
             profilePhotoInput: el('profile-photo-change-input'),
             previewPhotoButton: el('auth-preview-photo-button'),
             previewPhotoInput: el('auth-preview-photo-input'),
@@ -253,6 +254,8 @@
         if (guest) guest.style.display = 'inline-flex';
         if (mainLogout) mainLogout.style.display = 'none';
         if (profilePhotoButton) profilePhotoButton.style.display = 'none';
+        const profileOpenButton = el('profile-open-button');
+        if (profileOpenButton) profileOpenButton.style.display = 'none';
         if (previewPhotoButton) previewPhotoButton.style.display = 'none';
         if (readyButton) readyButton.style.display = 'none';
         if (accountTools) accountTools.style.display = 'none';
@@ -270,12 +273,16 @@
 
     function showAuthenticatedView(profile, user) {
         const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
+        const accountWelcome = el('account-welcome');
         setGuestMode(false);
         if (form) form.style.display = 'none';
+        if (accountWelcome) accountWelcome.style.display = 'block';
         if (logout) logout.style.display = 'inline-flex';
         if (guest) guest.style.display = 'none';
         if (mainLogout) mainLogout.style.display = 'inline-flex';
         if (profilePhotoButton) profilePhotoButton.style.display = 'inline-flex';
+        const profileOpenButton = el('profile-open-button');
+        if (profileOpenButton) profileOpenButton.style.display = 'inline-flex';
         if (previewPhotoButton) previewPhotoButton.style.display = 'inline-flex';
         if (readyButton) readyButton.style.display = 'inline-flex';
         if (accountTools) accountTools.style.display = 'block';
@@ -1010,6 +1017,13 @@
             window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
         });
     }
+
+    window.abrirMiPerfil = function () {
+        if (!state.currentUser) return;
+        const btn = document.getElementById('profile-open-button');
+        if (btn) { btn.classList.remove('profile-open-cinematic'); void btn.offsetWidth; btn.classList.add('profile-open-cinematic'); }
+        window.open('perfil.html', '_blank', 'noopener,noreferrer');
+    };
 
     function bindUi() {
         const {

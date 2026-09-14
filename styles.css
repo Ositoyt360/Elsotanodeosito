@@ -112,15 +112,37 @@ body {
 
 .welcome-title { 
     font-size: 3.5rem; font-weight: 900; margin: 0 0 15px 0; 
-    background: linear-gradient(90deg, #fff, var(--primary-color), var(--secondary-color), var(--primary-color), #fff); 
-    background-size: 200% auto; -webkit-background-clip: text;
+    display: inline-block;
+    width: 100%;
+    position: relative;
+    background: linear-gradient(90deg, #eafff2, #39ff6a, #58ff9a, #39ff6a, #eafff2); 
+    background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; animation: textShimmer 4s linear infinite; 
-    filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.3));
+    filter: drop-shadow(0 0 22px rgba(57, 255, 106, 0.55));
     letter-spacing: -1px;
     text-transform: uppercase;
 }
 
+.welcome-title::after {
+    content: "El Sótano de Osito";
+    position: absolute;
+    inset: 0;
+    display: block;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: center;
+    white-space: nowrap;
+    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.95) 50%, transparent 58%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: welcomeLightSweep 4.8s ease-in-out infinite;
+    pointer-events: none;
+}
+
 @keyframes textShimmer { to { background-position: 200% center; } }
+@keyframes welcomeLightSweep { 0%, 62% { background-position: 250% 0; } 100% { background-position: -20% 0; } }
 
 .loading-container { 
     width: 100%; background: rgba(255,255,255,0.03); height: 6px; 
@@ -260,7 +282,59 @@ body {
     margin-top: 6px;
 }
 
-.landing-btn { width: 220px; text-align: center; }
+ .landing-btn { width: 220px; text-align: center; }
+
+.account-welcome {
+    width: min(92vw, 520px);
+    margin: 0 auto 22px;
+    padding: 34px 30px;
+    box-sizing: border-box;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(13, 17, 23, 0.88), rgba(8, 10, 15, 0.94));
+    border: 1px solid rgba(0, 242, 254, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42), 0 0 35px rgba(0, 242, 254, 0.08);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.account-welcome-visible {
+    animation: accountWelcomeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes accountWelcomeIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.account-welcome-badge {
+    display: inline-flex;
+    margin-bottom: 12px;
+    padding: 5px 11px;
+    border: 1px solid rgba(0, 242, 254, 0.28);
+    border-radius: 999px;
+    color: var(--primary-color);
+    background: rgba(0, 242, 254, 0.07);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+.account-welcome h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    font-weight: 900;
+}
+
+.account-welcome p {
+    margin: 0 auto 22px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.account-welcome-btn {
+    width: min(100%, 300px);
+}
 
 /* --- Animación de entrada del formulario al pulsar "Iniciar sesión" --- */
 .auth-panel.auth-panel-visible {
@@ -695,8 +769,9 @@ body.guest-mode .livechat-floating-container {
 }
 
 .btn-enter-hub { 
+    /* Botón de fondo blanco: el texto debe ser negro para que se lea bien */
     background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); 
-    color: #04060c; border: none; padding: 16px 42px; 
+    color: #000000; text-shadow: none; border: none; padding: 16px 42px; 
     font-size: 13px; font-weight: 800; border-radius: var(--radius-md); cursor: pointer; 
     text-transform: uppercase; margin: 20px auto 0; transition: var(--transition-premium); 
     display: inline-block; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(255,255,255,0.1);
@@ -705,8 +780,9 @@ body.guest-mode .livechat-floating-container {
 }
 
 .btn-enter-hub:hover { 
-    background: #fff;
-    color: var(--bg-color);
+    /* Al pasar el mouse, el fondo se vuelve negro y el texto blanco */
+    background: #000000;
+    color: #ffffff;
     box-shadow: 0 0 35px var(--glow-color-1), 0 0 15px var(--primary-color); 
     transform: translateY(-3px) scale(1.02); 
 }
@@ -850,9 +926,10 @@ header {
 }
 .logo span{
     display:inline-block;
-    background:linear-gradient(45deg,var(--primary-color),#ffffff);
+    background:linear-gradient(45deg,#39ff6a,#eafff2);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
+    filter: drop-shadow(0 0 8px rgba(57,255,106,.55));
     animation:logoFloat 2.5s ease-in-out infinite;
 }
 .logo span:nth-child(1){animation-delay:0s;}
@@ -865,6 +942,59 @@ header {
 }
 
 .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* Menú desplegable del header: agrupa Mejorar Rendimiento, Modo ultra,
+   Notificaciones, Asistente IA, Cerrar sesión, Mi perfil y Cambiar foto
+   detrás de un único botón "☰ Menú" en vez de mostrarlos todos sueltos. */
+.header-menu-wrap {
+    position: relative;
+}
+
+.header-menu-toggle {
+    font-weight: 800;
+    letter-spacing: 0.4px;
+}
+
+.header-menu-dropdown {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 240px;
+    max-width: min(90vw, 320px);
+    padding: 14px;
+    background: linear-gradient(180deg, rgba(13, 17, 23, 0.98), rgba(8, 10, 15, 0.98));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+    z-index: 60;
+}
+
+.header-menu-dropdown.open {
+    display: flex;
+    animation: headerMenuOpen 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes headerMenuOpen {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.header-menu-dropdown .btn-action,
+.header-menu-dropdown .voice-assistant-badge {
+    width: 100%;
+    justify-content: center;
+}
+
+.header-menu-dropdown .theme-selector {
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 
 .btn-action { 
     background: var(--surface); color: var(--text-main); 
@@ -882,9 +1012,10 @@ header {
  
 .btn-action:hover::before { transform: translateX(100%); }
 
-.btn-action:hover { 
+.btn-action:hover:not(:disabled) { 
     border-color: var(--primary-color);
-    background: rgba(255, 255, 255, 0.05);
+    background: #000000;
+    color: #ffffff;
     transform: translateY(-2px);
 }
 
@@ -948,6 +1079,12 @@ header {
     background: #58ff9a;
     box-shadow: 0 0 10px #58ff9a;
     animation: voiceMicPulse 2s infinite ease-in-out;
+}
+
+.voice-assistant-badge:hover:not(:disabled) {
+    background: #000000;
+    border-color: var(--primary-color);
+    color: #ffffff;
 }
 
 .voice-assistant-badge.active {
@@ -1523,6 +1660,26 @@ body.ultra-performance #header-btn-ultra-performance {
     .updates-strip { grid-template-columns: 1fr; gap: 15px; }
 }
 
+/* Panel lateral (Música, OsitoExpo, Rendimiento Ultra, Ajustes de Interfaz)
+   SOLO en celular: se ocultan las tarjetas de Rendimiento Ultra y Ajustes de
+   Interfaz, el volumen de música queda arriba de todo, y la cuenta
+   regresiva de OsitoExpo + el aniversario de YouTube pasan al final.
+   En escritorio (arriba de 768px) nada de esto se toca. */
+@media (max-width: 768px) {
+    .sidebar-subscribe {
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar-subscribe .btn-directos-nav { order: 0; }
+    .sidebar-subscribe #music-card { order: 1; }
+    .sidebar-subscribe .cuenta-personalizacion:not(#ultra-performance-card) { order: 2; }
+    .sidebar-subscribe .countdown-box { order: 3; }
+    .sidebar-subscribe #ultra-performance-card,
+    .sidebar-subscribe #interface-settings-card {
+        display: none;
+    }
+}
+
 @media (max-width: 576px) {
     header { padding: 15px 4%; justify-content: center; }
     .promo-title-main { font-size: 1.8rem; }
@@ -1948,9 +2105,12 @@ body.no-animations .video-card {
 }
 
 .section-heading,
-.promo-title-main,
-.welcome-title {
+.promo-title-main {
     animation: titleGlowSweep 4.8s ease-in-out infinite;
+}
+
+.welcome-title {
+    animation: textShimmer 4s linear infinite, titleGlowSweep 4.8s ease-in-out infinite;
 }
 
 @keyframes titleGlowSweep {
@@ -2163,13 +2323,18 @@ body.no-animations .video-card {
 
 .ai-profile-actions .btn-action:hover:not(:disabled) {
     transform: translateY(-2px);
-    background: rgba(88, 255, 154, 0.12);
+    background: #000000;
     border-color: rgba(88, 255, 154, 0.35);
     color: #ffffff;
 }
 
 .ai-profile-actions .btn-action:hover:not(:disabled) .btn-icon {
     transform: scale(1.2);
+}
+
+/* Los botones Osito/Osita solo se muestran a invitados; con cuenta no hacen falta */
+body:not(.solo-invitado) .ai-gender-btn {
+    display: none !important;
 }
 
 /* Estado Activo Osito ♂ (Cyan Neon) */
@@ -2194,12 +2359,12 @@ body.no-animations .video-card {
 
 /* 4. Botón Toggle de Voz (#ai-voice-toggle) */
 #ai-voice-toggle.active {
-    background: linear-gradient(135deg, #58ff9a 0%, #13b85b 100%) !important;
-    color: #041009 !important;
-    border: 1.5px solid #8dffbb !important;
+    background: rgba(8, 20, 14, 0.85) !important;
+    color: #58ff9a !important;
+    border: 1.5px solid #58ff9a !important;
     font-weight: 900 !important;
-    box-shadow: 0 0 16px rgba(88, 255, 154, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
-    text-shadow: none !important;
+    box-shadow: 0 0 16px rgba(88, 255, 154, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    text-shadow: 0 0 10px rgba(88, 255, 154, 0.75) !important;
 }
 
 /* 5. Botón Guardar Nombre (#ai-name-save) */
@@ -2208,22 +2373,23 @@ body.no-animations .video-card {
     overflow: hidden;
     min-height: 42px;
     padding: 0 14px;
-    border: 1.5px solid #8dffbb !important;
+    border: 1.5px solid #58ff9a !important;
     border-radius: 10px;
-    background: linear-gradient(135deg, #58ff9a 0%, #13b85b 55%, #08783b 100%) !important;
-    color: #031b0b !important;
+    background: rgba(8, 20, 14, 0.85) !important;
+    color: #58ff9a !important;
     font-weight: 900 !important;
     font-size: 11px !important;
     letter-spacing: 0.3px;
-    box-shadow: 0 0 16px rgba(19, 184, 91, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 16px rgba(88, 255, 154, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    text-shadow: 0 0 10px rgba(88, 255, 154, 0.75) !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
 
 .ai-name-save:hover:not(:disabled) {
-    background: linear-gradient(135deg, #b8ffd1 0%, #58ff9a 50%, #13b85b 100%) !important;
+    background: rgba(88, 255, 154, 0.12) !important;
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 4px 22px rgba(88, 255, 154, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 22px rgba(88, 255, 154, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 .ai-name-save:disabled {
@@ -3665,3 +3831,75 @@ body.tema-navidad header {
 .logo span:nth-child(3){animation-delay:.4s;}
 .logo span:nth-child(4){animation-delay:.6s;}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+
+/* ===== Perfil en pestaña separada ===== */
+.profile-open-button {
+    border-color: rgba(88, 255, 154, 0.45);
+}
+.profile-open-button:hover {
+    border-color: rgba(88, 255, 154, 0.85);
+    box-shadow: 0 0 22px rgba(88, 255, 154, 0.18);
+}
+
+/* Brillo que recorre los textos grandes */
+.hero-title,
+.section-title,
+.promo-title-main,
+.cd-text,
+.page-title,
+h1.big-glow,
+h2.big-glow {
+    background: linear-gradient(110deg, currentColor 0%, currentColor 38%, #ffffff 50%, currentColor 62%, currentColor 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textShine 4.5s linear infinite;
+}
+@keyframes textShine {
+    0% { background-position: 220% 0; }
+    100% { background-position: -20% 0; }
+}
+
+/* Pulsación más clara al presionar botones */
+button:not(:disabled):active,
+a.btn-directos-nav:active {
+    transform: translateY(1px) scale(0.94) !important;
+    filter: brightness(1.15);
+}
+button:not(:disabled)::after,
+a.btn-directos-nav::after {
+    content: '';
+    position: absolute;
+    inset: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: rgba(255,255,255,.45);
+    opacity: 0;
+    transform: translate(-50%,-50%) scale(1);
+}
+button:not(:disabled):active::after,
+a.btn-directos-nav:active::after {
+    animation: buttonPulse 0.38s ease-out;
+}
+@keyframes buttonPulse {
+    0% { opacity: .65; transform: translate(-50%,-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(16); }
+}
+body.ultra-performance .welcome-title,
+body.ultra-performance .hero-title,
+body.ultra-performance .section-title,
+body.ultra-performance .promo-title-main,
+body.ultra-performance .cd-text,
+body.ultra-performance .page-title,
+body.ultra-performance h1.big-glow,
+body.ultra-performance h2.big-glow { animation: none !important; background: none !important; -webkit-text-fill-color: currentColor; }
+
+button, a.btn-directos-nav { position: relative; overflow: hidden; }
+
+/* ===== CINEMÁTICA DE ACCESO ===== */
+#welcome-screen::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(0,242,254,.10),transparent 22%),radial-gradient(circle at 20% 30%,rgba(88,255,154,.08),transparent 25%),radial-gradient(circle at 80% 70%,rgba(157,0,255,.09),transparent 25%);filter:blur(8px);animation:welcomeAtmosphere 8s ease-in-out infinite alternate;z-index:0;pointer-events:none}.welcome-panel{animation:welcomePanelCinematic .9s cubic-bezier(.16,1,.3,1) both}.welcome-title{position:relative;text-shadow:0 0 18px rgba(0,242,254,.18),0 0 42px rgba(88,255,154,.08)}.landing-gate,.account-welcome{animation:welcomeContentCinematic .75s .16s cubic-bezier(.16,1,.3,1) both}.landing-btn,.account-welcome-btn{position:relative;overflow:hidden;border:1px solid rgba(0,242,254,.42)!important;background:linear-gradient(135deg,rgba(0,242,254,.13),rgba(88,255,154,.08))!important;box-shadow:0 10px 35px rgba(0,0,0,.3),0 0 22px rgba(0,242,254,.08),inset 0 1px 0 rgba(255,255,255,.15);transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,border-color .25s ease,filter .2s ease}.landing-btn::before,.account-welcome-btn::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);transform:translateX(-130%);transition:transform .55s ease}.landing-btn:hover::before,.account-welcome-btn:hover::before{transform:translateX(130%)}.landing-btn:hover,.account-welcome-btn:hover{transform:translateY(-4px) scale(1.025)!important;box-shadow:0 16px 40px rgba(0,0,0,.38),0 0 32px rgba(0,242,254,.22),inset 0 1px 0 rgba(255,255,255,.2)!important;border-color:rgba(117,255,209,.72)!important}.landing-btn:active,.account-welcome-btn:active{transform:scale(.95)!important}.welcome-fade-out{opacity:0!important;transform:scale(1.08)!important;filter:blur(8px);transition:opacity .65s cubic-bezier(.4,0,.2,1),transform .65s cubic-bezier(.4,0,.2,1),filter .65s ease!important}.welcome-fade-out .welcome-panel{transform:translateY(-18px) scale(1.04);opacity:0;transition:transform .5s ease,opacity .35s ease}.auth-panel.auth-panel-visible{animation:authCinematicIn .65s cubic-bezier(.16,1,.3,1) both}@keyframes welcomeAtmosphere{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.08) translate3d(0,-18px,0)}}@keyframes welcomePanelCinematic{from{opacity:0;transform:translateY(30px) scale(.95);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}@keyframes welcomeContentCinematic{from{opacity:0;transform:translateY(20px) scale(.96);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}@keyframes authCinematicIn{from{opacity:0;transform:translateY(28px) scale(.94);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.profile-open-cinematic{animation:profileOpenCinematic .45s cubic-bezier(.34,1.56,.64,1)}@keyframes profileOpenCinematic{0%{transform:scale(1)}45%{transform:scale(.91);filter:brightness(1.35)}100%{transform:scale(1)}}

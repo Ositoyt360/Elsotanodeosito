@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi perfil · El Sótano de Osito</title>
+<link rel="stylesheet" href="profile.css?v=perfil-20260913-3">
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  const config={apiKey:'AIzaSyAM4rnHi3YU5pY6EK66ztAPRQdESs789Ew',authDomain:'el-sotano-de-osito.firebaseapp.com',projectId:'el-sotano-de-osito',storageBucket:'el-sotano-de-osito.firebasestorage.app',messagingSenderId:'569093514370',appId:'1:569093514370:web:121b78008c667bde93409b',measurementId:'G-0YQHGMVSHL'};
+  const app=firebase.apps.length?firebase.app():firebase.initializeApp(config);
+  window.profileAuth=firebase.auth();
+  window.profileDb=firebase.firestore();
+})();
+</script>
+</head>
+<body>
+<div class="profile-transition" id="profile-transition"></div>
+<div class="profile-bg"><span class="bg-orb bg-orb-a"></span><span class="bg-orb bg-orb-b"></span><span class="bg-orb bg-orb-c"></span><div class="bg-grid"></div></div>
+<main class="profile-shell">
+  <section class="profile-card">
+    <div class="profile-topbar">
+      <a class="back-button" id="back-to-sotano" href="index.html">← Volver al Sótano</a>
+      <span class="profile-kicker">CUENTA</span>
+    </div>
+    <div id="profile-loading" class="profile-state">Cargando tu perfil…</div>
+    <div id="profile-content" style="display:none;">
+      <div class="profile-heading">
+        <div class="avatar-wrap">
+          <div class="avatar-ring"></div>
+          <img id="profile-avatar" src="" alt="Foto de perfil">
+          <label class="avatar-change" for="photo-input">Cambiar foto</label>
+          <input id="photo-input" type="file" accept="image/*" hidden>
+        </div>
+        <div class="profile-identity">
+          <p class="profile-eyebrow">MI PERFIL</p>
+          <h1 id="profile-name-title">Tu perfil</h1>
+          <p id="profile-email" class="profile-email"></p>
+          <span class="identity-line"><i></i> Cuenta activa</span>
+        </div>
+      </div>
+
+      <div class="profile-section-title">
+        <span>Configuración de cuenta</span>
+        <small>Administra tu acceso y tu foto de perfil.</small>
+      </div>
+
+      <div class="profile-grid">
+        <section class="profile-panel profile-photo-panel">
+          <div class="panel-icon">◉</div>
+          <div class="panel-copy">
+            <h2>Foto de perfil</h2>
+            <p>Cambia la imagen que aparece junto a tu cuenta y en el chat.</p>
+          </div>
+          <label class="profile-button photo-main-button" for="photo-input">Elegir nueva foto</label>
+        </section>
+
+        <form id="password-form" class="profile-panel">
+          <div class="panel-icon">⌁</div>
+          <div class="panel-copy">
+            <h2>Cambiar contraseña</h2>
+            <p>Confirma tu contraseña actual para crear una nueva.</p>
+          </div>
+          <label>Contraseña actual<input id="current-password" type="password" autocomplete="current-password" required></label>
+          <label>Nueva contraseña<input id="new-password" type="password" minlength="6" autocomplete="new-password" required placeholder="Mínimo 6 caracteres"></label>
+          <button type="submit" class="profile-button pass-submit-btn">Cambiar contraseña</button>
+        </form>
+      </div>
+
+      <div id="profile-status" class="profile-status"></div>
+      <button id="logout-button" class="logout-button" type="button">Cerrar sesión</button>
+    </div>
+    <div id="profile-login-needed" class="profile-state" style="display:none;">
+      <h2>Necesitas iniciar sesión</h2>
+      <p>Esta página es para las personas que ya tienen una cuenta.</p>
+      <a class="profile-button link-button" href="index.html">Ir al inicio</a>
+    </div>
+  </section>
+</main>
+<script src="profile.js?v=perfil-20260913-3"></script>
+</body>
+</html>

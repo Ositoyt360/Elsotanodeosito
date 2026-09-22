@@ -811,7 +811,7 @@ body.guest-mode .livechat-floating-container {
 
 /* --- SECCIÓN PUBLICITARIA / BANNER --- */
 .promo-container { 
-    background: linear-gradient(165deg, rgba(8, 10, 15, 0.4) 0%, rgba(8, 10, 15, 0.9) 100%), url('fondo banner.png.png') center/cover no-repeat;
+    background: linear-gradient(165deg, rgba(8, 10, 15, 0.4) 0%, rgba(8, 10, 15, 0.9) 100%), url('fondo_banner_png.png') center/cover no-repeat;
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg); padding: var(--space-lg); position: relative; 
     overflow: hidden; min-height: 320px; display: flex; flex-direction: column; 
@@ -4213,4 +4213,239 @@ h2.big-glow {
     animation: none !important;
     transition: none !important;
     filter: none !important;
+}
+\n\n/* ===== V10: refinamiento visual + temporada Halloween ===== */\n:root {\n  --surface-elevated: rgba(13,17,23,.92);\n  --orange-halloween: #ff7a00;\n  --violet-halloween: #7a2cff;\n}\nheader { border-bottom: 1px solid rgba(57,255,106,.16); box-shadow: 0 10px 38px rgba(0,0,0,.28); }\n.content-section, .promo-container, .sidebar-subscribe, .auth-card {\n  border: 1px solid rgba(255,255,255,.09);\n  background: linear-gradient(145deg, rgba(18,23,31,.88), rgba(8,10,15,.78));\n}\n.btn-action, .tab-btn { border-radius: 12px; }\n.moderator-entry-button {\n  background: linear-gradient(135deg, rgba(255,122,0,.22), rgba(122,44,255,.22));\n  border-color: rgba(255,122,0,.45) !important;\n  color: #fff !important;\n}\n.halloween-decor { position: fixed; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }\n.halloween-bat, .halloween-pumpkin { position: absolute; filter: drop-shadow(0 0 10px rgba(255,122,0,.3)); opacity: .72; }\n.bat-one { top: 82px; left: 2vw; font-size: 28px; transform: rotate(-14deg); }\n.bat-two { top: 130px; right: 3vw; font-size: 24px; transform: rotate(12deg); }\n.pumpkin-one { bottom: 14px; left: 12px; font-size: 34px; }\n.pumpkin-two { bottom: 14px; right: 12px; font-size: 34px; }\n@media (min-width: 900px) and (prefers-reduced-motion: no-preference) {\n  .bat-one { animation: halloweenFloat 7s ease-in-out infinite alternate; }\n  .bat-two { animation: halloweenFloat 8s ease-in-out infinite alternate-reverse; }\n}\n@keyframes halloweenFloat { from { transform: translateY(0) rotate(-8deg); } to { transform: translateY(18px) rotate(9deg); } }\n@media (max-width: 768px) {\n  .halloween-bat { opacity: .42; font-size: 20px; }\n  .halloween-pumpkin { font-size: 26px; opacity: .6; }\n  .content-section, .promo-container, .sidebar-subscribe, .auth-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }\n}\n
+
+/* ===== V12 · MODOS GLOBALES DEL SITIO ===== */
+body.modo-normal { --mode-glow: rgba(88,255,154,.16); }
+body.modo-halloween { --mode-glow: rgba(255,104,0,.28); background-color:#08050a; background-image:radial-gradient(circle at 15% 10%,rgba(255,104,0,.22),transparent 32%),radial-gradient(circle at 85% 15%,rgba(123,31,162,.18),transparent 34%),linear-gradient(180deg,#0b0610,#050509); }
+body.modo-navidad { --mode-glow: rgba(120,210,255,.28); background-color:#06101a; background-image:radial-gradient(circle at 20% 5%,rgba(125,211,252,.25),transparent 30%),radial-gradient(circle at 80% 10%,rgba(16,185,129,.18),transparent 35%),linear-gradient(180deg,#06121c,#041018); }
+body.modo-san-valentin { --mode-glow: rgba(255,79,135,.25); background-color:#12060d; background-image:radial-gradient(circle at 20% 8%,rgba(255,79,135,.25),transparent 30%),radial-gradient(circle at 82% 10%,rgba(244,114,182,.18),transparent 34%),linear-gradient(180deg,#170711,#09040a); }
+body.modo-cumpleanos { --mode-glow: rgba(250,204,21,.24); background-color:#0d0917; background-image:radial-gradient(circle at 15% 5%,rgba(250,204,21,.2),transparent 28%),radial-gradient(circle at 85% 12%,rgba(168,85,247,.22),transparent 34%),linear-gradient(180deg,#100a1b,#080611); }
+body.modo-halloween .promo-section, body.modo-navidad .promo-section, body.modo-san-valentin .promo-section, body.modo-cumpleanos .promo-section,
+body.modo-halloween .sidebar-card, body.modo-navidad .sidebar-card, body.modo-san-valentin .sidebar-card, body.modo-cumpleanos .sidebar-card,
+body.modo-halloween .content-section, body.modo-navidad .content-section, body.modo-san-valentin .content-section, body.modo-cumpleanos .content-section { box-shadow:0 18px 60px var(--mode-glow); }
+.modo-sitio-decoracion { position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+.modo-sitio-item { position:absolute; top:-40px; opacity:.82; animation:modoCaida linear infinite; filter:drop-shadow(0 3px 8px rgba(255,255,255,.12)); }
+@keyframes modoCaida { from{transform:translate3d(0,-50px,0) rotate(0deg);opacity:0} 12%{opacity:.9} to{transform:translate3d(24vw,110vh,0) rotate(360deg);opacity:.12} }
+body.modo-halloween .header, body.modo-navidad .header, body.modo-san-valentin .header, body.modo-cumpleanos .header { backdrop-filter:blur(18px); border-bottom-color:rgba(255,255,255,.1); }
+body.modo-navidad .modo-sitio-item { text-shadow:0 0 10px rgba(200,240,255,.75); }
+body.modo-san-valentin .modo-sitio-item { text-shadow:0 0 12px rgba(255,79,135,.65); }
+body.modo-cumpleanos .modo-sitio-item { text-shadow:0 0 12px rgba(250,204,21,.65); }
+@media (prefers-reduced-motion: reduce) { .modo-sitio-item { animation:none; top:8%; } }
+
+/* V12 · pulido visual general */
+body { transition: background-color .45s ease, background-image .45s ease; }
+.content-section, .promo-section, .sidebar-card { transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease; }
+.content-section:hover, .promo-section:hover { border-color: rgba(255,255,255,.10); }
+.dashboard-section-header { gap:16px; }
+.section-heading { letter-spacing:-.02em; }
+@media (max-width:700px){
+  .video-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px; }
+  .updates-strip { grid-template-columns:1fr; gap:12px; padding:14px; }
+}
+@media (max-width:430px){
+  .video-grid { grid-template-columns:1fr; }
+}
+
+
+/* ===== V18 · DECORACIÓN REAL DE MODOS ESPECIALES ===== */
+.halloween-decor { display:none !important; }
+.modo-sitio-decoracion {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    overflow: hidden;
+    contain: strict;
+}
+.modo-decor-item {
+    position: absolute;
+    display: block;
+    width: var(--size);
+    height: var(--size);
+    opacity: .78;
+    animation: modoEspecialFlota var(--duration) var(--delay) linear infinite;
+    will-change: transform, opacity;
+}
+@keyframes modoEspecialFlota {
+    0% { transform: translate3d(0,-8vh,0) rotate(0deg); opacity:0; }
+    12% { opacity:.85; }
+    88% { opacity:.72; }
+    100% { transform: translate3d(var(--drift),108vh,0) rotate(360deg); opacity:0; }
+}
+
+@keyframes modoTwinkle { 0%,100% { opacity:.35; transform:scale(.85); } 50% { opacity:1; transform:scale(1.15); } }
+@keyframes modoPulseGlow { 0%,100% { filter:drop-shadow(0 0 4px currentColor); } 50% { filter:drop-shadow(0 0 13px currentColor); } }
+
+/* Halloween: calabazas, murciélagos, telarañas, fantasmas y chispas, sin emojis. */
+.decor-halloween .decor-pumpkin { background:linear-gradient(90deg,#7d2b00 0 12%,#ff7a00 12% 30%,#9f3900 30% 42%,#ff8a00 42% 62%,#8c3000 62% 76%,#ff7a00 76%); border-radius:46% 46% 42% 42%; width:22px; height:18px; box-shadow:0 0 14px rgba(255,122,0,.5); }
+.decor-halloween .decor-pumpkin::before { content:""; position:absolute; width:5px; height:7px; left:9px; top:-5px; background:#5b3a18; border-radius:3px; }
+.decor-halloween .decor-bat { width:32px; height:15px; background:#191221; border-radius:50% 50% 45% 45%; box-shadow:0 0 12px rgba(145,70,255,.35); }
+.decor-halloween .decor-bat::before,.decor-halloween .decor-bat::after { content:""; position:absolute; top:1px; width:22px; height:14px; background:#241633; }
+.decor-halloween .decor-bat::before { right:20px; clip-path:polygon(100% 0,0 12%,28% 45%,0 65%,38% 100%,100% 65%); }
+.decor-halloween .decor-bat::after { left:20px; clip-path:polygon(0 0,100% 12%,72% 45%,100% 65%,62% 100%,0 65%); }
+.decor-halloween .decor-web { width:32px; height:32px; border:1px solid rgba(255,255,255,.32); border-radius:50%; box-shadow:0 0 0 7px transparent, inset 0 0 0 1px rgba(255,255,255,.18); opacity:.55; }
+.decor-halloween .decor-web::before,.decor-halloween .decor-web::after { content:""; position:absolute; inset:50% 0 auto; height:1px; background:rgba(255,255,255,.28); transform:rotate(45deg); }
+.decor-halloween .decor-web::after { transform:rotate(-45deg); }
+.decor-halloween .decor-spark { width:6px; height:6px; background:#ff9a2e; border-radius:50%; box-shadow:0 0 16px #ff7a00; color:#ff9a2e; animation-name:modoEspecialFlota,modoTwinkle; animation-duration:var(--duration),1.6s; animation-delay:var(--delay),var(--delay); animation-iteration-count:infinite,infinite; animation-timing-function:linear,ease-in-out; }
+.decor-halloween .decor-ghost { width:20px; height:22px; background:rgba(238,240,255,.82); border-radius:50% 50% 0 0; box-shadow:0 0 14px rgba(200,180,255,.55); clip-path:polygon(0 40%,0 100%,17% 84%,34% 100%,50% 84%,66% 100%,83% 84%,100% 100%,100% 40%,100% 0,0 0); }
+.decor-halloween .decor-ghost::before,.decor-halloween .decor-ghost::after { content:""; position:absolute; top:38%; width:3px; height:4px; background:#241633; border-radius:50%; }
+.decor-halloween .decor-ghost::before { left:26%; }
+.decor-halloween .decor-ghost::after { right:26%; }
+
+/* Navidad: nieve, luces parpadeantes y estrellas. */
+.decor-navidad .decor-snow { width:7px; height:7px; border:2px solid rgba(225,248,255,.9); border-radius:50%; box-shadow:0 0 10px rgba(170,230,255,.8); }
+.decor-navidad .decor-light { width:8px; height:8px; border-radius:50%; background:#8fffc0; box-shadow:0 0 13px #58ff9a; color:#58ff9a; animation-name:modoEspecialFlota,modoTwinkle; animation-duration:var(--duration),1.4s; animation-delay:var(--delay),var(--delay); animation-iteration-count:infinite,infinite; animation-timing-function:linear,ease-in-out; }
+.decor-navidad .decor-light::after { content:""; position:absolute; width:1px; height:18px; top:-17px; left:50%; background:rgba(255,255,255,.22); }
+.decor-navidad .decor-light:nth-of-type(3n) { background:#61e7ff; box-shadow:0 0 13px #61e7ff; color:#61e7ff; }
+.decor-navidad .decor-light:nth-of-type(3n+1) { background:#ff9ad1; box-shadow:0 0 13px #ff9ad1; color:#ff9ad1; }
+.decor-navidad .decor-star { width:12px; height:12px; background:#ffe9a8; clip-path:polygon(50% 0%,63% 35%,100% 35%,70% 57%,82% 100%,50% 75%,18% 100%,30% 57%,0% 35%,37% 35%); box-shadow:0 0 12px rgba(255,233,168,.8); color:#ffe9a8; animation-name:modoEspecialFlota,modoTwinkle; animation-duration:var(--duration),2s; animation-delay:var(--delay),var(--delay); animation-iteration-count:infinite,infinite; animation-timing-function:linear,ease-in-out; }
+
+/* San Valentín: corazones CSS pulsantes y listones. */
+.decor-san-valentin .decor-heart { width:18px; height:18px; background:#ff4f87; transform:rotate(-45deg); border-radius:3px; box-shadow:0 0 16px rgba(255,79,135,.65); color:#ff4f87; animation-name:modoEspecialFlota,modoPulseGlow; animation-duration:var(--duration),1.8s; animation-delay:var(--delay),var(--delay); animation-iteration-count:infinite,infinite; animation-timing-function:linear,ease-in-out; }
+.decor-san-valentin .decor-heart::before,.decor-san-valentin .decor-heart::after { content:""; position:absolute; width:18px; height:18px; background:#ff4f87; border-radius:50%; }
+.decor-san-valentin .decor-heart::before { top:-9px; left:0; }
+.decor-san-valentin .decor-heart::after { left:9px; top:0; }
+.decor-san-valentin .decor-spark { width:6px; height:6px; border-radius:50%; background:#ffd1df; box-shadow:0 0 14px #ff8db1; }
+.decor-san-valentin .decor-ribbon { width:5px; height:26px; border-radius:3px; background:linear-gradient(180deg,#ffb6d2,#ff5c9a); box-shadow:0 0 10px rgba(255,92,154,.5); transform:rotate(18deg); }
+
+/* Cumpleaños: globos, confeti, chispas y estrellas de fiesta. */
+.decor-cumpleanos .decor-balloon { width:18px; height:24px; border-radius:50% 50% 45% 45%; background:linear-gradient(145deg,#ff5d8f,#9b5cff); box-shadow:0 0 15px rgba(255,93,143,.45); }
+.decor-cumpleanos .decor-balloon::after { content:""; position:absolute; width:1px; height:30px; top:23px; left:50%; background:rgba(255,255,255,.35); }
+.decor-cumpleanos .decor-balloon:nth-of-type(4n) { background:linear-gradient(145deg,#ffd34d,#ff9a2e); box-shadow:0 0 15px rgba(255,211,77,.45); }
+.decor-cumpleanos .decor-balloon:nth-of-type(4n+1) { background:linear-gradient(145deg,#61e7ff,#4ade80); box-shadow:0 0 15px rgba(97,231,255,.45); }
+.decor-cumpleanos .decor-confetti { width:6px; height:18px; border-radius:3px; background:#ffd34d; box-shadow:0 0 8px rgba(255,211,77,.35); }
+.decor-cumpleanos .decor-confetti:nth-of-type(3n) { background:#61e7ff; box-shadow:0 0 8px rgba(97,231,255,.35); }
+.decor-cumpleanos .decor-confetti:nth-of-type(5n) { background:#ff5d8f; box-shadow:0 0 8px rgba(255,93,143,.35); }
+.decor-cumpleanos .decor-spark { width:7px; height:7px; border-radius:50%; background:#8fffc0; box-shadow:0 0 14px #58ff9a; }
+.decor-cumpleanos .decor-star { width:12px; height:12px; background:#ffd34d; clip-path:polygon(50% 0%,63% 35%,100% 35%,70% 57%,82% 100%,50% 75%,18% 100%,30% 57%,0% 35%,37% 35%); box-shadow:0 0 12px rgba(255,211,77,.75); color:#ffd34d; animation-name:modoEspecialFlota,modoTwinkle; animation-duration:var(--duration),1.7s; animation-delay:var(--delay),var(--delay); animation-iteration-count:infinite,infinite; animation-timing-function:linear,ease-in-out; }
+
+/* El modo también pinta la pantalla de bienvenida y el fondo completo. */
+body.modo-halloween #welcome-screen { background:radial-gradient(circle at 50% 25%,rgba(255,94,0,.18),transparent 42%),linear-gradient(180deg,#120813,#050509); }
+body.modo-navidad #welcome-screen { background:radial-gradient(circle at 50% 20%,rgba(120,220,255,.18),transparent 45%),linear-gradient(180deg,#071827,#041018); }
+body.modo-san-valentin #welcome-screen { background:radial-gradient(circle at 50% 25%,rgba(255,79,135,.18),transparent 45%),linear-gradient(180deg,#190813,#09040a); }
+body.modo-cumpleanos #welcome-screen { background:radial-gradient(circle at 50% 25%,rgba(250,204,21,.15),transparent 45%),linear-gradient(180deg,#120a20,#080611); }
+
+@media (max-width:768px), (prefers-reduced-motion:reduce) {
+    .modo-decor-item { animation-duration:12s; opacity:.5; }
+    .decor-halloween .decor-web { display:none; }
+}
+
+/* ===== V19 · FONDOS TEMÁTICOS COMPLETOS ===== */
+#countdowns-container[hidden] { display:none !important; }
+.creator-countdown-editor { display:grid; gap:10px; margin-top:12px; }
+.creator-countdown-editor[hidden] { display:none !important; }
+.creator-countdown-help { margin:0; color:var(--text-muted); font-size:11px; line-height:1.45; }
+.creator-countdowns-list { display:grid; gap:10px; }
+.creator-countdown-row { display:grid; gap:8px; padding:10px; border:1px solid rgba(88,255,154,.18); border-radius:12px; background:rgba(0,0,0,.22); }
+.creator-countdown-grid { display:grid; grid-template-columns:minmax(0,1.2fr) 54px minmax(0,1fr); gap:7px; }
+.creator-countdown-row input { width:100%; min-width:0; box-sizing:border-box; border:1px solid rgba(88,255,154,.18); border-radius:8px; padding:9px; background:rgba(3,10,7,.72); color:#ecfff3; }
+.creator-countdown-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.creator-save-countdowns { border-color:rgba(88,255,154,.45); }
+.creator-delete-countdown { font-size:11px; padding:7px 9px; }
+.creator-countdown-empty, .creator-countdown-status { font-size:11px; color:var(--text-muted); line-height:1.4; }
+.creator-countdown-status[data-tone="ok"] { color:#8fffc0; }
+.creator-countdown-status[data-tone="error"] { color:#ff9f9f; }
+@media (max-width:768px) { .creator-countdown-grid { grid-template-columns:1fr 54px; } .creator-countdown-grid input[type="datetime-local"] { grid-column:1/-1; } .creator-countdown-actions { grid-template-columns:1fr; } }
+
+body.modo-halloween,
+body.modo-navidad,
+body.modo-san-valentin,
+body.modo-cumpleanos {
+  --theme-card: rgba(8,10,16,.82);
+  --theme-border: rgba(255,255,255,.14);
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center top;
+  background-attachment:scroll;
+  position:relative;
+}
+body.modo-halloween { background-color:#07030b; background-image:linear-gradient(rgba(5,2,9,.42),rgba(5,2,9,.78)),url('fondo-halloween.svg'); }
+body.modo-navidad { background-color:#041019; background-image:linear-gradient(rgba(3,13,23,.34),rgba(3,13,23,.72)),url('fondo-navidad.svg'); }
+body.modo-san-valentin { background-color:#0e040b; background-image:linear-gradient(rgba(13,2,9,.34),rgba(13,2,9,.76)),url('fondo-san-valentin.svg'); }
+body.modo-cumpleanos { background-color:#10061b; background-image:linear-gradient(rgba(12,4,22,.34),rgba(12,4,22,.76)),url('fondo-cumpleanos.svg'); }
+
+body.modo-halloween::before,
+body.modo-navidad::before,
+body.modo-san-valentin::before,
+body.modo-cumpleanos::before {
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--mode-accent) 16%,transparent),transparent 38%);
+}
+body.modo-halloween { --mode-accent:#ff7a00; --mode-accent-2:#a855f7; }
+body.modo-navidad { --mode-accent:#61e7ff; --mode-accent-2:#4ade80; }
+body.modo-san-valentin { --mode-accent:#ff5c9a; --mode-accent-2:#ffb6d2; }
+body.modo-cumpleanos { --mode-accent:#ffd34d; --mode-accent-2:#ff5d8f; }
+
+body.modo-halloween .content-section,
+body.modo-halloween .sidebar-card,
+body.modo-navidad .content-section,
+body.modo-navidad .sidebar-card,
+body.modo-san-valentin .content-section,
+body.modo-san-valentin .sidebar-card,
+body.modo-cumpleanos .content-section,
+body.modo-cumpleanos .sidebar-card {
+  background:linear-gradient(145deg,rgba(8,11,17,.88),rgba(5,7,11,.72));
+  border-color:color-mix(in srgb,var(--mode-accent) 30%,transparent);
+  box-shadow:0 16px 55px color-mix(in srgb,var(--mode-accent) 18%,transparent);
+}
+
+/* La foto del banner se mantiene siempre visible; solo cambia el tinte de color
+   para que combine con el modo especial activo (antes el modo la tapaba por completo). */
+body.modo-halloween .promo-container,
+body.modo-navidad .promo-container,
+body.modo-san-valentin .promo-container,
+body.modo-cumpleanos .promo-container {
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--mode-accent) 22%, rgba(8,10,15,.55)) 0%, rgba(8,10,15,.92) 100%),
+    url('fondo_banner_png.png') center/cover no-repeat;
+  border-color:color-mix(in srgb,var(--mode-accent) 30%,transparent);
+  box-shadow:0 16px 55px color-mix(in srgb,var(--mode-accent) 18%,transparent);
+}
+body.modo-halloween .section-heading,
+body.modo-navidad .section-heading,
+body.modo-san-valentin .section-heading,
+body.modo-cumpleanos .section-heading { text-shadow:0 0 18px color-mix(in srgb,var(--mode-accent) 28%,transparent); }
+body.modo-halloween .btn-action:hover,
+body.modo-navidad .btn-action:hover,
+body.modo-san-valentin .btn-action:hover,
+body.modo-cumpleanos .btn-action:hover { border-color:var(--mode-accent); box-shadow:0 0 18px color-mix(in srgb,var(--mode-accent) 25%,transparent); }
+
+/* Cabeceras y bienvenida con identidad propia. */
+body.modo-halloween header { border-bottom-color:rgba(255,122,0,.38); }
+body.modo-navidad header { border-bottom-color:rgba(97,231,255,.34); }
+body.modo-san-valentin header { border-bottom-color:rgba(255,92,154,.34); }
+body.modo-cumpleanos header { border-bottom-color:rgba(255,211,77,.34); }
+body.modo-halloween #welcome-screen { background:linear-gradient(rgba(7,2,12,.35),rgba(7,2,12,.82)),url('fondo-halloween.svg') center/cover no-repeat; }
+body.modo-navidad #welcome-screen { background:linear-gradient(rgba(2,15,25,.28),rgba(2,15,25,.78)),url('fondo-navidad.svg') center/cover no-repeat; }
+body.modo-san-valentin #welcome-screen { background:linear-gradient(rgba(19,3,12,.28),rgba(19,3,12,.8)),url('fondo-san-valentin.svg') center/cover no-repeat; }
+body.modo-cumpleanos #welcome-screen { background:linear-gradient(rgba(17,5,27,.28),rgba(17,5,27,.8)),url('fondo-cumpleanos.svg') center/cover no-repeat; }
+
+/* Decoración más elegante: concentración en bordes, no una lluvia de emojis. */
+body.modo-halloween .modo-sitio-decoracion,
+body.modo-navidad .modo-sitio-decoracion,
+body.modo-san-valentin .modo-sitio-decoracion,
+body.modo-cumpleanos .modo-sitio-decoracion { opacity:.72; }
+body.modo-halloween .decor-web { opacity:.34; }
+body.modo-navidad .decor-light { box-shadow:0 0 16px currentColor; }
+body.modo-san-valentin .decor-heart { filter:drop-shadow(0 0 9px rgba(255,92,154,.7)); }
+body.modo-cumpleanos .decor-balloon { filter:drop-shadow(0 0 10px rgba(255,93,143,.55)); }
+
+@media (max-width:768px){
+  body.modo-halloween,body.modo-navidad,body.modo-san-valentin,body.modo-cumpleanos { background-size:auto 100%; background-position:center top; }
+  body.modo-halloween .modo-sitio-decoracion,body.modo-navidad .modo-sitio-decoracion,body.modo-san-valentin .modo-sitio-decoracion,body.modo-cumpleanos .modo-sitio-decoracion { opacity:.48; }
+}
+
+/* V26: editor de conteos claro y usable desde la página principal */
+.creator-countdown-field { display:grid; gap:5px; min-width:0; }
+.creator-countdown-field > span { color:var(--text-muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.creator-countdown-row { padding:11px; }
+.creator-countdown-row input { font-size:13px; }
+.creator-countdown-grid { grid-template-columns: 80px minmax(0,1fr); }
+.creator-countdown-date-field { min-width:0; }
+.creator-countdown-date-field input { width:100%; }
+@media (max-width:768px) {
+  .creator-countdown-grid { grid-template-columns: 1fr; }
+  .creator-countdown-grid input[type="datetime-local"] { grid-column:auto; }
 }

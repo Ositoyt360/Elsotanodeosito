@@ -2,21 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
+    function signedIn() { return request.auth != null; }
     function isCreator() {
       return signedIn() && request.auth.token.email == 'ositoyt360@elsotanodeosito.com';
     }
+    function isLimitedModerator() {
+      return signedIn() && request.auth.token.email != null && request.auth.token.email.split('@')[0] == 'denis';
+    }
+    function isBanned(uid) {
+      return exists(/databases/$(database)/documents/moderation/$(uid)) &&
+        get(/databases/$(database)/documents/moderation/$(uid)).data.bannedUntil > request.time.toMillis();
+    }
 
     match /users/{userId} {
-      allow read: if signedIn() && request.auth.uid == userId;
-      allow create, update: if signedIn() && (
-        request.auth.uid == userId ||
-        isCreator()
-      );
-      allow delete: if false;
+      allow read: if signedIn() && (request.auth.uid == userId || isCreator());
+      allow create, update: if signedIn() && (request.auth.uid == userId || isCreator());
+      allow delete: if isCreator();
+    }
+
+    match /moderation/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isCreator());
+      allow create, update, delete: if isCreator();
+    }
+
+    match /siteSettings/public {
+      allow read: if true;
+      allow create: if isCreator();
+      allow update: if isCreator() || (isLimitedModerator() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['countdowns']) && request.resource.data.theme == resource.data.theme && request.resource.data.title == resource.data.title);
+      allow delete: if isCreator();
     }
 
     match /aiChats/{userId}/messages/{messageId} {
@@ -25,14 +38,19 @@ service cloud.firestore {
     }
 
     match /livechat/{messageId} {
-      // Chat público del sitio: cualquiera puede leer y publicar mensajes.
-      // Los datos privados del usuario siguen protegidos en /users y /aiChats.
       allow read: if true;
-      allow create: if (!messageId.matches('rank_.*') && (!messageId.matches('profile_.*') || (signedIn() && request.resource.data.uid == request.auth.uid))) || isCreator();
-      allow update: if !messageId.matches('rank_.*') && (
-        (!messageId.matches('profile_.*') && signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid && request.resource.data.timestamp == resource.data.timestamp) ||
-        (!messageId.matches('profile_.*') && isCreator())
-      );
+
+      // Perfiles públicos: cada usuario puede mantener su propia foto/rango visible.
+      allow create: if
+        (messageId.matches('profile_.*') && signedIn() && request.resource.data.uid == request.auth.uid) ||
+        (!messageId.matches('profile_.*') && !messageId.matches('rank_.*') && signedIn() && !isBanned(request.auth.uid) && (!request.resource.data.isSystem || isCreator() || isLimitedModerator())) ||
+        isCreator();
+
+      allow update: if
+        (messageId.matches('profile_.*') && signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid) ||
+        (!messageId.matches('profile_.*') && !messageId.matches('rank_.*') && signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid && request.resource.data.timestamp == resource.data.timestamp && !isBanned(request.auth.uid)) ||
+        isCreator();
+
       allow delete: if isCreator();
     }
   }

@@ -5,9 +5,23 @@ service firebase.storage {
     function signedIn() {
       return request.auth != null;
     }
+    function isCreator() {
+      return signedIn() && request.auth.token.email == 'ositoyt360@elsotanodeosito.com';
+    }
+    function isLimitedModerator() {
+      return signedIn() && request.auth.token.email != null && request.auth.token.email.split('@')[0] == 'denis';
+    }
 
     match /users/{userId}/profile.jpg {
       allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    match /announcements/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if (isCreator() || (isLimitedModerator() && request.auth.uid == uid))
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isCreator() || (isLimitedModerator() && request.auth.uid == uid);
     }
   }
 }

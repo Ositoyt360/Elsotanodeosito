@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=fondo-movimiento-20260914-2">
+    <link rel="stylesheet" href="styles.css?v=modos-v19-20260922">
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -185,10 +185,9 @@
         window.livechatUpdateFirebase = null;
     </script>
 
-    <script src="actualizaciones-helper.js"></script>
+    <script src="actualizaciones-helper.js?v=modos-v19-20260922"></script>
 </head>
 <body>
-
     <canvas id="space-canvas"></canvas>
     <div class="ambient-glow" id="glow-1"></div>
     <div class="ambient-glow" id="glow-2"></div>
@@ -517,12 +516,9 @@
                         <span>🔔</span> Activar Notificaciones
                     </button>
 
-                    <button class="voice-assistant-badge" id="voice-assistant-badge" type="button" onclick="toggleIAPanel()" title="Abrir panel de IA" aria-label="Abrir panel de IA">
-                        <span class="voice-mic-dot" id="voice-mic-dot"></span>
-                        <span aria-hidden="true">🤖</span>
-                        <span id="voice-status-label">Asistente IA</span>
+                    <button class="btn-action moderator-entry-button" id="moderator-entry-button" type="button" style="display:none;" onclick="window.open('moderador.html','_blank','noopener,noreferrer')">
+                        <span aria-hidden="true">🛡️</span> Entrar como moderador
                     </button>
-
                     <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
                     <button class="btn-action profile-open-button" id="profile-open-button" type="button" style="display:none;" onclick="abrirMiPerfil()">Mi perfil</button>
                     <img class="header-profile-avatar" id="header-profile-avatar" src="" alt="Foto de perfil" style="display:none;">
@@ -564,12 +560,22 @@
                     <span class="promo-tag">LIVE &bull; UPDATES</span>
                     <h2 class="promo-title-main">&Uacute;LTIMAS ACTUALIZACIONES</h2>
                     <p class="promo-desc promo-desc-compact">Cambios recientes del sitio con fecha y estado en vivo.</p>
-                    <div class="promo-live-counter" id="updates-live-counter">Actualizando en vivo</div>
+                    <div class="promo-live-counter" id="updates-live-counter">Actualizado · 21 sep 2026</div>
                     <div class="promo-updates" id="promo-updates-container">
                         <div class="promo-update-card">
-                            <span class="promo-update-badge">Nuevo</span>
-                            <h3 class="promo-update-title">Cargando actualizaciones...</h3>
-                            <div class="promo-update-time update-timestamp" data-timestamp="">Actualizando...</div>
+                            <span class="promo-update-badge">V12</span>
+                            <h3 class="promo-update-title">Modos especiales para toda la comunidad</h3>
+                            <div class="promo-update-time">22 sep 2026 · Navidad, Halloween, San Valentín y cumpleaños del canal controlados desde moderación.</div>
+                        </div>
+                        <div class="promo-update-card">
+                            <span class="promo-update-badge">Eventos</span>
+                            <h3 class="promo-update-title">Conteos con fecha y hora</h3>
+                            <div class="promo-update-time">22 sep 2026 · El moderador puede programar OsitoExpo y otros eventos con día y hora exactos.</div>
+                        </div>
+                        <div class="promo-update-card">
+                            <span class="promo-update-badge">Mejoras</span>
+                            <h3 class="promo-update-title">Panel de moderación más completo</h3>
+                            <div class="promo-update-time">22 sep 2026 · Publicaciones solo para moderación, cuentas, baneos y herramientas de administración.</div>
                         </div>
                     </div>
                 </div>
@@ -662,7 +668,7 @@
         </main>
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
-            <audio id="bg-music" src="musica_snowfall.mp3" preload="none" loop></audio>
+            <audio id="bg-music" src="musica_snowfall.mp3" preload="metadata" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
                 <img src="logo_yt.png" alt="" class="yt-channel-logo" width="26" height="26" loading="lazy" decoding="async">
@@ -689,17 +695,17 @@
             </div>
 
 
-            <div class="sidebar-card countdown-box">
-                <div class="cd-text">&#128293; OsitoExpo muy pronto &#128293;</div>
-                <div class="countdown-timer" id="countdown-timer">-- : -- : -- : --</div>
-                <div class="cd-date">Nuevas sorpresas para la comunidad</div>
-            </div>
+            <div id="countdowns-container" class="countdowns-container" aria-label="Conteos regresivos" hidden></div>
 
-            <div class="sidebar-card countdown-box">
-                <div class="cd-text">5 años en YouTube</div>
-                <div class="countdown-timer" id="youtube-anniversary-timer">-- : -- : -- : --</div>
-                <div class="cd-date">2 de junio</div>
-            </div>
+            <section id="creator-countdown-editor" class="sidebar-card creator-countdown-editor" hidden aria-label="Conteos regresivos">
+                <div class="sidebar-card-title">⏱️ Conteos regresivos</div>
+                <div id="creator-countdowns-list" class="creator-countdowns-list"></div>
+                <div class="creator-countdown-actions">
+                    <button id="creator-add-countdown" class="btn-action" type="button" onclick="window.agregarConteoCreador(event)">＋ Agregar conteo</button>
+                    <button id="creator-save-countdowns" class="btn-action creator-save-countdowns" type="button">💾 Guardar</button>
+                </div>
+                <div id="creator-countdown-status" class="creator-countdown-status" aria-live="polite"></div>
+            </section>
 
             <div class="sidebar-card settings-section cuenta-personalizacion"> 
                 <div class="sidebar-card-title">Diseños personalizados</div>
@@ -751,7 +757,6 @@
                         <span class="ia-status-dot" aria-hidden="true"></span>
                         <div>
                             <h3><span aria-hidden="true">🤖</span> Asistente de Inteligencia</h3>
-                            <p>Tu copiloto del sótano</p>
                         </div>
                         <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
                             <span class="live-dot"></span> 🔴 EN VIVO
@@ -879,64 +884,153 @@
             }
         };
 
-        // Decoración estacional: Halloween del 1 al 31 de octubre y
-        // decoración navideña del 15 de noviembre al 7 de enero.
-        function obtenerTemporadaActual(fecha = new Date()) {
-            const mes = fecha.getMonth() + 1; // 1 = enero ... 12 = diciembre
-            const dia = fecha.getDate();
+        // ===== MODO ESPECIAL GLOBAL =====
+        // El moderador publica un único modo en Firestore y todos los visitantes,
+        // incluidos invitados y la pantalla de entrada, reciben el mismo tema.
+        const SITE_THEME_LABELS = { normal: 'Normal', halloween: 'Halloween', navidad: 'Navidad', 'san-valentin': 'San Valentín', cumpleanos: 'Cumpleaños del canal' };
+        const MODE_MUSIC = {
+            normal: 'musica_snowfall.mp3',
+            halloween: 'hallowen de osito.mp3',
+            navidad: 'navidad de osito.mp3',
+            'san-valentin': 'san valentin de osito.mp3',
+            cumpleanos: 'cumple de osito.mp3'
+        };
 
-            if (mes === 10) return 'halloween'; // 1 - 31 de octubre (se quita el 1 de noviembre)
+        function crearDecoracionModo(theme) {
+            const old = document.getElementById('modo-sitio-decoracion');
+            if (old) old.remove();
+            if (theme === 'normal') return;
 
-            if (mes === 11 && dia >= 15) return 'navidad'; // 15 de noviembre en adelante
-            if (mes === 12) return 'navidad'; // todo diciembre
-            if (mes === 1 && dia <= 7) return 'navidad'; // hasta el 7 de enero
+            const layer = document.createElement('div');
+            layer.id = 'modo-sitio-decoracion';
+            layer.className = `modo-sitio-decoracion decor-${theme}`;
+            layer.setAttribute('aria-hidden', 'true');
 
-            return null;
+            const config = {
+                halloween: { count: 22, types: ['pumpkin','bat','web','spark','ghost'] },
+                navidad: { count: 34, types: ['snow','light','snow','snow','star','light'] },
+                'san-valentin': { count: 24, types: ['heart','heart','spark','ribbon'] },
+                cumpleanos: { count: 28, types: ['balloon','confetti','spark','confetti','star'] }
+            }[theme];
+            if (!config) return;
+
+            for (let i = 0; i < config.count; i++) {
+                const item = document.createElement('span');
+                const type = config.types[i % config.types.length];
+                item.className = `modo-decor-item decor-${type}`;
+                item.style.left = `${Math.random() * 100}%`;
+                item.style.top = `${Math.random() * 100}%`;
+                item.style.setProperty('--delay', `${Math.random() * 8}s`);
+                item.style.setProperty('--duration', `${7 + Math.random() * 9}s`);
+                item.style.setProperty('--drift', `${-70 + Math.random() * 140}px`);
+                item.style.setProperty('--size', `${10 + Math.random() * 18}px`);
+                layer.appendChild(item);
+            }
+            document.body.appendChild(layer);
         }
 
-        function aplicarDecoracionEstacional() {
-            const temporada = obtenerTemporadaActual();
+        function cambiarMusicaModo(theme) {
+            const audio = document.getElementById('bg-music');
+            if (!audio) return;
+            const src = MODE_MUSIC[theme] || MODE_MUSIC.normal;
+            const next = new URL(src, window.location.href).href;
+            const current = new URL(audio.getAttribute('src') || MODE_MUSIC.normal, window.location.href).href;
+            if (current === next) return;
 
-            document.body.classList.remove('tema-halloween', 'tema-navidad');
-            const contenedorExistente = document.getElementById('temporada-decoracion');
-            if (contenedorExistente) contenedorExistente.remove();
-            const badgeExistente = document.getElementById('temporada-badge');
-            if (badgeExistente) badgeExistente.remove();
+            const estabaSonando = !audio.paused;
+            audio.pause();
+            audio.setAttribute('src', src);
+            audio.load();
+            audio.loop = true;
 
-            if (!temporada) return;
-
-            document.body.classList.add(temporada === 'halloween' ? 'tema-halloween' : 'tema-navidad');
-
-            const emojisPorTemporada = {
-                halloween: ['🎃', '👻', '🕸️', '🦇', '🕷️'],
-                navidad: ['❄️', '🎄', '🎅', '⭐', '🔔']
-            };
-            const emojis = emojisPorTemporada[temporada];
-
-            const contenedor = document.createElement('div');
-            contenedor.className = 'temporada-decoracion';
-            contenedor.id = 'temporada-decoracion';
-
-            const cantidad = 18;
-            for (let i = 0; i < cantidad; i++) {
-                const item = document.createElement('span');
-                item.className = 'temporada-item';
-                item.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                item.style.left = (Math.random() * 100) + 'vw';
-                item.style.fontSize = (14 + Math.random() * 18) + 'px';
-                item.style.animationDuration = (8 + Math.random() * 10) + 's';
-                item.style.animationDelay = (Math.random() * 10) + 's';
-                contenedor.appendChild(item);
+            // Si el usuario ya dio el gesto de entrada, cambiamos la canción al instante.
+            if (estabaSonando || document.getElementById('welcome-screen')?.classList.contains('welcome-fade-out')) {
+                const p = audio.play();
+                if (p && typeof p.catch === 'function') p.catch(() => {});
             }
-            document.body.appendChild(contenedor);
+        }
 
-            const badge = document.createElement('div');
-            badge.className = 'temporada-badge';
-            badge.id = 'temporada-badge';
-            badge.textContent = temporada === 'halloween'
-                ? '🎃 Edición especial de Halloween'
-                : '🎄 Edición especial de Navidad';
-            document.body.appendChild(badge);
+        function aplicarModoSitio(theme) {
+            const t = SITE_THEME_LABELS[theme] ? theme : 'normal';
+            document.body.classList.remove('modo-normal','modo-halloween','modo-navidad','modo-san-valentin','modo-cumpleanos');
+            document.body.classList.add('modo-' + t);
+            document.documentElement.dataset.siteTheme = t;
+            crearDecoracionModo(t);
+            cambiarMusicaModo(t);
+        }
+
+        function aplicarTituloSitio(title) {
+            const limpio = String(title || '').trim().slice(0, 70);
+            if (!limpio) return;
+            document.title = limpio;
+            const logo = document.querySelector('header .logo');
+            const welcome = document.querySelector('.welcome-title');
+            const promo = document.querySelector('#slide-0 .promo-title-main');
+            if (logo) logo.textContent = limpio;
+            if (welcome) welcome.textContent = limpio;
+            if (promo) promo.textContent = limpio;
+        }
+
+        function aplicarConfiguracionSitio(settings) {
+            const data = settings || {};
+            aplicarModoSitio(data.theme || 'normal');
+            // Siempre renderizamos el valor de Firestore. Si está vacío, limpiamos
+            // los placeholders para que no parezca que el conteo no se publicó.
+            if (Array.isArray(data.countdowns)) {
+                window.__ositoCountdownsLoaded = true;
+                renderizarConteosRegresivos(data.countdowns);
+            }
+            aplicarTituloSitio(data.title);
+        }
+
+        async function actualizarModoSitioDesdeFirestore() {
+            try {
+                if (!window.dbFirebase || !window.docFirebase || !window.getDocFirebase) throw new Error('Firestore no está listo');
+                const snap = await window.getDocFirebase(window.docFirebase(window.dbFirebase, 'siteSettings', 'public'));
+                const settings = snap && snap.exists ? (snap.data() || {}) : {};
+                aplicarConfiguracionSitio(settings);
+                return;
+            } catch (error) {
+                console.warn('[SiteSettings] Firestore no respondió; probando respaldo del servidor.', error);
+            }
+
+            // Respaldo: si Firebase tarda, está bloqueado por reglas antiguas o el
+            // hosting sirve una versión que no inicia la escucha, intentamos la
+            // configuración pública del servidor. Esto evita que el moderador vea
+            // “guardado” pero el visitante no vea el conteo.
+            try {
+                const response = await fetch('/api/site-settings', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const settings = await response.json();
+                aplicarConfiguracionSitio(settings);
+            } catch (fallbackError) {
+                console.warn('[SiteSettings] Tampoco se pudo cargar el respaldo del servidor.', fallbackError);
+            }
+        }
+
+        function aplicarSiteSettingsSnapshot(snapshot) {
+            const settings = snapshot && snapshot.exists ? (snapshot.data() || {}) : {};
+            aplicarConfiguracionSitio(settings);
+            // Marca que ya recibimos una respuesta real; nunca dejamos el
+            // placeholder visible después de una lectura válida.
+            window.__ositoCountdownsLoaded = true;
+        }
+
+        function conectarModoSitio() {
+            if (window.__ositoModoSitioUnsub) { try { window.__ositoModoSitioUnsub(); } catch(e){} }
+            try {
+                if (window.dbFirebase && window.docFirebase && window.onSnapshotFirebase) {
+                    const ref = window.docFirebase(window.dbFirebase, 'siteSettings', 'public');
+                    window.__ositoModoSitioUnsub = window.onSnapshotFirebase(ref, aplicarSiteSettingsSnapshot, error => {
+                        console.warn('[SiteSettings] Escucha en tiempo real falló.', error);
+                        actualizarModoSitioDesdeFirestore();
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.warn('[SiteSettings] No se pudo iniciar la escucha en tiempo real.', error);
+            }
+            actualizarModoSitioDesdeFirestore();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -950,6 +1044,9 @@
             const p1 = localStorage.getItem('theme_primary') || '#58ff9a';
             const p2 = localStorage.getItem('theme_secondary') || '#13b85b';
             cambiarFondo(p1, p2);
+            conectarModoSitio();
+            bindCreatorCountdownEditor();
+            renderCreatorCountdownEditor([]);
 
             const savedFont = localStorage.getItem('osito_font_size');
             if (savedFont) {
@@ -972,7 +1069,6 @@
             configurarAlertas();
             actualizarVisibilidadSeccionesCuenta();
             window.addEventListener('osito:firebase-auth-ready', actualizarVisibilidadSeccionesCuenta);
-            aplicarDecoracionEstacional();
 
             if(localStorage.getItem('osito_no_anim') === 'true') {
                 if (!document.body.classList.contains('no-animations')) toggleAnimaciones();
@@ -1162,14 +1258,55 @@
             }
         }
 
+        // Caché local de videos por categoría: evita re-descargar TODA la playlist
+        // (a veces varias páginas de 50 videos, una por una) en cada visita.
+        // Con caché fresca, la sección se pinta al instante y solo se refresca
+        // en segundo plano cuando pasan más de VIDEOS_CACHE_TTL_MS.
+        const VIDEOS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+        function leerCacheVideos(categoria) {
+            try {
+                const raw = localStorage.getItem(`osito_videos_cache_${categoria}`);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || !Array.isArray(parsed.videos)) return null;
+                return parsed;
+            } catch (error) {
+                console.warn('[YouTubeSync] No se pudo leer la caché de', categoria, error);
+                return null;
+            }
+        }
+
+        function guardarCacheVideos(categoria, videos) {
+            try {
+                localStorage.setItem(`osito_videos_cache_${categoria}`, JSON.stringify({ videos, timestamp: Date.now() }));
+            } catch (error) {
+                console.warn('[YouTubeSync] No se pudo guardar la caché de', categoria, error);
+            }
+        }
+
         async function cargarVideosDesdePlaylist(categoria = 'videos') {
             const config = PLAYLISTS[categoria] || PLAYLISTS.videos;
             const grid = document.getElementById(config.grid);
             if (!grid) return;
+
+            // 1) Si hay caché en este navegador, se muestra de inmediato (sin esperar a la red).
+            const cache = leerCacheVideos(categoria);
+            const cacheFresca = Boolean(cache) && (Date.now() - cache.timestamp) < VIDEOS_CACHE_TTL_MS;
+            if (cache) {
+                videosPorCategoria[categoria] = cache.videos;
+                if (categoria === 'videos') { idsVideos = cache.videos; window.idsVideos = idsVideos; }
+                if (categoria === 'directos') { idsDirectos = cache.videos; window.idsDirectos = idsDirectos; }
+                renderizarCategoria(categoria);
+                console.log(`[YouTubeSync] "${categoria}" mostrado desde caché (${cache.videos.length} videos).`);
+                if (cacheFresca) return; // La caché sigue vigente: no hace falta llamar a YouTube ahora.
+            }
+
+            // 2) Sincroniza con YouTube (de entrada si no había caché, o en segundo plano si estaba vieja).
             let arrayVideosAcumulados = [];
             let nextPageToken = "";
-            let primerRenderHecho = false;
-            
+            let primerRenderHecho = Boolean(cache);
+
             try {
                 do {
                     let tokenQuery = nextPageToken ? `&pageToken=${nextPageToken}` : "";
@@ -1205,12 +1342,14 @@
                 } while (nextPageToken);
 
                 renderizarCategoria(categoria);
-                if (videosPorCategoria[categoria].length === 0) {
+                guardarCacheVideos(categoria, videosPorCategoria[categoria]);
+                console.log(`[YouTubeSync] "${categoria}" sincronizado con YouTube (${videosPorCategoria[categoria].length} videos).`);
+                if (videosPorCategoria[categoria].length === 0 && !cache) {
                     grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">La lista de reproducción está vacía.</p>';
                 }
             } catch (error) {
-                console.error("Error al conectar con YouTube API:", error);
-                if(videosPorCategoria[categoria].length === 0) {
+                console.error("[YouTubeSync] Error al conectar con YouTube API:", error);
+                if(videosPorCategoria[categoria].length === 0 && !cache) {
                     grid.innerHTML = '<p style="color: #ff3333; padding: 20px;">Error al conectar con YouTube.</p>';
                 }
             }
@@ -1446,26 +1585,278 @@
             );
         }
 
-        function iniciarContador() {
-            const timer = document.getElementById("countdown-timer");
-            if (timer) timer.textContent = "OSITOEXPO MUY PRONTO";
-            return;
-            // 10:30 AM en El Salvador equivale a 16:30 UTC porque El Salvador usa UTC-6.
-            const fechaProximaNovedadUTC = Date.UTC(2026, 7, 2, 16, 30, 0); 
-            setInterval(() => { 
-                const ahoraUTC = new Date().getTime(); 
-                const distancia = fechaProximaNovedadUTC - ahoraUTC;
-                if (distancia < 0) {
-                    document.getElementById("countdown-timer").innerHTML = "¡EN DIRECTO!";
+        const DEFAULT_COUNTDOWNS = [];
+
+        function normalizarTargetConteo(value) {
+            if (value == null || value === '') return '';
+            if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+            if (value instanceof Date) return String(value.getTime());
+            if (typeof value === 'object' && typeof value.toMillis === 'function') {
+                const ms = Number(value.toMillis());
+                return Number.isFinite(ms) ? String(ms) : '';
+            }
+            if (typeof value === 'object' && Number.isFinite(Number(value.seconds))) {
+                return String(Number(value.seconds) * 1000 + Math.floor(Number(value.nanoseconds || 0) / 1e6));
+            }
+            const text = String(value).trim();
+            const n = Number(text);
+            if (Number.isFinite(n) && n > 0) return String(n);
+            const parsed = Date.parse(text);
+            return Number.isFinite(parsed) ? String(parsed) : '';
+        }
+
+        function normalizarConteosRegresivos(data) {
+            const items = Array.isArray(data) ? data : [];
+            return items.map((item, index) => ({
+                id: String(item?.id || `countdown-${index + 1}`),
+                title: String(item?.title || 'Nuevo evento').slice(0, 70),
+                emoji: String(item?.emoji || '').slice(0, 4),
+                subtitle: String(item?.subtitle || '').slice(0, 120),
+                targetAt: normalizarTargetConteo(item?.targetAt)
+            })).filter(item => item.title && item.targetAt && Number.isFinite(Number(item.targetAt)) && Number(item.targetAt) > Date.now());
+        }
+
+        function formatearFechaConteo(targetAt) {
+            if (!targetAt) return 'Fecha y hora pendientes';
+            const date = new Date(Number(targetAt));
+            if (Number.isNaN(date.getTime())) return 'Fecha y hora pendientes';
+            return date.toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' });
+        }
+
+        function creatorCountdownsEnabled() {
+            return Boolean(window.ositoEsCreador) && Boolean(window.dbFirebase && window.docFirebase && window.setDocFirebase);
+        }
+
+        function creatorCountdownStatus(message, error) {
+            const status = document.getElementById('creator-countdown-status');
+            if (!status) return;
+            status.textContent = message || '';
+            status.dataset.tone = error ? 'error' : 'ok';
+        }
+
+        function renderCreatorCountdownEditor(items) {
+            const panel = document.getElementById('creator-countdown-editor');
+            const list = document.getElementById('creator-countdowns-list');
+            if (!panel || !list) return;
+            const visible = creatorCountdownsEnabled();
+            panel.hidden = !visible;
+            if (!visible) { list.innerHTML = ''; return; }
+            const source = Array.isArray(items) ? items : [];
+            if (!source.length) {
+                list.innerHTML = '';
+                return;
+            }
+            list.innerHTML = source.map((item, index) => {
+                const target = normalizarTargetConteo(item?.targetAt);
+                const dateValue = target ? toCreatorCountdownLocalInput(target) : '';
+                return `<div class="creator-countdown-row" data-creator-countdown-row>
+                    <input type="hidden" data-creator-cd-id value="${escaparHTML(item?.id || `countdown-${index + 1}`)}">
+                    <label class="creator-countdown-field">
+                        <span>Título del conteo</span>
+                        <input data-creator-cd-title maxlength="70" value="${escaparHTML(item?.title || '')}" placeholder="Ej. Estreno del nuevo video">
+                    </label>
+                    <div class="creator-countdown-grid">
+                        <label class="creator-countdown-field">
+                            <span>Emoji</span>
+                            <input data-creator-cd-emoji maxlength="4" value="${escaparHTML(item?.emoji || '⏳')}" placeholder="⏳" aria-label="Emoji">
+                        </label>
+                        <label class="creator-countdown-field creator-countdown-date-field">
+                            <span>Fecha y hora</span>
+                            <input data-creator-cd-date type="datetime-local" value="${dateValue}" aria-label="Fecha y hora">
+                        </label>
+                    </div>
+                    <label class="creator-countdown-field">
+                        <span>Texto opcional</span>
+                        <input data-creator-cd-subtitle maxlength="120" value="${escaparHTML(item?.subtitle || '')}" placeholder="Ej. ¡No te lo pierdas!">
+                    </label>
+                    <button class="btn-action creator-delete-countdown" type="button" data-creator-remove-countdown>Eliminar</button>
+                </div>`;
+            }).join('');
+        }
+
+        window.renderCreatorCountdownEditor = renderCreatorCountdownEditor;
+
+        function toCreatorCountdownLocalInput(value) {
+            const ms = Number(normalizarTargetConteo(value));
+            if (!Number.isFinite(ms)) return '';
+            const d = new Date(ms);
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function collectCreatorCountdowns() {
+            return [...document.querySelectorAll('[data-creator-countdown-row]')].map((row, index) => {
+                const value = selector => String(row.querySelector(selector)?.value || '').trim();
+                const rawDate = value('[data-creator-cd-date]');
+                const targetAt = rawDate ? new Date(rawDate).getTime() : NaN;
+                return {
+                    id: value('[data-creator-cd-id]') || `countdown-${index + 1}`,
+                    title: value('[data-creator-cd-title]') || 'Nuevo evento',
+                    emoji: value('[data-creator-cd-emoji]') || '⏳',
+                    subtitle: value('[data-creator-cd-subtitle]'),
+                    targetAt: Number.isFinite(targetAt) ? targetAt : ''
+                };
+            }).filter(item => item.title);
+        }
+
+        async function saveCreatorCountdowns() {
+            if (!creatorCountdownsEnabled()) return;
+            const user = window.firebaseAuth?.currentUser || window.ositoCurrentUser;
+            if (!user || String(user.email || '').toLowerCase() !== 'ositoyt360@elsotanodeosito.com') {
+                creatorCountdownStatus('Debes iniciar sesión con la cuenta OsitoYT360.', true);
+                return;
+            }
+            const rows = [...document.querySelectorAll('[data-creator-countdown-row]')];
+            const missingTitle = rows.some(row => !String(row.querySelector('[data-creator-cd-title]')?.value || '').trim());
+            if (missingTitle) {
+                creatorCountdownStatus('Escribe un título para cada conteo.', true);
+                const emptyTitle = rows.find(row => !String(row.querySelector('[data-creator-cd-title]')?.value || '').trim())?.querySelector('[data-creator-cd-title]');
+                emptyTitle?.focus();
+                return;
+            }
+            const countdowns = collectCreatorCountdowns();
+            const invalid = countdowns.filter(item => !Number.isFinite(Number(item.targetAt)) || Number(item.targetAt) <= Date.now());
+            if (invalid.length) {
+                creatorCountdownStatus('Cada conteo necesita una fecha y hora futura.', true);
+                return;
+            }
+            const button = document.getElementById('creator-save-countdowns');
+            if (button) { button.disabled = true; button.textContent = 'Guardando…'; }
+            try {
+                const ref = window.docFirebase(window.dbFirebase, 'siteSettings', 'public');
+                await window.setDocFirebase(ref, {
+                    countdowns,
+                    updatedAt: window.serverTimestampFirebase ? window.serverTimestampFirebase() : Date.now()
+                }, { merge: true });
+                renderCreatorCountdownEditor(countdowns);
+                renderizarConteosRegresivos(countdowns);
+                creatorCountdownStatus('✓ Guardado y publicado para todos.', false);
+            } catch (error) {
+                console.error('[CreatorCountdowns]', error);
+                creatorCountdownStatus('No se pudo guardar: ' + (error?.message || 'error de Firestore'), true);
+            } finally {
+                if (button) { button.disabled = false; button.textContent = '💾 Guardar conteos'; }
+            }
+        }
+
+        function agregarConteoCreador(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const panel = document.getElementById('creator-countdown-editor');
+            const list = document.getElementById('creator-countdowns-list');
+            if (!panel || !list) return;
+
+            // No dependemos de Firebase para abrir el formulario. Firebase solo
+            // hace falta al pulsar Guardar. Así el botón siempre responde.
+            panel.hidden = false;
+            const current = collectCreatorCountdowns();
+            current.push({
+                id: `countdown-${Date.now()}`,
+                title: '',
+                emoji: '⏳',
+                subtitle: '',
+                targetAt: ''
+            });
+            renderCreatorCountdownEditor(current);
+
+            const rows = list.querySelectorAll('[data-creator-countdown-row]');
+            const firstTitle = rows[rows.length - 1]?.querySelector('[data-creator-cd-title]');
+            if (firstTitle) {
+                firstTitle.focus();
+                firstTitle.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            creatorCountdownStatus('Escribe el título, elige la fecha y pulsa Guardar.', false);
+        }
+        window.agregarConteoCreador = agregarConteoCreador;
+
+        function bindCreatorCountdownEditor() {
+            const add = document.getElementById('creator-add-countdown');
+            const save = document.getElementById('creator-save-countdowns');
+            if (add && !add.dataset.bound) {
+                add.dataset.bound = '1';
+                // Listener directo + delegación como respaldo. Esto evita que otro
+                // script o una actualización del DOM deje el botón sin acción.
+                add.addEventListener('click', agregarConteoCreador, true);
+                add.onclick = agregarConteoCreador;
+            }
+            if (save && !save.dataset.bound) {
+                save.dataset.bound = '1';
+                save.addEventListener('click', saveCreatorCountdowns);
+            }
+            if (!document.body.dataset.creatorCountdownDelegated) {
+                document.body.dataset.creatorCountdownDelegated = '1';
+                document.addEventListener('click', event => {
+                    const addButton = event.target.closest('#creator-add-countdown');
+                    if (addButton) {
+                        agregarConteoCreador(event);
+                        return;
+                    }
+                    const remove = event.target.closest('[data-creator-remove-countdown]');
+                    if (!remove) return;
+                    remove.closest('[data-creator-countdown-row]')?.remove();
+                    if (!document.querySelector('[data-creator-countdown-row]')) {
+                        creatorCountdownStatus('', false);
+                    }
+                }, true);
+            }
+        }
+
+        function renderizarConteosRegresivos(items) {
+            const container = document.getElementById('countdowns-container');
+            if (!container) return;
+            const list = normalizarConteosRegresivos(items);
+            renderCreatorCountdownEditor(Array.isArray(items) ? items : []);
+            if (!list.length) {
+                container.innerHTML = '';
+                container.hidden = true;
+                return;
+            }
+            container.hidden = false;
+            container.innerHTML = list.map((item) => `
+                <div class="sidebar-card countdown-box" data-countdown-id="${escaparHTML(item.id)}">
+                    <div class="cd-text">${item.emoji ? escaparHTML(item.emoji) + ' ' : ''}${escaparHTML(item.title)}</div>
+                    <div class="countdown-timer" data-countdown-target="${escaparHTML(item.targetAt)}">-- : -- : -- : --</div>
+                    <div class="cd-date">${escaparHTML(item.subtitle || formatearFechaConteo(item.targetAt))}</div>
+                </div>
+            `).join('');
+            actualizarConteosRegresivos();
+        }
+
+        function actualizarConteosRegresivos() {
+            document.querySelectorAll('[data-countdown-target]').forEach((timer) => {
+                const target = Number(timer.dataset.countdownTarget || '');
+                if (!Number.isFinite(target)) {
+                    timer.textContent = 'FECHA PENDIENTE';
                     return;
                 }
-                const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
-                const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
-                const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
- 
-                document.getElementById("countdown-timer").innerHTML = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
-            }, 1000);
+                const diff = target - Date.now();
+                if (diff <= 0) {
+                    const card = timer.closest('[data-countdown-id]');
+                    if (card) card.remove();
+                    const container = document.getElementById('countdowns-container');
+                    if (container && !container.querySelector('[data-countdown-target]')) {
+                        container.innerHTML = '';
+                        container.hidden = true;
+                    }
+                    return;
+                }
+                const dias = Math.floor(diff / 86400000);
+                const horas = Math.floor((diff % 86400000) / 3600000);
+                const minutos = Math.floor((diff % 3600000) / 60000);
+                const segundos = Math.floor((diff % 60000) / 1000);
+                timer.textContent = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutos.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
+            });
+        }
+
+        window.renderizarConteosRegresivos = renderizarConteosRegresivos;
+        window.DEFAULT_COUNTDOWNS = DEFAULT_COUNTDOWNS;
+
+        function iniciarContador() {
+            renderizarConteosRegresivos([]);
+            if (window.__ositoCountdownInterval) clearInterval(window.__ositoCountdownInterval);
+            window.__ositoCountdownInterval = setInterval(actualizarConteosRegresivos, 1000);
         }
 
         function iniciarContadorYouTube() {
@@ -1482,8 +1873,12 @@
             const numAnos = anioDestino - anioInicio;
             
             const timer = document.getElementById("youtube-anniversary-timer");
-            const label = timer?.previousElementSibling;
-            const dateLabel = timer?.nextElementSibling;
+            // Esta tarjeta ya no existe en el HTML (se reemplazó por el editor de
+            // conteos); si no está en la página, no arrancamos el intervalo para
+            // evitar un error en consola cada segundo.
+            if (!timer) return;
+            const label = timer.previousElementSibling;
+            const dateLabel = timer.nextElementSibling;
  
             if (label) label.innerText = `${numAnos} años en YouTube`;
             if (dateLabel) dateLabel.innerText = `2 de junio ${anioDestino}`;
@@ -1559,6 +1954,11 @@
             const volValue = document.getElementById('music-volume-value');
 
             if (!audio) return;
+
+            // El modo global decide qué pista corresponde a todos.
+            const theme = document.documentElement.dataset.siteTheme || 'normal';
+            const modeSrc = MODE_MUSIC[theme] || MODE_MUSIC.normal;
+            if (audio.getAttribute('src') !== modeSrc) { audio.setAttribute('src', modeSrc); audio.load(); }
 
             // cargar volumen guardado (0-100)
             const savedVol = Number(localStorage.getItem(MUSIC_VOLUME_KEY) ?? '30');
@@ -2632,7 +3032,6 @@
                 </div>
                 <div class="livechat-header-actions">
                     <span class="livechat-live-pill">Tiempo real</span>
-                    <button class="livechat-admin-trigger" id="livechat-admin-trigger" type="button" title="Crear publicacion">Publicar</button>
                     <button class="livechat-btn-icon" type="button" onclick="toggleLiveChatPanel()" title="Minimizar">✕</button>
                 </div>
             </div>
@@ -2644,24 +3043,6 @@
             </div>
 
             <div class="livechat-mute-note" id="livechat-mute-note" style="display:none;"></div>
-
-            <div class="livechat-admin-panel" id="livechat-admin-panel" style="display:none;">
-                <div class="livechat-admin-title">🛡️ Herramientas del creador</div>
-                <div class="livechat-admin-title"><span>Herramientas del creador</span><button class="livechat-admin-close" id="livechat-admin-close" type="button" title="Cerrar publicacion">X</button></div>
-                <div class="livechat-admin-field">
-                    <label for="livechat-admin-broadcast">Publicación para la comunidad</label>
-                    <textarea id="livechat-admin-broadcast" maxlength="400" placeholder="Escribe un anuncio..."></textarea>
-                </div>
-                <div class="livechat-admin-field">
-                    <label for="livechat-admin-image">Imagen de la publicacion</label>
-                    <input id="livechat-admin-image" type="file" accept="image/*">
-                    <img id="livechat-admin-image-preview" class="livechat-admin-image-preview" alt="Vista previa de la publicacion" style="display:none;">
-                </div>
-                <div class="livechat-admin-actions">
-                    <button id="livechat-admin-publish" class="livechat-admin-btn btn-admin-broadcast" type="button"><span class="btn-icon">📣</span> Publicar</button>
-                    <button id="livechat-admin-clear" class="livechat-admin-btn btn-admin-clear" type="button"><span class="btn-icon">🧹</span> Vaciar chat</button>
-                </div>
-            </div>
 
             <div class="livechat-rank-panel" id="livechat-rank-panel" style="display:none;">
                 <div class="livechat-admin-title">
@@ -2801,8 +3182,8 @@
                 const currentEmail = normalize(window.firebaseAuth?.currentUser?.email || window.ositoCurrentUserProfile?.email);
                 const currentName = normalize(getUserName());
                 return Boolean(window.ositoEsCreador)
-                    || currentEmail === 'ositoy360@elsotanodeosito.com'
-                    || currentName === 'ositoy360';
+                    || currentEmail === 'ositoyt360@elsotanodeosito.com'
+                    || currentName === 'ositoyt360';
             }
 
             function getMessageAgeMs(message) {
@@ -3312,13 +3693,13 @@
                     renderMessage(message, { history: true, preserveScroll: true });
                 });
                 ensureScrollBottom();
-                setConnectionState(true, 'Firebase conectado');
+                setConnectionState(true, '<span id="livechat-online-count">1</span> en línea');
             }
 
             function useFirebaseChat() {
                 firebaseChatReady = true;
                 if (firebaseFallbackTimer) clearTimeout(firebaseFallbackTimer);
-                setConnectionState(true, 'Conectando Firebase...');
+                setConnectionState(true, 'Conectando...');
                 firebaseSnapshotReceived = false;
             }
 
@@ -3330,7 +3711,7 @@
 
             window.addEventListener('osito:livechat-error', () => {
                 firebaseChatReady = false;
-                setConnectionState(false, 'Firebase no disponible');
+                setConnectionState(false, 'Sin conexión');
             });
 
             function connectSocket() {
@@ -3383,7 +3764,7 @@
 
             function startServerFallback() {
                 firebaseChatReady = false;
-                setConnectionState(false, 'Firebase no disponible');
+                setConnectionState(false, 'Sin conexión');
             }
 
             async function sendFirebaseMessage(text, user, options) {
@@ -3397,7 +3778,7 @@
                         const profileSnapshot = await window.getDocFirebase(
                             window.docFirebase(window.dbFirebase, 'users', currentUser.uid)
                         );
-                        if (profileSnapshot.exists()) {
+                        if ((typeof profileSnapshot.exists === 'function' ? profileSnapshot.exists() : Boolean(profileSnapshot.exists))) {
                             const savedProfile = profileSnapshot.data() || {};
                             profile = { ...profile, ...savedProfile };
                             window.ositoCurrentUserProfile = profile;
@@ -3409,7 +3790,7 @@
                         const rankSnapshot = await window.getDocFirebase(
                             window.docFirebase(window.dbFirebase, 'livechat', `rank_${currentUser.uid}`)
                         );
-                        if (rankSnapshot.exists()) {
+                        if ((typeof rankSnapshot.exists === 'function' ? rankSnapshot.exists() : Boolean(rankSnapshot.exists))) {
                             profile = { ...profile, ...(rankSnapshot.data() || {}) };
                             window.ositoCurrentUserProfile = profile;
                         }
@@ -3420,7 +3801,7 @@
                         const publicProfileSnapshot = await window.getDocFirebase(
                             window.docFirebase(window.dbFirebase, 'livechat', `profile_${currentUser.uid}`)
                         );
-                        if (publicProfileSnapshot.exists()) {
+                        if ((typeof publicProfileSnapshot.exists === 'function' ? publicProfileSnapshot.exists() : Boolean(publicProfileSnapshot.exists))) {
                             profile = { ...profile, ...(publicProfileSnapshot.data() || {}) };
                             window.ositoCurrentUserProfile = profile;
                         }

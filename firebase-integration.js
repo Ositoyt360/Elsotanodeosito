@@ -20,6 +20,8 @@
         profileUnsubscribe: null,
         rankUnsubscribe: null,
         publicProfileUnsubscribe: null,
+        moderationUnsubscribe: null,
+        siteSettingsUnsubscribe: null,
         aiSeededFromDom: false,
         authSubmitting: false,
     };
@@ -33,6 +35,11 @@
 
     function isCreatorAccount(user) {
         return String(user?.email || '').trim().toLowerCase() === CREATOR_EMAIL;
+    }
+
+    function snapshotExists(snapshot) {
+        if (!snapshot) return false;
+        return typeof snapshot.exists === 'function' ? snapshot.exists() : Boolean(snapshot.exists);
     }
 
     function el(id) {
@@ -198,8 +205,18 @@
         window.aiNombreActual = displayName;
         const isCreator = isCreatorAccount(user);
         window.ositoEsCreador = isCreator;
+        const moderatorEntryButton = el('moderator-entry-button');
+        if (moderatorEntryButton) moderatorEntryButton.style.display = isCreator ? 'inline-flex' : 'none';
         document.body.classList.toggle('creator-mode', isCreator);
         if (rankForm) rankForm.style.display = isCreator ? 'grid' : 'none';
+        if (isCreator && typeof window.actualizarModoSitioDesdeFirestore === 'function') {
+            // El editor de conteos vive en index.html. Al entrar la cuenta creadora,
+            // forzamos una lectura para que aparezca aunque la escucha pública
+            // se hubiera conectado antes de que Firebase Auth terminara de iniciar.
+            window.actualizarModoSitioDesdeFirestore();
+        } else if (!isCreator) {
+            window.renderCreatorCountdownEditor?.([]);
+        }
         if (creatorBadge) {
             creatorBadge.style.display = isCreator ? 'inline-flex' : 'none';
             creatorBadge.textContent = '✨ Creador';
@@ -327,7 +344,7 @@
         const ref = window.docFirebase(db, 'users', user.uid);
         const snap = await window.getDocFirebase(ref);
 
-        if (snap.exists()) {
+        if (snapshotExists(snap)) {
             const data = snap.data() || {};
             return {
                 uid: user.uid,
@@ -337,7 +354,9 @@
                 rankLabel: sanitizeRankLabel(data.rankLabel || data.rank || data.rankName || ''),
                 rankColor: sanitizeRankColor(data.rankColor || '#00f2fe'),
                 tutorialSeen: Boolean(data.tutorialSeen),
-                createdAt: data.createdAt || null
+                createdAt: data.createdAt || null,
+                deleted: Boolean(data.deleted),
+                deletedAt: data.deletedAt || null
             };
         }
 
@@ -417,7 +436,7 @@
         state.profileUnsubscribe = window.onSnapshotFirebase(
             window.docFirebase(db, 'users', user.uid),
             (snapshot) => {
-                if (!snapshot.exists()) return;
+                if (!snapshotExists(snapshot)) return;
                 const data = snapshot.data() || {};
                 state.profile = {
                     ...(state.profile || {}),
@@ -435,7 +454,7 @@
         state.rankUnsubscribe = window.onSnapshotFirebase(
             window.docFirebase(db, 'livechat', `rank_${user.uid}`),
             (snapshot) => {
-                if (snapshot.exists()) applyRank(snapshot.data() || {});
+                if (snapshotExists(snapshot)) applyRank(snapshot.data() || {});
             },
             (error) => console.warn('[FirebaseLiveChat] No se pudo sincronizar la etiqueta.', error)
         );
@@ -443,7 +462,7 @@
         state.publicProfileUnsubscribe = window.onSnapshotFirebase(
             window.docFirebase(db, 'livechat', `profile_${user.uid}`),
             (snapshot) => {
-                if (!snapshot.exists()) return;
+                if (!snapshotExists(snapshot)) return;
                 const data = snapshot.data() || {};
                 state.profile = {
                     ...(state.profile || {}),
@@ -845,6 +864,7 @@
                 }, { merge: true });
                 await window.setDocFirebase(window.docFirebase(db, 'livechat', `profile_${state.currentUser.uid}`), {
                     uid: state.currentUser.uid,
+                    displayName: state.profile?.displayName || safeEmailName(state.currentUser.email),
                     photoURL,
                     updatedAt: Date.now()
                 }, { merge: true });
@@ -861,6 +881,7 @@
 
             state.profile = { ...(state.profile || {}), photoURL };
             window.ositoCurrentUserProfile = { ...(window.ositoCurrentUserProfile || {}), photoURL };
+            try { localStorage.setItem(`osito_profile_photo_${state.currentUser.uid}`, photoURL); } catch (e) {}
             setPreview(state.profile, state.currentUser);
             setStatus('Foto guardada correctamente.', 'success');
             if (typeof window.mostrarNotificacion === 'function') {
@@ -951,12 +972,68 @@
         return false;
     }
 
+    function startSiteSettingsListener() {
+        if (typeof state.siteSettingsUnsubscribe === 'function') state.siteSettingsUnsubscribe();
+        if (!db || !window.docFirebase || !window.onSnapshotFirebase) return;
+        state.siteSettingsUnsubscribe = window.onSnapshotFirebase(
+            window.docFirebase(db, 'siteSettings', 'public'),
+            (snapshot) => {
+                if (!snapshotExists(snapshot)) return;
+                const data = snapshot.data() || {};
+                if (typeof window.renderizarConteosRegresivos === 'function') {
+                    window.renderizarConteosRegresivos(Array.isArray(data.countdowns) ? data.countdowns : window.DEFAULT_COUNTDOWNS || []);
+                }
+                const title = String(data.title || '').trim().slice(0, 70);
+                if (!title) return;
+                document.title = title;
+                const logo = document.querySelector('header .logo');
+                const welcome = document.querySelector('.welcome-title');
+                const promo = document.querySelector('#slide-0 .promo-title-main');
+                if (logo) logo.textContent = title;
+                if (welcome) welcome.textContent = title;
+                if (promo) promo.textContent = title;
+            },
+            (error) => console.warn('[SiteSettings] No se pudo sincronizar el título.', error)
+        );
+    }
+
+    function startModerationListener(user) {
+        if (typeof state.moderationUnsubscribe === 'function') state.moderationUnsubscribe();
+        if (!user || !db || !window.docFirebase || !window.onSnapshotFirebase) return;
+        state.moderationUnsubscribe = window.onSnapshotFirebase(
+            window.docFirebase(db, 'moderation', user.uid),
+            (snapshot) => {
+                const data = snapshotExists(snapshot) ? (snapshot.data() || {}) : {};
+                const bannedUntil = Number(data.bannedUntil || 0);
+                window.ositoBannedUntil = bannedUntil;
+                const input = el('livechat-input');
+                const note = el('livechat-mute-note');
+                const active = bannedUntil > Date.now() && !isCreatorAccount(user);
+                if (input) {
+                    input.disabled = active;
+                    input.placeholder = active ? 'Cuenta baneada temporalmente…' : 'Escribe un mensaje…';
+                }
+                if (note && active) {
+                    const mins = Math.max(1, Math.ceil((bannedUntil - Date.now()) / 60000));
+                    note.style.display = 'block';
+                    note.textContent = `Tu cuenta está baneada temporalmente. Tiempo aproximado restante: ${mins} min.`;
+                } else if (note && !active) {
+                    note.style.display = 'none';
+                }
+            },
+            (error) => console.warn('[Moderation] No se pudo consultar el estado de la cuenta.', error)
+        );
+    }
+
     async function initAuth() {
         const firebaseReady = await waitForFirebaseServices();
         db = window.dbFirebase || null;
         auth = window.firebaseAuth || null;
         storage = window.firebaseStorage || null;
         window.livechatDbFirebase = db;
+        // El título, el modo especial y los conteos ya no se leen de Firebase
+        // (ver conectarModoSitio en index.html, que ahora usa /api/site-settings).
+        if (typeof window.conectarModoSitio === 'function') window.conectarModoSitio();
 
         if (!firebaseReady || !auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
             showUnauthenticatedView();
@@ -993,12 +1070,22 @@
                     state.publicProfileUnsubscribe();
                     state.publicProfileUnsubscribe = null;
                 }
+                if (typeof state.moderationUnsubscribe === 'function') {
+                    state.moderationUnsubscribe();
+                    state.moderationUnsubscribe = null;
+                }
                 showUnauthenticatedView();
                 return;
             }
 
             try {
                 await loadProfileAndAttach(user);
+                if (state.profile?.deleted) {
+                    try { await window.firebaseAuth.signOut(); } catch (e) {}
+                    setStatus('Esta cuenta fue eliminada del sitio.', 'error');
+                    showUnauthenticatedView();
+                    return;
+                }
             } catch (error) {
                 console.error('[FirebaseAuth]', error);
                 setStatus('No pudimos cargar tu perfil.', 'error');
@@ -1013,6 +1100,7 @@
 
             // El chat usa Firestore para sincronizar mensajes entre cuentas en tiempo real.
             startProfileListener(user);
+            startModerationListener(user);
             startLiveChatListener();
             window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
         });

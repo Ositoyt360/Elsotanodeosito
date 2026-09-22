@@ -1,0 +1,36 @@
+CAMBIOS V15
+===========
+
+1) Arreglado: "Missing or insufficient permissions" al activar Halloween,
+   Navidad, San Valentín, Cumpleaños (y al guardar conteos regresivos).
+   - Causa: moderator.js guardaba el modo especial escribiendo directo a
+     Firestore (siteSettings/public) desde el navegador. Las reglas de
+     Firestore rechazan esa escritura directa, tal como ya lo indicaba
+     CAMBIOS_V13.txt. El servidor YA tenía la ruta
+     /api/moderator/site-settings (con Firebase Admin) para esto, pero
+     saveTheme() y saveCountdowns() en moderator.js nunca la usaban.
+   - Ahora ambas funciones pasan por esa ruta del servidor, igual que ya
+     hacían los baneos, borrado de mensajes, etc.
+   - De regalo: el botón "Guardar título" del panel de moderación
+     (que existía en el HTML pero no tenía ningún código detrás) ahora
+     también funciona, usando esa misma ruta.
+
+2) Agregados registros de depuración ("logs"/"puts") en moderator.js:
+   - Cada llamada al servidor ahora imprime en la consola del navegador
+     (F12 → Console) la ruta, los datos enviados y la respuesta o el
+     error exacto (con el código HTTP). Así, si algo vuelve a fallar,
+     se puede ver el motivo real ahí mismo, y el mensaje del toast rojo
+     también incluye el código de error.
+
+3) Sincronización con YouTube más rápida:
+   - Antes, cada vez que se abría la página (o una pestaña de videos)
+     se descargaba TODA la lista de reproducción de YouTube, página por
+     página, sin guardar nada — por eso tardaba.
+   - Ahora se guarda una caché local (10 minutos) por categoría de
+     video. Con caché vigente, la sección se pinta al instante sin
+     llamar a YouTube. Si la caché ya es vieja, se muestra igual al
+     instante y se actualiza en silencio de fondo.
+   - Esto también reduce el consumo de la cuota de la API de YouTube.
+
+Archivos modificados: moderator.js, index.html
+Archivo sin cambios (no hizo falta tocar el servidor): server.js

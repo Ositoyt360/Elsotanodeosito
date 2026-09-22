@@ -1,0 +1,10 @@
+V21 - MODERADOR LIMITADO DENIS
+
+- La cuenta Denis puede entrar al panel de moderación.
+- Denis solo tiene acceso a moderación de mensajes.
+- Denis NO puede cambiar modos especiales, fondos, título ni conteos.
+- Denis NO puede ver ni gestionar Usuarios registrados.
+- Denis NO puede cambiar contraseñas ni borrar cuentas.
+- El servidor protege estas restricciones: ocultar botones en la interfaz no es la única barrera.
+- La cuenta creadora OsitoYT360 conserva todos los permisos.
+- Denis se detecta por nombre visible exacto "Denis" o por correo cuyo usuario sea "denis".

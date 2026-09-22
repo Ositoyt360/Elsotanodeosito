@@ -1,0 +1,7 @@
+V20 - FIX CONTEOS REGRESIVOS
+
+- El moderador guarda targetAt como milisegundos para evitar problemas de zona horaria/serialización.
+- Se valida que cada conteo tenga fecha y hora futura antes de guardar.
+- Después de guardar, el moderador vuelve a leer siteSettings/public y refleja el valor realmente almacenado.
+- El sitio público acepta fechas en milisegundos, ISO y objetos Timestamp de Firestore.
+- Los conteos expirados o sin fecha válida siguen ocultándose automáticamente.

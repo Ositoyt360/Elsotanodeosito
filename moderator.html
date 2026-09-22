@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moderación · El Sótano de Osito</title>
+  <link rel="stylesheet" href="moderator.css?v=20260922-3">
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="season" aria-hidden="true"><span>🦇</span><span>🎃</span><span>🕸️</span></div>
+  <header class="mod-header">
+    <div>
+      <p class="eyebrow">EL SÓTANO DE OSITO</p>
+      <h1>Centro de moderación</h1>
+      <p id="mod-status">Comprobando acceso…</p>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" class="btn secondary">← Volver al sitio</a>
+      <button id="mod-logout" class="btn danger" type="button">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main id="mod-app" class="mod-shell" hidden>
+    <section class="notice">
+      <strong>Publicaciones:</strong> lo que publiques aquí se mostrará en el <strong>chat en vivo</strong> como anuncio oficial.
+    </section>
+
+    <section class="panel theme-panel" data-creator-only>
+      <div class="panel-head"><div><span class="kicker">APARIENCIA GLOBAL</span><h2>Modos del sitio</h2></div><strong id="theme-current-label" class="theme-current">Modo actual: Normal</strong></div>
+      <p class="muted">Elige un modo y se guardará en Firebase para que <strong>todos los visitantes</strong> vean el mismo fondo y decoración.</p>
+      <div class="theme-buttons" role="group" aria-label="Modos especiales">
+        <button class="btn theme-mode" data-theme-mode="normal" type="button">🌙 Normal</button>
+        <button class="btn theme-mode" data-theme-mode="halloween" type="button">🎃 Halloween</button>
+        <button class="btn theme-mode" data-theme-mode="navidad" type="button">🎄 Navidad</button>
+        <button class="btn theme-mode" data-theme-mode="san-valentin" type="button">💖 San Valentín</button>
+        <button class="btn theme-mode" data-theme-mode="cumpleanos" type="button">🎂 Cumpleaños</button>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Resumen" data-creator-only>
+      <article><span>Cuentas</span><strong id="stat-users">0</strong></article>
+      <article><span>Baneadas ahora</span><strong id="stat-banned">0</strong></article>
+      <article><span>Mensajes</span><strong id="stat-messages">0</strong></article>
+    </section>
+
+    <div class="grid two" data-creator-only>
+      <section class="panel panel-wide">
+        <div class="panel-head"><div><span class="kicker">EVENTOS</span><h2>Conteos regresivos</h2></div></div>
+        <p class="muted">Crea o modifica los conteos como OsitoExpo usando <strong>fecha y hora exactas</strong>. Se muestran automáticamente en la página principal.</p>
+        <div id="countdowns-editor" class="countdowns-editor"></div>
+        <div class="inline-controls countdown-add-row">
+          <button id="add-countdown" class="btn secondary" type="button">＋ Agregar conteo</button>
+          <button id="save-countdowns" class="btn" type="button">💾 Guardar conteos</button>
+        </div>
+      </section>
+
+
+    </div>
+
+    <section class="panel" data-creator-only>
+      <div class="panel-head responsive">
+        <div><span class="kicker">CUENTAS</span><h2>Usuarios registrados</h2></div>
+        <input id="user-search" class="search" type="search" placeholder="Buscar por nombre o correo…">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cuenta</th><th>Estado</th><th>Banear</th><th>Contraseña</th><th>Acciones</th></tr></thead>
+          <tbody id="users-body"><tr><td colspan="5" class="empty">Cargando cuentas…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel moderator-messages-panel">
+      <div class="panel-head responsive">
+        <div><span class="kicker">MODERACIÓN</span><h2>Mensajes recientes</h2></div>
+        <button id="refresh-messages" class="btn secondary" type="button">Actualizar</button>
+      </div>
+      <div id="messages-list" class="messages-list"><p class="empty">Cargando mensajes…</p></div>
+    </section>
+  </main>
+
+  <section id="access-denied" class="denied" hidden>
+    <div>🔒</div><h2>Acceso exclusivo para Osito YT 360</h2><p>Inicia sesión en la página principal con la cuenta del creador.</p><a class="btn" href="index.html">Volver</a>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="moderator.js?v=20260922-3"></script>
+</body>
+</html>

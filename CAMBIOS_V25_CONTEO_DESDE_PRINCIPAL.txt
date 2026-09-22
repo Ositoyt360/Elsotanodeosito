@@ -1,0 +1,8 @@
+V25 — CONTEOS EDITABLES DESDE LA PÁGINA PRINCIPAL
+
+- Se eliminó la edición de conteos del panel de moderación.
+- La cuenta creadora OsitoYT360 puede agregar, editar y eliminar conteos directamente desde index.html.
+- El editor solo aparece cuando la sesión autenticada pertenece a ositoyt360@elsotanodeosito.com.
+- Los cambios se guardan directamente en Firestore en siteSettings/public y se publican para todos en tiempo real.
+- Se mantiene la validación de fecha/hora futura y la normalización de timestamps.
+- Se agregó estado visual de guardado/error en el editor principal.

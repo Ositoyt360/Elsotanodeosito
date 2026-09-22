@@ -1,0 +1,7 @@
+V27 — FIX BOTÓN AGREGAR CONTEO
+
+- El botón “＋ Agregar conteo” ahora abre siempre el formulario sin depender de que Firebase haya terminado de cargar.
+- Se añadió una función global de respaldo y delegación de eventos.
+- Al agregar un conteo, aparece inmediatamente el campo “Título del conteo”, emoji, fecha/hora y texto opcional.
+- El título recibe el foco automáticamente.
+- Guardar sigue requiriendo Firebase y valida título + fecha futura.

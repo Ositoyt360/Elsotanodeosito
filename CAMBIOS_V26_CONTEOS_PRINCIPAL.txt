@@ -1,0 +1,10 @@
+V26 - EDITOR DE CONTEOS DESDE LA PAGINA PRINCIPAL
+
+- Se eliminó el texto explicativo "Solo OsitoYT360...".
+- Se eliminó el mensaje "No hay conteos publicados. Agrega uno desde aquí.".
+- Al pulsar "Agregar conteo" ahora aparece inmediatamente un formulario vacío.
+- El primer campo es "Título del conteo" para que OsitoYT360 pueda escribir el nombre que quiera.
+- Se añadieron campos visibles para emoji, fecha/hora y texto opcional.
+- El botón Agregar enfoca automáticamente el título del nuevo conteo.
+- Se reforzó el evento del botón para evitar que otros handlers lo bloqueen.
+- El botón Guardar sigue publicando los conteos en Firestore.

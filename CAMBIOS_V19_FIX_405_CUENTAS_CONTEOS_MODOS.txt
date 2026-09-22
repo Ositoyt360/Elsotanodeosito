@@ -1,0 +1,8 @@
+V19 — FIX 405 + CUENTAS + CONTEOS + FONDOS TEMÁTICOS
+
+- Borrar cuenta: si el hosting devuelve HTTP 405 al endpoint de Firebase Admin, el moderador ya no recibe el error rojo. Se aplica un borrado lógico en Firestore (deleted=true), se eliminan perfil/rango públicos y el sitio bloquea el acceso de esa cuenta. Si el servidor Admin está disponible, se hace borrado completo de Firebase Authentication.
+- Conteos: ya no aparece “Cargando conteo”, “Próximamente” ni guiones cuando no existe un conteo válido. Solo se muestran eventos con fecha futura válida. Cuando llegan a cero se ocultan.
+- Conteos: se evita mostrar los valores de prueba/default antes de que llegue Firestore.
+- Modos: Halloween, Navidad, San Valentín y Cumpleaños ahora tienen fondos SVG diferentes, ligeros y de pantalla completa, además de decoración propia y pantalla de entrada temática.
+- Se mantienen las canciones de cada modo del paquete.
+- Se eliminaron los placeholders/lluvia de emojis usados para los conteos vacíos.

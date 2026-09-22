@@ -1,0 +1,14 @@
+V24 - FIX DEFINITIVO DE CONTEOS REGRESIVOS VISIBLES
+
+- Se reforzó la lectura de fechas del conteo para aceptar:
+  - timestamp en milisegundos
+  - Date
+  - Timestamp de Firestore
+  - objetos {seconds,nanoseconds}
+  - fechas ISO/texto válidas
+- Se agregó respaldo a /api/site-settings cuando Firestore no responde,
+  para evitar que el moderador vea “Conteos guardados y publicados” pero
+  la página pública quede sin mostrar el conteo.
+- La escucha de configuración pública marca explícitamente que ya recibió
+  una respuesta real y vuelve a renderizar el conteo inmediatamente.
+- Se conserva el contador en tiempo real cada segundo.

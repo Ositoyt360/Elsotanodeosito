@@ -1,0 +1,25 @@
+V28 - FIX REAL DEL BOTON "AGREGAR CONTEO"
+
+Causa encontrada probando el botón en un navegador real:
+
+- El editor de conteos (en index.html) llamaba a una función escapeHtml(...)
+  que NO existe en ese lugar del código. Esa función solo existe dentro del
+  chat en vivo (más abajo en el archivo, en otro bloque). Al hacer clic en
+  "＋ Agregar conteo", el código tronaba con "escapeHtml is not defined" y
+  la fila nueva nunca se dibujaba, aunque el panel ya estuviera abierto.
+- Se corrigió para usar escaparHTML(...), que es la función correcta que sí
+  existe en esa parte del archivo. Esto afectaba tanto al editor del
+  creador como a la tarjeta pública del conteo (ambas usaban el nombre
+  equivocado).
+- Se probó el botón de forma automatizada (clic real) y ahora sí agrega la
+  fila con Título, Emoji, Fecha/hora y Texto opcional, lista para guardar.
+
+De paso, unrelacionado a Denis:
+- Se encontró que el temporizador viejo del aniversario de YouTube seguía
+  corriendo cada segundo apuntando a una tarjeta que ya no existe en el
+  HTML (se reemplazó por el editor de conteos), y tronaba en la consola
+  del navegador de cualquier visitante sin parar. Se agregó un candado
+  para que simplemente no haga nada si esa tarjeta no está en la página.
+
+No se tocó nada de moderator.js, moderator.html, firestore.rules,
+storage.rules ni server.js (todo lo de Denis queda igual).

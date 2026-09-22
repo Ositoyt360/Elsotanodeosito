@@ -25,7 +25,7 @@
   }
   function isBanned(uid){const b=bans.get(uid);return b && Number(b.bannedUntil)>Date.now();}
   function renderUsers(){ const q=$('user-search').value.trim().toLowerCase(); const list=users.filter(u=>`${u.displayName||''} ${u.email||''}`.toLowerCase().includes(q)); $('stat-users').textContent=users.length; $('stat-banned').textContent=users.filter(u=>isBanned(u.id)).length; $('users-body').innerHTML=list.length?list.map(u=>{const ban=bans.get(u.id)||{};const banned=isBanned(u.id);const deleted=Boolean(u.deleted);return `<tr><td><div class="user-cell"><img class="avatar" src="${esc(u.photoURL||'logo_yt.png')}" alt=""><div><strong>${esc(u.displayName||u.email||'Usuario')}</strong><div class="sub">${esc(u.email||'sin correo')} · ${esc(u.id)}</div></div></div></td><td><span class="badge ${banned?'banned':'ok'}">${deleted?'Eliminado':banned?'Baneado hasta '+esc(fmt(ban.bannedUntil)):'Activo'}</span></td><td><div class="inline-controls"><input id="ban-${u.id}" type="number" min="1" value="10" aria-label="Duración"><select id="unit-${u.id}"><option value="60">min</option><option value="3600">h</option><option value="86400">días</option></select><button class="btn small" data-ban="${u.id}">Banear</button>${banned?`<button class="btn small secondary" data-unban="${u.id}">Quitar ban</button>`:''}</div></td><td><div class="inline-controls"><input id="pass-${u.id}" type="password" minlength="6" placeholder="Nueva contraseña"><button class="btn small" data-pass="${u.id}">Cambiar</button></div></td><td><button class="btn small danger" data-delete-user="${u.id}">Borrar cuenta</button></td></tr>`}).join(''):'<tr><td colspan="5" class="empty">No hay cuentas que coincidan.</td></tr>'; }
-  function renderMessages(){ $('stat-messages').textContent=messages.length; $('messages-list').innerHTML=messages.length?messages.map(m=>`<div class="message-row"><div><strong>${esc(m.user||'Usuario')}</strong><span class="sub"> · ${esc(fmt(m.timestamp))}</span><p>${esc(m.isDeleted?'Mensaje eliminado':m.text||'')}</p></div><button class="btn small danger" data-delete-message="${esc(m.id)}">Borrar</button></div>`).join(''):'<p class="empty">No hay mensajes.</p>'; }
+  function renderMessages(){ const stat=$('stat-messages'); if(stat) stat.textContent=messages.length; const list=$('messages-list'); if(!list) return; list.innerHTML=messages.length?messages.map(m=>`<div class="message-row"><div><strong>${esc(m.user||'Usuario')}</strong><span class="sub"> · ${esc(fmt(m.timestamp))}</span><p>${esc(m.isDeleted?'Mensaje eliminado':m.text||'')}</p></div><button class="btn small danger" data-delete-message="${esc(m.id)}">Borrar</button></div>`).join(''):'<p class="empty">No hay mensajes.</p>'; }
   async function loadUsers(){
     try {
       const data=await server('/api/moderator/users',{method:'list'});
@@ -178,11 +178,16 @@
     if(isLimited){
       document.body.classList.add('limited-moderator');
       document.querySelectorAll('[data-creator-only]').forEach(e=>e.remove());
+      const title=$('mod-title'); if(title) title.textContent='Panel de moderación';
+      const role=$('mod-role-badge'); if(role){ role.hidden=false; role.textContent='🛡️ Moderador · Denis'; role.className='role-badge limited'; }
+      const scope=$('moderator-scope'); if(scope){ scope.hidden=false; scope.innerHTML='<strong>Permisos de Denis:</strong> revisar, publicar anuncios y eliminar mensajes del chat. Las opciones de creador permanecen bloqueadas.'; }
       await loadMessages();
-      await loadSettings();
       return;
     }
     document.body.classList.remove('limited-moderator');
+    const title=$('mod-title'); if(title) title.textContent='Centro del creador';
+    const role=$('mod-role-badge'); if(role){ role.hidden=false; role.textContent='👑 Creador · OsitoYT360'; role.className='role-badge creator'; }
+    const scope=$('moderator-scope'); if(scope){ scope.hidden=false; scope.innerHTML='<strong>OsitoYT360:</strong> acceso completo a la administración del sitio, modos, conteos, cuentas y moderación.'; }
     await Promise.all([loadUsers(),loadBans(),loadMessages(),loadSettings()]);
   }
   document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;try{
@@ -211,7 +216,15 @@
       toast(hardDeleted ? 'Cuenta eliminada completamente.' : 'Cuenta eliminada del sitio. El servidor no permite borrarla de Authentication (405), pero ya no podrá entrar.');
       await Promise.all([loadUsers(),loadBans()]);
     }
-    if(b.dataset.deleteMessage){if(!confirm('¿Borrar este mensaje para todos?'))return;await server('/api/moderator/message',{id:b.dataset.deleteMessage});toast('Mensaje borrado para todos.');await loadMessages();}
+    if(b.dataset.deleteMessage){
+      if(!confirm('¿Borrar este mensaje para todos?')) return;
+      const messageId = b.dataset.deleteMessage;
+      // La moderación de mensajes no depende de Express ni de /api: así
+      // funciona también cuando el sitio está publicado como GitHub Pages.
+      await db.doc(`livechat/${messageId}`).delete();
+      toast('Mensaje borrado para todos.');
+      await loadMessages();
+    }
   }catch(err){toast(err.message||'No se pudo completar la acción.',true)}});
   $('user-search').addEventListener('input',renderUsers);
   $('refresh-messages').addEventListener('click',()=>loadMessages().catch(e=>toast(e.message,true)));
@@ -230,7 +243,7 @@
     $('mod-app').hidden=!ok;
     $('access-denied').hidden=ok;
     if(!ok){$('mod-status').textContent='Acceso denegado';return;}
-    $('mod-status').textContent=isCreator?`Sesión segura: ${user.email}`:`Moderador limitado: ${user.displayName||'Denis'}`;
+    $('mod-status').textContent=isCreator?'Sesión segura · cuenta creadora OsitoYT360':`Sesión segura · moderador ${user.displayName||'Denis'}`;
     try{await initData(isLimited)}catch(e){toast('No se pudieron cargar todos los datos: '+e.message,true)}
   }));
 })();

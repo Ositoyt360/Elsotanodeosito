@@ -4449,3 +4449,12 @@ body.modo-cumpleanos .decor-balloon { filter:drop-shadow(0 0 10px rgba(255,93,14
   .creator-countdown-grid { grid-template-columns: 1fr; }
   .creator-countdown-grid input[type="datetime-local"] { grid-column:auto; }
 }
+
+
+/* Moderador limitado: acceso visible al panel sin activar herramientas del creador. */
+body.limited-moderator-mode .moderator-entry-button {
+    display: inline-flex !important;
+    border-color: rgba(0, 242, 254, .48) !important;
+    background: linear-gradient(135deg, rgba(0,242,254,.14), rgba(57,255,106,.10));
+    color: #dffcff !important;
+}

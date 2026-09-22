@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=modos-v19-20260922">
+    <link rel="stylesheet" href="styles.css?v=modos-v20-20260922">
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -517,7 +517,7 @@
                     </button>
 
                     <button class="btn-action moderator-entry-button" id="moderator-entry-button" type="button" style="display:none;" onclick="window.open('moderador.html','_blank','noopener,noreferrer')">
-                        <span aria-hidden="true">🛡️</span> Entrar como moderador
+                        <span aria-hidden="true">🛡️</span> Panel de moderación
                     </button>
                     <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
                     <button class="btn-action profile-open-button" id="profile-open-button" type="button" style="display:none;" onclick="abrirMiPerfil()">Mi perfil</button>
@@ -1650,15 +1650,15 @@
                 const target = normalizarTargetConteo(item?.targetAt);
                 const dateValue = target ? toCreatorCountdownLocalInput(target) : '';
                 return `<div class="creator-countdown-row" data-creator-countdown-row>
-                    <input type="hidden" data-creator-cd-id value="${escaparHTML(item?.id || `countdown-${index + 1}`)}">
+                    <input type="hidden" data-creator-cd-id value="${escapeHtml(item?.id || `countdown-${index + 1}`)}">
                     <label class="creator-countdown-field">
                         <span>Título del conteo</span>
-                        <input data-creator-cd-title maxlength="70" value="${escaparHTML(item?.title || '')}" placeholder="Ej. Estreno del nuevo video">
+                        <input data-creator-cd-title maxlength="70" value="${escapeHtml(item?.title || '')}" placeholder="Ej. Estreno del nuevo video">
                     </label>
                     <div class="creator-countdown-grid">
                         <label class="creator-countdown-field">
                             <span>Emoji</span>
-                            <input data-creator-cd-emoji maxlength="4" value="${escaparHTML(item?.emoji || '⏳')}" placeholder="⏳" aria-label="Emoji">
+                            <input data-creator-cd-emoji maxlength="4" value="${escapeHtml(item?.emoji || '⏳')}" placeholder="⏳" aria-label="Emoji">
                         </label>
                         <label class="creator-countdown-field creator-countdown-date-field">
                             <span>Fecha y hora</span>
@@ -1667,7 +1667,7 @@
                     </div>
                     <label class="creator-countdown-field">
                         <span>Texto opcional</span>
-                        <input data-creator-cd-subtitle maxlength="120" value="${escaparHTML(item?.subtitle || '')}" placeholder="Ej. ¡No te lo pierdas!">
+                        <input data-creator-cd-subtitle maxlength="120" value="${escapeHtml(item?.subtitle || '')}" placeholder="Ej. ¡No te lo pierdas!">
                     </label>
                     <button class="btn-action creator-delete-countdown" type="button" data-creator-remove-countdown>Eliminar</button>
                 </div>`;
@@ -1815,10 +1815,10 @@
             }
             container.hidden = false;
             container.innerHTML = list.map((item) => `
-                <div class="sidebar-card countdown-box" data-countdown-id="${escaparHTML(item.id)}">
-                    <div class="cd-text">${item.emoji ? escaparHTML(item.emoji) + ' ' : ''}${escaparHTML(item.title)}</div>
-                    <div class="countdown-timer" data-countdown-target="${escaparHTML(item.targetAt)}">-- : -- : -- : --</div>
-                    <div class="cd-date">${escaparHTML(item.subtitle || formatearFechaConteo(item.targetAt))}</div>
+                <div class="sidebar-card countdown-box" data-countdown-id="${escapeHtml(item.id)}">
+                    <div class="cd-text">${item.emoji ? escapeHtml(item.emoji) + ' ' : ''}${escapeHtml(item.title)}</div>
+                    <div class="countdown-timer" data-countdown-target="${escapeHtml(item.targetAt)}">-- : -- : -- : --</div>
+                    <div class="cd-date">${escapeHtml(item.subtitle || formatearFechaConteo(item.targetAt))}</div>
                 </div>
             `).join('');
             actualizarConteosRegresivos();
@@ -1873,12 +1873,8 @@
             const numAnos = anioDestino - anioInicio;
             
             const timer = document.getElementById("youtube-anniversary-timer");
-            // Esta tarjeta ya no existe en el HTML (se reemplazó por el editor de
-            // conteos); si no está en la página, no arrancamos el intervalo para
-            // evitar un error en consola cada segundo.
-            if (!timer) return;
-            const label = timer.previousElementSibling;
-            const dateLabel = timer.nextElementSibling;
+            const label = timer?.previousElementSibling;
+            const dateLabel = timer?.nextElementSibling;
  
             if (label) label.innerText = `${numAnos} años en YouTube`;
             if (dateLabel) dateLabel.innerText = `2 de junio ${anioDestino}`;
@@ -4183,6 +4179,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=queen-badge-password-20260908-1"></script>
+    <script src="firebase-integration.js?v=mod-20260922queen-badge-password-20260908-1"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

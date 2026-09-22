@@ -5,3 +5,10 @@ V27 — FIX BOTÓN AGREGAR CONTEO
 - Al agregar un conteo, aparece inmediatamente el campo “Título del conteo”, emoji, fecha/hora y texto opcional.
 - El título recibe el foco automáticamente.
 - Guardar sigue requiriendo Firebase y valida título + fecha futura.
+
+
+V28 · FIX MOD EN GITHUB PAGES (22 sep 2026)
+- El moderador limitado Denis ahora ve y puede abrir el botón de Panel de moderación desde el menú principal.
+- La eliminación de mensajes se hace directamente con Firestore, sin depender de /api, por lo que funciona en GitHub Pages.
+- Firestore permite a Denis borrar mensajes del chat, pero no perfiles ni rangos.
+- Se mantiene separado del modo creador: Denis no recibe gestión de cuentas, modos globales ni conteos.

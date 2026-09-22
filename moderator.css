@@ -39,3 +39,11 @@ body.limited-moderator .moderator-messages-panel::before {
 }
 
 .publication-photo-field{margin-top:12px}.publication-image-preview{margin:10px 0;border:1px solid rgba(0,242,254,.18);border-radius:14px;padding:8px;background:rgba(0,0,0,.2)}.publication-image-preview img{display:block;max-width:100%;max-height:260px;border-radius:10px;object-fit:contain}.limited-moderator .countdown-panel{border-color:rgba(0,242,254,.3)}.limited-moderator .moderator-messages-panel{border-color:rgba(0,242,254,.3)}
+
+
+/* Identidad de permisos */
+.role-badge{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+.role-badge.creator{color:#ffe38a;border-color:rgba(255,211,77,.35);background:rgba(255,211,77,.08)}
+.role-badge.limited{color:#9cecff;border-color:rgba(0,242,254,.32);background:rgba(0,242,254,.07)}
+.role-help{margin:0 0 14px;padding:11px 13px;border-radius:12px;border:1px solid rgba(0,242,254,.16);background:rgba(0,242,254,.045);color:#b9ecf5;font-size:12px}
+.limited-moderator .role-help{border-color:rgba(0,242,254,.25)}

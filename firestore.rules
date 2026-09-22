@@ -17,6 +17,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isCreator());
       allow create, update: if signedIn() && (request.auth.uid == userId || isCreator());
+      // El moderador limitado (Denis) puede borrar mensajes del chat,
+      // pero no perfiles ni rangos. Esto permite moderación directa desde
+      // GitHub Pages sin depender del backend Express.
       allow delete: if isCreator();
     }
 
@@ -28,7 +31,7 @@ service cloud.firestore {
     match /siteSettings/public {
       allow read: if true;
       allow create: if isCreator();
-      allow update: if isCreator() || (isLimitedModerator() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['countdowns']) && request.resource.data.theme == resource.data.theme && request.resource.data.title == resource.data.title);
+      allow update: if isCreator();
       allow delete: if isCreator();
     }
 
@@ -51,7 +54,8 @@ service cloud.firestore {
         (!messageId.matches('profile_.*') && !messageId.matches('rank_.*') && signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid && request.resource.data.timestamp == resource.data.timestamp && !isBanned(request.auth.uid)) ||
         isCreator();
 
-      allow delete: if isCreator();
+      // Denis puede borrar mensajes normales desde GitHub Pages, pero no perfiles/rangos.
+      allow delete: if isCreator() || (isLimitedModerator() && !messageId.matches('profile_.*') && !messageId.matches('rank_.*'));
     }
   }
 }

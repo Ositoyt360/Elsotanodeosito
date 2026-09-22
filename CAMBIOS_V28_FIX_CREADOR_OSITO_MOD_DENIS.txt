@@ -1,0 +1,10 @@
+V28 FIX CREATOR/MOD GITHUB
+
+- El creador visible y funcional es OsitoYT360.
+- Denis queda como moderador limitado.
+- Corregido el acceso al panel en GitHub Pages.
+- Corregido render de mensajes cuando se ocultan herramientas del creador.
+- Corregidas reglas Firestore: Denis puede borrar mensajes normales, pero no perfiles/rangos.
+- Las opciones de modos, conteos, cuentas y baneos siguen siendo exclusivas de OsitoYT360.
+- El panel muestra claramente el rol activo.
+- Actualizados los versionadores de JS/CSS para evitar caché en GitHub Pages.

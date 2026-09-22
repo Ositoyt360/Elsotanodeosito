@@ -204,10 +204,26 @@
 
         window.aiNombreActual = displayName;
         const isCreator = isCreatorAccount(user);
+        const emailLower = String(user?.email || '').trim().toLowerCase();
+        const localPart = emailLower.split('@')[0];
+        const profileName = String(profile?.displayName || user?.displayName || '').trim().toLowerCase();
+        // Denis es moderador limitado: puede abrir el panel y moderar mensajes,
+        // pero NO recibe las herramientas exclusivas del creador. Esto también
+        // funciona en GitHub Pages, donde no existe el backend /api del proyecto.
+        const isLimitedModerator = Boolean(user) && !isCreator && (profileName === 'denis' || localPart === 'denis');
+        window.ositoEsModerador = isCreator || isLimitedModerator;
+        window.ositoEsModeradorLimitado = isLimitedModerator;
         window.ositoEsCreador = isCreator;
         const moderatorEntryButton = el('moderator-entry-button');
-        if (moderatorEntryButton) moderatorEntryButton.style.display = isCreator ? 'inline-flex' : 'none';
+        if (moderatorEntryButton) {
+            moderatorEntryButton.style.display = (isCreator || isLimitedModerator) ? 'inline-flex' : 'none';
+            moderatorEntryButton.innerHTML = isCreator
+                ? '<span aria-hidden="true">🛡️</span> Entrar como moderador'
+                : '<span aria-hidden="true">🛡️</span> Panel de moderación';
+            moderatorEntryButton.title = isCreator ? 'Abrir el panel de moderación del creador' : 'Abrir el panel de moderación';
+        }
         document.body.classList.toggle('creator-mode', isCreator);
+        document.body.classList.toggle('limited-moderator-mode', isLimitedModerator);
         if (rankForm) rankForm.style.display = isCreator ? 'grid' : 'none';
         if (isCreator && typeof window.actualizarModoSitioDesdeFirestore === 'function') {
             // El editor de conteos vive en index.html. Al entrar la cuenta creadora,

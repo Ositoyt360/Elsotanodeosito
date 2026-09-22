@@ -1,28 +1,46 @@
-V29 — FIX BOTÓN "AGREGAR CONTEO" + CONTEO VISIBLE EN MODO INVITADO (22 sep 2026)
+V29 — FIX REAL: BOTÓN "AGREGAR CONTEO" Y CONTEO REGRESIVO INVISIBLE (22 sep 2026)
 
-BUG REAL DEL BOTÓN (causa raíz):
-- El botón "＋ Agregar conteo" tenía TRES formas de disparar la misma acción
-  a la vez: el atributo onclick del HTML, un addEventListener puesto
-  directamente en el botón, y una delegación de eventos en document. Un
-  solo clic activaba las tres, así que cada clic agregaba 2 o 3 filas de
-  conteo vacías en lugar de una sola (por eso "no funcionaba bien").
-- Ahora el botón se maneja por un único camino (delegación en document) y,
-  además, se agregó un blindaje extra: si el mismo clic llega a procesarse
-  más de una vez por cualquier motivo, se ignora automáticamente.
+CAUSA RAÍZ ENCONTRADA (confirmada probando el sitio en un navegador real):
+- La función "escapeHtml", usada para armar el HTML del editor de conteos
+  y del conteo público, estaba definida ÚNICAMENTE dentro de una función
+  autoejecutable (IIFE) del chat en vivo, mucho más abajo en index.html.
+  Esa función es una "caja cerrada": nada de fuera de ella puede usar lo
+  que hay adentro.
+- El editor de conteos y el conteo público que se ve en la página
+  principal están en un bloque de código totalmente aparte, ANTES del
+  chat, y llamaban a "escapeHtml" pensando que existía de forma global.
+  No era así.
+- Resultado: en el momento exacto de pulsar "＋ Agregar conteo", o en el
+  momento en que llegaban los datos de Firestore para pintar el conteo
+  público, el navegador lanzaba un error interno
+  ("escapeHtml is not defined") y detenía la función ahí mismo, sin
+  avisar nada en pantalla. Por fuera parecía que "no pasaba nada" al
+  pulsar el botón, y que el conteo "no se veía", cuando en realidad sí se
+  guardaba bien en Firestore: lo que fallaba era únicamente el dibujo en
+  pantalla.
+- Esto explica los dos síntomas reportados con una sola causa: el botón
+  de agregar y la visibilidad del conteo (para cuentas e invitados por
+  igual) dependían del mismo código roto.
 
-CONTEO REGRESIVO VISIBLE PARA TODOS (incluido modo invitado):
-- El conteo ya se guardaba de forma pública en Firestore
-  (siteSettings/public, con lectura abierta a cualquiera, con o sin
-  sesión), pero la conexión en tiempo real solo se intentaba una vez, justo
-  al cargar la página. Si esa primera conexión ocurría antes de que
-  Firebase terminara de inicializar, nadie (ni invitados ni cuentas)
-  volvía a intentarlo.
-- Se agregó una reconexión de seguridad en dos momentos clave:
-  1) justo cuando alguien entra como invitado,
-  2) justo cuando cualquier persona (invitado o con cuenta) termina de
-     entrar al sitio principal.
-- Con esto, el conteo regresivo se sincroniza siempre que haga falta, se
-  vea con cuenta iniciada o en modo invitado.
-- No se tocó el permiso de edición: solo OsitoYT360 puede agregar, editar
-  o eliminar (Eliminar + Guardar) los conteos; todos los visitantes,
-  incluidos los invitados, solo pueden verlo.
+CORRECCIÓN:
+- Se agregó una función "escapeHtml" verdaderamente global, disponible
+  desde el principio del archivo, para que el editor de conteos y el
+  conteo público puedan usarla sin depender del chat.
+- Se probó en un navegador real: ahora cada clic en "＋ Agregar conteo"
+  agrega exactamente un formulario nuevo (título, emoji, fecha/hora,
+  texto opcional), y el conteo público se dibuja correctamente con datos
+  de ejemplo simulando una sesión de invitado.
+
+TAMBIÉN EN ESTA VERSIÓN (adicional, por seguridad):
+- El botón "＋ Agregar conteo" antes tenía además TRES formas distintas de
+  activarse con un solo clic (onclick en el HTML + listener directo +
+  delegación de eventos), lo que sí llegaba a duplicar filas en algunos
+  casos. Ahora solo queda un camino, más un seguro extra que ignora
+  cualquier ejecución repetida del mismo clic.
+- Se agregó una reconexión de respaldo a siteSettings/public (donde vive
+  el conteo) justo al entrar como invitado y justo al entrar al sitio, por
+  si la primera conexión ocurre antes de que Firebase termine de cargar.
+
+No se tocaron los permisos: solo la cuenta OsitoYT360 puede agregar,
+editar o eliminar (Eliminar + Guardar) los conteos; todos los demás
+visitantes, incluidos los invitados, solo pueden verlos.

@@ -1588,6 +1588,26 @@
 
         const DEFAULT_COUNTDOWNS = [];
 
+        // Utilidad global para escapar HTML. Antes el editor y la vista pública
+        // de conteos regresivos llamaban a "escapeHtml" asumiendo que era
+        // global, pero la única definición que existía estaba encerrada dentro
+        // de una función autoejecutable (IIFE) del chat en vivo, mucho más
+        // abajo en el archivo, y por lo tanto NO era visible aquí. Eso hacía
+        // que, al pulsar "＋ Agregar conteo" o al recibir datos de Firestore,
+        // el código lanzara "escapeHtml is not defined" y se detuviera en
+        // silencio: por eso no aparecía el formulario ni el conteo público.
+        if (typeof window.escapeHtml !== 'function') {
+            window.escapeHtml = function escapeHtml(text) {
+                return String(text ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            };
+        }
+        const escapeHtml = window.escapeHtml;
+
         function normalizarTargetConteo(value) {
             if (value == null || value === '') return '';
             if (typeof value === 'number' && Number.isFinite(value)) return String(value);

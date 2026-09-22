@@ -343,6 +343,12 @@
         setStatus('Entraste como invitado. Algunas funciones estan bloqueadas.', 'neutral');
         window.actualizarVisibilidadSeccionesCuenta?.();
         window.aiAnimarExitoAuth?.();
+        // El conteo regresivo (siteSettings/public) es de lectura pública y
+        // debe verse igual para invitados que para cuentas con sesión. Se
+        // vuelve a conectar la escucha en tiempo real aquí como red de
+        // seguridad, por si el intento inicial (antes de elegir "invitado")
+        // se hizo antes de que Firebase terminara de inicializar.
+        window.conectarModoSitio?.();
     }
 
     async function loadOrCreateProfile(user, fromRegister = false, registerGender = '', registerPhotoURL = '') {

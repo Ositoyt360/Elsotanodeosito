@@ -701,7 +701,7 @@
                 <div class="sidebar-card-title">⏱️ Conteos regresivos</div>
                 <div id="creator-countdowns-list" class="creator-countdowns-list"></div>
                 <div class="creator-countdown-actions">
-                    <button id="creator-add-countdown" class="btn-action" type="button" onclick="window.agregarConteoCreador(event)">＋ Agregar conteo</button>
+                    <button id="creator-add-countdown" class="btn-action" type="button">＋ Agregar conteo</button>
                     <button id="creator-save-countdowns" class="btn-action creator-save-countdowns" type="button">💾 Guardar</button>
                 </div>
                 <div id="creator-countdown-status" class="creator-countdown-status" aria-live="polite"></div>
@@ -1032,6 +1032,7 @@
             }
             actualizarModoSitioDesdeFirestore();
         }
+        window.conectarModoSitio = conectarModoSitio;
 
         window.addEventListener('DOMContentLoaded', () => {
             // Cargar configuración de diseño guardada
@@ -1740,7 +1741,13 @@
         }
 
         function agregarConteoCreador(event) {
+            // Blindaje contra doble/triple ejecución: el botón puede recibir el
+            // mismo clic a través de varios caminos (listener directo,
+            // delegación en document, etc.). Si el mismo evento ya fue
+            // procesado, no volvemos a agregar otra fila vacía.
             if (event) {
+                if (event.__ositoConteoHandled) return;
+                event.__ositoConteoHandled = true;
                 event.preventDefault();
                 event.stopPropagation();
             }
@@ -1772,15 +1779,12 @@
         window.agregarConteoCreador = agregarConteoCreador;
 
         function bindCreatorCountdownEditor() {
-            const add = document.getElementById('creator-add-countdown');
             const save = document.getElementById('creator-save-countdowns');
-            if (add && !add.dataset.bound) {
-                add.dataset.bound = '1';
-                // Listener directo + delegación como respaldo. Esto evita que otro
-                // script o una actualización del DOM deje el botón sin acción.
-                add.addEventListener('click', agregarConteoCreador, true);
-                add.onclick = agregarConteoCreador;
-            }
+            // El botón "＋ Agregar conteo" se maneja únicamente mediante la
+            // delegación de eventos en document (más abajo). Antes también
+            // tenía un listener directo y un onclick en el HTML: al hacer un
+            // solo clic se disparaban los tres a la vez y se agregaban 2 o 3
+            // filas vacías en lugar de una. Ahora solo hay un camino posible.
             if (save && !save.dataset.bound) {
                 save.dataset.bound = '1';
                 save.addEventListener('click', saveCreatorCountdowns);
@@ -1924,6 +1928,11 @@
                 const sidebar = document.getElementById('sidebar-panel');
                 if (sidebar) sidebar.classList.add('sidebar-show');
             }, 100);
+            // Red de seguridad: al entrar al sitio (cuenta o invitado) nos
+            // reconectamos a siteSettings/public para asegurar que el conteo
+            // regresivo se muestre siempre, sin depender de que la escucha
+            // inicial (antes de este momento) haya tenido éxito.
+            window.conectarModoSitio?.();
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
             // Autoplay permitido después del gesto del usuario

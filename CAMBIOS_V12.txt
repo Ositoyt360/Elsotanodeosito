@@ -1,0 +1,10 @@
+EL SÓTANO DE OSITO — V12
+
+- Nuevo sistema de modos globales: Normal, Halloween, Navidad, San Valentín y Cumpleaños del canal.
+- El administrador activa el modo desde moderador.html; se guarda en siteSettings/public y se sincroniza para todos.
+- Navidad: copos de nieve; Halloween: decoración oscura con calabazas/telarañas; San Valentín: corazones; Cumpleaños: confeti/fiesta.
+- Los modos cambian el fondo de toda la página.
+- Panel de moderación rediseñado con controles visuales.
+- Conteos regresivos configurables con fecha y hora.
+- Actualizaciones públicas actualizadas a V12.
+- No se vuelve a mostrar el código de acceso en el panel.

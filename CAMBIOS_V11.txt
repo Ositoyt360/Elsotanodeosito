@@ -1,0 +1,18 @@
+EL SÓTANO DE OSITO · V11 · 21/09/2026
+
+1. Los conteos regresivos ahora son configurables desde el modo moderador.
+2. Cada conteo permite nombre, emoji, texto secundario, fecha y hora exactas.
+3. Se puede agregar la cantidad de conteos necesarios y eliminarlos desde moderación.
+4. Los conteos se guardan en Firestore y se reflejan automáticamente en la página principal.
+5. Se eliminó el botón público de "Publicar" del chat en vivo.
+6. Las publicaciones oficiales quedan disponibles únicamente dentro del modo moderador.
+7. Se retiró el panel de código de acceso del modo moderador.
+8. La lista de cuentas ahora se obtiene directamente de Firebase Authentication mediante Firebase Admin, evitando depender solo de la colección Firestore de perfiles.
+9. Se mantiene un respaldo mediante la colección users si Firebase Admin no está configurado.
+10. Se corrigió la comprobación del creador para usar el correo oficial de Osito YT 360 de forma consistente.
+11. Se mantienen las funciones anteriores de fotos persistentes, baneos, borrado de mensajes, contraseñas nuevas y decoración de Halloween.
+
+IMPORTANTE:
+- Publica firestore.rules.
+- Para detectar todas las cuentas de Firebase Authentication y permitir borrar/cambiar contraseñas desde moderación, configura Firebase Admin en server.js.
+- Firebase no permite leer ni mostrar las contraseñas actuales de los usuarios; el panel solo puede establecer una contraseña nueva.

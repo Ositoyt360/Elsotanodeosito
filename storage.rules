@@ -16,15 +16,6 @@ service firebase.storage {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
-
-    match /countdowns/{uid}/{fileName} {
-      allow read: if true;
-      allow write: if isCreator() && request.auth.uid == uid
-        && request.resource.size < 150 * 1024 * 1024
-        && (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/(mp4|webm|ogg|quicktime)'));
-      allow delete: if isCreator() && request.auth.uid == uid;
-    }
-
     match /announcements/{uid}/{fileName} {
       allow read: if true;
       allow write: if (isCreator() || (isLimitedModerator() && request.auth.uid == uid))

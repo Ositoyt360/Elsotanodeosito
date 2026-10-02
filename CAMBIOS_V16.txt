@@ -1,0 +1,40 @@
+CAMBIOS V16
+===========
+
+Pediste que el modo del sitio (Normal/Halloween/Navidad/San Valentín/
+Cumpleaños), el título y los conteos regresivos YA NO se guarden en
+Firebase, sino localmente, y que aun así todos los que visiten el sitio
+lo vean al recargar. Esto es lo que cambié:
+
+1) Guardado 100% local (sin Firebase):
+   - Se agregó un archivito nuevo en tu propio servidor: site-settings.json
+     (se crea solo, no hay que crearlo a mano).
+   - Cuando activas un modo especial, guardas el título o guardas los
+     conteos desde el panel de moderación, eso ya NO toca Firestore ni
+     Firebase Admin para nada: se guarda directo en ese archivo, en tu
+     servidor. Por eso ya no debería volver a salir el error "Missing or
+     insufficient permissions".
+   - Quién puede guardar: se sigue revisando que hayas iniciado sesión
+     con tu cuenta de creador en el panel (igual que antes), pero esa
+     verificación ya no depende de que Firebase Admin esté configurado
+     en el servidor (que era lo que probablemente seguía fallando).
+
+2) Visible para todos, y se ve al recargar:
+   - El sitio principal (index.html) ahora pide el modo/título/conteos
+     directo a tu servidor (no a Firebase) cada vez que alguien carga la
+     página, así que cualquier visitante ve el mismo modo que activaste.
+   - Además, se revisa solo cada 30 segundos en segundo plano, para que
+     si alguien ya tiene la página abierta, también vea el cambio sin
+     tener que recargar manualmente.
+
+Archivos modificados: server.js, moderator.js, index.html,
+firebase-integration.js
+
+Nota importante: esta vez SÍ hay que volver a subir server.js (además de
+los archivos de siempre), porque ahí quedan las rutas nuevas:
+  GET  /api/site-settings                 → lectura pública
+  POST /api/moderator/site-settings-local → guardado (solo el creador)
+Si tu hosting reinicia el servidor y borra archivos que no estén en el
+repositorio/paquete que subes, asegúrate de que site-settings.json (una
+vez creado) también se conserve entre despliegues, o el modo volverá a
+"Normal" después de cada reinicio.

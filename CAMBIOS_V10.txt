@@ -1,0 +1,14 @@
+EL SÓTANO DE OSITO · V10 · 21/09/2026
+
+1. Foto de perfil persistente y perfil público corregido.
+2. Botón IA retirado del menú.
+3. Eliminados/limpiados los textos "Firebase conectado" y "Tu copiloto del sótano".
+4. Refinamiento visual general y optimización móvil.
+5. Nuevo botón "Entrar como moderador" para Osito YT 360, en otra pestaña.
+6. Panel moderador: cuentas, baneos con temporizador, publicaciones al chat, borrado de mensajes, título, cambio de contraseña nueva y borrado de cuentas vía Firebase Admin.
+7. Últimas actualizaciones renovadas.
+8. Decoración Halloween.
+9. Corregidas comprobaciones snapshot.exists para Firebase compat.
+
+IMPORTANTE: publicar firestore.rules. Para borrar usuarios/cambiar contraseñas de Authentication, configurar Firebase Admin en server.js como explica README.md.
+Firebase no permite leer/mostrar las contraseñas actuales de los usuarios.

@@ -47,4 +47,3 @@ body.limited-moderator .moderator-messages-panel::before {
 .role-badge.limited{color:#9cecff;border-color:rgba(0,242,254,.32);background:rgba(0,242,254,.07)}
 .role-help{margin:0 0 14px;padding:11px 13px;border-radius:12px;border:1px solid rgba(0,242,254,.16);background:rgba(0,242,254,.045);color:#b9ecf5;font-size:12px}
 .limited-moderator .role-help{border-color:rgba(0,242,254,.25)}
-.countdown-editor-row textarea{width:100%;min-height:70px;box-sizing:border-box;resize:vertical}.countdown-editor-row input[type=file]{width:100%;box-sizing:border-box}.countdown-media-help{color:#8ea69a;font-size:11px}

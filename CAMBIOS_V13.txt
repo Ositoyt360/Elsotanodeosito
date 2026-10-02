@@ -1,0 +1,8 @@
+V13 — Corrección de permisos, modos globales y conteos
+
+- Los modos Normal/Halloween/Navidad/San Valentín/Cumpleaños ahora se guardan mediante el servidor con Firebase Admin para evitar “Missing or insufficient permissions”.
+- Los modos se sincronizan desde siteSettings/public y se aplican a todos los visitantes.
+- El listener global de temas ahora espera a que Firebase esté listo y se reconecta al iniciar la integración.
+- Se añadieron botones visibles en el panel de moderador para cada modo.
+- Los conteos con fecha y hora se guardan mediante Firebase Admin y se publican para todos.
+- Baneos, quitar ban y borrado de mensajes del moderador usan el servidor para evitar errores de permisos del cliente.

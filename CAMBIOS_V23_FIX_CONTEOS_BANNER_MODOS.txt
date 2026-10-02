@@ -1,0 +1,29 @@
+V23 - FIX CONTEO REGRESIVO + FOTO DEL BANNER + MEJORA DE DISEÑO DE MODOS
+
+- BUG REAL DEL CONTEO (causa raíz): en index.html, la fecha guardada se
+  convertía a texto y luego se validaba con `new Date(texto)`. En JavaScript
+  eso da "Invalid Date" cuando el texto es solo números largos (el
+  timestamp en milisegundos), así que TODOS los conteos se descartaban
+  aunque el moderador dijera "guardado". Por eso nunca se veían.
+  Corregido para convertir a número antes de crear la fecha, tanto al
+  filtrar los conteos válidos como al actualizar el reloj cada segundo.
+
+- FOTO DEL BANNER: el CSS apuntaba a un archivo llamado
+  "fondo banner.png.png" que no existe; el archivo real es
+  "fondo_banner_png.png". Corregido el nombre.
+
+- FOTO DEL BANNER AL CAMBIAR DE MODO: los modos especiales (Halloween,
+  Navidad, San Valentín, Cumpleaños) reemplazaban el fondo del banner por
+  un degradado plano, tapando la foto por completo. Ahora la foto se
+  mantiene siempre visible y solo cambia el tinte de color según el modo
+  activo.
+
+- DISEÑO DE LOS MODOS ESPECIALES: se agregaron nuevos elementos
+  decorativos (fantasmas para Halloween, estrellas titilantes para
+  Navidad y Cumpleaños, listones para San Valentín), parpadeo/pulso en
+  luces y corazones, más variedad de colores en globos/confeti, y un
+  resplandor de fondo que ahora toma el color propio de cada modo.
+
+No se modificó nada relacionado con Denis: moderator.js, moderator.html,
+firestore.rules, storage.rules y server.js quedan exactamente igual que
+en la V22.

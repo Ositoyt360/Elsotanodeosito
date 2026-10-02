@@ -1,0 +1,9 @@
+PARCHE V17 - ERROR 405 EN MODOS ESPECIALES
+
+- Se eliminó la dependencia del POST /api/moderator/site-settings-local para modos, título y conteos.
+- El panel de moderación ahora guarda directamente en Firestore: siteSettings/public.
+- La portada escucha siteSettings/public en tiempo real, así todos ven el cambio sin recargar.
+- Esto evita el error HTTP 405 en hostings que sirven la web como archivos estáticos.
+- firestore.rules ya incluye lectura pública de siteSettings/public y escritura solo para la cuenta creadora.
+
+IMPORTANTE: publica firestore.rules en tu proyecto Firebase para que la escritura del creador esté autorizada.

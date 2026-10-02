@@ -1,0 +1,10 @@
+V22 - DENIS: CONTEOS + PUBLICACIONES CON FOTO
+
+- Denis conserva moderacion de mensajes.
+- Denis ahora puede crear/editar/eliminar conteos regresivos en siteSettings/public, pero no puede cambiar tema ni titulo.
+- Denis puede publicar anuncios oficiales en el chat en vivo.
+- Las publicaciones aceptan texto, foto o ambos.
+- Las fotos se comprimen a JPG y se suben a Firebase Storage en announcements/{uid}/.
+- El sitio ya tenia soporte para imageURL en publicaciones y ahora Denis usa el mismo formato.
+- Usuarios registrados, modos especiales, titulo, contraseñas y borrado de cuentas siguen bloqueados para Denis.
+- Firestore y Storage rules incluyen la restriccion de Denis por correo local 'denis'.

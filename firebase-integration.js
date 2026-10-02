@@ -330,6 +330,8 @@
     }
 
     function enterAsGuest() {
+        window.ositoCurrentUser = null;
+        try { document.dispatchEvent(new CustomEvent('osito:auth-ready', { detail: { uid: null } })); } catch (e) {}
         state.currentUser = null;
         state.profile = null;
         state.authReady = true;
@@ -974,6 +976,8 @@
 
         setPreview(profile, user);
         showAuthenticatedView(profile, user);
+        // V49.4: los Me gusta leen la reacción propia cuando ya hay sesión.
+        try { document.dispatchEvent(new CustomEvent('osito:auth-ready', { detail: { uid: user.uid } })); } catch (e) {}
 
         if (window.localStorage) {
             localStorage.setItem('osito_ai_nombre', profile.displayName || safeEmailName(user.email));
@@ -1072,6 +1076,10 @@
             state.currentUser = user || null;
             if (!user) {
                 state.profile = null;
+                if (window.ositoCurrentUser) {
+                    window.ositoCurrentUser = null;
+                    try { document.dispatchEvent(new CustomEvent('osito:auth-ready', { detail: { uid: null } })); } catch (e) {}
+                }
                 if (typeof state.aiUnsubscribe === 'function') {
                     state.aiUnsubscribe();
                     state.aiUnsubscribe = null;

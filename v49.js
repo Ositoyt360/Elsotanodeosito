@@ -1,17 +1,41 @@
 /**
- * V49 — Me gusta / No me gusta por video, botón de reproducir y ayudas de rendimiento.
- * Las reacciones se guardan en este dispositivo (localStorage). Nada de esto toca llaves ni servidor.
+ * V49.4 — Me gusta / No me gusta por video, botón de reproducir y ayudas de rendimiento.
+ * Los totales viven en Firestore (videoLikeCounts) y se ven en tiempo real para todos.
+ * Cada usuario con sesión tiene UNA reacción por video (videoLikeUsers). Nada de esto toca llaves ni servidor.
  */
 (function () {
     'use strict';
-    var KEY = 'osito_reacciones_v1';
+    var KEY = 'osito_reacciones_v2';
     var COUNTS = Object.create(null);
     var COUNT_UNSUBS = Object.create(null);
     var pending = Object.create(null);
     var html = document.documentElement;
 
-    function leer() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
-    function guardar(o) { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+    // Reacción propia (caché por usuario para que se vea al instante; la verdad está en Firestore).
+    function uidActual() { var u = window.ositoCurrentUser; return u && u.uid ? String(u.uid) : ''; }
+    function leer() {
+        var uid = uidActual();
+        if (!uid) return {};
+        try { return JSON.parse(localStorage.getItem(KEY + '_' + uid)) || {}; } catch (e) { return {}; }
+    }
+    function guardar(o) {
+        var uid = uidActual();
+        if (!uid) return;
+        try { localStorage.setItem(KEY + '_' + uid, JSON.stringify(o)); } catch (e) {}
+    }
+    // Firestore "compat" expone exists como PROPIEDAD y el modular como FUNCIÓN: soportamos ambos.
+    function existe(snap) {
+        if (!snap) return false;
+        return typeof snap.exists === 'function' ? !!snap.exists() : !!snap.exists;
+    }
+    // 1234 -> 1,2 mil · 1500000 -> 1,5 M (para que quepa en la tarjeta y se lea bien)
+    function formatoCantidad(n) {
+        n = Math.max(0, Math.floor(Number(n) || 0));
+        if (n < 1000) return String(n);
+        var fmt = function (v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); };
+        if (n < 1000000) return fmt(n / 1000) + ' mil';
+        return fmt(n / 1000000) + ' M';
+    }
     function limpiarId(id) { return String(id || '').replace(/[^\w-]/g, ''); }
     function sinAnimaciones() {
         var c = document.body.classList;
@@ -43,7 +67,7 @@
         id = limpiarId(id);
         var actual = leer()[id];
         var c = COUNTS[id] || { likes: 0, dislikes: 0 };
-        return '<div class="vc-actions" data-vid="' + id + '">' + boton('like', actual === 'like', id) + '<span class="vc-count like-count" data-count-like>0</span>' + boton('dislike', actual === 'dislike', id) + '<span class="vc-count dislike-count" data-count-dislike>0</span></div>';
+        return '<div class="vc-actions" data-vid="' + id + '">' + boton('like', actual === 'like', id) + '<span class="vc-count like-count" data-count-like>' + formatoCantidad(c.likes) + '</span>' + boton('dislike', actual === 'dislike', id) + '<span class="vc-count dislike-count" data-count-dislike>' + formatoCantidad(c.dislikes) + '</span></div>';
     }
 
     function pintarConteos(id) {
@@ -52,10 +76,40 @@
         document.querySelectorAll('.vc-actions[data-vid="' + id + '"]').forEach(function (box) {
             var l = box.querySelector('[data-count-like]');
             var d = box.querySelector('[data-count-dislike]');
-            if (l) l.textContent = String(c.likes || 0);
-            if (d) d.textContent = String(c.dislikes || 0);
-            box.classList.toggle('has-likes', Number(c.likes || 0) > 0);
+            var likes = Math.max(0, Number(c.likes || 0)), dislikes = Math.max(0, Number(c.dislikes || 0));
+            if (l) { l.textContent = formatoCantidad(likes); l.title = likes + (likes === 1 ? ' Me gusta' : ' Me gusta'); }
+            if (d) { d.textContent = formatoCantidad(dislikes); d.title = dislikes + ' No me gusta'; }
+            box.classList.toggle('has-likes', likes > 0);
         });
+    }
+
+    // Marca los pulgares según la reacción propia (una sola activa a la vez).
+    function pintarMia(id, tipo) {
+        id = limpiarId(id);
+        document.querySelectorAll('.vc-actions[data-vid="' + id + '"]').forEach(function (box) {
+            Array.prototype.forEach.call(box.querySelectorAll('.vc-input'), function (x) {
+                x.checked = tipo === x.getAttribute('data-tipo');
+            });
+        });
+    }
+
+    // Lee de Firestore la reacción del usuario (si cambió de dispositivo o limpió el navegador).
+    var MIA_LEIDA = Object.create(null);
+    function cargarMia(id) {
+        id = limpiarId(id);
+        var uid = uidActual();
+        if (!id || !uid || !window.dbFirebase || !window.docFirebase || !window.getDocFirebase) return;
+        var clave = uid + '|' + id;
+        if (MIA_LEIDA[clave]) return;
+        MIA_LEIDA[clave] = 1;
+        window.getDocFirebase(window.docFirebase(window.dbFirebase, 'videoLikeUsers', id, 'users', uid)).then(function (snap) {
+            var tipo = existe(snap) ? (snap.data() || {}).reaction : null;
+            if (tipo !== 'like' && tipo !== 'dislike') tipo = null;
+            var datos = leer();
+            if (tipo) datos[id] = tipo; else delete datos[id];
+            guardar(datos);
+            if (!pending[id]) pintarMia(id, tipo);
+        }).catch(function () { delete MIA_LEIDA[clave]; });
     }
 
     function escucharConteos(id) {
@@ -63,8 +117,8 @@
         if (!id || COUNT_UNSUBS[id] || !window.dbFirebase || !window.docFirebase || !window.onSnapshotFirebase) return;
         var ref = window.docFirebase(window.dbFirebase, 'videoLikeCounts', id);
         COUNT_UNSUBS[id] = window.onSnapshotFirebase(ref, function (snap) {
-            var data = snap && typeof snap.exists === 'function' && snap.exists() ? snap.data() : {};
-            COUNTS[id] = { likes: Number(data.likes || 0), dislikes: Number(data.dislikes || 0) };
+            var data = existe(snap) ? (snap.data() || {}) : {};
+            COUNTS[id] = { likes: Math.max(0, Number(data.likes || 0)), dislikes: Math.max(0, Number(data.dislikes || 0)) };
             pintarConteos(id);
         }, function () {
             // Los conteos locales siguen visibles aunque Firestore no esté disponible.
@@ -76,28 +130,46 @@
             var id = box.getAttribute('data-vid');
             escucharConteos(id);
             pintarConteos(id);
+            var propia = leer()[limpiarId(id)];
+            if (propia) pintarMia(id, propia);
+            cargarMia(id);
         });
     }
 
-    function reaccionGlobal(id, tipo) {
+    // Ejecuta una transacción con la API que haya: wrapper global, o db.runTransaction (compat).
+    function correrTransaccion(fn) {
+        if (typeof window.runTransactionFirebase === 'function') return window.runTransactionFirebase(window.dbFirebase, fn);
+        if (window.dbFirebase && typeof window.dbFirebase.runTransaction === 'function') return window.dbFirebase.runTransaction(fn);
+        return Promise.reject(new Error('transaccion_no_disponible'));
+    }
+
+    // Aplica la reacción DESEADA del usuario y devuelve { likes, dislikes, next }.
+    // deseada = 'like' | 'dislike' | null (null = quitar su reacción).
+    function reaccionGlobal(id, deseada) {
         id = limpiarId(id);
         var user = window.ositoCurrentUser;
-        if (!user || !user.uid || !window.dbFirebase || !window.docFirebase || !window.getDocFirebase || !window.setDocFirebase || !window.runTransactionFirebase) {
+        if (!user || !user.uid || !window.dbFirebase || !window.docFirebase) {
             return Promise.reject(new Error('login_required'));
         }
-        if (pending[id]) return pending[id];
+        // Si hay un guardado en curso para este video, el nuevo espera su turno (así nunca se pisan).
+        if (pending[id]) {
+            var espera = pending[id].catch(function () {}).then(function () { return reaccionGlobal(id, deseada); });
+            return espera;
+        }
         var countRef = window.docFirebase(window.dbFirebase, 'videoLikeCounts', id);
         var userRef = window.docFirebase(window.dbFirebase, 'videoLikeUsers', id, 'users', user.uid);
-        pending[id] = window.runTransactionFirebase(window.dbFirebase, async function (tx) {
+        pending[id] = correrTransaccion(async function (tx) {
+            // En Firestore todas las lecturas van antes de las escrituras.
             var oldSnap = await tx.get(userRef);
-            var old = oldSnap.exists() ? oldSnap.data().reaction : null;
             var countSnap = await tx.get(countRef);
-            var c = countSnap.exists() ? countSnap.data() : {};
-            var likes = Math.max(0, Number(c.likes || 0));
-            var dislikes = Math.max(0, Number(c.dislikes || 0));
-            var next = old === tipo ? null : tipo;
-            if (old === 'like') likes--;
-            if (old === 'dislike') dislikes--;
+            var old = existe(oldSnap) ? ((oldSnap.data() || {}).reaction || null) : null;
+            var c = existe(countSnap) ? (countSnap.data() || {}) : {};
+            var likes = Math.max(0, Math.floor(Number(c.likes || 0)));
+            var dislikes = Math.max(0, Math.floor(Number(c.dislikes || 0)));
+            var next = deseada === 'like' || deseada === 'dislike' ? deseada : null;
+            if (old === next) return { likes: likes, dislikes: dislikes, next: next, sinCambio: true };
+            if (old === 'like') likes = Math.max(0, likes - 1);
+            if (old === 'dislike') dislikes = Math.max(0, dislikes - 1);
             if (next === 'like') likes++;
             if (next === 'dislike') dislikes++;
             tx.set(countRef, { likes: likes, dislikes: dislikes, updatedAt: Date.now() }, { merge: true });
@@ -108,7 +180,9 @@
             COUNTS[id] = { likes: result.likes, dislikes: result.dislikes };
             pintarConteos(id);
             return result;
-        }).finally(function () { delete pending[id]; });
+        });
+        var limpiar = function () { delete pending[id]; };
+        pending[id].then(limpiar, limpiar);
         return pending[id];
     }
 
@@ -120,33 +194,76 @@
         setTimeout(function () { label.classList.remove('boom'); }, 1100);
     }
 
+    function avisar(caja, texto) {
+        var aviso = caja.querySelector('.vc-hint');
+        if (!aviso) { aviso = document.createElement('span'); aviso.className = 'vc-hint'; caja.appendChild(aviso); }
+        aviso.textContent = texto;
+        clearTimeout(aviso.__t);
+        if (texto) aviso.__t = setTimeout(function () { aviso.textContent = ''; }, 3200);
+    }
+
+    // V49.5: la cara de LAIA reacciona (y suena) cuando alguien da Me gusta, No me gusta o quita su reacción.
+    function caraReacciona(tipo) {
+        var F = window.OsitoFace;
+        if (!F || !F.caras) return;
+        var expr = tipo === 'like' ? 'love' : (tipo === 'dislike' ? 'sad' : 'wink');
+        var ms = tipo === 'dislike' ? 2600 : 2000;
+        if (window.OsitoFaceSound && window.OsitoFaceSound.marcarUsuario) window.OsitoFaceSound.marcarUsuario();
+        if (window.OsitoNight && window.OsitoNight.tocar) window.OsitoNight.tocar(true); // si dormía, despierta con la reacción
+        // Se quita la expresión actual para que se vuelva a disparar aunque sea la misma.
+        F.caras.forEach(function (c) { if (c.offsetParent) F.poner(c, null, 0); });
+        requestAnimationFrame(function () {
+            F.caras.forEach(function (c) {
+                if (!c.offsetParent) return;
+                F.poner(c, expr, ms);
+                c.classList.remove('of-boing'); void c.offsetWidth; c.classList.add('of-boing');
+                setTimeout(function () { c.classList.remove('of-boing'); }, 600);
+            });
+        });
+    }
+
     document.addEventListener('change', function (e) {
         var inp = e.target;
         if (!inp || !inp.classList || !inp.classList.contains('vc-input')) return;
         var caja = inp.closest('.vc-actions');
         if (!caja) return;
-        var id = caja.getAttribute('data-vid'), tipo = inp.getAttribute('data-tipo');
-        var datos = leer();
-        if (inp.checked) { datos[id] = tipo; explotar(inp.closest('.like-btn')); } else { delete datos[id]; }
-        guardar(datos);
-        if (window.ositoCurrentUser && window.ositoCurrentUser.uid) {
-            reaccionGlobal(id, tipo).catch(function (err) {
-                if (err && err.message === 'login_required') return;
-                console.warn('[Likes] No se pudo sincronizar el like:', err);
-            });
-        } else {
-            var aviso = caja.querySelector('.vc-hint');
-            if (!aviso) {
-                aviso = document.createElement('span'); aviso.className = 'vc-hint'; caja.appendChild(aviso);
-            }
-            aviso.textContent = 'Inicia sesión para compartir tu reacción';
-            setTimeout(function () { if (aviso) aviso.textContent = ''; }, 2500);
+        var id = limpiarId(caja.getAttribute('data-vid')), tipo = inp.getAttribute('data-tipo');
+        var datosPrevios = leer();
+        var antes = datosPrevios[id] || null;
+
+        // Sin sesión no se puede contar la reacción: se revierte el pulgar para que el número siempre sea real.
+        if (!uidActual()) {
+            pintarMia(id, null);
+            avisar(caja, 'Inicia sesión para dar Me gusta o No me gusta');
+            return;
         }
-        // Sincroniza el mismo video si aparece en otra pestaña (Favoritos, Series…).
-        Array.prototype.forEach.call(document.querySelectorAll('.vc-actions[data-vid="' + id + '"]'), function (otra) {
-            Array.prototype.forEach.call(otra.querySelectorAll('.vc-input'), function (x) {
-                x.checked = datos[id] === x.getAttribute('data-tipo');
-            });
+
+        // Respuesta inmediata (optimista): pulgar marcado y número ajustado al instante.
+        var despues = inp.checked ? tipo : null;
+        var c = COUNTS[id] || { likes: 0, dislikes: 0 };
+        var previoConteo = { likes: c.likes || 0, dislikes: c.dislikes || 0 };
+        var opt = { likes: previoConteo.likes, dislikes: previoConteo.dislikes };
+        if (antes === 'like') opt.likes = Math.max(0, opt.likes - 1);
+        if (antes === 'dislike') opt.dislikes = Math.max(0, opt.dislikes - 1);
+        if (despues === 'like') opt.likes++;
+        if (despues === 'dislike') opt.dislikes++;
+        COUNTS[id] = opt; pintarConteos(id);
+        pintarMia(id, despues);
+        if (despues) explotar(caja.querySelector('.like-btn.' + despues));
+        caraReacciona(despues);
+        var datos = leer(); if (despues) datos[id] = despues; else delete datos[id]; guardar(datos);
+
+        reaccionGlobal(id, despues).then(function (res) {
+            // El servidor manda: se muestran los totales reales.
+            pintarMia(id, res.next);
+            var d2 = leer(); if (res.next) d2[id] = res.next; else delete d2[id]; guardar(d2);
+        }).catch(function (err) {
+            // Falló (reglas, sin red…): se deshace lo optimista.
+            COUNTS[id] = previoConteo; pintarConteos(id);
+            pintarMia(id, antes);
+            var d3 = leer(); if (antes) d3[id] = antes; else delete d3[id]; guardar(d3);
+            console.warn('[Likes] No se pudo guardar la reacción:', err);
+            avisar(caja, err && err.message === 'login_required' ? 'Inicia sesión para dar Me gusta o No me gusta' : 'No se pudo guardar. Inténtalo de nuevo');
         });
     });
 
@@ -182,7 +299,12 @@
     setInterval(revisarReproductor, 2000);
 
     setTimeout(prepararConteos, 300);
-    document.addEventListener('osito:auth-ready', prepararConteos);
+    document.addEventListener('osito:auth-ready', function () {
+        // Al iniciar o cerrar sesión se vuelve a leer la reacción propia de cada video visible.
+        MIA_LEIDA = Object.create(null);
+        document.querySelectorAll('.vc-actions[data-vid]').forEach(function (box) { pintarMia(box.getAttribute('data-vid'), null); });
+        prepararConteos();
+    });
     window.addEventListener('load', prepararConteos);
 
     window.OsitoV49 = {
@@ -193,6 +315,7 @@
         cargarDiferido: cargarDiferido,
         revisarReproductor: revisarReproductor,
         equipoLimitado: equipoLimitado,
-        prepararConteos: prepararConteos
+        prepararConteos: prepararConteos,
+        formatoCantidad: formatoCantidad
     };
 }());

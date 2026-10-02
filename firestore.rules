@@ -25,7 +25,12 @@ service cloud.firestore {
         && request.resource.data.likes >= 0
         && request.resource.data.dislikes >= 0
         && request.resource.data.likes <= 1000000
-        && request.resource.data.dislikes <= 1000000;
+        && request.resource.data.dislikes <= 1000000
+        // V49.4: cada reacción solo puede mover un contador +1 o -1 (evita que alguien ponga 999999 desde la consola).
+        && request.resource.data.likes <= (resource == null ? 0 : resource.data.likes) + 1
+        && request.resource.data.likes >= (resource == null ? 0 : resource.data.likes) - 1
+        && request.resource.data.dislikes <= (resource == null ? 0 : resource.data.dislikes) + 1
+        && request.resource.data.dislikes >= (resource == null ? 0 : resource.data.dislikes) - 1;
       allow delete: if isCreator();
     }
 

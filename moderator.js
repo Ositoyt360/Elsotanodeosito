@@ -94,7 +94,7 @@
     toast('Título guardado para todos los visitantes.');
   }
   function defaultCountdowns(){return [];}
-  function renderCountdownEditor(items){const list=Array.isArray(items)?items:[];$('countdowns-editor').innerHTML=list.map((c,i)=>`<div class="countdown-editor-row" data-countdown-row><input type="hidden" data-cd-id value="${esc(c.id||`countdown-${i+1}`)}"><div class="inline-controls"><input data-cd-title maxlength="70" value="${esc(c.title||'')}" placeholder="Nombre del evento"><input data-cd-emoji maxlength="4" value="${esc(c.emoji||'⏳')}" title="Emoji"><input data-cd-date type="datetime-local" value="${toLocalInput(c.targetAt)}"><button class="btn small danger" data-remove-countdown type="button">Eliminar</button></div><textarea data-cd-subtitle maxlength="180" placeholder="Texto si no hay fecha o descripción">${esc(c.subtitle||'')}</textarea><input data-cd-media type="file" accept="image/*,video/*"><input type="hidden" data-cd-media-url value="${esc(c.mediaUrl||'')}"><input type="hidden" data-cd-media-type value="${esc(c.mediaType||'')}"><small class="countdown-media-help">${c.mediaUrl?'Contenido multimedia actual guardado.':'Imagen/video opcional.'}</small></div>`).join('');}
+  function renderCountdownEditor(items){const list=Array.isArray(items)?items:[];$('countdowns-editor').innerHTML=list.map((c,i)=>`<div class="countdown-editor-row" data-countdown-row><input type="hidden" data-cd-id value="${esc(c.id||`countdown-${i+1}`)}"><div class="inline-controls"><input data-cd-title maxlength="70" value="${esc(c.title||'')}" placeholder="Nombre del evento"><input data-cd-emoji maxlength="4" value="${esc(c.emoji||'⏳')}" title="Emoji"><input data-cd-date type="datetime-local" value="${toLocalInput(c.targetAt)}"><button class="btn small danger" data-remove-countdown type="button">Eliminar</button></div><textarea data-cd-subtitle maxlength="180" placeholder="Texto si no hay fecha o descripción">${esc(c.subtitle||'')}</textarea><input data-cd-media type="file" accept="image/*,video/*"><input type="hidden" data-cd-media-url value="${esc(c.mediaUrl||'')}"><input type="hidden" data-cd-media-type value="${esc(c.mediaType||'')}"><small class="countdown-media-help">${c.mediaUrl?'Contenido multimedia actual guardado.':'Imagen/video opcional (video: máximo 5 minutos).'}</small></div>`).join('');}
   function toMillis(value){
     if(value==null||value==='') return NaN;
     if(typeof value==='number') return value;
@@ -106,10 +106,20 @@
   }
   function toLocalInput(value){const ms=toMillis(value);if(!Number.isFinite(ms))return '';const d=new Date(ms);const pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
   function collectCountdowns(){return [...document.querySelectorAll('[data-countdown-row]')].map((row,i)=>{const v=s=>String(row.querySelector(s)?.value||'').trim();const raw=v('[data-cd-date]');let targetAt='';if(raw){const ms=new Date(raw).getTime();if(Number.isFinite(ms)) targetAt=ms;}return {id:v('[data-cd-id]')||`countdown-${i+1}`,title:v('[data-cd-title]')||'Nuevo evento',emoji:v('[data-cd-emoji]')||'⏳',subtitle:v('[data-cd-subtitle]'),mediaUrl:v('[data-cd-media-url]'),mediaType:v('[data-cd-media-type]'),targetAt};}).filter(c=>c.title);}
+  // V49.6: los videos del contador pueden durar 5 minutos como máximo.
+  function duracionVideoSeg(file){return new Promise(resolve=>{const v=document.createElement('video');const url=URL.createObjectURL(file);let listo=false;const fin=d=>{if(listo)return;listo=true;try{URL.revokeObjectURL(url);}catch(e){}v.removeAttribute('src');resolve(d);};v.preload='metadata';v.onloadedmetadata=()=>fin(v.duration);v.onerror=()=>fin(NaN);setTimeout(()=>fin(NaN),10000);v.src=url;});}
+  async function validarDuracionVideo(file){
+    if(!file||!String(file.type||'').startsWith('video/'))return null;
+    const d=await duracionVideoSeg(file);
+    if(!isFinite(d)||d<=0)return 'No pude leer la duración del video. Usa un MP4 normal (máximo 5 minutos).';
+    if(d>300.5)return `El video dura ${Math.floor(d/60)} min ${String(Math.round(d%60)).padStart(2,'0')} s y el máximo permitido es 5 minutos.`;
+    return null;
+  }
   async function uploadCountdownMedia(file,user,id){
     if(!file)return '';
+    const errorDuracion=await validarDuracionVideo(file);
+    if(errorDuracion)throw new Error(errorDuracion);
     if(!user)throw new Error('La sesión de creador no está disponible.');
-    if(file.size>150*1024*1024)throw new Error('El archivo multimedia debe pesar menos de 150 MB.');
     if(!/^(image\/(jpeg|png|webp|gif)|video\/(mp4|webm|ogg|quicktime))$/i.test(file.type||''))throw new Error('Solo se permiten JPG, PNG, WEBP, GIF, MP4, WEBM, OGG o MOV.');
     const safeName=String(file.name||'media').replace(/[^a-z0-9._-]/gi,'_').slice(-80);
     const path=`countdowns/${user.uid}/${id}-${Date.now()}-${safeName}`;

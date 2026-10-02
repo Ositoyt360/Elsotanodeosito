@@ -1,0 +1,27 @@
+EL SÓTANO DE OSITO — V49.5
+IA 100% LOCAL · SONIDOS DE LA CARA TAMBIÉN AFUERA · LA CARA REACCIONA A ME GUSTA / NO ME GUSTA
+
+1) IA LOCAL (sin Claude)
+ - La IA ya NO llama a ningún servidor ni a Claude. Responde con la base de conocimiento, chistes, datos
+   curiosos, cuentas (3443 mas 2, 12 x 8, 20% de 150...) y charla libre, todo dentro de la página.
+ - Si no sabe algo, usa el mensaje local de "todavía no disponible".
+ - Se quitó el <meta name="osito-ia-url"> de index.html. Ya no hace falta Render para la IA
+   (server.js queda en el zip pero la página no lo usa).
+ - Estado de la cara: "En línea · modo local".
+
+2) SONIDOS DE LA CARA FUERA DEL PANEL
+ - Ahora la cara de la burbuja también suena con el panel cerrado.
+ - Lo que provocas tú (cursor, tocar la cara, like/dislike) suena siempre.
+ - Lo que la cara hace sola suena con una pausa mínima de 7 segundos para no cansar.
+ - Siguen sin sonar: parpadeo, respiración, mientras la IA habla, mientras escucha el micrófono
+   y con la pestaña en segundo plano. Botón 🔔/🔕 en el panel para apagarlos.
+ - Los navegadores exigen un primer toque en la página antes de reproducir audio.
+
+3) LA CARA REACCIONA A LOS LIKES
+ - Me gusta -> ojos de corazón + latido y campanita.
+ - No me gusta -> cara triste con lágrimas + trombón triste.
+ - Quitar la reacción -> guiño.
+ - Reacciona en la burbuja aunque el panel esté cerrado, y con brinco.
+
+ARCHIVOS CAMBIADOS: index.html, ia-claude.js, face-sound.js, v49.js.
+(Las reglas de Firestore y lo demás de V49.4 siguen igual.)

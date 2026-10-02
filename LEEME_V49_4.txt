@@ -1,0 +1,67 @@
+EL SÓTANO DE OSITO — V49.4
+ARREGLOS: IA (error 400) · LIKES · CARA DE LAIA CON SONIDOS
+
+============================================================
+1) IA: "Claude recibió una solicitud que no pudo aceptar"
+============================================================
+Eso es un error 400 de Anthropic. Se corrigió en server.js:
+ - Ya NO se envía "temperature" (los modelos nuevos de Claude la rechazan con 400).
+ - Los textos se limpian de caracteres Unicode rotos (mitades de emoji al recortar mensajes largos).
+ - Si el modelo configurado en ANTHROPIC_MODEL da 400/404, el servidor reintenta una vez con
+   claude-haiku-4-5-20251001 automáticamente.
+ - Si el 400 es porque la cuenta de Anthropic se quedó SIN SALDO, ahora se detecta aparte.
+ - https://TU-SERVIDOR/api/ia/estado ahora incluye "ultimoError" (status y tipo) para diagnosticar
+   sin abrir los logs. El mensaje completo de Anthropic sigue en los logs de Render ("[IA] Anthropic respondió ...").
+ >>> Debes volver a DESPLEGAR server.js en Render para que esto tenga efecto. <<<
+ >>> Si después de desplegar sigue fallando, revisa Render > Logs: dirá el motivo exacto. <<<
+
+Cuentas sin gastar Claude: "3443 mas 2", "12 x 8", "100 entre 4", "20% de 150", "raiz cuadrada de 81",
+"(3+4)*2" las resuelve la propia página (analizador seguro, sin eval). Ejemplo: "¡Fácil! 3443 + 2 = 3445. 🧮"
+
+============================================================
+2) ME GUSTA / NO ME GUSTA (los números no cambiaban)
+============================================================
+Causas encontradas:
+ a) index.html usa Firebase "compat" y NO tenía runTransactionFirebase: cada like fallaba en silencio.
+ b) En Firebase compat "exists" es una propiedad, no una función: los totales siempre se leían como 0.
+Ahora:
+ - Los totales (videoLikeCounts) se leen y guardan bien, en tiempo real para todos los visitantes.
+ - Una reacción por usuario y video; cambiar de Me gusta a No me gusta mueve los dos números.
+ - La reacción propia se recupera de Firestore (si cambias de celular o borras el navegador).
+ - Respuesta instantánea: el pulgar y el número cambian al tocar; si falla el guardado, se deshace y avisa.
+ - Sin sesión: no se puede reaccionar (se avisa "Inicia sesión...") para que el número siempre sea real.
+ - Números grandes: 1,2 mil · 1,5 M.
+ - firestore.rules: cada reacción solo puede subir o bajar un contador en 1.
+ >>> Publica firestore.rules de nuevo (Firebase Console > Firestore > Reglas, o firebase deploy --only firestore:rules). <<<
+
+============================================================
+3) CARA DE LAIA
+============================================================
+Animaciones nuevas:
+ - Amor: ojos de corazón que laten. Emocionada: ojos de estrella + sonrisa grande con lengua.
+ - Enojo: ojos inclinados, ceño y temblor. Tristeza: ojos caídos y lágrimas que ruedan.
+ - Confusión: un ojo grande y otro chico, boca chueca. Curiosidad: ojos más grandes. Sorpresa: brinco.
+ - Sueño: cabeceo con párpados pesados. Bostezo: cabeza hacia atrás. Mareada (clics rápidos): ojos que giran.
+ - Cada emoción tiñe la cara de un color (rosa, amarillo, azul oscuro, rojo…).
+ - La boca imita las sílabas mientras habla (sincronía labial) y las cejas saltan con cada palabra.
+ - Pensando/escuchando: cejas que se mueven, cabeza que se inclina, colores que giran más rápido.
+ - Parpadeos sencillos y dobles que ya no interrumpen la emoción; la mirada rebota y la cabeza la acompaña.
+ - La emoción de la respuesta depende de lo que DICE: chiste -> emocionada, disculpa -> triste,
+   error/duda -> confundida, gracias -> amor, dato asombroso -> sorpresa, pregunta -> curiosa.
+ - Clics sobre la cara: 1 amor/alegría · 2 guiño · 3 emocionada · 4 confundida · 5 mareada · 7 enojada y luego triste.
+Arreglos internos: ReferenceError silencioso (paraTodas/quieta no existían en el primer bloque) y la
+inclinación de la expresión curiosa se perdía por un estilo en línea.
+Todo se apaga en Modo sin animaciones / Ultra rendimiento / "reducir movimiento".
+
+SONIDOS (face-sound.js, generados con WebAudio, sin archivos):
+ sonrisa (3 notas) · guiño (blip) · curiosa (¿hm-hm?) · sorpresa (barrido + destellos) · amor (latido + campanita)
+ bostezo (aire + aaah) · emocionada (arpegio) · confundida (¿huuh?) · triste (trombón triste) · enojada (gruñido)
+ sueño (nana) · alegría (ding-ding) · cursor encima (bloop) · viendo video (palomitas) · chat abierto (burbuja)
+ mareada (sirena) · pensando (bu-bup) · escuchando (aviso de micrófono)
+ - Suenan solo después de tocar la página; con el panel cerrado solo suena lo que provocas tú (cursor/toque en la cara).
+ - No suenan mientras la IA habla ni mientras el micrófono escucha.
+ - Botón 🔔/🔕 en el encabezado del panel de la IA para apagarlos (se recuerda).
+ - El parpadeo y la respiración son silenciosos a propósito.
+
+ARCHIVOS CAMBIADOS: server.js, v49.js, v49.css, ia-claude.js, index.html, firebase-integration.js,
+firestore.rules y NUEVO face-sound.js.

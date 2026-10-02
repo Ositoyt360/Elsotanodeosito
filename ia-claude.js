@@ -1,5 +1,5 @@
 /**
- * IA de El Sótano de Osito — cara animada + conexión con Claude (V48)
+ * IA de El Sótano de Osito — cara animada + respuestas locales (V49.5, sin Claude)
  *
  * 1) Cara: estados idle / listening / thinking / speaking sobre todos los
  *    elementos .osito-face (burbuja y cabecera del panel). Los ojos se mueven
@@ -17,7 +17,7 @@
     var estadoActual = '';
 
     var TEXTOS = {
-        idle: 'En línea · con Claude',
+        idle: 'En línea · modo local',
         listening: 'Escuchando…',
         thinking: 'Pensando…',
         speaking: 'Hablando…'
@@ -27,6 +27,9 @@
         var c = document.body.classList;
         return c.contains('no-animations') || c.contains('ultra-performance');
     }
+    // V49.4: estas dos se usaban desde aquí pero vivían en el bloque de abajo (ReferenceError silencioso).
+    function quieta() { return sinAnimaciones(); }
+    function paraTodas(expr, ms) { if (window.OsitoFace && window.OsitoFace.paraTodas) window.OsitoFace.paraTodas(expr, ms); }
 
     function pintarEstado(estado) {
         if (estado === estadoActual) return;
@@ -101,8 +104,52 @@
     var pendientes = 0;
     var vigilante = null;
 
+    /* Sincronía labial: la boca cambia de forma con cada "sílaba" (ancho, alto, redondez). */
+    var VISEMAS = [[.5, .16, 0], [.85, .6, .2], [1, 1, 0], [.62, .95, 1], [.92, .42, 0], [.45, .1, 0], [.75, .8, .6]];
+    var lipTimer = 0, visemaPrevio = -1, emphTimer = 0;
+    function equipoLento() { var h = document.documentElement.classList; return h.contains('low-end-device') || h.contains('mobile-lite'); }
+    function pasoLabios() {
+        lipTimer = 0;
+        if (!flags.hablando) return;
+        var cerrar = Math.random() < .18, v;
+        if (cerrar) v = [.5, .05, 0];
+        else {
+            var i; do { i = Math.floor(Math.random() * VISEMAS.length); } while (i === visemaPrevio);
+            visemaPrevio = i; v = VISEMAS[i];
+        }
+        caras.forEach(function (c) {
+            if (!c.offsetParent) return;
+            c.style.setProperty('--mw', v[0]); c.style.setProperty('--mh', v[1]); c.style.setProperty('--mr', v[2]);
+        });
+        lipTimer = setTimeout(pasoLabios, (cerrar ? 110 : 75 + Math.random() * 85) * (equipoLento() ? 1.7 : 1));
+    }
+    function iniciarLabios() {
+        if (sinAnimaciones()) return;
+        caras.forEach(function (c) { c.classList.add('of-lipsync'); });
+        if (!lipTimer) pasoLabios();
+    }
+    function detenerLabios() {
+        clearTimeout(lipTimer); lipTimer = 0;
+        caras.forEach(function (c) {
+            c.classList.remove('of-lipsync', 'of-emph');
+            c.style.removeProperty('--mw'); c.style.removeProperty('--mh'); c.style.removeProperty('--mr');
+        });
+    }
+    // Énfasis: en cada palabra (si el navegador avisa) las cejas dan un saltito y la boca se abre más.
+    function enfatizar() {
+        if (!flags.hablando || sinAnimaciones()) return;
+        caras.forEach(function (c) {
+            if (!c.offsetParent) return;
+            c.style.setProperty('--mw', 1); c.style.setProperty('--mh', 1); c.style.setProperty('--mr', 0);
+            c.classList.add('of-emph');
+        });
+        clearTimeout(emphTimer);
+        emphTimer = setTimeout(function () { caras.forEach(function (c) { c.classList.remove('of-emph'); }); }, 170);
+    }
+
     function empezoAHablar() {
         flags.hablando = true;
+        iniciarLabios();
         recalcular();
         if (!vigilante) {
             // Por si el navegador cancela la voz sin avisar: apaga la boca.
@@ -115,6 +162,7 @@
         if (!forzar) pendientes = Math.max(0, pendientes - 1);
         if (pendientes > 0) return;
         flags.hablando = false;
+        detenerLabios();
         if (vigilante) { clearInterval(vigilante); vigilante = null; }
         recalcular();
     }
@@ -125,6 +173,7 @@
             try {
                 pendientes += 1;
                 utterance.addEventListener('start', empezoAHablar);
+                utterance.addEventListener('boundary', enfatizar);
                 utterance.addEventListener('end', function () { terminoDeHablar(false); });
                 utterance.addEventListener('error', function () { terminoDeHablar(false); });
             } catch (e) { /* si algo falla, la voz sigue funcionando igual */ }
@@ -175,52 +224,9 @@
      * Pregunta a Claude. Devuelve { texto } o { error }.
      * error: 'sin_conexion' | 'ia_no_configurada' | 'muy_rapido' | 'limite_dia' | 'limite_total' | 'ia_no_disponible'
      */
-    function preguntar(pregunta, contexto) {
-        contexto = contexto || {};
-        if (navigator.onLine === false) return Promise.resolve({ error: 'sin_conexion' });
-
-        pidiendoAClaude = true;
-        flags.pensando = true;
-        recalcular();
-        var quitarEscribiendo = mostrarEscribiendo();
-
-        var controlador = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        var corte = controlador ? setTimeout(function () { controlador.abort(); }, 30000) : null;
-
-        return fetch(urlIA(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            signal: controlador ? controlador.signal : undefined,
-            body: JSON.stringify({
-                pregunta: pregunta,
-                nombre: contexto.nombre || '',
-                genero: contexto.genero || '',
-                historial: historialDesdePantalla(pregunta)
-            })
-        }).then(function (resp) {
-            return resp.json().catch(function () { return {}; }).then(function (data) {
-                if (resp.ok && data && data.texto) return { texto: String(data.texto) };
-                return { error: (data && data.error) || 'ia_no_disponible' };
-            });
-        }).catch(function (error) {
-            if (error && error.name === 'AbortError') return { error: 'ia_tiempo_agotado' };
-            return { error: 'ia_servidor_no_disponible' };
-        }).then(function (resultado) {
-            if (corte) clearTimeout(corte);
-            quitarEscribiendo();
-            pidiendoAClaude = false;
-            flags.pensando = false;
-            recalcular();
-            return resultado;
-        });
-    }
-
-    /* URL del servidor: mismo dominio por defecto; en hosting estático se configura con
-       <meta name="osito-ia-url" content="https://tu-servidor"> o window.OSITO_IA_URL. */
-    function urlIA() {
-        var meta = document.querySelector('meta[name="osito-ia-url"]');
-        var base = (window.OSITO_IA_URL || (meta && meta.content) || '').replace(/\/+$/, '');
-        return base + '/api/ia';
+    function preguntar() {
+        // V49.5: la IA funciona 100% local. No se llama a ningún servidor.
+        return Promise.resolve({ error: 'ia_local' });
     }
 
     /* ---------- Respuestas libres sin Claude (chistes, datos, cuentas, charla) ---------- */
@@ -255,70 +261,124 @@
         turnos[clave] += 1;
         return lista[i];
     }
-    function cuenta(t) {
-        var e = t.replace(/(cuanto es|cuanto da|calcula|resuelve|resultado de|=)/g, ' ').replace(/[x×]/g, '*').replace(/÷/g, '/').replace(/\^/g, '**').replace(/,/g, '.').trim();
-        if (!/^[\d\s+\-*/().%]+$/.test(e) || !/\d\s*(\*\*|[+\-*/%])\s*[\d(]/.test(e) || e.length > 60) return null;
+    /* Calculadora: entiende "3443 mas 2", "12 x 8", "100 entre 4", "20% de 150", "raiz cuadrada de 81"…
+       Usa un analizador propio (sin eval/Function), así que solo puede hacer matemáticas. */
+    function evaluar(s) {
+        var i = 0;
+        function ws() { while (s.charAt(i) === ' ') i++; }
+        function num() {
+            ws();
+            var m = /^\d+(\.\d+)?/.exec(s.slice(i));
+            if (!m) throw 0;
+            i += m[0].length;
+            return parseFloat(m[0]);
+        }
+        function prim() {
+            ws();
+            var c = s.charAt(i);
+            if (c === '(') { i++; var v = suma(); ws(); if (s.charAt(i) !== ')') throw 0; i++; return v; }
+            if (c === '-') { i++; return -prim(); }
+            if (c === '+') { i++; return prim(); }
+            return num();
+        }
+        function pot() {
+            var base = prim();
+            ws();
+            if (s.charAt(i) === '*' && s.charAt(i + 1) === '*') { i += 2; return Math.pow(base, pot()); }
+            return base;
+        }
+        function prod() {
+            var v = pot();
+            for (;;) {
+                ws();
+                var c = s.charAt(i);
+                if (c === '*' && s.charAt(i + 1) !== '*') { i++; v *= pot(); }
+                else if (c === '/') { i++; var d = pot(); if (d === 0) throw 'div0'; v /= d; }
+                else return v;
+            }
+        }
+        function suma() {
+            var v = prod();
+            for (;;) {
+                ws();
+                var c = s.charAt(i);
+                if (c === '+') { i++; v += prod(); }
+                else if (c === '-') { i++; v -= prod(); }
+                else return v;
+            }
+        }
+        var r = suma(); ws();
+        if (i < s.length) throw 0;
+        return r;
+    }
+    function fmtNum(n) {
+        var r = Math.round(n * 1e6) / 1e6;
+        return Math.abs(r) >= 10000 && Number.isInteger(r) ? r.toLocaleString('es-SV').replace(/,/g, ' ') : String(r).replace('.', ',');
+    }
+    var ALEGRES = ['¡Fácil! ', '¡Listo! ', 'A ver… ', '¡Cuentas claras! '];
+    function calcular(pregunta) {
+        var t = String(pregunta || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿?¡!]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!t || t.length > 90 || !/\d/.test(t)) return null;
+        var m = /(\d+(?:[.,]\d+)?)\s*(?:%|por ciento)\s*de\s*(\d+(?:[.,]\d+)?)/.exec(t);
+        if (m) {
+            var p = parseFloat(m[1].replace(',', '.')), base = parseFloat(m[2].replace(',', '.'));
+            return 'El ' + m[1] + '% de ' + m[2] + ' es ' + fmtNum(p / 100 * base) + '. 🧮';
+        }
+        m = /raiz cuadrada de (\d+(?:[.,]\d+)?)/.exec(t);
+        if (m) return 'La raíz cuadrada de ' + m[1] + ' es ' + fmtNum(Math.sqrt(parseFloat(m[1].replace(',', '.')))) + '. 🧮';
+        var e = ' ' + t + ' ';
+        e = e.replace(/\bcuanto (es|son|da|dan|seria|sera)\b/g, ' ')
+             .replace(/\bcual es el resultado de\b/g, ' ')
+             .replace(/\bpor favor\b/g, ' ')
+             .replace(/\b(multiplicado por|multiplicado|multiplicar)\b/g, ' * ')
+             .replace(/\b(dividido entre|dividido por|dividido|dividir)\b/g, ' / ')
+             .replace(/\belevado a(?: la)?\b/g, ' ** ')
+             .replace(/\bal cuadrado\b/g, ' ** 2 ')
+             .replace(/\bal cubo\b/g, ' ** 3 ')
+             .replace(/\bpor\b/g, ' * ').replace(/\bentre\b/g, ' / ')
+             .replace(/\bmas\b/g, ' + ').replace(/\bmenos\b/g, ' - ')
+             .replace(/(\d)\s*[x×]\s*(?=[\d(])/g, '$1 * ').replace(/÷/g, ' / ').replace(/\^/g, ' ** ')
+             .replace(/(\d),(\d)/g, '$1.$2')
+             .replace(/\b(calcula|calcular|calculame|resuelve|resolver|dime|dame|resultado|operacion|suma|cuenta|ayudame|con|el|la|de|me|es|son|igual|que|esto|porfa)\b/g, ' ')
+             .replace(/=/g, ' ').replace(/\s+/g, ' ').trim();
+        if (/^\d+(-\d+)+$/.test(e)) return null; // fechas / teléfonos (2026-10-02)
+        if (!e || !/^[\d\s+\-*/().]+$/.test(e) || !/\d\s*(\*\*|[+\-*/])\s*[\d(\-]/.test(e)) return null;
         try {
-            var r = Function('"use strict";return (' + e + ')')();
-            if (typeof r !== 'number' || !isFinite(r)) return null;
-            return 'El resultado es ' + (Math.round(r * 1e6) / 1e6) + '. 🧮';
-        } catch (x) { return null; }
+            var r = evaluar(e);
+            if (typeof r !== 'number' || !isFinite(r) || Math.abs(r) > 1e15) return null;
+            var bonito = e.replace(/\*\*/g, '^').replace(/\*/g, '×').replace(/\//g, '÷').replace(/\s+/g, ' ').replace(/\./g, ',');
+            return ALEGRES[Math.floor(Math.random() * ALEGRES.length)] + bonito + ' = ' + fmtNum(r) + '. 🧮';
+        } catch (x) {
+            return x === 'div0' ? 'No se puede dividir entre cero, ni en Minecraft. 😅' : null;
+        }
     }
     function respuestaLibre(pregunta) {
         var t = plano(pregunta);
         if (!t) return null;
         if (/\b(chiste|broma|hazme reir|chistoso)\b/.test(t)) return siguiente(CHISTES, 'chiste');
         if (/dato curioso|curiosidad|sabias que|dime algo (interesante|curioso)/.test(t)) return siguiente(DATOS, 'dato');
-        var c = cuenta(t); if (c) return c;
+        var c = calcular(pregunta); if (c) return c;
         if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy para lo que necesites. 😄';
         if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano. 👋';
         if (/como estas|que tal estas|como te va|como andas/.test(t)) return '¡Muy bien, con mucha energía! Gracias por preguntar. ¿Y tú cómo estás? 😊';
-        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy la inteligencia artificial de El Sótano de Osito, funciono con Claude. Puedo contarte sobre el canal, chistes, datos curiosos y más. 🤖';
+        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy la inteligencia artificial de El Sótano de Osito, vivo aquí mismo en la página. Puedo contarte sobre el canal, chistes, datos curiosos y más. 🤖';
         if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return 'Claro. Cuéntame de qué materia es y qué te piden, y lo vemos paso a paso. 📚';
         return null;
     }
     function mensajeSinClaude(codigo) {
-        if (codigo === 'ia_no_configurada' || codigo === 'ia_no_disponible' || codigo === 'ia_tiempo_agotado' || codigo === 'ia_sin_respuesta') {
-            return 'Ahora mismo mi cerebro avanzado no está conectado, así que no puedo responder eso. Pregúntame sobre el canal, pídeme un chiste o un dato curioso, o inténtalo de nuevo en un momento. 🙏';
+        if (codigo === 'ia_local' || codigo === 'ia_no_configurada' || codigo === 'ia_no_disponible' || codigo === 'ia_tiempo_agotado' || codigo === 'ia_sin_respuesta') {
+            return 'Eso todavía no lo sé. Pregúntame sobre el canal, pídeme un chiste, un dato curioso o una cuenta sencilla. 🙏';
         }
         return null;
     }
-    // Aviso para quien administra el sitio (solo en la consola del navegador).
-    fetch(urlIA().replace(/\/api\/ia$/, '/api/ia/estado'), { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-        if (!estadoTexto) return;
-        if (d && d.activa === true) {
-            estadoTexto.textContent = 'Claude configurado · listo';
-            estadoTexto.dataset.iaOk = '1';
-        } else if (d) {
-            estadoTexto.textContent = 'Servidor IA sin llave';
-            estadoTexto.dataset.iaOk = '0';
-            console.warn('[IA] El servidor responde, pero ANTHROPIC_API_KEY no está configurada.');
-        } else {
-            estadoTexto.textContent = 'Servidor IA no disponible';
-            estadoTexto.dataset.iaOk = '0';
-        }
-    }).catch(function () {
-        if (estadoTexto) { estadoTexto.textContent = 'Servidor IA no encontrado'; estadoTexto.dataset.iaOk = '0'; }
-        console.warn('[IA] No hay servidor de IA en esta URL. Si el sitio es estático, configura <meta name="osito-ia-url"> con la URL del servidor Node.');
-    });
+    if (estadoTexto) { estadoTexto.textContent = TEXTOS.idle; estadoTexto.dataset.iaOk = '1'; }
 
     window.OsitoIA = {
+        calcular: calcular,
         respuestaLibre: respuestaLibre,
         mensajeSinClaude: mensajeSinClaude,
         preguntar: preguntar,
-        mensajeDeError: function (codigo) {
-            if (codigo === 'muy_rapido') return 'Voy un poquito más lento para no atragantarme 😅 Espera unos segundos y vuelve a preguntarme.';
-            if (codigo === 'limite_dia' || codigo === 'limite_total') return 'Hoy ya respondí muchísimas preguntas y necesito descansar. Vuelve a intentarlo más tarde.';
-            if (codigo === 'ia_clave_invalida' || codigo === 'ia_sin_acceso') return 'Mi servidor sí está encendido, pero la llave de Claude no es válida o ya no tiene acceso. Hay que renovar la llave en el servidor.';
-            if (codigo === 'ia_modelo_no_disponible') return 'Claude está conectado, pero el modelo configurado ya no está disponible. Revisa ANTHROPIC_MODEL en el servidor.';
-            if (codigo === 'ia_solicitud_invalida') return 'Claude recibió una solicitud que no pudo aceptar. Ya marqué el error para revisarlo en el servidor.';
-            if (codigo === 'ia_proveedor_limite') return 'Claude está limitando temporalmente las solicitudes. Espera unos segundos y vuelve a intentar.';
-            if (codigo === 'ia_proveedor_no_disponible') return 'El servidor está conectado con Claude, pero Anthropic no está disponible en este momento. Inténtalo de nuevo.';
-            if (codigo === 'ia_tiempo_agotado') return 'Claude tardó demasiado en responder. Inténtalo de nuevo en unos segundos.';
-        if (codigo === 'ia_servidor_no_disponible') return 'No encuentro el servidor de IA. Si la página está en GitHub Pages, configura la URL de tu servidor Node en osito-ia-url.';
-            if (codigo === 'sin_conexion') return 'Parece que no tienes conexión a internet. Revisa tu señal y vuelve a preguntarme.';
-            return null; // el sitio usa su mensaje local de siempre
-        }
+        mensajeDeError: function () { return null; } // V49.5: sin servidor, siempre se usan las respuestas locales
     };
 
     /* ---------- Caja de texto: crece sola y Enter envía ---------- */
@@ -342,13 +402,13 @@
         if (formulario) formulario.addEventListener('submit', function () { setTimeout(ajustar, 0); });
     }
 
-    // Reacción natural cuando llega una respuesta: despierta, sonríe y da
-    // un pequeño rebote. Si es un mensaje del usuario, se pone curiosa.
+    // Reacción natural: la cara elige su emoción según LO QUE DICE el mensaje (ver OsitoFace.reaccionarTexto).
+    // Si es un mensaje del usuario, se pone curiosa.
     document.addEventListener('osito:ia-message', function (e) {
         if (quieta()) return;
         var rol = e && e.detail && e.detail.role;
         if (rol === 'bot') {
-            paraTodas(Math.random() < .35 ? 'excited' : 'joy', 1500);
+            if (window.OsitoFace) window.OsitoFace.reaccionarTexto(e.detail.text);
             caras.forEach(function (cara) {
                 cara.classList.remove('of-boing');
                 void cara.offsetWidth;
@@ -372,7 +432,8 @@
     var caras = Array.prototype.slice.call(document.querySelectorAll('.osito-face'));
     if (!caras.length) return;
     var cuerpo = document.body, html = document.documentElement;
-    var EXPRESIONES = ['smile', 'wink', 'curious', 'wow', 'love', 'yawn', 'excited', 'confused', 'sad', 'angry'];
+    var EXPRESIONES = ['smile', 'wink', 'curious', 'wow', 'love', 'yawn', 'excited', 'confused', 'laugh', 'shy', 'cool', 'kiss', 'dance'];
+    function esDeNoche() { return !!(window.OsitoNight && window.OsitoNight.esNoche && window.OsitoNight.esNoche()); }
     var ultimaActividad = Date.now(), dormida = false;
 
     function quieta() {
@@ -385,6 +446,11 @@
         card.insertAdjacentHTML('beforeend', '<span class="of-brow l"></span><span class="of-brow r"></span><span class="of-cheek l"></span><span class="of-cheek r"></span><span class="of-smile"></span>');
         cara.insertAdjacentHTML('beforeend', '<i class="of-spark"></i>');
     });
+    // V49.4: lágrimas para la tristeza (solo se ven con data-expr="sad").
+    caras.forEach(function (cara) {
+        var card = cara.querySelector('.of-card');
+        if (card && !card.querySelector('.of-tear')) card.insertAdjacentHTML('beforeend', '<i class="of-tear l"></i><i class="of-tear r"></i>');
+    });
 
     function poner(cara, expr, ms) {
         if (expr) cara.setAttribute('data-expr', expr); else cara.removeAttribute('data-expr');
@@ -395,6 +461,15 @@
         caras.forEach(function (c) { if (c.offsetParent) poner(c, expr, ms); });
     }
 
+    // Parpadeo por clase (no pisa la expresión actual): simple o doble, como una persona.
+    function parpadear(cara, doble) {
+        cara.classList.add('of-blinking');
+        setTimeout(function () {
+            cara.classList.remove('of-blinking');
+            if (doble) setTimeout(function () { parpadear(cara, false); }, 170);
+        }, 130);
+    }
+
     // Microgestos ligeros: parpadeos, pequeñas miradas y respiración.
     // No usan canvas ni filtros pesados, así que la cara puede seguir viva
     // incluso en móviles de gama baja.
@@ -402,13 +477,14 @@
         if (document.hidden || quieta() || dormida) return;
         caras.forEach(function (cara) {
             if (!cara.offsetParent) return;
+            if (cara.getAttribute('data-expr')) return; // no interrumpir una emoción en curso
             var r = Math.random();
-            if (r < .34) {
-                poner(cara, 'blink', 300);
-            } else if (r < .62) {
-                cara.style.setProperty('--gx', ((Math.random() * 2 - 1) * .55).toFixed(2));
-                cara.style.setProperty('--gy', ((Math.random() * 2 - 1) * .35).toFixed(2));
-                cara.style.setProperty('--tilt', ((Math.random() * 8) - 4).toFixed(1) + 'deg');
+            if (r < .36) {
+                parpadear(cara, Math.random() < .28);
+            } else if (r < .64) {
+                cara.style.setProperty('--gx', ((Math.random() * 2 - 1) * .6).toFixed(2));
+                cara.style.setProperty('--gy', ((Math.random() * 2 - 1) * .38).toFixed(2));
+                cara.style.setProperty('--tilt-i', ((Math.random() * 8) - 4).toFixed(1) + 'deg');
             } else if (r < .82) {
                 poner(cara, Math.random() < .5 ? 'smile' : 'wink', 900);
             } else {
@@ -419,7 +495,7 @@
         });
     }
     (function programarMicrogesto() {
-        setTimeout(function () { microgesto(); programarMicrogesto(); }, 2600 + Math.random() * 3600);
+        setTimeout(function () { microgesto(); programarMicrogesto(); }, 1800 + Math.random() * 2800);
     }());
     function activa() {
         ultimaActividad = Date.now();
@@ -433,7 +509,7 @@
     // Cada cierto tiempo hace un gesto distinto; si nadie la toca en ~30 s se duerme.
     (function ciclo() {
         setTimeout(function () {
-            if (!document.hidden && !quieta()) {
+            if (!document.hidden && !quieta() && !esDeNoche()) { // de noche manda face-extra.js (dormir)
                 var libre = caras.every(function (c) { var e = c.dataset.estado; return !e || e === 'idle'; });
                 if (!dormida && Date.now() - ultimaActividad > 30000) { dormida = true; paraTodas('sleepy', 0); }
                 else if (libre && !dormida) {
@@ -493,24 +569,60 @@
         hayVideo = ahora;
     }, 1200);
 
-    // Clic/toque en la cara: salta y se pone feliz.
+    // Clic/toque en la cara: reacciona. Si le das clic muy rápido se marea, se enoja y luego pide perdón.
+    var clics = 0, clicTimer = 0;
     caras.forEach(function (cara) {
         cara.addEventListener('click', function () {
             if (quieta()) return;
+            clics += 1;
+            clearTimeout(clicTimer);
+            clicTimer = setTimeout(function () { clics = 0; }, 1500);
             cara.classList.remove('of-boing'); void cara.offsetWidth; cara.classList.add('of-boing');
-            poner(cara, Math.random() < 0.5 ? 'love' : 'joy', 1400);
             setTimeout(function () { cara.classList.remove('of-boing'); }, 600);
+            if (clics >= 7) {
+                clics = 0;
+                paraTodas('angry', 1800);
+                setTimeout(function () { paraTodas('sad', 1800); }, 1900);
+            } else if (clics >= 5) paraTodas('dizzy', 1200);
+            else if (clics === 4) poner(cara, 'confused', 1100);
+            else if (clics === 3) poner(cara, 'excited', 1300);
+            else if (clics === 2) poner(cara, 'wink', 1000);
+            else { var v1 = ['love', 'joy', 'shy', 'laugh', 'cool', 'kiss', 'dance']; poner(cara, v1[Math.floor(Math.random() * v1.length)], 1700); }
         });
     });
 
-    // Cuando la IA responde, se alegra; al escribir, mira hacia abajo (al campo de texto).
+    // Emoción según el TEXTO de la respuesta (alegre, disculpa, duda, sorpresa, cariño, error…).
+    var ultimaReaccionTexto = 0;
+    function expresionParaTexto(t) {
+        t = String(t || '').toLowerCase();
+        if (/no (encuentro|est[aá]) (el )?servidor|todav[ií]a no lo s[eé]|no est[aá] (conectado|disponible)|tard[oó] demasiado|llave|anthropic|sin conexi[oó]n|conexi[oó]n a internet|no pudo aceptar/.test(t)) return 'confused';
+        if (/lo siento|disculp|perd[oó]n|lamento|desafortunad|no puedo (dar|compartir|ayudar)|por seguridad|necesito descansar|😢|😔|🙏/.test(t)) return 'sad';
+        if (/no (estoy seguro|lo s[eé]|s[eé])\b|no entiendo|no tengo (ese )?dato|todav[ií]a no est[aá] (registrad|disponible)/.test(t)) return 'confused';
+        if (/ja(ja)+|je(je)+|chiste|😂|🤣|colmo|zum-ba|tokofondo/.test(t)) return 'laugh';
+        if (/🧮|¡f[aá]cil|¡listo/.test(t)) return 'excited';
+        if (/\b(m[uú]sica|canci[oó]n|bail|fiesta|cumplea|navidad|halloween|🎵|🎶|🎉)/.test(t)) return 'dance';
+        if (/\b(eres (muy |tan )?(lind|bonit|guap|genial|el mejor|la mejor)|qu[eé] (lind|bonit|guap)|te amo|te adoro)/.test(t)) return 'shy';
+        if (/😘|\bbeso/.test(t)) return 'kiss';
+        if (/😎|\b(genial|chevere|chévere|buen[ií]simo|excelente|rock)/.test(t)) return 'cool';
+        if (/❤|💖|💕|gracias|de nada|te quiero|cari[ñn]|gusto|encantad/.test(t)) return 'love';
+        if (/\bwow\b|incre[ií]ble|asombr|sorprend|🤯|😮|¡qu[eé] genial|record|sab[ií]as que|dato curioso|🐙|🐋|⚡/.test(t)) return 'wow';
+        if (/¿[^?]*\?\s*(😊|😄|🙂)?\s*$/.test(t)) return 'curious';
+        if (/\b(hola|qu[eé] onda|buenas|bienvenid)/.test(t)) return 'wink';
+        return Math.random() < .3 ? 'smile' : 'joy';
+    }
+    function reaccionarTexto(texto) {
+        if (quieta()) return;
+        ultimaReaccionTexto = Date.now();
+        paraTodas(expresionParaTexto(texto), 1900);
+    }
     var mensajes = document.getElementById('ai-messages');
     if (mensajes && 'MutationObserver' in window) {
+        // Respaldo para mensajes que no pasan por agregarMensajeIA (p. ej. el aviso de límite de invitado).
         new MutationObserver(function (lista) {
-            if (quieta()) return;
+            if (quieta() || Date.now() - ultimaReaccionTexto < 600) return;
             lista.forEach(function (m) {
                 Array.prototype.forEach.call(m.addedNodes, function (n) {
-                    if (n.nodeType === 1 && n.classList.contains('bot') && !n.classList.contains('typing')) paraTodas('joy', 1300);
+                    if (n.nodeType === 1 && n.classList.contains('bot') && !n.classList.contains('typing')) reaccionarTexto(n.textContent);
                 });
             });
         }).observe(mensajes, { childList: true });
@@ -525,4 +637,7 @@
     // Al abrir el panel de la IA se sorprende y saluda.
     var burbuja = document.querySelector('.ia-toggle-bubble');
     if (burbuja) burbuja.addEventListener('click', function () { if (!quieta()) setTimeout(function () { paraTodas('wow', 900); }, 120); });
+
+    // API pública para el primer bloque y para face-sound.js
+    window.OsitoFace = { paraTodas: paraTodas, poner: poner, reaccionarTexto: reaccionarTexto, expresionParaTexto: expresionParaTexto, caras: caras };
 }());

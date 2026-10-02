@@ -1,0 +1,36 @@
+EL SÓTANO DE OSITO — V49.6
+CARA DORMIDA DE NOCHE · RONQUIDOS · ANIMACIONES NUEVAS · VIDEOS DEL CONTADOR DE MÁX. 5 MINUTOS
+
+1) LA CARA DUERME DE NOCHE (face-extra.js, NUEVO)
+ - De 9:00 pm a 5:30 am (hora de El Salvador) la cara se duerme sola cuando nadie la usa (12 s quieta).
+ - Dormida: ojos cerrados, boca que respira, cabecita que cabecea, tres Z que suben, burbujita de
+   mocos que se infla y revienta, y un tono azul oscuro de noche.
+ - Si la tocas, le pasas el cursor, abres el panel, le escribes, le hablas, le das Me gusta/No me gusta
+   o reproduces un video, despierta (bosteza) y vuelve a dormirse sola cuando se queda quieta.
+ - Al amanecer (5:30 am) despierta bostezando. De noche ya no hace los gestos al azar.
+ - Para probarlo de día: abre la consola del navegador y escribe  OsitoNight.forzar(true)
+   Para volver a la hora real:  OsitoNight.forzar(null)
+
+2) RONQUIDOS (face-sound.js)
+ - Mientras duerme ronca: 3 ronquidos seguidos y una pausa de ~22 segundos (para no cansar).
+ - Suenan aunque el panel esté cerrado, pero solo después de que la persona toque la página una vez.
+ - Al quedarse dormida suena una nana corta. El botón 🔔/🔕 del panel los apaga todos.
+
+3) MÁS ANIMACIONES EN LA CARA (cada una con su sonido)
+ - Risa: ojitos felices, boca que tiembla, cabeza que se sacude · "ja-ja-ja-ja"
+ - Tímida: mejillas muy rojas, mirada hacia abajo, bamboleo · "uwu"
+ - Genial: lentes oscuros con destello y cabeceo · bajo con onda y campanita
+ - Beso: boquita fruncida con 💋 · "mmuac"
+ - Baile: se mece y brinca con 🎵 · bombo, platillos y melodía
+ - Salen al azar, al tocar la cara y según lo que dice la IA (chiste -> risa, "eres lindo" -> tímida,
+   música/fiesta/cumple -> baile, "genial" -> lentes, beso -> beso).
+ - Se apagan con Modo sin animaciones / Ultra rendimiento / "reducir movimiento".
+
+4) VIDEOS DEL CONTADOR: MÁXIMO 5 MINUTOS
+ - Al elegir un video en el editor de conteos (index.html y moderador) se revisa su duración:
+   si pasa de 5 minutos (o no se puede leer), se rechaza con un aviso y no se sube.
+ - También se vuelve a revisar al guardar. Las imágenes no cambian. El peso máximo sigue siendo 150 MB.
+ - Nota: Firebase Storage no puede medir la duración, así que el límite se aplica en la página.
+
+ARCHIVOS CAMBIADOS: index.html, moderator.js, ia-claude.js, face-sound.js, v49.js, v49.css
+NUEVO: face-extra.js

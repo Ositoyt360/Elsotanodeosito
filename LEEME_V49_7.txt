@@ -1,0 +1,15 @@
+EL SÓTANO DE OSITO — V49.7
+
+1) VIDEOS DEL CONTADOR: SIN LÍMITE DE PESO, SOLO 5 MINUTOS DE DURACIÓN
+ - Se quitó el límite de 150 MB en index.html, moderator.js y storage.rules.
+ - Lo único que se revisa es la duración: el video puede durar máximo 5 minutos.
+ >>> Publica storage.rules de nuevo (Firebase Console > Storage > Reglas, o firebase deploy --only storage). <<<
+
+2) CELULAR: MÚSICA Y CONTEOS ARRIBA
+ - En celular (pantallas de hasta 992 px) la música de fondo y los conteos regresivos (con su video)
+   suben al inicio de la página, justo debajo del encabezado y antes de "Explorar Contenido".
+ - La música queda como una barra compacta con ▶️/⏸️ y el volumen, para pausarla sin bajar.
+ - "Únete al Canal" y el resto de tarjetas se quedan abajo como antes.
+ - En computadora no cambia nada.
+
+ARCHIVOS CAMBIADOS: index.html, moderator.js, storage.rules, v49.css

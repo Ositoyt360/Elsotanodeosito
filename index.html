@@ -12,9 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     <link rel="stylesheet" href="styles.css?v=v48-ia-claude-cara-rendimiento-20261002">
-    <link rel="stylesheet" href="v49.css?v=v49">
+    <link rel="stylesheet" href="v49.css?v=v49-7">
     <!-- Si tu página está en hosting estático (GitHub Pages), pon aquí la URL de tu servidor con server.js, ej: https://mi-servidor.onrender.com -->
-    <meta name="osito-ia-url" content="https://elsotanodeosito.onrender.com">
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -95,6 +94,7 @@
                 window.authCredentialFirebase = (email, password) => window.firebase.auth.EmailAuthProvider.credential(email, password);
                 window.reauthenticateWithCredentialFirebase = (user, credential) => user.reauthenticateWithCredential(credential);
                 window.deleteDocFirebase = (ref) => ref.delete();
+                window.runTransactionFirebase = (database, updateFn) => database.runTransaction(updateFn);
                 window.onAuthStateChangedFirebase = (instance, callback) => instance.onAuthStateChanged(callback);
                 window.updateProfileFirebase = (user, data) => user.updateProfile(data);
                 window.storageRefFirebase = (bucket, path) => bucket.ref(path);
@@ -793,12 +793,13 @@ accent-color:#00ff88;
                         <span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span>
                         <div class="ia-header-text">
                             <h3>Asistente de Inteligencia</h3>
-                            <p><span class="ia-status-dot" aria-hidden="true"></span><span id="ia-face-status-text">Comprobando Claude…</span></p>
+                            <p><span class="ia-status-dot" aria-hidden="true"></span><span id="ia-face-status-text">En línea · modo local</span></p>
                         </div>
                         <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
                             <span class="live-dot"></span> 🔴 EN VIVO
                         </a>
                     </div>
+                    <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar Asistente">✕</button>
                 </div>
                 <div class="ia-setup">
@@ -2064,7 +2065,7 @@ accent-color:#00ff88;
                         <label class="creator-countdown-field creator-countdown-date-field"><span>Fecha (opcional)</span><input data-creator-cd-date type="datetime-local" value="${dateValue}" aria-label="Fecha y hora opcional"></label>
                     </div>
                     <label class="creator-countdown-field"><span>Texto si no hay fecha (también sirve como descripción)</span><textarea data-creator-cd-subtitle maxlength="180" placeholder="Ej. Próximamente en El Sótano de Osito">${escapeHtml(item?.subtitle || '')}</textarea></label>
-                    <label class="creator-countdown-field"><span>Imagen o video (opcional, máx. 150 MB)</span><input data-creator-cd-media type="file" accept="image/*,video/*"><div class="creator-countdown-media-preview" data-creator-cd-media-preview>${item?.mediaUrl ? (mediaType === 'video' || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(String(item.mediaUrl)) ? `<video src="${escapeHtml(item.mediaUrl)}" muted playsinline preload="metadata" controls></video>` : `<img src="${escapeHtml(item.mediaUrl)}" alt="Vista previa del contenido del conteo" loading="lazy">`) : ''}</div><small class="creator-countdown-media-status" data-creator-cd-media-status>${creatorCountdownPendingFiles.has(String(item?.id || `countdown-${index + 1}`)) ? `Pendiente de guardar: ${escapeHtml(creatorCountdownPendingFiles.get(String(item?.id || `countdown-${index + 1}`)).name)}` : (item?.mediaUrl ? `Contenido actual: ${escapeHtml(mediaType || 'multimedia')}` : 'Puedes dejarlo vacío.')}</small></label>
+                    <label class="creator-countdown-field"><span>Imagen o video (opcional · los videos pueden durar máximo 5 minutos)</span><input data-creator-cd-media type="file" accept="image/*,video/*"><div class="creator-countdown-media-preview" data-creator-cd-media-preview>${item?.mediaUrl ? (mediaType === 'video' || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(String(item.mediaUrl)) ? `<video src="${escapeHtml(item.mediaUrl)}" muted playsinline preload="metadata" controls></video>` : `<img src="${escapeHtml(item.mediaUrl)}" alt="Vista previa del contenido del conteo" loading="lazy">`) : ''}</div><small class="creator-countdown-media-status" data-creator-cd-media-status>${creatorCountdownPendingFiles.has(String(item?.id || `countdown-${index + 1}`)) ? `Pendiente de guardar: ${escapeHtml(creatorCountdownPendingFiles.get(String(item?.id || `countdown-${index + 1}`)).name)}` : (item?.mediaUrl ? `Contenido actual: ${escapeHtml(mediaType || 'multimedia')}` : 'Puedes dejarlo vacío.')}</small></label>
                     <input type="hidden" data-creator-cd-media-url value="${escapeHtml(item?.mediaUrl || '')}">
                     <input type="hidden" data-creator-cd-media-type value="${escapeHtml(mediaType)}">
                     <button class="btn-action creator-delete-countdown" type="button" data-creator-remove-countdown aria-label="Eliminar este conteo">🗑️ Eliminar</button>
@@ -2099,10 +2100,35 @@ accent-color:#00ff88;
             }).filter(item => item.title);
         }
 
+        // V49.6: los videos del contador pueden durar 5 minutos como máximo.
+        const MAX_VIDEO_SEGUNDOS = 5 * 60;
+        function duracionVideoSeg(file) {
+            return new Promise(resolve => {
+                const v = document.createElement('video');
+                const url = URL.createObjectURL(file);
+                let listo = false;
+                const fin = d => { if (listo) return; listo = true; try { URL.revokeObjectURL(url); } catch (e) {} v.removeAttribute('src'); resolve(d); };
+                v.preload = 'metadata';
+                v.onloadedmetadata = () => fin(v.duration);
+                v.onerror = () => fin(NaN);
+                setTimeout(() => fin(NaN), 10000);
+                v.src = url;
+            });
+        }
+        function textoDuracion(seg) { const m = Math.floor(seg / 60), s = Math.round(seg % 60); return m + ' min ' + String(s).padStart(2, '0') + ' s'; }
+        async function validarDuracionVideo(file) {
+            if (!file || !String(file.type || '').startsWith('video/')) return null;
+            const d = await duracionVideoSeg(file);
+            if (!isFinite(d) || d <= 0) return 'No pude leer la duración del video. Usa un MP4 normal (máximo 5 minutos).';
+            if (d > MAX_VIDEO_SEGUNDOS + 0.5) return 'El video dura ' + textoDuracion(d) + ' y el máximo permitido es 5 minutos.';
+            return null;
+        }
+
         async function uploadCreatorCountdownMedia(file, user, countdownId) {
             if (!file) return null;
+            const errorDuracion = await validarDuracionVideo(file);
+            if (errorDuracion) throw new Error(errorDuracion);
             if (!/^image\/(jpeg|png|webp|gif)$|^video\/(mp4|webm|ogg|quicktime)$/i.test(file.type || '')) throw new Error('Solo se permiten imágenes (jpg, png, webp, gif) o videos (mp4, webm, ogg, mov).');
-            if (file.size > 150 * 1024 * 1024) throw new Error('El archivo multimedia debe pesar menos de 150 MB.');
             const storage = window.firebaseStorage;
             if (!storage) throw new Error('Firebase Storage no está disponible. Revisa que el servicio Storage esté habilitado en Firebase.');
             const safeName = String(file.name || 'media').replace(/[^a-z0-9._-]/gi, '_').slice(-80);
@@ -2261,6 +2287,15 @@ accent-color:#00ff88;
                                 ? `<video src="${url}" muted playsinline controls preload="metadata"></video>`
                                 : `<img src="${url}" alt="Vista previa del contenido del conteo">`;
                         }
+                        validarDuracionVideo(file).then(error => {
+                            if (!error) return;
+                            input.value = '';
+                            creatorCountdownPendingFiles.delete(id);
+                            const pv = row?.querySelector('[data-creator-cd-media-preview]');
+                            if (pv) pv.innerHTML = '';
+                            if (statusEl) statusEl.textContent = '⚠ ' + error;
+                            if (typeof creatorCountdownStatus === 'function') creatorCountdownStatus(error, true);
+                        });
                     } else {
                         creatorCountdownPendingFiles.delete(id);
                     }
@@ -3001,8 +3036,10 @@ accent-color:#00ff88;
     </script> 
 
     <script src="base-conocimiento.js?v=v48"></script>
-    <script src="v49.js?v=v49"></script>
-    <script src="ia-claude.js?v=v49" defer></script>
+    <script src="v49.js?v=v49-7"></script>
+    <script src="face-sound.js?v=v49-7" defer></script>
+    <script src="ia-claude.js?v=v49-7" defer></script>
+    <script src="face-extra.js?v=v49-7" defer></script>
     <script>
         (function(){
             const aiMessages = document.getElementById('ai-messages');
@@ -3382,7 +3419,7 @@ accent-color:#00ff88;
                 }
 
                 // 9. V48: si la pregunta no está en la base local, se devuelve null
-                // y enviarPreguntaIA se la pasa a Claude (vía /api/ia en el servidor).
+                // y enviarPreguntaIA usa la charla libre local.
                 return null;
             }
 
@@ -3453,19 +3490,16 @@ accent-color:#00ff88;
                     return;
                 }
 
-                // No está en la base local: responde Claude (si el servidor no lo permite, mensaje de siempre).
-                if (!window.OsitoIA) {
-                    setTimeout(() => agregarMensajeIA(mensajeNoDisponibleLocal(), 'bot'), 180);
+                // V49.4: las cuentas sencillas (3443 mas 2, 12 x 8, 100 entre 4…) se resuelven aquí, sin gastar a Claude.
+                const cuentaRapida = window.OsitoIA && window.OsitoIA.calcular ? window.OsitoIA.calcular(limpia) : null;
+                if (cuentaRapida) {
+                    setTimeout(() => agregarMensajeIA(cuentaRapida, 'bot'), 180);
                     return;
                 }
-                const resultado = await window.OsitoIA.preguntar(limpia, { nombre: aiNombre, genero: aiGenero });
-                if (resultado && resultado.texto) {
-                    agregarMensajeIA(resultado.texto, 'bot');
-                } else {
-                    const aviso = window.OsitoIA.mensajeDeError(resultado && resultado.error);
-                    const libre = window.OsitoIA.respuestaLibre ? window.OsitoIA.respuestaLibre(limpia) : null;
-                    agregarMensajeIA(aviso || libre || window.OsitoIA.mensajeSinClaude(resultado && resultado.error) || mensajeNoDisponibleLocal(), 'bot');
-                }
+
+                // V49.5: todo es local. Si no está en la base, charla libre o mensaje de "no disponible".
+                const libre = window.OsitoIA && window.OsitoIA.respuestaLibre ? window.OsitoIA.respuestaLibre(limpia) : null;
+                setTimeout(() => agregarMensajeIA(libre || mensajeNoDisponibleLocal(), 'bot'), 180);
             }
 
             aiGenderBtns.forEach(btn => {

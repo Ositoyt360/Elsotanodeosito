@@ -1041,7 +1041,8 @@ if (wss) {
 // misma información oficial en su instrucción de sistema).
 // ============================================================
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
+const MODELO_IA_RESPALDO = 'claude-haiku-4-5-20251001';
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || MODELO_IA_RESPALDO;
 const IA_MAX_POR_MINUTO = Number(process.env.IA_MAX_POR_MINUTO || 12);
 const IA_MAX_POR_DIA_IP = Number(process.env.IA_MAX_POR_DIA_IP || 150);
 const IA_MAX_POR_DIA_TOTAL = Number(process.env.IA_MAX_POR_DIA_TOTAL || 4000);
@@ -1121,11 +1122,20 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref();
 
+// V49.4: quita caracteres Unicode "rotos" (mitades de emoji al recortar texto). Anthropic responde 400 con ellos.
+function textoSeguroIA(t) {
+  return String(t == null ? '' : t)
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
+    .replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '$1')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ' ');
+}
+let iaUltimoError = null;
+
 function limpiarHistorialIA(historial, pregunta) {
   const mensajes = [];
   (Array.isArray(historial) ? historial : []).slice(-8).forEach((m) => {
     const rol = m && m.role === 'assistant' ? 'assistant' : (m && m.role === 'user' ? 'user' : '');
-    const texto = String(m && m.text || '').replace(/\s+/g, ' ').trim().slice(0, 600);
+    const texto = textoSeguroIA(String(m && m.text || '').replace(/\s+/g, ' ').trim().slice(0, 600)).trim();
     if (!rol || !texto) return;
     const ultimo = mensajes[mensajes.length - 1];
     if (ultimo && ultimo.role === rol) ultimo.content += ' ' + texto;
@@ -1146,12 +1156,13 @@ function textoPlanoIA(texto) {
     .replace(/\n{2,}/g, '\n')
     .trim()
     .slice(0, 1200);
+  // (el recorte puede partir un emoji; se limpia abajo en textoSeguroIA)
 }
 
 // V49: para comprobar desde el navegador si Claude está activo (no revela la llave).
 app.get('/api/ia/estado', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ activa: Boolean(ANTHROPIC_API_KEY), configurada: Boolean(ANTHROPIC_API_KEY), modelo: ANTHROPIC_API_KEY ? ANTHROPIC_MODEL : null, endpoint: '/api/ia' });
+  res.json({ activa: Boolean(ANTHROPIC_API_KEY), configurada: Boolean(ANTHROPIC_API_KEY), modelo: ANTHROPIC_API_KEY ? ANTHROPIC_MODEL : null, endpoint: '/api/ia', ultimoError: iaUltimoError });
 });
 
 app.post('/api/ia', async (req, res) => {
@@ -1185,14 +1196,16 @@ app.post('/api/ia', async (req, res) => {
   const temporizador = setTimeout(() => controlador.abort(), 28000);
   try {
     const peticion = global.fetch || require('node-fetch');
-    const cuerpo = JSON.stringify({
-      model: ANTHROPIC_MODEL,
+    // V49.4: SIN "temperature" (los modelos nuevos de Claude la rechazan con 400) y con textos saneados.
+    const mensajes = limpiarHistorialIA(req.body?.historial, pregunta).map((m) => ({ role: m.role, content: textoSeguroIA(m.content) || '.' }));
+    const sistemaSeguro = textoSeguroIA(sistema);
+    const armarCuerpo = (modelo) => JSON.stringify({
+      model: modelo,
       max_tokens: 600,
-      temperature: 0.7,
-      system: sistema,
-      messages: limpiarHistorialIA(req.body?.historial, pregunta)
+      system: sistemaSeguro,
+      messages: mensajes
     });
-    const llamar = () => peticion('https://api.anthropic.com/v1/messages', {
+    const llamar = (modelo) => peticion('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: controlador.signal,
       headers: {
@@ -1200,13 +1213,19 @@ app.post('/api/ia', async (req, res) => {
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
-      body: cuerpo
+      body: armarCuerpo(modelo)
     });
-    let respuesta = await llamar();
+    let respuesta = await llamar(ANTHROPIC_MODEL);
     // Un reintento si Anthropic está saturado (429 / 5xx / 529).
     if (!respuesta.ok && (respuesta.status === 429 || respuesta.status >= 500)) {
       await new Promise((r) => setTimeout(r, 900));
-      respuesta = await llamar();
+      respuesta = await llamar(ANTHROPIC_MODEL);
+    }
+    // Si el modelo configurado da 400/404, se prueba una vez con el modelo seguro por defecto.
+    if (!respuesta.ok && (respuesta.status === 400 || respuesta.status === 404) && ANTHROPIC_MODEL !== MODELO_IA_RESPALDO) {
+      const previo = await respuesta.clone().text().catch(() => '');
+      console.warn('[IA] El modelo', ANTHROPIC_MODEL, 'respondió', respuesta.status, '- reintentando con', MODELO_IA_RESPALDO, previo.slice(0, 200));
+      respuesta = await llamar(MODELO_IA_RESPALDO);
     }
     if (!respuesta.ok) {
       const detalle = await respuesta.text().catch(() => '');
@@ -1218,6 +1237,9 @@ app.post('/api/ia', async (req, res) => {
         mensajeProveedor = String(errData?.error?.message || '');
       } catch (_) {}
       console.error('[IA] Anthropic respondió', respuesta.status, tipoProveedor || 'sin_tipo', mensajeProveedor.slice(0, 260));
+      const sinCreditos = respuesta.status === 400 && /credit balance|billing|plan/i.test(mensajeProveedor);
+      iaUltimoError = { status: respuesta.status, tipo: tipoProveedor || 'sin_tipo', motivo: sinCreditos ? 'cuenta_sin_saldo' : undefined, cuando: new Date().toISOString() };
+      if (sinCreditos) return res.status(502).json({ error: 'ia_sin_creditos' });
       if (respuesta.status === 401) return res.status(502).json({ error: 'ia_clave_invalida' });
       if (respuesta.status === 403) return res.status(502).json({ error: 'ia_sin_acceso' });
       if (respuesta.status === 404) return res.status(502).json({ error: 'ia_modelo_no_disponible' });
@@ -1226,10 +1248,11 @@ app.post('/api/ia', async (req, res) => {
       if (respuesta.status >= 500) return res.status(502).json({ error: 'ia_proveedor_no_disponible' });
       return res.status(502).json({ error: 'ia_no_disponible' });
     }
+    iaUltimoError = null;
     const data = await respuesta.json();
     const texto = textoPlanoIA((data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join(' '));
     if (!texto) return res.status(502).json({ error: 'ia_sin_respuesta' });
-    return res.json({ ok: true, texto });
+    return res.json({ ok: true, texto: textoSeguroIA(texto) });
   } catch (error) {
     console.error('[IA] Error al consultar a Claude:', error.name === 'AbortError' ? 'tiempo agotado' : error.message);
     return res.status(504).json({ error: 'ia_tiempo_agotado' });

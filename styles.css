@@ -5818,3 +5818,167 @@ html.mobile-lite body:not(.no-animations):not(.ultra-performance) .ia-bubble-wra
 }
 html.mobile-lite .ia-section { animation: none !important; }
 html.mobile-lite .osito-face .of-card { transition: none; }
+
+
+/* ============================================================
+   V50 — MÓVIL LIMPIO + LA MASCOTITA + RENDIMIENTO GAMA DE ENTRADA
+   ============================================================ */
+@media (max-width: 768px) {
+    /* Solo el contador queda fuera del menú y aparece antes del contenido. */
+    .page-layout {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .page-layout > .main-content { order: 5 !important; }
+    .page-layout > .sidebar-subscribe { display: contents !important; }
+    .sidebar-subscribe > * { order: 99 !important; }
+
+    .sidebar-subscribe > #countdowns-container {
+        order: 0 !important;
+        width: 100% !important;
+        margin: 0 0 8px !important;
+    }
+
+    /* En móvil no se muestran volumen, personalización ni el CTA lateral:
+       la música se mueve por JS dentro de Menú y los colores ya viven allí. */
+    .sidebar-subscribe > #music-card,
+    .sidebar-subscribe > .btn-directos-nav,
+    .sidebar-subscribe > .cuenta-personalizacion,
+    .sidebar-subscribe > #ultra-performance-card,
+    .sidebar-subscribe > #interface-settings-card,
+    .sidebar-subscribe > .creator-countdown-editor,
+    .sidebar-subscribe > .creator-updates-editor {
+        display: none !important;
+    }
+
+    /* El menú es el único sitio de controles secundarios en teléfono. */
+    .header-menu-dropdown #music-card {
+        display: block !important;
+        margin: 0 !important;
+        padding: 8px !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+    .header-menu-dropdown #music-card .sidebar-card-title {
+        margin-bottom: 6px !important;
+    }
+    .header-menu-dropdown #music-card .setting-row {
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+    .header-menu-dropdown #music-card .setting-row input[type="range"] {
+        width: auto !important;
+        flex: 1 1 auto !important;
+    }
+
+    /* La mascotita: panel suficientemente alto para que SIEMPRE se vea la caja
+       de escritura y el micrófono incluso en teléfonos bajos. */
+    .ia-section.active {
+        width: min(420px, calc(100vw - 12px)) !important;
+        height: min(720px, calc(100dvh - 18px)) !important;
+        max-height: calc(100dvh - 18px) !important;
+        border-radius: 16px !important;
+    }
+    .ia-section .ia-chat-shell {
+        min-height: 0 !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .ia-section .ia-messages {
+        flex: 1 1 auto !important;
+        min-height: 150px !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+    }
+    .ia-section .ai-input-row {
+        flex: 0 0 auto !important;
+        min-height: 50px !important;
+    }
+    .ia-section #ai-input {
+        min-height: 40px !important;
+        height: 40px !important;
+        font-size: 15px !important;
+        line-height: 1.35 !important;
+    }
+    .ia-section .ai-mic-btn,
+    .ia-section .ai-input-row .btn-send {
+        width: 42px !important;
+        min-width: 42px !important;
+        height: 42px !important;
+    }
+    .ia-section .ai-voice-status {
+        flex: 0 0 auto !important;
+        padding-bottom: 2px;
+    }
+}
+
+/* Rendimiento: elimina repaints caros en móviles, sin quitar la decoración
+   propia de cada modo especial. */
+html.mobile-lite .ambient-glow,
+html.mobile-lite .promo-bg-fx {
+    display: none !important;
+}
+html.mobile-lite .sidebar-subscribe,
+html.mobile-lite .ia-section,
+html.mobile-lite .header-menu-dropdown {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+html.low-end-device .video-card,
+html.low-end-device .sidebar-card,
+html.low-end-device .content-section {
+    box-shadow: none !important;
+}
+html.low-end-device .osito-face {
+    filter: none !important;
+}
+html.low-end-device .modo-sitio-decoracion .modo-decor-item {
+    will-change: transform;
+}
+
+/* Cada modo especial le da a la carita una animación distinta.
+   Son movimientos cortos y baratos: transform/opacity, sin filtros. */
+@keyframes mascotHalloween {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-2px) rotate(-3deg); }
+    75% { transform: translateY(1px) rotate(3deg); }
+}
+@keyframes mascotChristmas {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.025); }
+}
+@keyframes mascotValentine {
+    0%,100% { transform: scale(1); }
+    45% { transform: scale(1.055); }
+    70% { transform: scale(.985); }
+}
+@keyframes mascotBirthday {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    35% { transform: translateY(-5px) rotate(-2deg); }
+    65% { transform: translateY(0) rotate(2deg); }
+}
+
+body.modo-halloween .osito-face { animation: mascotHalloween 2.8s ease-in-out infinite; }
+body.modo-navidad .osito-face { animation: mascotChristmas 3.2s ease-in-out infinite; }
+body.modo-san-valentin .osito-face { animation: mascotValentine 2.4s ease-in-out infinite; }
+body.modo-cumpleanos .osito-face { animation: mascotBirthday 2.2s ease-in-out infinite; }
+
+html.mobile-lite body.modo-halloween .osito-face { animation-duration: 4.8s; }
+html.mobile-lite body.modo-navidad .osito-face { animation-duration: 5.2s; }
+html.mobile-lite body.modo-san-valentin .osito-face { animation-duration: 4.6s; }
+html.mobile-lite body.modo-cumpleanos .osito-face { animation-duration: 4.4s; }
+
+body.no-animations .osito-face,
+body.ultra-performance .osito-face {
+    animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    body.modo-halloween .osito-face,
+    body.modo-navidad .osito-face,
+    body.modo-san-valentin .osito-face,
+    body.modo-cumpleanos .osito-face {
+        animation: none !important;
+    }
+}

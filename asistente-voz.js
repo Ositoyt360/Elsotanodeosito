@@ -10,6 +10,7 @@
     });
 
     const API_BASE = 'https://www.googleapis.com/youtube/v3';
+    const MASCOT_NAME = 'La mascotita del Sotano';
     const DEFAULT_HINT = 'Pulsa el microfono para hablar';
     const CHANNEL_NAME = 'OsitoYT360';
     const LIVE_URL = 'https://www.youtube.com/@OsitoYT360/live';
@@ -121,7 +122,17 @@
     }
 
     function openYouTube(url) {
-        window.open(url, '_blank', 'noopener');
+        const destino = String(url || CHANNEL_URL);
+        try {
+            const nueva = window.open(destino, '_blank', 'noopener');
+            if (nueva) return true;
+        } catch (e) {}
+        try {
+            window.location.assign(destino);
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     function dispatchState(state, details = {}) {
@@ -589,6 +600,7 @@
             this.voiceOutputEnabled = localStorage.getItem('osito_ai_voz') !== 'false';
             this.pendingSpeech = null;
             this.accumulatedTranscript = '';
+            this.sessionFinalResults = Object.create(null);
             this.hasHeardSpeech = false;
             this.sessionStartTime = 0;
             this.lastSpeechTime = 0;
@@ -626,29 +638,40 @@
             this.recognition.maxAlternatives = 1;
 
             this.recognition.onstart = () => {
+                this.sessionFinalResults = Object.create(null);
                 this.isListening = true;
                 this.setState(State.LISTENING, { label: 'Escuchando... habla ahora' });
                 this.scheduleDeadlineCheck();
             };
 
             this.recognition.onresult = (event) => {
-                let finalText = '';
+                let finalAdded = '';
                 let interimText = '';
-                for (let i = 0; i < event.results.length; i++) {
+                const start = Number(event.resultIndex || 0);
+                for (let i = start; i < event.results.length; i++) {
                     const result = event.results[i];
+                    const spoken = String(result?.[0]?.transcript || '').trim();
+                    if (!spoken) continue;
                     if (result.isFinal) {
-                        finalText += `${result[0].transcript} `;
+                        const key = String(i);
+                        if (this.sessionFinalResults[key] === spoken) continue;
+                        this.sessionFinalResults[key] = spoken;
+                        finalAdded += (finalAdded ? ' ' : '') + spoken;
                     } else {
-                        interimText += `${result[0].transcript} `;
+                        interimText += (interimText ? ' ' : '') + spoken;
                     }
                 }
-                finalText = finalText.trim();
+                finalAdded = finalAdded.trim();
                 interimText = interimText.trim();
+                if (finalAdded) {
+                    this.accumulatedTranscript = [this.accumulatedTranscript, finalAdded]
+                        .filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+                    this.pendingSpeech = null;
+                } else if (interimText) {
+                    this.pendingSpeech = interimText;
+                }
 
-                if (finalText) this.accumulatedTranscript = finalText;
-                else if (interimText) this.pendingSpeech = interimText;
-
-                if (finalText || interimText) {
+                if (finalAdded || interimText) {
                     this.hasHeardSpeech = true;
                     this.lastSpeechTime = Date.now();
                     setStatusLabel('Escuchando... habla ahora');
@@ -672,7 +695,7 @@
                 this.setState(State.ERROR, { label, error: event.error });
                 setStatusLabel(label);
                 if (event.error === 'not-allowed') {
-                    showToast('Concede permiso al microfono para usar el asistente.');
+                    showToast('Concede permiso al microfono para usar La mascotita del Sotano.');
                 }
             };
 
@@ -800,7 +823,7 @@
             }
 
             if (esModoInvitado()) {
-                showToast('Inicia sesión para usar el micrófono del asistente.');
+                showToast('Inicia sesión para usar el micrófono de La mascotita del Sotano.');
                 setStatusLabel('Micrófono disponible solo con cuenta');
                 return;
             }
@@ -1165,7 +1188,7 @@
             if (status) status.textContent = detail.label || DEFAULT_HINT;
             badge?.classList.toggle('active', active);
             badge?.classList.toggle('listening', detail.state === State.LISTENING);
-            if (badgeLabel) badgeLabel.textContent = detail.state === State.LISTENING ? 'Escuchando...' : 'Asistente IA';
+            if (badgeLabel) badgeLabel.textContent = detail.state === State.LISTENING ? 'Escuchando...' : 'La mascotita del Sotano';
         });
 
         setStatusLabel(DEFAULT_HINT);

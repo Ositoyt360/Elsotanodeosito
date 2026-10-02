@@ -213,7 +213,7 @@
         if (!aiMessages) return function () {};
         var burbuja = document.createElement('div');
         burbuja.className = 'msg bot typing';
-        burbuja.setAttribute('aria-label', 'La IA está escribiendo');
+        burbuja.setAttribute('aria-label', 'La mascotita del Sotano está escribiendo');
         burbuja.innerHTML = '<i></i><i></i><i></i>';
         aiMessages.appendChild(burbuja);
         aiMessages.scrollTop = aiMessages.scrollHeight;
@@ -361,7 +361,7 @@
         if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy para lo que necesites. 😄';
         if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano. 👋';
         if (/como estas|que tal estas|como te va|como andas/.test(t)) return '¡Muy bien, con mucha energía! Gracias por preguntar. ¿Y tú cómo estás? 😊';
-        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy la inteligencia artificial de El Sótano de Osito, vivo aquí mismo en la página. Puedo contarte sobre el canal, chistes, datos curiosos y más. 🤖';
+        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy La mascotita del Sotano, vivo aquí mismo en la página. Puedo contarte sobre el canal, chistes, datos curiosos y más. 🤖';
         if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return 'Claro. Cuéntame de qué materia es y qué te piden, y lo vemos paso a paso. 📚';
         return null;
     }

@@ -307,6 +307,47 @@
     });
     window.addEventListener('load', prepararConteos);
 
+
+    /* ---------- V50: controles móviles ---------- */
+    /*
+     * En teléfono el contenido de la barra lateral no debe ocupar espacio
+     * permanente. El contador queda arriba y música/colores viven dentro de
+     * Menú. Los IDs originales se conservan para no romper los controles JS.
+     */
+    function sincronizarControlesMoviles() {
+        var menu = document.getElementById('header-menu-dropdown');
+        var sidebar = document.getElementById('sidebar-panel');
+        var music = document.getElementById('music-card');
+        if (!menu || !sidebar || !music) return;
+
+        var movil = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        var marcador = menu.querySelector('.theme-selector');
+        if (movil) {
+            if (music.parentNode !== menu) {
+                menu.insertBefore(music, marcador || null);
+            }
+        } else {
+            if (music.parentNode !== sidebar) {
+                var countdowns = document.getElementById('countdowns-container');
+                sidebar.insertBefore(music, countdowns || sidebar.firstElementChild || null);
+            }
+        }
+    }
+
+    function iniciarControlesMoviles() {
+        sincronizarControlesMoviles();
+        window.addEventListener('resize', sincronizarControlesMoviles, { passive: true });
+        if (window.matchMedia) {
+            var mq = window.matchMedia('(max-width: 768px)');
+            var cambio = function () { sincronizarControlesMoviles(); };
+            if (mq.addEventListener) mq.addEventListener('change', cambio);
+            else if (mq.addListener) mq.addListener(cambio);
+        }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarControlesMoviles, { once: true });
+    else iniciarControlesMoviles();
+
     window.OsitoV49 = {
         accionesHTML: accionesHTML,
         playHTML: PLAY_HTML,

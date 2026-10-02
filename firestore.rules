@@ -19,18 +19,28 @@ service cloud.firestore {
     // autenticado solo puede modificar su propia reacción.
     match /videoLikeCounts/{videoId} {
       allow read: if true;
-      allow create, update: if signedIn()
+      // La primera reacción puede crear el contador desde cero.
+      allow create: if signedIn()
+        && request.resource.data.likes is int
+        && request.resource.data.dislikes is int
+        && request.resource.data.likes >= 0
+        && request.resource.data.dislikes >= 0
+        && request.resource.data.likes <= 1
+        && request.resource.data.dislikes <= 1
+        && request.resource.data.likes + request.resource.data.dislikes <= 1;
+
+      // Después de existir, cada operación solo puede mover un contador +1/-1.
+      allow update: if signedIn()
         && request.resource.data.likes is int
         && request.resource.data.dislikes is int
         && request.resource.data.likes >= 0
         && request.resource.data.dislikes >= 0
         && request.resource.data.likes <= 1000000
         && request.resource.data.dislikes <= 1000000
-        // V49.4: cada reacción solo puede mover un contador +1 o -1 (evita que alguien ponga 999999 desde la consola).
-        && request.resource.data.likes <= (resource == null ? 0 : resource.data.likes) + 1
-        && request.resource.data.likes >= (resource == null ? 0 : resource.data.likes) - 1
-        && request.resource.data.dislikes <= (resource == null ? 0 : resource.data.dislikes) + 1
-        && request.resource.data.dislikes >= (resource == null ? 0 : resource.data.dislikes) - 1;
+        && request.resource.data.likes <= resource.data.likes + 1
+        && request.resource.data.likes >= resource.data.likes - 1
+        && request.resource.data.dislikes <= resource.data.dislikes + 1
+        && request.resource.data.dislikes >= resource.data.dislikes - 1;
       allow delete: if isCreator();
     }
 

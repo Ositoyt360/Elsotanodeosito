@@ -718,7 +718,9 @@ app.post('/api/moderator/site-settings-local', requireCreatorLocal, (req, res) =
         id: String(item?.id || `countdown-${index + 1}`).slice(0, 80),
         title: String(item?.title || 'Nuevo evento').trim().slice(0, 70),
         emoji: String(item?.emoji || '⏳').slice(0, 4),
-        subtitle: String(item?.subtitle || '').trim().slice(0, 120),
+        subtitle: String(item?.subtitle || '').trim().slice(0, 180),
+        mediaUrl: String(item?.mediaUrl || '').trim().slice(0, 1200),
+        mediaType: String(item?.mediaType || '').trim().slice(0, 20),
         targetAt: String(item?.targetAt || '').trim().slice(0, 40)
       })).filter(item => item.title);
       const actual = leerSiteSettings();
@@ -758,7 +760,9 @@ app.post('/api/moderator/site-settings', requireCreator, async (req, res) => {
         id: String(item?.id || `countdown-${index + 1}`).slice(0, 80),
         title: String(item?.title || 'Nuevo evento').trim().slice(0, 70),
         emoji: String(item?.emoji || '⏳').slice(0, 4),
-        subtitle: String(item?.subtitle || '').trim().slice(0, 120),
+        subtitle: String(item?.subtitle || '').trim().slice(0, 180),
+        mediaUrl: String(item?.mediaUrl || '').trim().slice(0, 1200),
+        mediaType: String(item?.mediaType || '').trim().slice(0, 20),
         targetAt: String(item?.targetAt || '').trim().slice(0, 40)
       })).filter(item => item.title);
       const title = String(req.body?.title || '').trim().slice(0, 70);

@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=modos-v20-20260922">
+    <link rel="stylesheet" href="styles.css?v=v47-rendimiento-ia-actualizaciones-20261002">
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -186,6 +186,27 @@
     </script>
 
     <script src="actualizaciones-helper.js?v=modos-v19-20260922"></script>
+
+<style id="osito-v36">
+/* Modos especiales animados */
+body.modo-cumpleanos::before{content:'🎈 🎈 🎈';position:fixed;inset:0;pointer-events:none;animation:flotar 12s linear infinite;font-size:40px;opacity:.35}
+body.modo-sanvalentin::before{content:'❤️ ❤️ ❤️';position:fixed;inset:0;pointer-events:none;animation:flotar 10s linear infinite;font-size:34px;opacity:.35}
+body.modo-navidad::before{content:'❄️ ❄️ ❄️';position:fixed;inset:0;pointer-events:none;animation:flotar 8s linear infinite;font-size:30px;opacity:.35}
+body.modo-halloween::before{content:'🦇 🎃 🦇';position:fixed;inset:0;pointer-events:none;animation:flotar 14s linear infinite;font-size:34px;opacity:.35}
+@keyframes flotar{from{transform:translateY(100vh)}to{transform:translateY(-100vh)}}
+
+.sidebar button,.side-menu button{
+border-radius:14px!important;
+box-shadow:0 0 15px rgba(0,255,136,.25)!important;
+}
+
+/* Volumen estilo enviado */
+#music-volume{
+height:6px;border-radius:999px;
+accent-color:#00ff88;
+}
+</style>
+
 </head>
 <body>
     <canvas id="space-canvas"></canvas>
@@ -205,7 +226,7 @@
         <div class="welcome-overlay"></div>
         <div class="gamer-grid"></div>
         <div class="welcome-panel">
-            <h1 class="welcome-title">El Sótano de Osito</h1>
+            <h1 class="welcome-title osito-logo" data-osito-logo="true" aria-label="El Sótano de Osito">El Sótano de Osito</h1>
 
             <div class="landing-loading" id="landing-loading">Cargando tu sesión…</div>
 
@@ -493,7 +514,7 @@
     </script>
 
     <header>
-        <div class="logo" aria-label="El Sótano de Osito">El Sótano De Osito</div>
+        <div class="logo osito-logo" data-osito-logo="true" aria-label="El Sótano de Osito">El Sótano De Osito</div>
         <div class="header-actions"> 
             <div class="header-menu-wrap">
                 <button class="btn-action header-menu-toggle" id="header-menu-toggle" type="button" onclick="toggleHeaderMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="header-menu-dropdown">
@@ -543,8 +564,8 @@
                 <div class="promo-bg-fx"></div>
                 
                 <div class="promo-slide active" id="slide-0">
+                    <h2 class="promo-title-main osito-logo" data-osito-logo="true">EL S&Oacute;TANO DE OSITO</h2>
                     <span class="promo-tag">INFO &bull; COMUNIDAD</span>
-                    <h2 class="promo-title-main">EL S&Oacute;TANO DE OSITO</h2>
                     <p class="promo-intro">Te damos la bienvenida a la experiencia oficial de OsitoYT360.</p>
                     <p class="promo-desc">Esta p&aacute;gina centraliza los videos recientes, los directos de respaldo, las novedades del canal y los eventos m&aacute;s importantes de la comunidad en un solo lugar.</p>
                 </div>
@@ -707,6 +728,17 @@
                 <div id="creator-countdown-status" class="creator-countdown-status" aria-live="polite"></div>
             </section>
 
+            <section id="creator-updates-editor" class="sidebar-card creator-countdown-editor creator-updates-editor" hidden aria-label="Editar actualizaciones">
+                <div class="sidebar-card-title">📝 Editar actualizaciones</div>
+                <p class="creator-countdown-help">Título, descripción y fecha de cada actualización. El banner muestra las 3 más recientes según la fecha.</p>
+                <div id="creator-updates-list" class="creator-countdowns-list"></div>
+                <div class="creator-countdown-actions">
+                    <button id="creator-add-update" class="btn-action" type="button">＋ Agregar actualización</button>
+                    <button id="creator-save-updates" class="btn-action creator-save-countdowns" type="button">💾 Guardar</button>
+                </div>
+                <div id="creator-updates-status" class="creator-countdown-status" aria-live="polite"></div>
+            </section>
+
             <div class="sidebar-card settings-section cuenta-personalizacion"> 
                 <div class="sidebar-card-title">Diseños personalizados</div>
                 <div class="preset-grid">
@@ -746,11 +778,16 @@
     </div>
 
     <div class="ia-floating-container">
-        <button class="ia-toggle-bubble" id="ia-bubble" onclick="toggleIAPanel()" type="button" aria-label="Abrir asistente de IA" aria-expanded="false">
-            <span class="ia-bubble-icon" aria-hidden="true">🤖</span>
-            <span class="ia-bubble-close-icon" aria-hidden="true">✕</span>
-            <span class="ia-bubble-badge" title="IA Lista"></span>
-        </button>
+        <div class="ia-bubble-wrap">
+            <div class="spinner ia-bubble-spinner" aria-hidden="true">
+                <div class="spinner1 ia-bubble-spinner1"></div>
+            </div>
+            <button class="ia-toggle-bubble" id="ia-bubble" onclick="toggleIAPanel()" type="button" aria-label="Abrir asistente de IA" aria-expanded="false">
+                <span class="ia-bubble-icon" aria-hidden="true">🤖</span>
+                <span class="ia-bubble-close-icon" aria-hidden="true">✕</span>
+                <span class="ia-bubble-badge" title="IA Lista"></span>
+            </button>
+        </div>
         <section class="ia-section" id="ai-section">
                 <div class="ia-header">
                     <div class="ia-header-title">
@@ -896,6 +933,235 @@
             cumpleanos: 'cumple de osito.mp3'
         };
 
+        // V39 — fondos de video por especial. Los archivos fueron preparados
+        // sin pista de audio; además el elemento se fuerza a muted para evitar
+        // que un navegador reproduzca sonido por error.
+        const MODE_BACKGROUND_VIDEO = {
+            halloween: 'video hallowen.mp4',
+            navidad: 'Fondo Navidad.mp4',
+            cumpleanos: 'fondo de cumple.mp4'
+        };
+
+        // V46 — si el navegador bloquea el autoplay, reintenta con el primer gesto
+        // del usuario (clic en "Entrar al Sótano", tecla o toque) y al volver a la pestaña.
+        function reproducirVideoFondoActivo() {
+            if (document.body.classList.contains('ultra-performance') || document.body.classList.contains('no-animations')) return;
+            const layer = document.getElementById('modo-sitio-video');
+            const v = layer && (layer.querySelector('video.is-active') || layer.querySelector('video'));
+            if (!v || !v.paused) return;
+            const p = v.play();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
+        function esperarGestoVideoFondo() {
+            if (window.__videoGestoPendiente) return;
+            window.__videoGestoPendiente = true;
+            const eventos = ['pointerdown', 'keydown', 'touchstart', 'click'];
+            const reintentar = () => {
+                window.__videoGestoPendiente = false;
+                eventos.forEach(ev => document.removeEventListener(ev, reintentar, true));
+                reproducirVideoFondoActivo();
+            };
+            eventos.forEach(ev => document.addEventListener(ev, reintentar, { capture: true, passive: true }));
+        }
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) reproducirVideoFondoActivo(); });
+
+        // Fondo de video por modo especial.
+        // Normal: reproduce en bucle con una segunda copia que entra en fade
+        // durante el cierre del clip para que el reinicio no se vea brusco.
+        // Rendimiento/Ultra: congela el primer fotograma del MISMO video.
+        function sincronizarVideoModo(theme) {
+            const layer = document.getElementById('modo-sitio-video');
+            if (!layer) return;
+            const videos = Array.from(layer.querySelectorAll('video'));
+            if (!videos.length) return;
+
+            // V47: el video se congela SOLO en modo rendimiento (Quitar animaciones)
+            // y en Modo ultra. En móviles o con "movimiento reducido" del sistema
+            // sigue reproduciéndose.
+            const isReduced = () => document.body.classList.contains('ultra-performance')
+                || document.body.classList.contains('no-animations');
+            const reduced = isReduced();
+            const themeActive = () => document.documentElement.dataset.siteTheme === theme;
+
+            videos.forEach((video, index) => {
+                video.muted = true;
+                video.defaultMuted = true;
+                video.playsInline = true;
+                video.autoplay = false;
+                video.loop = false;
+                video.preload = index === 0 ? 'auto' : 'metadata';
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('aria-hidden', 'true');
+            });
+
+            const state = layer.__videoState || (layer.__videoState = {
+                activeIndex: 0,
+                transitioning: false,
+                timer: null,
+                bound: false
+            });
+            state.activeIndex = Math.min(state.activeIndex, videos.length - 1);
+            layer.classList.toggle('modo-video-playing', !reduced);
+            layer.classList.toggle('modo-video-frozen', reduced);
+
+            if (reduced) {
+                if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+                state.transitioning = false;
+                videos.forEach((video, index) => {
+                    video.classList.toggle('is-active', index === 0);
+                    video.style.opacity = index === 0 ? '1' : '0';
+                    video.style.zIndex = index === 0 ? '2' : '1';
+                    try { video.pause(); } catch (e) {}
+                });
+                state.activeIndex = 0;
+                const freeze = () => {
+                    if (!themeActive()) return;
+                    try { videos[0].pause(); } catch (e) {}
+                    try { videos[0].currentTime = 0; } catch (e) {}
+                };
+                if (videos[0].readyState >= 2) freeze();
+                else if (!videos[0].dataset.freezeBound) {
+                    videos[0].dataset.freezeBound = '1';
+                    videos[0].addEventListener('loadeddata', freeze, { once: true });
+                    videos[0].addEventListener('canplay', freeze, { once: true });
+                }
+                return;
+            }
+
+            const transitionMs = 1100;
+            const prepareAndPlay = (video) => {
+                if (!themeActive()) return;
+                const p = video.play();
+                if (p && typeof p.catch === 'function') p.catch(() => esperarGestoVideoFondo());
+            };
+
+            const crossfadeToNext = () => {
+                if (state.transitioning || !themeActive()) return;
+                const currentIndex = state.activeIndex;
+                const nextIndex = (currentIndex + 1) % videos.length;
+                const current = videos[currentIndex];
+                const next = videos[nextIndex];
+                if (!current || !next) return;
+                state.transitioning = true;
+
+                try { next.currentTime = 0; } catch (e) {}
+                next.style.zIndex = '3';
+                next.style.opacity = '0';
+                next.classList.add('is-active');
+                prepareAndPlay(next);
+
+                // El mismo MP4 se desvanece hacia su inicio; esto oculta el corte.
+                requestAnimationFrame(() => {
+                    if (!themeActive()) return;
+                    current.style.opacity = '0';
+                    next.style.opacity = '1';
+                });
+
+                state.timer = window.setTimeout(() => {
+                    if (!themeActive()) return;
+                    try { current.pause(); } catch (e) {}
+                    try { current.currentTime = 0; } catch (e) {}
+                    current.classList.remove('is-active');
+                    current.style.opacity = '0';
+                    current.style.zIndex = '1';
+                    next.style.opacity = '1';
+                    next.style.zIndex = '2';
+                    state.activeIndex = nextIndex;
+                    state.transitioning = false;
+                    state.timer = null;
+                }, transitionMs);
+            };
+
+            if (!state.bound) {
+                state.bound = true;
+                videos.forEach((video, index) => {
+                    video.addEventListener('timeupdate', () => {
+                        if (state.activeIndex !== index || state.transitioning || isReduced() || !themeActive()) return;
+                        const duration = Number(video.duration);
+                        if (!Number.isFinite(duration) || duration <= 0) return;
+                        // Empezar la transición solo al final para conservar casi todo el clip.
+                        if (video.currentTime >= duration - 1.15) crossfadeToNext();
+                    }, { passive: true });
+                    video.addEventListener('ended', () => {
+                        if (state.activeIndex === index && !state.transitioning && !isReduced() && themeActive()) {
+                            crossfadeToNext();
+                        }
+                    });
+                });
+            }
+
+            videos.forEach((video, index) => {
+                const isActive = index === state.activeIndex;
+                video.classList.toggle('is-active', isActive);
+                video.style.opacity = isActive ? '1' : '0';
+                video.style.zIndex = isActive ? '2' : '1';
+            });
+            state.transitioning = false;
+            if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+
+            const active = videos[state.activeIndex];
+            const start = () => {
+                if (!themeActive() || isReduced()) return;
+                // Pre-cargar el segundo clip para que la transición no deje un frame negro.
+                const next = videos[(state.activeIndex + 1) % videos.length];
+                if (next) {
+                    next.preload = 'auto';
+                    try { next.load(); } catch (e) {}
+                }
+                prepareAndPlay(active);
+            };
+            if (active.readyState >= 2) start();
+            else if (!active.dataset.startBound) {
+                active.dataset.startBound = '1';
+                active.addEventListener('loadeddata', start, { once: true });
+                active.addEventListener('canplay', start, { once: true });
+            }
+        }
+
+        function crearVideoFondoModo(theme) {
+            const old = document.getElementById('modo-sitio-video');
+            if (old) old.remove();
+            const src = MODE_BACKGROUND_VIDEO[theme];
+            if (!src && theme === 'san-valentin') {
+                // No hay mp4 de San Valentín: fondo animado con CSS (zoom lento + brillo que respira).
+                const sv = document.createElement('div');
+                sv.id = 'modo-sitio-video';
+                sv.className = 'modo-sitio-video modo-video-san-valentin modo-video-animado';
+                sv.setAttribute('aria-hidden', 'true');
+                sv.innerHTML = '<div class="sv-bg"></div><div class="sv-glow"></div>';
+                document.body.insertBefore(sv, document.body.firstChild);
+                return;
+            }
+            if (!src) return;
+
+            const layer = document.createElement('div');
+            layer.id = 'modo-sitio-video';
+            layer.className = `modo-sitio-video modo-video-${theme}`;
+            layer.setAttribute('aria-hidden', 'true');
+
+            const makeVideo = (preload) => {
+                const video = document.createElement('video');
+                video.src = src;
+                video.preload = preload;
+                video.muted = true;
+                video.defaultMuted = true;
+                video.playsInline = true;
+                video.autoplay = false;
+                video.loop = false;
+                video.className = 'modo-bg-video';
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('aria-hidden', 'true');
+                return video;
+            };
+
+            layer.appendChild(makeVideo('auto'));
+            layer.appendChild(makeVideo('metadata'));
+            document.body.insertBefore(layer, document.body.firstChild);
+            sincronizarVideoModo(theme);
+        }
+
         function crearDecoracionModo(theme) {
             const old = document.getElementById('modo-sitio-decoracion');
             if (old) old.remove();
@@ -906,24 +1172,27 @@
             layer.className = `modo-sitio-decoracion decor-${theme}`;
             layer.setAttribute('aria-hidden', 'true');
 
+            // V46 — emojis reales que CAEN en cada especial.
             const config = {
-                halloween: { count: 22, types: ['pumpkin','bat','web','spark','ghost'] },
-                navidad: { count: 34, types: ['snow','light','snow','snow','star','light'] },
-                'san-valentin': { count: 24, types: ['heart','heart','spark','ribbon'] },
-                cumpleanos: { count: 28, types: ['balloon','confetti','spark','confetti','star'] }
+                halloween: { count: 26, emojis: ['👻', '🎃', '🦇', '👻', '🕸️', '💀', '🎃', '🕷️'] },
+                navidad: { count: 32, emojis: ['❄️', '🎄', '❄️', '⭐', '🎅', '❄️', '🎁', '🔔'] },
+                'san-valentin': { count: 28, emojis: ['❤️', '💕', '💖', '🌹', '💘', '❤️', '💗', '💝'] },
+                cumpleanos: { count: 28, emojis: ['🎈', '🎉', '🎂', '🎊', '🎁', '🎈', '⭐', '🥳'] }
             }[theme];
             if (!config) return;
 
             for (let i = 0; i < config.count; i++) {
                 const item = document.createElement('span');
-                const type = config.types[i % config.types.length];
-                item.className = `modo-decor-item decor-${type}`;
+                const emoji = config.emojis[i % config.emojis.length];
+                item.className = 'modo-decor-item decor-emoji' + (emoji === '🦇' ? ' emoji-bat' : '');
+                item.textContent = emoji;
                 item.style.left = `${Math.random() * 100}%`;
-                item.style.top = `${Math.random() * 100}%`;
-                item.style.setProperty('--delay', `${Math.random() * 8}s`);
-                item.style.setProperty('--duration', `${7 + Math.random() * 9}s`);
+                item.style.top = '0';
+                // Delay negativo: al cargar ya hay emojis repartidos por toda la pantalla.
+                item.style.setProperty('--delay', `-${(Math.random() * 14).toFixed(2)}s`);
+                item.style.setProperty('--duration', `${9 + Math.random() * 9}s`);
                 item.style.setProperty('--drift', `${-70 + Math.random() * 140}px`);
-                item.style.setProperty('--size', `${10 + Math.random() * 18}px`);
+                item.style.setProperty('--size', `${20 + Math.random() * 18}px`);
                 layer.appendChild(item);
             }
             document.body.appendChild(layer);
@@ -952,11 +1221,21 @@
 
         function aplicarModoSitio(theme) {
             const t = SITE_THEME_LABELS[theme] ? theme : 'normal';
+            // V46: Firestore dispara este método cada vez que cambia CUALQUIER dato público
+            // (conteos, título...). Si el modo es el mismo no se reconstruye nada; antes
+            // el video se destruía y volvía a empezar en el cuadro 0 cada vez.
+            if (window.__ositoTemaAplicado === t && (t === 'normal' || document.getElementById('modo-sitio-video') || document.getElementById('modo-sitio-decoracion'))) {
+                sincronizarVideoModo(t);
+                return;
+            }
+            window.__ositoTemaAplicado = t;
             document.body.classList.remove('modo-normal','modo-halloween','modo-navidad','modo-san-valentin','modo-cumpleanos');
             document.body.classList.add('modo-' + t);
             document.documentElement.dataset.siteTheme = t;
+            crearVideoFondoModo(t);
             crearDecoracionModo(t);
             cambiarMusicaModo(t);
+            sincronizarVideoModo(t);
         }
 
         function aplicarTituloSitio(title) {
@@ -980,6 +1259,7 @@
                 window.__ositoCountdownsLoaded = true;
                 renderizarConteosRegresivos(data.countdowns);
             }
+            aplicarActualizacionesSitio(data.updates);
             aplicarTituloSitio(data.title);
         }
 
@@ -1047,6 +1327,7 @@
             cambiarFondo(p1, p2);
             conectarModoSitio();
             bindCreatorCountdownEditor();
+            bindCreatorUpdatesEditor();
             renderCreatorCountdownEditor([]);
 
             const savedFont = localStorage.getItem('osito_font_size');
@@ -1163,6 +1444,7 @@
                 }
             });
             if (animacionesActivas) iniciarEspacio();
+            sincronizarVideoModo(document.documentElement.dataset.siteTheme || 'normal');
         }
 
         function toggleModoUltra() {
@@ -1178,6 +1460,7 @@
                 });
                 advancedAnimacionesEnabled = false;
                 if (animacionesActivas) iniciarEspacio();
+                sincronizarVideoModo(document.documentElement.dataset.siteTheme || 'normal');
                 return;
             }
             activarModoUltra();
@@ -1249,6 +1532,7 @@
                 localStorage.setItem('osito_no_anim', 'true');
                 if(animationFrameId) cancelAnimationFrame(animationFrameId);
                 if(intervaloPromo) clearInterval(intervaloPromo);
+                sincronizarVideoModo(document.documentElement.dataset.siteTheme || 'normal');
             } else {
                 document.body.classList.remove('no-animations');
                 btn.classList.remove('active'); 
@@ -1534,7 +1818,11 @@
 
         function renderizarActualizaciones(datos) {
             // Acepta tanto un array directo como un objeto con la propiedad actualizaciones
-            const arr = Array.isArray(datos) ? datos : (datos && datos.actualizaciones ? datos.actualizaciones : []);
+            // V47: si OsitoYT360 guardó actualizaciones propias, esas mandan sobre la
+            // colección antigua y sobre los ejemplos.
+            const propias = Array.isArray(window.__ositoUpdatesData) ? window.__ositoUpdatesData : [];
+            const fuente = propias.length ? propias : datos;
+            const arr = Array.isArray(fuente) ? fuente : (fuente && fuente.actualizaciones ? fuente.actualizaciones : []);
             const lista = (arr.length ? arr : actualizacionesDemo(2027, 5))
                 .map(act => ({
                     badge: act.badge || 'Nuevo',
@@ -1544,6 +1832,7 @@
                 }))
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .slice(0, 3);
+            window.__ositoUpdatesLastShown = lista.map(a => ({ ...a }));
 
             const promoContainer = document.getElementById('promo-updates-container');
             if (promoContainer) {
@@ -1552,6 +1841,7 @@
                         <span class="promo-update-badge">${escaparTextoBanner(act.badge)}</span>
                         <div class="promo-update-copy">
                             <h3 class="promo-update-title">${escaparTextoBanner(act.titulo)}</h3>
+                            ${act.descripcion ? `<p class="promo-update-desc">${escaparTextoBanner(act.descripcion)}</p>` : ''}
                             <div class="promo-update-time update-timestamp" data-timestamp="${act.timestamp}">
                                 Actualizado el ${formatearTiempoRelativo(act.timestamp)}
                             </div>
@@ -1580,13 +1870,192 @@
                             timestamp: normalizarTimestamp(data.timestamp)
                         });
                     });
+                    window.__ositoUpdatesFallback = actualizacionesFB;
                     renderizarActualizaciones(actualizacionesFB);
                 },
                 () => renderizarActualizaciones(actualizacionesDemo(2027, 5))
             );
         }
 
+
+        // ===== V47 — EDITOR DE ACTUALIZACIONES (solo OsitoYT360) =====
+        // Se guardan en siteSettings/public (campo "updates"), el mismo documento de
+        // los conteos, que ya permite escribir únicamente a la cuenta creadora.
+        window.__ositoUpdatesData = null;
+
+        function normalizarActualizacionesSitio(items) {
+            return (Array.isArray(items) ? items : []).map((it, i) => ({
+                id: String(it?.id || `upd-${i + 1}`),
+                badge: String(it?.badge || 'Nuevo').trim().slice(0, 20) || 'Nuevo',
+                titulo: String(it?.titulo || '').trim().slice(0, 80),
+                descripcion: String(it?.descripcion || '').trim().slice(0, 240),
+                timestamp: normalizarTimestamp(it?.timestamp)
+            })).filter(it => it.titulo);
+        }
+
+        function aplicarActualizacionesSitio(items) {
+            const limpias = normalizarActualizacionesSitio(items);
+            const firma = JSON.stringify(limpias);
+            const cambio = firma !== window.__ositoUpdatesSig;
+            window.__ositoUpdatesSig = firma;
+            window.__ositoUpdatesData = limpias;
+            if (cambio) renderizarActualizaciones(window.__ositoUpdatesFallback || []);
+            renderCreatorUpdatesEditor(limpias);
+        }
+
+        // Fechas del editor: siempre hora de El Salvador (UTC-6, sin horario de verano).
+        function msAInputSV(ms) {
+            const n = Number(ms);
+            if (!Number.isFinite(n)) return '';
+            const d = new Date(n - 6 * 3600000);
+            const p = x => String(x).padStart(2, '0');
+            return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+        }
+        function inputSVAMs(value) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(value || ''));
+            if (!m) return NaN;
+            return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] + 6, +m[5]);
+        }
+
+        function creatorUpdatesStatus(message, error) {
+            const el = document.getElementById('creator-updates-status');
+            if (!el) return;
+            el.textContent = message || '';
+            el.dataset.tone = error ? 'error' : 'ok';
+        }
+
+        function renderCreatorUpdatesEditor(items, force, mantenerOrden) {
+            const panel = document.getElementById('creator-updates-editor');
+            const list = document.getElementById('creator-updates-list');
+            if (!panel || !list) return;
+            const visible = creatorCountdownsEnabled();
+            panel.hidden = !visible;
+            if (!visible) { list.innerHTML = ''; panel.dataset.dirty = '0'; return; }
+            // No redibujar mientras el creador escribe: una actualización en vivo borraría lo escrito.
+            if (!force && list.children.length && (panel.dataset.dirty === '1' || panel.contains(document.activeElement))) return;
+            const source = Array.isArray(items) ? items : (window.__ositoUpdatesData || []);
+            if (!source.length) {
+                list.innerHTML = '<div class="creator-countdown-empty">Aún no hay actualizaciones guardadas: el banner muestra ejemplos. Agrega una nueva o carga las que se ven ahora para editarlas.</div>'
+                    + '<button class="btn-action" type="button" id="creator-load-current-updates">📥 Cargar las que se ven ahora</button>';
+                return;
+            }
+            const ordenadas = mantenerOrden ? [...source] : [...source].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+            list.innerHTML = ordenadas.map((item, index) => `<div class="creator-countdown-row" data-creator-update-row>
+                    <input type="hidden" data-upd-id value="${escapeHtml(item.id || `upd-${index + 1}`)}">
+                    <label class="creator-countdown-field"><span>Título</span><input data-upd-title maxlength="80" value="${escapeHtml(item.titulo || '')}" placeholder="Ej. Nuevo modo Halloween"></label>
+                    <label class="creator-countdown-field"><span>Descripción</span><textarea data-upd-desc maxlength="240" placeholder="Qué cambió en esta actualización">${escapeHtml(item.descripcion || '')}</textarea></label>
+                    <label class="creator-countdown-field"><span>Fecha y hora (El Salvador)</span><input data-upd-date type="datetime-local" value="${msAInputSV(item.timestamp)}"></label>
+                    <label class="creator-countdown-field"><span>Etiqueta</span><input data-upd-badge maxlength="20" value="${escapeHtml(item.badge || 'Nuevo')}" placeholder="Nuevo"></label>
+                    <button class="btn-action creator-delete-countdown" type="button" data-upd-remove aria-label="Eliminar esta actualización">🗑️ Eliminar</button>
+                </div>`).join('');
+        }
+        window.renderCreatorUpdatesEditor = renderCreatorUpdatesEditor;
+
+        function collectCreatorUpdates(opciones) {
+            const omitirVacias = Boolean(opciones && opciones.omitirVacias);
+            return [...document.querySelectorAll('[data-creator-update-row]')].map((row, i) => {
+                const v = sel => String(row.querySelector(sel)?.value || '').trim();
+                const ts = inputSVAMs(v('[data-upd-date]'));
+                return {
+                    id: v('[data-upd-id]') || `upd-${Date.now()}-${i}`,
+                    badge: v('[data-upd-badge]') || 'Nuevo',
+                    titulo: v('[data-upd-title]'),
+                    descripcion: v('[data-upd-desc]'),
+                    timestamp: Number.isFinite(ts) ? ts : Date.now()
+                };
+            }).filter(it => !omitirVacias || it.titulo);
+        }
+
+        async function saveCreatorUpdates(opciones) {
+            if (!creatorCountdownsEnabled()) return false;
+            const user = window.firebaseAuth?.currentUser || window.ositoCurrentUser;
+            if (!user || String(user.email || '').toLowerCase() !== 'ositoyt360@elsotanodeosito.com') {
+                creatorUpdatesStatus('Debes iniciar sesión con la cuenta OsitoYT360.', true); return false;
+            }
+            const omitirVacias = Boolean(opciones && opciones.omitirVacias);
+            const todas = collectCreatorUpdates();
+            if (!omitirVacias && todas.some(it => !it.titulo)) {
+                creatorUpdatesStatus('Escribe un título para cada actualización.', true); return false;
+            }
+            const finales = todas.filter(it => it.titulo);
+            const button = document.getElementById('creator-save-updates');
+            if (button) { button.disabled = true; button.textContent = 'Guardando…'; }
+            try {
+                const ref = window.docFirebase(window.dbFirebase, 'siteSettings', 'public');
+                await window.setDocFirebase(ref, { updates: finales, updatedAt: window.serverTimestampFirebase ? window.serverTimestampFirebase() : Date.now() }, { merge: true });
+                const panel = document.getElementById('creator-updates-editor');
+                if (panel) panel.dataset.dirty = '0';
+                window.__ositoUpdatesSig = null;
+                aplicarActualizacionesSitio(finales);
+                renderCreatorUpdatesEditor(window.__ositoUpdatesData, true);
+                creatorUpdatesStatus('✓ Guardado y publicado para todos.', false);
+                return true;
+            } catch (error) {
+                console.error('[CreatorUpdates]', error);
+                creatorUpdatesStatus('No se pudo guardar: ' + (error?.message || 'error'), true);
+                return false;
+            } finally {
+                if (button) { button.disabled = false; button.textContent = '💾 Guardar'; }
+            }
+        }
+
+        function agregarActualizacionCreador() {
+            const panel = document.getElementById('creator-updates-editor');
+            const list = document.getElementById('creator-updates-list');
+            if (!panel || !list) return;
+            panel.hidden = false;
+            const actuales = collectCreatorUpdates();
+            actuales.unshift({ id: `upd-${Date.now()}`, badge: 'Nuevo', titulo: '', descripcion: '', timestamp: Date.now() });
+            // Sin reordenar: la fila nueva queda arriba aunque su fecha sea "ahora".
+            renderCreatorUpdatesEditor(actuales, true, true);
+            panel.dataset.dirty = '1';
+            const primero = list.querySelector('[data-upd-title]');
+            if (primero) { primero.focus(); primero.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+            creatorUpdatesStatus('Escribe título, descripción y fecha. Luego pulsa Guardar.', false);
+        }
+
+        function bindCreatorUpdatesEditor() {
+            if (document.body.dataset.creatorUpdatesBound) return;
+            document.body.dataset.creatorUpdatesBound = '1';
+            document.addEventListener('click', event => {
+                if (event.target.closest('#creator-add-update')) { event.preventDefault(); agregarActualizacionCreador(); return; }
+                if (event.target.closest('#creator-save-updates')) { event.preventDefault(); saveCreatorUpdates(); return; }
+                if (event.target.closest('#creator-load-current-updates')) {
+                    event.preventDefault();
+                    const panel = document.getElementById('creator-updates-editor');
+                    renderCreatorUpdatesEditor(normalizarActualizacionesSitio(window.__ositoUpdatesLastShown || []), true);
+                    if (panel) panel.dataset.dirty = '1';
+                    creatorUpdatesStatus('Edítalas y pulsa Guardar para publicarlas.', false);
+                    return;
+                }
+                const remove = event.target.closest('[data-upd-remove]');
+                if (remove) {
+                    event.preventDefault();
+                    if (!window.confirm('¿Eliminar esta actualización?')) return;
+                    remove.closest('[data-creator-update-row]')?.remove();
+                    creatorUpdatesStatus('Eliminando…', false);
+                    saveCreatorUpdates({ omitirVacias: true });
+                }
+            }, true);
+            document.addEventListener('input', event => {
+                if (!event.target.closest('#creator-updates-editor')) return;
+                const panel = document.getElementById('creator-updates-editor');
+                if (panel) panel.dataset.dirty = '1';
+            }, true);
+        }
+
         const DEFAULT_COUNTDOWNS = [];
+
+        // Guarda los archivos (imagen/video) que el usuario ya eligió en el
+        // formulario pero que aún no se han subido/guardado. Antes, si el
+        // editor se volvía a dibujar (por ejemplo al llegar una actualización
+        // en tiempo real de Firestore, o al pulsar "＋ Agregar conteo" para
+        // otra fila), el <input type="file"> se recreaba desde cero y el
+        // archivo elegido se perdía sin aviso: por eso parecía que "no
+        // dejaba subir videos". Ahora el archivo se conserva aquí, por id de
+        // conteo, y se usa al guardar aunque el <input> se haya vuelto a
+        // dibujar mientras tanto.
+        const creatorCountdownPendingFiles = new Map();
 
         // Utilidad global para escapar HTML. Antes el editor y la vista pública
         // de conteos regresivos llamaban a "escapeHtml" asumiendo que era
@@ -1632,16 +2101,33 @@
                 id: String(item?.id || `countdown-${index + 1}`),
                 title: String(item?.title || 'Nuevo evento').slice(0, 70),
                 emoji: String(item?.emoji || '').slice(0, 4),
-                subtitle: String(item?.subtitle || '').slice(0, 120),
+                subtitle: String(item?.subtitle || '').slice(0, 180),
+                mediaUrl: String(item?.mediaUrl || '').trim(),
+                mediaType: String(item?.mediaType || '').toLowerCase(),
                 targetAt: normalizarTargetConteo(item?.targetAt)
-            })).filter(item => item.title && item.targetAt && Number.isFinite(Number(item.targetAt)) && Number(item.targetAt) > Date.now());
+            })).filter(item => item.title);
         }
 
         function formatearFechaConteo(targetAt) {
             if (!targetAt) return 'Fecha y hora pendientes';
             const date = new Date(Number(targetAt));
             if (Number.isNaN(date.getTime())) return 'Fecha y hora pendientes';
-            return date.toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' });
+            return date.toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/El_Salvador' });
+        }
+        // V38 — fecha y hora YA NO van juntas: dos funciones separadas,
+        // ambas fijas en hora de El Salvador (America/El_Salvador) sin importar
+        // en qué zona horaria esté quien visita la página.
+        function formatearSoloFechaConteo(targetAt) {
+            if (!targetAt) return 'Fecha pendiente';
+            const date = new Date(Number(targetAt));
+            if (Number.isNaN(date.getTime())) return 'Fecha pendiente';
+            return date.toLocaleDateString('es-SV', { dateStyle: 'medium', timeZone: 'America/El_Salvador' });
+        }
+        function formatearSoloHoraConteo(targetAt) {
+            if (!targetAt) return '--:--';
+            const date = new Date(Number(targetAt));
+            if (Number.isNaN(date.getTime())) return '--:--';
+            return date.toLocaleTimeString('es-SV', { timeStyle: 'short', timeZone: 'America/El_Salvador' });
         }
 
         function creatorCountdownsEnabled() {
@@ -1659,38 +2145,31 @@
             const panel = document.getElementById('creator-countdown-editor');
             const list = document.getElementById('creator-countdowns-list');
             if (!panel || !list) return;
+            try { renderCreatorUpdatesEditor(); } catch (e) {}
             const visible = creatorCountdownsEnabled();
             panel.hidden = !visible;
             if (!visible) { list.innerHTML = ''; return; }
             const source = Array.isArray(items) ? items : [];
-            if (!source.length) {
-                list.innerHTML = '';
-                return;
-            }
+            if (!source.length) { list.innerHTML = '<div class="creator-countdown-empty">No hay conteos. Agrega uno para empezar.</div>'; return; }
             list.innerHTML = source.map((item, index) => {
                 const target = normalizarTargetConteo(item?.targetAt);
                 const dateValue = target ? toCreatorCountdownLocalInput(target) : '';
+                const mediaType = String(item?.mediaType || '').toLowerCase();
                 return `<div class="creator-countdown-row" data-creator-countdown-row>
                     <input type="hidden" data-creator-cd-id value="${escapeHtml(item?.id || `countdown-${index + 1}`)}">
                     <label class="creator-countdown-field">
-                        <span>Título del conteo</span>
+                        <span>Título</span>
                         <input data-creator-cd-title maxlength="70" value="${escapeHtml(item?.title || '')}" placeholder="Ej. Estreno del nuevo video">
                     </label>
                     <div class="creator-countdown-grid">
-                        <label class="creator-countdown-field">
-                            <span>Emoji</span>
-                            <input data-creator-cd-emoji maxlength="4" value="${escapeHtml(item?.emoji || '⏳')}" placeholder="⏳" aria-label="Emoji">
-                        </label>
-                        <label class="creator-countdown-field creator-countdown-date-field">
-                            <span>Fecha y hora</span>
-                            <input data-creator-cd-date type="datetime-local" value="${dateValue}" aria-label="Fecha y hora">
-                        </label>
+                        <label class="creator-countdown-field"><span>Emoji</span><input data-creator-cd-emoji maxlength="4" value="${escapeHtml(item?.emoji || '⏳')}" placeholder="⏳" aria-label="Emoji"></label>
+                        <label class="creator-countdown-field creator-countdown-date-field"><span>Fecha (opcional)</span><input data-creator-cd-date type="datetime-local" value="${dateValue}" aria-label="Fecha y hora opcional"></label>
                     </div>
-                    <label class="creator-countdown-field">
-                        <span>Texto opcional</span>
-                        <input data-creator-cd-subtitle maxlength="120" value="${escapeHtml(item?.subtitle || '')}" placeholder="Ej. ¡No te lo pierdas!">
-                    </label>
-                    <button class="btn-action creator-delete-countdown" type="button" data-creator-remove-countdown>Eliminar</button>
+                    <label class="creator-countdown-field"><span>Texto si no hay fecha (también sirve como descripción)</span><textarea data-creator-cd-subtitle maxlength="180" placeholder="Ej. Próximamente en El Sótano de Osito">${escapeHtml(item?.subtitle || '')}</textarea></label>
+                    <label class="creator-countdown-field"><span>Imagen o video (opcional, máx. 150 MB)</span><input data-creator-cd-media type="file" accept="image/*,video/*"><div class="creator-countdown-media-preview" data-creator-cd-media-preview>${item?.mediaUrl ? (mediaType === 'video' || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(String(item.mediaUrl)) ? `<video src="${escapeHtml(item.mediaUrl)}" muted playsinline preload="metadata" controls></video>` : `<img src="${escapeHtml(item.mediaUrl)}" alt="Vista previa del contenido del conteo" loading="lazy">`) : ''}</div><small class="creator-countdown-media-status" data-creator-cd-media-status>${creatorCountdownPendingFiles.has(String(item?.id || `countdown-${index + 1}`)) ? `Pendiente de guardar: ${escapeHtml(creatorCountdownPendingFiles.get(String(item?.id || `countdown-${index + 1}`)).name)}` : (item?.mediaUrl ? `Contenido actual: ${escapeHtml(mediaType || 'multimedia')}` : 'Puedes dejarlo vacío.')}</small></label>
+                    <input type="hidden" data-creator-cd-media-url value="${escapeHtml(item?.mediaUrl || '')}">
+                    <input type="hidden" data-creator-cd-media-type value="${escapeHtml(mediaType)}">
+                    <button class="btn-action creator-delete-countdown" type="button" data-creator-remove-countdown aria-label="Eliminar este conteo">🗑️ Eliminar</button>
                 </div>`;
             }).join('');
         }
@@ -1715,46 +2194,67 @@
                     title: value('[data-creator-cd-title]') || 'Nuevo evento',
                     emoji: value('[data-creator-cd-emoji]') || '⏳',
                     subtitle: value('[data-creator-cd-subtitle]'),
+                    mediaUrl: value('[data-creator-cd-media-url]'),
+                    mediaType: value('[data-creator-cd-media-type]'),
                     targetAt: Number.isFinite(targetAt) ? targetAt : ''
                 };
             }).filter(item => item.title);
+        }
+
+        async function uploadCreatorCountdownMedia(file, user, countdownId) {
+            if (!file) return null;
+            if (!/^image\/(jpeg|png|webp|gif)$|^video\/(mp4|webm|ogg|quicktime)$/i.test(file.type || '')) throw new Error('Solo se permiten imágenes (jpg, png, webp, gif) o videos (mp4, webm, ogg, mov).');
+            if (file.size > 150 * 1024 * 1024) throw new Error('El archivo multimedia debe pesar menos de 150 MB.');
+            const storage = window.firebaseStorage;
+            if (!storage) throw new Error('Firebase Storage no está disponible. Revisa que el servicio Storage esté habilitado en Firebase.');
+            const safeName = String(file.name || 'media').replace(/[^a-z0-9._-]/gi, '_').slice(-80);
+            const path = `countdowns/${user.uid}/${countdownId}-${Date.now()}-${safeName}`;
+            const ref = window.storageRefFirebase(storage, path);
+            await window.uploadBytesFirebase(ref, file, { contentType: file.type, cacheControl: 'public,max-age=31536000' });
+            if (typeof window.getDownloadURLFirebase === 'function') return await window.getDownloadURLFirebase(ref);
+            return await ref.getDownloadURL();
         }
 
         async function saveCreatorCountdowns() {
             if (!creatorCountdownsEnabled()) return;
             const user = window.firebaseAuth?.currentUser || window.ositoCurrentUser;
             if (!user || String(user.email || '').toLowerCase() !== 'ositoyt360@elsotanodeosito.com') {
-                creatorCountdownStatus('Debes iniciar sesión con la cuenta OsitoYT360.', true);
-                return;
+                creatorCountdownStatus('Debes iniciar sesión con la cuenta OsitoYT360.', true); return;
             }
             const rows = [...document.querySelectorAll('[data-creator-countdown-row]')];
-            const missingTitle = rows.some(row => !String(row.querySelector('[data-creator-cd-title]')?.value || '').trim());
-            if (missingTitle) {
-                creatorCountdownStatus('Escribe un título para cada conteo.', true);
-                const emptyTitle = rows.find(row => !String(row.querySelector('[data-creator-cd-title]')?.value || '').trim())?.querySelector('[data-creator-cd-title]');
-                emptyTitle?.focus();
-                return;
+            if (rows.some(row => !String(row.querySelector('[data-creator-cd-title]')?.value || '').trim())) {
+                creatorCountdownStatus('Escribe un título para cada conteo.', true); return;
             }
             const countdowns = collectCreatorCountdowns();
-            const invalid = countdowns.filter(item => !Number.isFinite(Number(item.targetAt)) || Number(item.targetAt) <= Date.now());
-            if (invalid.length) {
-                creatorCountdownStatus('Cada conteo necesita una fecha y hora futura.', true);
-                return;
-            }
+            const invalid = countdowns.filter(item => Number(item.targetAt) && Number(item.targetAt) <= Date.now());
+            if (invalid.length) { creatorCountdownStatus('La fecha y hora, si se usan, deben ser futuras.', true); return; }
             const button = document.getElementById('creator-save-countdowns');
             if (button) { button.disabled = true; button.textContent = 'Guardando…'; }
             try {
+                for (const row of rows) {
+                    const id = String(row.querySelector('[data-creator-cd-id]')?.value || `countdown-${Date.now()}`);
+                    // Usamos el archivo guardado en memoria (si existe) porque el
+                    // <input type="file"> puede haberse vuelto a dibujar y perder
+                    // la selección visual, pero el archivo real sigue disponible aquí.
+                    const file = creatorCountdownPendingFiles.get(id) || row.querySelector('[data-creator-cd-media]')?.files?.[0] || null;
+                    if (file) {
+                        const statusEl = row.querySelector('[data-creator-cd-media-status]');
+                        if (statusEl) statusEl.textContent = 'Subiendo archivo…';
+                        const url = await uploadCreatorCountdownMedia(file, user, id);
+                        row.querySelector('[data-creator-cd-media-url]').value = url;
+                        row.querySelector('[data-creator-cd-media-type]').value = file.type.startsWith('video/') ? 'video' : 'image';
+                        creatorCountdownPendingFiles.delete(id);
+                    }
+                }
+                const finalCountdowns = collectCreatorCountdowns();
                 const ref = window.docFirebase(window.dbFirebase, 'siteSettings', 'public');
-                await window.setDocFirebase(ref, {
-                    countdowns,
-                    updatedAt: window.serverTimestampFirebase ? window.serverTimestampFirebase() : Date.now()
-                }, { merge: true });
-                renderCreatorCountdownEditor(countdowns);
-                renderizarConteosRegresivos(countdowns);
+                await window.setDocFirebase(ref, { countdowns: finalCountdowns, updatedAt: window.serverTimestampFirebase ? window.serverTimestampFirebase() : Date.now() }, { merge: true });
+                renderCreatorCountdownEditor(finalCountdowns);
+                renderizarConteosRegresivos(finalCountdowns);
                 creatorCountdownStatus('✓ Guardado y publicado para todos.', false);
             } catch (error) {
                 console.error('[CreatorCountdowns]', error);
-                creatorCountdownStatus('No se pudo guardar: ' + (error?.message || 'error de Firestore'), true);
+                creatorCountdownStatus('No se pudo guardar: ' + (error?.message || 'error'), true);
             } finally {
                 if (button) { button.disabled = false; button.textContent = '💾 Guardar conteos'; }
             }
@@ -1794,7 +2294,7 @@
                 firstTitle.focus();
                 firstTitle.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
-            creatorCountdownStatus('Escribe el título, elige la fecha y pulsa Guardar.', false);
+            creatorCountdownStatus('Escribe el título. La fecha y hora son opcionales.', false);
         }
         window.agregarConteoCreador = agregarConteoCreador;
 
@@ -1819,9 +2319,52 @@
                     }
                     const remove = event.target.closest('[data-creator-remove-countdown]');
                     if (!remove) return;
-                    remove.closest('[data-creator-countdown-row]')?.remove();
-                    if (!document.querySelector('[data-creator-countdown-row]')) {
-                        creatorCountdownStatus('', false);
+                    const row = remove.closest('[data-creator-countdown-row]');
+                    const id = row?.querySelector('[data-creator-cd-id]')?.value;
+                    const oldMediaUrl = row?.querySelector('[data-creator-cd-media-url]')?.value || '';
+                    if (id) creatorCountdownPendingFiles.delete(id);
+                    row?.remove();
+                    remove.disabled = true;
+                    creatorCountdownStatus('Conteo eliminado. Guardando…', false);
+                    // Eliminar también el archivo de Storage evita dejar videos/imágenes
+                    // huérfanos cuando se borra un conteo existente.
+                    (async () => {
+                        try {
+                            await saveCreatorCountdowns();
+                            if (oldMediaUrl && window.firebaseStorage?.refFromURL) {
+                                try { await window.firebaseStorage.refFromURL(oldMediaUrl).delete(); }
+                                catch (storageError) { console.warn('[CreatorCountdowns] No se pudo borrar el multimedia anterior.', storageError); }
+                            }
+                        } catch (error) {
+                            console.error('[CreatorCountdowns] Error al eliminar conteo', error);
+                            creatorCountdownStatus('No se pudo eliminar: ' + (error?.message || 'error'), true);
+                        }
+                    })();
+                }, true);
+                // Guarda en memoria el archivo elegido en cuanto el usuario lo
+                // selecciona, para no perderlo si el formulario se vuelve a
+                // dibujar (por una fila nueva o por una actualización en vivo)
+                // antes de pulsar "Guardar".
+                document.addEventListener('change', event => {
+                    const input = event.target.closest('[data-creator-cd-media]');
+                    if (!input) return;
+                    const row = input.closest('[data-creator-countdown-row]');
+                    const id = row?.querySelector('[data-creator-cd-id]')?.value;
+                    const file = input.files?.[0] || null;
+                    const statusEl = row?.querySelector('[data-creator-cd-media-status]');
+                    if (!id) return;
+                    if (file) {
+                        creatorCountdownPendingFiles.set(id, file);
+                        if (statusEl) statusEl.textContent = `Pendiente de guardar: ${file.name}`;
+                        const preview = row?.querySelector('[data-creator-cd-media-preview]');
+                        if (preview) {
+                            const url = URL.createObjectURL(file);
+                            preview.innerHTML = file.type.startsWith('video/')
+                                ? `<video src="${url}" muted playsinline controls preload="metadata"></video>`
+                                : `<img src="${url}" alt="Vista previa del contenido del conteo">`;
+                        }
+                    } else {
+                        creatorCountdownPendingFiles.delete(id);
                     }
                 }, true);
             }
@@ -1832,19 +2375,25 @@
             if (!container) return;
             const list = normalizarConteosRegresivos(items);
             renderCreatorCountdownEditor(Array.isArray(items) ? items : []);
-            if (!list.length) {
-                container.innerHTML = '';
-                container.hidden = true;
-                return;
-            }
+            if (!list.length) { container.innerHTML = ''; container.hidden = true; return; }
             container.hidden = false;
-            container.innerHTML = list.map((item) => `
-                <div class="sidebar-card countdown-box" data-countdown-id="${escapeHtml(item.id)}">
+            container.innerHTML = list.map((item) => {
+                const media = item.mediaUrl ? (item.mediaType === 'video' || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(item.mediaUrl)
+                    ? `<video class="countdown-media" src="${escapeHtml(item.mediaUrl)}" controls playsinline muted preload="metadata"></video>`
+                    : `<img class="countdown-media" src="${escapeHtml(item.mediaUrl)}" alt="${escapeHtml(item.title)}" loading="lazy">`) : '';
+                return `<div class="sidebar-card countdown-box" data-countdown-id="${escapeHtml(item.id)}">
+                    ${media}
                     <div class="cd-text">${item.emoji ? escapeHtml(item.emoji) + ' ' : ''}${escapeHtml(item.title)}</div>
-                    <div class="countdown-timer" data-countdown-target="${escapeHtml(item.targetAt)}">-- : -- : -- : --</div>
-                    <div class="cd-date">${escapeHtml(item.subtitle || formatearFechaConteo(item.targetAt))}</div>
-                </div>
-            `).join('');
+                    ${item.targetAt ? `<div class="countdown-timer cd-timer-boxed" data-countdown-target="${escapeHtml(item.targetAt)}">
+                        <div class="cd-unit"><span class="cd-unit-value" data-cd="d">--</span><span class="cd-unit-label">Días</span></div>
+                        <div class="cd-unit"><span class="cd-unit-value" data-cd="h">--</span><span class="cd-unit-label">Hrs</span></div>
+                        <div class="cd-unit"><span class="cd-unit-value" data-cd="m">--</span><span class="cd-unit-label">Min</span></div>
+                        <div class="cd-unit"><span class="cd-unit-value" data-cd="s">--</span><span class="cd-unit-label">Seg</span></div>
+                    </div>` : ''}
+                    ${item.subtitle ? `<div class="cd-date countdown-description">${escapeHtml(item.subtitle)}</div>` : (item.targetAt ? `<div class="cd-date">${escapeHtml(formatearSoloFechaConteo(item.targetAt))}</div>` : '')}
+                    ${item.targetAt ? `<button type="button" class="cd-time-chip" data-countdown-time="${escapeHtml(item.targetAt)}" aria-label="Hora en El Salvador">🕒 <span data-cd-time-value>${escapeHtml(formatearSoloHoraConteo(item.targetAt))}</span> <small>hora SV</small></button>` : ''}
+                </div>`;
+            }).join('');
             actualizarConteosRegresivos();
         }
 
@@ -1852,11 +2401,21 @@
             document.querySelectorAll('[data-countdown-target]').forEach((timer) => {
                 const target = Number(timer.dataset.countdownTarget || '');
                 if (!Number.isFinite(target)) {
-                    timer.textContent = 'FECHA PENDIENTE';
+                    if (!timer.querySelector('.cd-pending')) timer.innerHTML = '<span class="cd-pending">FECHA PENDIENTE</span>';
                     return;
                 }
                 const diff = target - Date.now();
                 if (diff <= 0) {
+                    // V38 — al llegar a cero ya NO se borra de inmediato: se queda
+                    // 12 horas mostrando "¡ES HOY!" antes de desaparecer.
+                    const DOCE_HORAS_MS = 12 * 60 * 60 * 1000;
+                    if (diff > -DOCE_HORAS_MS) {
+                        if (!timer.classList.contains('cd-es-hoy')) {
+                            timer.classList.add('cd-es-hoy');
+                            timer.innerHTML = '<span class="cd-hoy-msg">🎉 ¡ES HOY! 🎉</span>';
+                        }
+                        return;
+                    }
                     const card = timer.closest('[data-countdown-id]');
                     if (card) card.remove();
                     const container = document.getElementById('countdowns-container');
@@ -1870,7 +2429,14 @@
                 const horas = Math.floor((diff % 86400000) / 3600000);
                 const minutos = Math.floor((diff % 3600000) / 60000);
                 const segundos = Math.floor((diff % 60000) / 1000);
-                timer.textContent = `${dias.toString().padStart(2,'0')}d : ${horas.toString().padStart(2,'0')}h : ${minutos.toString().padStart(2,'0')}m : ${segundos.toString().padStart(2,'0')}s`;
+                const dEl = timer.querySelector('[data-cd="d"]');
+                const hEl = timer.querySelector('[data-cd="h"]');
+                const mEl = timer.querySelector('[data-cd="m"]');
+                const sEl = timer.querySelector('[data-cd="s"]');
+                if (dEl) dEl.textContent = dias.toString().padStart(2, '0');
+                if (hEl) hEl.textContent = horas.toString().padStart(2, '0');
+                if (mEl) mEl.textContent = minutos.toString().padStart(2, '0');
+                if (sEl) sEl.textContent = segundos.toString().padStart(2, '0');
             });
         }
 
@@ -1953,6 +2519,7 @@
             // regresivo se muestre siempre, sin depender de que la escucha
             // inicial (antes de este momento) haya tenido éxito.
             window.conectarModoSitio?.();
+            sincronizarVideoModo(document.documentElement.dataset.siteTheme || 'normal');
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
             // Autoplay permitido después del gesto del usuario
@@ -4208,6 +4775,6 @@
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=mod-20260922queen-badge-password-20260908-1"></script>
+    <script src="firebase-integration.js?v=mod-v32-20260924"></script>
     <script src='asistente-voz.js'></script></body>
 </html>

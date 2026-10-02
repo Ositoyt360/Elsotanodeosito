@@ -1,0 +1,46 @@
+EL SÓTANO DE OSITO — V49
+
+0) POR QUÉ LA IA RESPONDÍA "Esa información todavía no está disponible…" A TODO
+   La página llama a /api/ia, que vive en server.js. Si el sitio está en hosting ESTÁTICO (GitHub Pages) o el
+   servidor no tiene la variable ANTHROPIC_API_KEY, Claude nunca contesta y salía el mensaje de respaldo.
+   Solución (elige una):
+   A) Sitio con server.js (Render, Railway, VPS…): crea la variable ANTHROPIC_API_KEY, haz "npm install" y "npm start".
+      Comprueba en  https://TU-DOMINIO/api/ia/estado  -> debe decir {"activa":true}.
+   B) Página en GitHub Pages + servidor aparte: sube el proyecto a un hosting con Node, ponle ANTHROPIC_API_KEY y
+      en index.html cambia  <meta name="osito-ia-url" content="">  por  content="https://tu-servidor.onrender.com".
+      (Opcional) IA_ALLOWED_ORIGINS=https://tuusuario.github.io para que solo tu página use tu llave.
+   NUNCA pongas la llave en index.html ni en ningún .js.
+
+1) IA MEJORADA
+   - Prompt nuevo: más amistosa, resuelve tareas paso a paso, no dice "no tengo información" en temas generales,
+     conoce la fecha/hora de El Salvador, 600 tokens, 1 reintento si Anthropic está saturado.
+   - Sin Claude conectado ya no falla en seco: responde chistes, datos curiosos, cuentas, saludos y gracias por sí sola,
+     y si no puede avisa claramente que Claude no está conectado.
+
+2) CARA DE LA IA CON VIDA
+   Cejas, mejillas sonrojadas, sonrisa, guiños, cara de sorpresa/curiosidad/amor, se duerme (zzz) tras 30 s sin uso,
+   se alegra cuando responde, mira hacia abajo al escribir, rebota al tocarla y flota suavemente.
+   Se apaga sola en Modo rendimiento / Ultra / equipos muy limitados.
+
+3) BOTÓN DE REPRODUCIR
+   Nuevo botón con ícono SVG, anillo que pulsa, efecto al pasar/tocar y círculo de carga hasta que el video arranca.
+
+4) ME GUSTA / NO ME GUSTA EN CADA VIDEO
+   Tu código convertido a clases (no se puede repetir un id en cada tarjeta). Like con fuegos artificiales, dislike con
+   sacudida; solo uno activo a la vez. Se guarda en el dispositivo (localStorage). Los contadores globales
+   requerirían guardar en Firebase: se puede agregar después.
+
+5) RENDIMIENTO (los videos de fondo de los especiales SE MANTIENEN)
+   - Versiones "lite" (640x360, 15 fps, 0.2–0.8 MB) en /fondos para celulares y equipos de gama baja; PC potente usa los originales.
+   - Portada (jpg) instantánea y el video se descarga después de pintar la página.
+   - El video de fondo se pausa mientras ves un video de YouTube.
+   - Miniaturas más pequeñas en celular, compresión gzip (npm install la activa) y contención de capas.
+
+ARCHIVOS NUEVOS: v49.css, v49.js, carpeta fondos/, LEEME_V49.txt
+ARCHIVOS CAMBIADOS: index.html, ia-claude.js, server.js, package.json, .env.example
+
+--- ACTUALIZACIÓN V49.1 ---
+- La llave de Claude está en el archivo .env (solo lo lee el servidor; está en .gitignore y el servidor no lo sirve al navegador).
+  En un hosting NO subas el .env: crea la variable ANTHROPIC_API_KEY en su panel. La llave se compartió en un chat: cuando puedas, créala de nuevo en console.anthropic.com.
+- Cara: al pasar el puntero se pone feliz y, al quitarlo, conserva esa cara ~3 s; bosteza y luego sonríe; reacciona al abrir/cerrar el Chat en vivo y cuando se reproduce un video (cara de espectador) y al terminar.
+- Botón de reproducir centrado con posición absoluta (0 px de desfase) y el video llena siempre la tarjeta; Me gusta/No me gusta centrados.

@@ -1,0 +1,29 @@
+EL SÓTANO DE OSITO — V48 (IA con Claude + cara animada + rendimiento)
+
+1) ACTIVAR CLAUDE (obligatorio para que la IA responda cualquier pregunta)
+   - Crea tu llave en https://console.anthropic.com
+   - En tu hosting crea la variable de entorno  ANTHROPIC_API_KEY  con esa llave
+     (o copia .env.example como .env si lo corres en tu PC) y reinicia el servidor: npm start
+   - NUNCA pegues la llave en index.html ni en ningún archivo .js: cualquiera podría verla y gastarte el saldo.
+   - Opcional: ANTHROPIC_MODEL (por defecto claude-haiku-4-5-20251001, rápido y barato; para respuestas más
+     profundas usa claude-sonnet-5-5).
+   - Si la llave no está o el sitio es solo estático (sin server.js), la IA sigue funcionando con su base local
+     de siempre y no se rompe nada.
+
+2) CÓMO RESPONDE
+   - Primero busca en la base de conocimiento de siempre (las 19 preguntas oficiales + extras).
+   - Si la pregunta no está ahí, se la pasa a Claude, que además recibe esa misma información oficial.
+   - Límites contra abuso (se pueden cambiar con variables): 12 preguntas/minuto, 150/día por persona (IA_MAX_*).
+   - Los invitados siguen con su límite de 5 preguntas.
+
+3) CARA DE LA IA
+   - Reemplaza el 🤖 en la burbuja y en la cabecera del panel. Parpadea, mueve los ojos, sigue el puntero en PC,
+     se pone "pensando" mientras Claude responde, "escuchando" con el micrófono y mueve la boca al hablar.
+   - Modo rendimiento / Modo ultra la dejan quieta.
+
+4) RENDIMIENTO DE LOS ESPECIALES
+   - Videos de fondo a 480p y de bucle continuo (de 12 MB a 2.6 MB en total); un solo <video> en vez de dos.
+   - Menos emojis cayendo en celular, sin sombras ni capas a pantalla completa animadas, sin blur sobre el video,
+     sin partículas tapadas por el fondo, video en pausa al cambiar de pestaña.
+   - Archivos nuevos/cambiados: server.js, ia-claude.js (nuevo), index.html, styles.css, asistente-voz.js,
+     los 3 mp4, .env.example, .gitignore.

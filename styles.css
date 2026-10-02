@@ -5549,3 +5549,272 @@ body.no-animations .sidebar-show .btn-directos-nav,
 body.ultra-performance .sidebar-show .btn-directos-nav { opacity: 1 !important; }
 html body.no-animations::before, html body.no-animations::after,
 html body.ultra-performance::before, html body.ultra-performance::after { animation: none !important; transition: none !important; }
+
+
+/* =========================================================
+   V48
+   1) CARA ANIMADA DE LA IA (reemplaza el logo 🤖): ojos que se mueven,
+      parpadeo, boca al hablar, estados escuchando / pensando / hablando.
+   2) NUEVO DISEÑO DEL PANEL DE LA IA (oscuro, chips que se deslizan,
+      entrada redonda) y conexión con Claude.
+   3) RENDIMIENTO de los modos especiales (Redmi 15c y similares):
+      video 480p en bucle, menos emojis, sin filtros/blur animados.
+   ========================================================= */
+
+/* ---------- 1) CARA DE LA IA ---------- */
+.osito-face {
+    --fs: 58px; --gx: 0; --gy: 0; --rx: 0deg; --ry: 0deg; --bd: 0s;
+    position: relative; display: inline-block; flex: 0 0 auto;
+    width: 1em; height: 1em; font-size: var(--fs); line-height: 1;
+    perspective: 700px; vertical-align: middle;
+}
+.osito-face .of-card {
+    position: absolute; inset: 0; border-radius: .3em; overflow: hidden;
+    background: #161226;
+    box-shadow: inset 0 0 .05em rgba(255,255,255,.55), 0 .035em .14em rgba(0,0,0,.45);
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform .25s ease-out;
+}
+.osito-face .of-blob {
+    position: absolute; inset: -30%;
+    background:
+        radial-gradient(circle at 50% 14%, #9147ff 0 24%, transparent 54%),
+        radial-gradient(circle at 50% 86%, #34d399 0 24%, transparent 54%),
+        radial-gradient(circle at 14% 50%, #ec4899 0 24%, transparent 54%),
+        radial-gradient(circle at 86% 50%, #05e0f5 0 24%, transparent 54%);
+    animation: ofSpin 10s linear infinite;
+}
+.osito-face .of-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(160deg, rgba(255,255,255,.30), rgba(255,255,255,0) 46%);
+}
+.osito-face .of-eyes {
+    position: absolute; left: 50%; top: 41%; z-index: 2;
+    transform: translate(-50%, -50%) translate(calc(var(--gx) * .07em), calc(var(--gy) * .05em));
+    transition: transform .22s ease-out;
+}
+.osito-face .of-look { display: flex; gap: .17em; transition: transform .25s ease; }
+.osito-face .of-eye {
+    width: .135em; height: .27em; border-radius: .085em; background: #fff;
+    animation: ofBlink 10s var(--bd) infinite;
+}
+.osito-face .of-happy {
+    position: absolute; left: 50%; top: 41%; z-index: 2; display: none;
+    transform: translate(-50%, -50%); color: #fff;
+}
+.osito-face .of-happy svg { width: .31em; height: .31em; display: block; }
+.osito-face .of-mouth {
+    position: absolute; left: 50%; top: 64%; z-index: 2;
+    width: .2em; height: .105em; margin-left: -.1em; background: #fff;
+    border-radius: .025em .025em .105em .105em;
+    transform-origin: 50% 0; transform: scale(.6, 0); opacity: 0;
+    transition: opacity .15s ease;
+}
+.osito-face::after {
+    content: ""; position: absolute; inset: -.05em; border-radius: .35em;
+    border: .022em solid rgba(255,255,255,.7); opacity: 0; pointer-events: none;
+}
+
+@media (hover: hover) {
+    .osito-face[data-estado="idle"]:hover .of-eyes { display: none; }
+    .osito-face[data-estado="idle"]:hover .of-happy { display: flex; }
+}
+
+/* escuchando: ojos grandes + anillo que pulsa */
+.osito-face[data-estado="listening"] .of-look { transform: scale(1.14); }
+.osito-face[data-estado="listening"]::after { animation: ofRing 1.2s ease-out infinite; }
+/* pensando: ojos entrecerrados que miran de lado a lado */
+.osito-face[data-estado="thinking"] .of-look { animation: ofScan 1.4s ease-in-out infinite alternate; }
+.osito-face[data-estado="thinking"] .of-eye { animation: none; transform: scaleY(.82); }
+/* hablando: boca que se abre y se cierra + ojitos que rebotan */
+.osito-face[data-estado="speaking"] .of-mouth { opacity: 1; animation: ofTalk .85s ease-in-out infinite; }
+.osito-face[data-estado="speaking"] .of-eye { animation: ofBlink 10s var(--bd) infinite, ofEyeTalk .42s ease-in-out infinite alternate; }
+
+@keyframes ofSpin { to { transform: rotate(360deg); } }
+@keyframes ofBlink { 0%, 45%, 51%, 95%, 100% { transform: scaleY(1); } 48%, 98% { transform: scaleY(.38); } }
+@keyframes ofScan { from { transform: translateX(-.07em) scaleY(.9); } to { transform: translateX(.07em) scaleY(.9); } }
+@keyframes ofEyeTalk { from { translate: 0 0; } to { translate: 0 -.016em; } }
+@keyframes ofRing { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.22); opacity: 0; } }
+@keyframes ofTalk {
+    0%   { transform: scale(.8, .2); }
+    14%  { transform: scale(1, 1); }
+    30%  { transform: scale(.7, .35); }
+    46%  { transform: scale(.95, .85); }
+    60%  { transform: scale(.8, .25); }
+    76%  { transform: scale(1, .95); }
+    90%  { transform: scale(.75, .4); }
+    100% { transform: scale(.8, .2); }
+}
+
+/* Burbuja flotante: la cara ocupa el lugar del logo */
+.ia-toggle-bubble {
+    background: transparent !important; border: 0 !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+.ia-toggle-bubble.open {
+    background: linear-gradient(135deg, rgba(255,77,77,.55), rgba(180,20,20,.65)) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 18px rgba(255,77,77,.4) !important;
+}
+.ia-bubble-icon { display: flex !important; align-items: center; justify-content: center; font-size: 0 !important; line-height: 0; }
+.ia-bubble-icon .osito-face { --fs: 48px; }
+@media (max-width: 576px) { .ia-bubble-icon .osito-face { --fs: 42px; } }
+html body:not(.no-animations):not(.ultra-performance) .ia-toggle-bubble:not(.open) { animation: none !important; }
+html body:not(.no-animations):not(.ultra-performance) .ia-toggle-bubble:not(.open) .ia-bubble-icon { animation: none !important; }
+
+/* ---------- 2) PANEL DE LA IA (diseño nuevo) ---------- */
+.ia-section {
+    position: relative; isolation: isolate;
+    background: #26262b !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: 22px !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    box-shadow: 0 18px 50px rgba(0,0,0,.55) !important;
+    animation: floatIn .3s cubic-bezier(.16,1,.3,1) both !important;
+}
+.ia-section::before {
+    content: ""; position: absolute; top: -9rem; left: -6rem; width: 15rem; height: 15rem;
+    background: radial-gradient(circle, #fff 10%, rgba(255,255,255,.1) 20%, transparent 100%);
+    opacity: .2; border-radius: 50%; z-index: -1; pointer-events: none;
+    transition: transform .8s cubic-bezier(.3,1.5,.6,1), opacity .6s ease;
+}
+.ia-section:focus-within::before { transform: translate(8rem, 3rem); opacity: .3; }
+
+.ia-header { background: transparent !important; border-bottom: 1px solid rgba(255,255,255,.08) !important; padding: 12px 14px !important; }
+.ia-header-title { gap: 11px; flex: 1 1 auto; }
+.ia-header-title .osito-face { --fs: 42px; }
+.ia-header h3 { color: #f2f2f2 !important; text-transform: none !important; letter-spacing: .2px !important; font-size: .95rem !important; }
+.ia-header-text p { display: flex; align-items: center; gap: 6px; margin: 3px 0 0 !important; font-size: 11px; color: #a9a9b3 !important; }
+.ia-header-text .ia-status-dot { width: 7px; height: 7px; box-shadow: 0 0 8px var(--primary-color); }
+.ia-close-btn { background: rgba(255,255,255,.07) !important; color: #d3d3d3 !important; cursor: pointer !important; }
+
+.ia-setup { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 10px 12px 12px; }
+.ai-chat-shell { display: flex; flex-direction: column; gap: 10px; }
+.ia-section .ai-profile-row { background: rgba(255,255,255,.04) !important; border: 1px solid rgba(255,255,255,.08) !important; border-radius: 14px !important; }
+.ia-section .btn-action {
+    background: #2e2e2e !important; border: 2px solid rgba(255,255,255,.1) !important; color: #d3d3d3 !important;
+    border-radius: 999px !important; box-shadow: none !important; font-weight: 700;
+}
+.ia-section .btn-action:hover:not(:disabled) { background: #d3d3d3 !important; color: #2e2e2e !important; transform: none !important; }
+.ia-section .ai-gender-btn.active, .ia-section #ai-voice-toggle.active { border-color: lightskyblue !important; color: lightskyblue !important; }
+.ia-section .ai-gender-btn.active:hover, .ia-section #ai-voice-toggle.active:hover { color: #2e2e2e !important; }
+.ia-section .input-gamer { background: #1b1b1f !important; border: 2px solid rgba(255,255,255,.1) !important; border-radius: 12px !important; color: #fff !important; }
+
+.ia-section .ia-messages {
+    background: rgba(0,0,0,.28) !important; border: 1px solid rgba(255,255,255,.06) !important; border-radius: 16px !important;
+    scrollbar-width: thin; scrollbar-color: #d3d3d3 transparent;
+}
+.ia-section .msg.bot { background: #34343a !important; color: #f1f1f1 !important; border: 0 !important; border-radius: 16px 16px 16px 4px !important; }
+.ia-section .msg.user { background: #d3d3d3 !important; color: #2e2e2e !important; border: 0 !important; border-radius: 16px 16px 4px 16px !important; font-weight: 600; }
+.ia-section .msg.typing { display: inline-flex; gap: 5px; align-items: center; padding: 12px 14px; }
+.ia-section .msg.typing i { width: 6px; height: 6px; border-radius: 50%; background: #d3d3d3; animation: iaTypingDot 1s ease-in-out infinite; }
+.ia-section .msg.typing i:nth-child(2) { animation-delay: .15s; }
+.ia-section .msg.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes iaTypingDot { 0%, 80%, 100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-4px); opacity: 1; } }
+
+/* chips que se deslizan */
+.ia-section .ai-suggestions {
+    display: flex !important; gap: .6em; overflow: hidden; width: 100%; margin: 2px 0 !important; --gap: .6em;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+.ia-section .ai-suggestions > ul {
+    display: flex; gap: var(--gap); flex-shrink: 0; list-style: none; margin: 0; padding: 0;
+    animation: iaMarquee 32s linear infinite;
+}
+.ia-section .ai-suggestions > ul > li { display: contents; }
+.ia-section .ai-suggestions:hover > ul, .ia-section .ai-suggestions:focus-within > ul { animation-play-state: paused; }
+.ia-section .ai-suggestion {
+    width: auto !important; white-space: nowrap; min-height: 36px !important; padding: 6px 14px !important;
+    border-radius: 10px !important; background: #2e2e2e !important; border: 2px solid #2e2e2e !important; color: #d3d3d3 !important;
+    font-size: 12px !important; font-weight: 700 !important; box-shadow: none !important; transform: none !important;
+}
+.ia-section .ai-suggestion:hover:not(:disabled) { background: #d3d3d3 !important; color: #2e2e2e !important; }
+.ia-section .ai-suggestion:active:not(:disabled) { transform: scale(.94) !important; }
+@keyframes iaMarquee { to { transform: translateX(calc(-100% - var(--gap))); } }
+
+/* caja de escritura */
+.ia-section .ai-input-row {
+    position: relative !important; display: flex !important; align-items: flex-end !important; gap: 6px !important;
+    padding: 6px 8px !important; background: #1b1b1f !important; border: 2px solid rgba(255,255,255,.12) !important;
+    border-radius: 18px !important; transition: border-color .25s ease;
+}
+.ia-section .ai-input-row:focus-within { border-color: rgba(255,255,255,.3) !important; }
+.ia-section #ai-input {
+    flex: 1 1 auto; min-width: 0; min-height: 38px; max-height: 110px; height: 38px; padding: 9px 6px; box-sizing: border-box;
+    background: none !important; border: 0 !important; outline: none; resize: none; color: #fff; font: inherit; font-size: 14px; line-height: 1.4;
+    scrollbar-width: thin;
+}
+.ia-section #ai-input::placeholder { color: #b9b9c3; }
+.ia-section .ai-mic-btn {
+    width: 38px !important; height: 38px !important; min-width: 38px !important; background: transparent !important;
+    border: 2px solid rgba(255,255,255,.1) !important; font-size: 17px !important;
+}
+.ia-section .ai-mic-btn:hover { background: rgba(255,255,255,.1) !important; box-shadow: none !important; transform: none !important; }
+.ia-section .ai-mic-btn.listening { border-color: #ff4136 !important; background: rgba(255,65,54,.2) !important; }
+.ia-section .ai-mic-btn.processing { border-color: #ffdc00 !important; background: rgba(255,220,0,.18) !important; }
+.ia-section .ai-mic-btn.speaking { border-color: #7fdbff !important; background: rgba(127,219,255,.18) !important; }
+.ia-section .ai-input-row .btn-send {
+    width: 38px !important; height: 38px !important; min-width: 38px !important; padding: 0 !important;
+    background: #d3d3d3 !important; border: 0 !important; border-radius: 50% !important; box-shadow: none !important;
+    color: #2e2e2e !important; display: flex !important; align-items: center; justify-content: center;
+}
+.ia-section .ai-input-row .btn-send .send-icon { width: 20px; height: 20px; fill: #2e2e2e; }
+.ia-section .ai-input-row .btn-send:hover:not(:disabled) { background: #fff !important; transform: translateY(-2px) !important; }
+.ia-section .ai-input-row .btn-send:active:not(:disabled) { transform: scale(.92) !important; }
+.ia-section .ai-input-row .btn-send:disabled { opacity: .5; }
+.ia-section .ai-voice-status { color: #a9a9b3 !important; }
+
+/* Sin animaciones (modo rendimiento / ultra): los chips quedan quietos y se pueden desplazar */
+body.no-animations .ia-section .ai-suggestions, body.ultra-performance .ia-section .ai-suggestions { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+body.no-animations .ia-section .ai-suggestions > ul[aria-hidden], body.ultra-performance .ia-section .ai-suggestions > ul[aria-hidden] { display: none; }
+
+/* ---------- 3) RENDIMIENTO ---------- */
+/* Video de fondo: un solo <video loop> (480p) sin filtro CSS ni segundo elemento. */
+.modo-sitio-video video.modo-bg-video {
+    filter: none !important; transform: none !important; will-change: auto !important; transition: none !important;
+    opacity: .8 !important;
+}
+body.modo-halloween .modo-sitio-video video.modo-bg-video { opacity: .82 !important; }
+body.modo-navidad .modo-sitio-video video.modo-bg-video { opacity: .78 !important; }
+body.modo-cumpleanos .modo-sitio-video video.modo-bg-video { opacity: .76 !important; }
+body.ultra-performance .modo-sitio-video video.modo-bg-video,
+body.no-animations .modo-sitio-video video.modo-bg-video { opacity: .55 !important; }
+
+/* Emojis que caen: sin sombras (filter) y sin capas extra; menos elementos desde el JS. */
+body .modo-sitio-decoracion .modo-decor-item.decor-emoji { filter: none !important; will-change: transform; }
+
+/* Capas a pantalla completa: solo opacidad (nada de hue-rotate ni background-position animados). */
+@keyframes xmasAuroraShift { 0%, 100% { opacity: .6; } 50% { opacity: .88; } }
+@keyframes partyLightsSweep { 0%, 100% { opacity: .55; } 50% { opacity: .85; } }
+@keyframes modoPulseGlow { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+
+/* Celulares (mobile-lite): los especiales conservan video + emojis, pero se quitan las capas animadas
+   a pantalla completa, los brillos animados de textos y todo blur que se repinta sobre el video. */
+html.mobile-lite body.modo-halloween::before, html.mobile-lite body.modo-navidad::before,
+html.mobile-lite body.modo-san-valentin::before, html.mobile-lite body.modo-cumpleanos::before,
+html.mobile-lite body.modo-halloween::after, html.mobile-lite body.modo-navidad::after,
+html.mobile-lite body.modo-san-valentin::after, html.mobile-lite body.modo-cumpleanos::after {
+    animation: none !important; filter: none !important; will-change: auto !important;
+}
+html.mobile-lite body.modo-cumpleanos::after { display: none !important; }
+html.mobile-lite[data-site-theme]:not([data-site-theme="normal"]) :is(.section-heading, .promo-title-main, .hero-title, .section-title, .cd-hoy-msg, .cd-unit-value, .creator-preview-name, .lc-creator-name, .lc-rank-badge, .auth-preview strong) {
+    animation: none !important; filter: none !important;
+}
+html.mobile-lite[data-site-theme]:not([data-site-theme="normal"]) .modo-video-san-valentin .sv-glow { animation: none !important; mix-blend-mode: normal; opacity: .6; }
+html.mobile-lite[data-site-theme]:not([data-site-theme="normal"]) .modo-video-san-valentin .sv-bg { animation: none !important; inset: 0; }
+html.mobile-lite .ambient-glow, html.mobile-lite .promo-bg-fx { display: none !important; }
+html.mobile-lite .promo-container, html.mobile-lite .promo-arrow, html.mobile-lite .updates-strip,
+html.mobile-lite .livechat-toggle-bubble, html.mobile-lite .livechat-section, html.mobile-lite .livechat-admin-panel,
+html.mobile-lite .livechat-rank-panel, html.mobile-lite .temporada-badge, html.mobile-lite .header-menu-backdrop {
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+html.mobile-lite .livechat-section { background: rgba(10,14,20,.97) !important; }
+html.mobile-lite[data-site-theme]:not([data-site-theme="normal"]) body .header,
+html.mobile-lite[data-site-theme]:not([data-site-theme="normal"]) header { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+/* Burbuja de la IA en celular: halo ya suavizado (sin blur) y sin brillos animados */
+html.mobile-lite body:not(.no-animations):not(.ultra-performance) .ia-bubble-wrap .ia-bubble-spinner::before {
+    animation: none !important; filter: none !important; opacity: .55;
+    background: radial-gradient(circle, rgba(186,66,255,.5), rgba(0,225,255,.25) 55%, transparent 72%);
+}
+html.mobile-lite .ia-section { animation: none !important; }
+html.mobile-lite .osito-face .of-card { transition: none; }

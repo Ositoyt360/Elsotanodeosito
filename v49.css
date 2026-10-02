@@ -1,0 +1,204 @@
+/* V49 — cara con vida, botón de reproducir, Me gusta / No me gusta y rendimiento */
+
+/* ================= 1) BOTÓN DE REPRODUCIR ================= */
+.video-play-btn::before,.video-play-btn::after{content:none!important;display:none!important}
+.video-play-btn{padding:0!important;margin:0!important;min-width:0!important;min-height:0!important;width:auto!important;height:auto!important;position:absolute!important;inset:0!important;display:block!important;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.55))!important;transition:background .3s ease;-webkit-tap-highlight-color:transparent}
+.video-play-btn:hover{background:linear-gradient(180deg,rgba(0,0,0,.08) 20%,rgba(0,0,0,.62))!important}
+.vp-core{position:absolute!important;left:50%;top:50%;margin:-32px 0 0 -32px;z-index:1;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#7dffb8,#1fcf76);box-shadow:0 6px 22px rgba(34,210,122,.5),inset 0 0 0 2px rgba(255,255,255,.35);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s ease}
+.vp-core svg{width:28px;height:28px;margin-left:3px;fill:#04140b;transition:transform .28s ease}
+.vp-ring{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;
+  border:2px solid rgba(125,255,184,.75);animation:vpPulse 2.2s ease-out infinite;pointer-events:none}
+.video-play-btn:hover .vp-core,.video-play-btn:focus-visible .vp-core{transform:scale(1.13);box-shadow:0 8px 30px rgba(34,210,122,.7),inset 0 0 0 2px rgba(255,255,255,.5)}
+.video-play-btn:hover .vp-core svg{transform:translateX(2px)}
+.video-play-btn:active .vp-core{transform:scale(.93)}
+.video-play-btn:focus-visible{outline:3px solid #7dffb8;outline-offset:-3px}
+@keyframes vpPulse{0%{transform:scale(1);opacity:.85}100%{transform:scale(1.65);opacity:0}}
+@media(max-width:480px){.vp-core,.vp-ring{width:52px;height:52px;margin:-26px 0 0 -26px}.vp-core svg{width:23px;height:23px}}
+.vp-loading{position:absolute;inset:0;z-index:1;display:grid;place-items:center;background:#050806;pointer-events:none}
+.vp-spin{width:42px;height:42px;border-radius:50%;border:4px solid rgba(125,255,184,.2);border-top-color:#7dffb8;animation:vpSpin .8s linear infinite}
+@keyframes vpSpin{to{transform:rotate(360deg)}}
+
+/* ================= 2) ME GUSTA / NO ME GUSTA (código del creador, versión por clases) ================= */
+.vc-actions{display:flex;align-items:center;gap:2px;padding:2px 8px 8px}
+.vc-actions .vc-hint{margin-left:auto;font-size:.7rem;color:#7f8a96;letter-spacing:.2px}
+.like-btn{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
+.like-btn input{position:absolute;opacity:0;width:0;height:0}
+.like-btn .lb-icons{display:grid}
+.like-btn.dislike .lb-icons{transform:scaleY(-1)}
+.like-btn svg{width:2.7rem;height:2.7rem;fill:#9aa5b1;padding:10px;transition:fill .2s ease,transform .2s ease}
+.like-btn:hover svg{fill:#e8edf2;transform:scale(1.08)}
+.like-btn .icon-solid{display:none}
+.like-btn .icon-regular{display:block}
+.like-btn input:focus-visible ~ .lb-icons{outline:2px solid #7dffb8;border-radius:50%}
+.like-btn input:checked ~ .lb-icons .icon-regular{display:none}
+.like-btn input:checked ~ .lb-icons .icon-solid{display:block;fill:#d7000f}
+.like-btn.dislike input:checked ~ .lb-icons .icon-solid{fill:#3d8bff}
+.like-btn.boom .icon-solid{animation:checkedIconLike .5s}
+.like-btn.dislike.boom .icon-solid{animation:dislikeShake .45s}
+.like-btn .fireworks{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;transform:scale(.4);z-index:6}
+.like-btn .checked-like-fx{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%}
+.like-btn.boom:not(.dislike) .checked-like-fx{box-shadow:0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff,0 0 #fff;animation:fwBang 1s ease-out forwards,fwGravity 1s ease-in forwards}
+@keyframes checkedIconLike{0%{transform:scale(0);opacity:0}50%{transform:scale(1.2) rotate(-10deg)}}
+@keyframes dislikeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-8deg)}60%{transform:translateX(4px) rotate(8deg)}}
+@keyframes fwGravity{to{transform:translateY(160px);opacity:0}}
+@keyframes fwBang{to{box-shadow:257px -27px #8800ff,105px 21px #ff006a,154px 94px #3300ff,115px 114px #ff008c,106px 162px #0051ff,54px 120px #00ff2b,14px 213px #ff00e6,-17px 260px #00b7ff,-40px 98px #ff8000,-93px 123px #e6ff00,-163px 118px #00ffd5,-131px 68px #fb00ff,-194px 62px #ff0400,-242px -27px #aaff00,-211px -52px #8800ff,-86px -57px #ff006a,-132px -99px #3300ff,-87px -152px #ff008c,-65px -199px #0051ff,-49px -212px #00ff2b,25px -217px #ff00e6,69px -183px #00b7ff,71px -81px #ff8000,180px -160px #e6ff00,98px -39px #00ffd5,211px -67px #fb00ff}}
+body.no-animations .like-btn .fireworks,body.ultra-performance .like-btn .fireworks,html.low-end-device .like-btn .fireworks{display:none}
+body.no-animations .like-btn.boom .icon-solid,body.ultra-performance .like-btn.boom .icon-solid{animation:none}
+
+/* ================= 3) CARA DE LA IA CON MÁS VIDA ================= */
+.osito-face{animation:ofBob 4.6s ease-in-out infinite;rotate:var(--tilt,0deg);transition:rotate .35s ease;cursor:pointer}
+.osito-face .of-brow{position:absolute;z-index:2;top:21%;width:.12em;height:.03em;border-radius:.02em;background:#fff;opacity:0;
+  transition:opacity .2s ease,transform .25s ease}
+.osito-face .of-brow.l{left:calc(50% - .22em)}
+.osito-face .of-brow.r{left:calc(50% + .1em)}
+.osito-face .of-cheek{position:absolute;z-index:1;top:57%;width:.1em;height:.065em;border-radius:50%;background:radial-gradient(#ff7ab3,rgba(255,122,179,0) 70%);opacity:0;transition:opacity .25s ease}
+.osito-face .of-cheek.l{left:17%}
+.osito-face .of-cheek.r{right:17%}
+.osito-face .of-smile{position:absolute;left:50%;top:60%;z-index:2;width:.2em;height:.085em;margin-left:-.1em;border-bottom:.032em solid #fff;border-radius:0 0 .2em .2em;
+  opacity:0;transform:scale(.7);transition:opacity .25s ease,transform .25s ease}
+.osito-face[data-estado="idle"] .of-smile{opacity:.92;transform:scale(1)}
+.osito-face .of-spark{position:absolute;right:-.1em;top:-.12em;z-index:4;font-size:.24em;line-height:1;opacity:0;pointer-events:none;font-style:normal}
+.osito-face[data-expr] .of-spark{opacity:1;animation:ofSpark 1.6s ease-out infinite}
+.osito-face[data-estado="thinking"] .of-spark{opacity:1;animation:ofSpark 1.1s ease-out infinite}
+.osito-face[data-estado="thinking"] .of-spark::before{content:"💭"}
+.osito-face[data-estado="thinking"] .of-brow{opacity:1}
+.osito-face[data-estado="thinking"] .of-brow.l{transform:rotate(10deg)}
+.osito-face[data-estado="thinking"] .of-brow.r{transform:translateY(-.025em) rotate(-8deg)}
+.osito-face[data-estado="thinking"] .of-smile,.osito-face[data-estado="speaking"] .of-smile,.osito-face[data-estado="listening"] .of-smile{opacity:0}
+.osito-face[data-estado="listening"] .of-brow{opacity:1;transform:translateY(-.02em)}
+.osito-face[data-estado="speaking"] .of-cheek{opacity:.6}
+
+.osito-face[data-expr="smile"] .of-eyes,.osito-face[data-expr="love"] .of-eyes,.osito-face[data-expr="joy"] .of-eyes{display:none}
+.osito-face[data-expr="smile"] .of-happy,.osito-face[data-expr="love"] .of-happy,.osito-face[data-expr="joy"] .of-happy{display:flex}
+.osito-face[data-expr="smile"] .of-cheek,.osito-face[data-expr="love"] .of-cheek,.osito-face[data-expr="joy"] .of-cheek,.osito-face[data-expr="wink"] .of-cheek{opacity:.85}
+.osito-face[data-expr="smile"] .of-spark::before,.osito-face[data-expr="joy"] .of-spark::before{content:"✨"}
+.osito-face[data-expr="love"] .of-spark::before{content:"❤"; color:#ff5c8a}
+.osito-face[data-expr="wink"] .of-spark::before{content:"✨"}
+.osito-face[data-expr="wink"] .of-eye{animation:none}
+.osito-face[data-expr="wink"] .of-eye:last-child{transform:scaleY(.1)}
+.osito-face[data-expr="wow"] .of-eye{animation:none;transform:scale(1.18,1.3)}
+.osito-face[data-expr="wow"] .of-brow{opacity:1;transform:translateY(-.03em)}
+.osito-face[data-expr="wow"] .of-smile{opacity:0}
+.osito-face[data-expr="wow"] .of-mouth{opacity:1;width:.085em;height:.1em;margin-left:-.0425em;border-radius:50%;transform:scale(1)}
+.osito-face[data-expr="wow"] .of-spark::before{content:"❗"}
+.osito-face[data-expr="curious"]{--tilt:-7deg}
+.osito-face[data-expr="curious"] .of-brow{opacity:1}
+.osito-face[data-expr="curious"] .of-brow.r{transform:translateY(-.03em) rotate(-10deg)}
+.osito-face[data-expr="curious"] .of-spark::before{content:"❓"}
+.osito-face[data-expr="sleepy"]{--tilt:6deg}
+.osito-face[data-expr="sleepy"] .of-eye{animation:none;transform:scaleY(.16)}
+.osito-face[data-expr="sleepy"] .of-smile{opacity:.5}
+.osito-face[data-expr="sleepy"] .of-spark{animation:ofZzz 2.4s ease-in-out infinite}
+.osito-face[data-expr="sleepy"] .of-spark::before{content:"z"; font-weight:800; color:#cfd8ff}
+.osito-face[data-expr="joy"]{animation:ofHop .55s cubic-bezier(.3,1.6,.5,1) 1,ofBob 4.6s .55s ease-in-out infinite}
+.osito-face.of-boing{animation:ofBoing .5s ease-out 1,ofBob 4.6s .5s ease-in-out infinite}
+
+@keyframes ofBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.045em)}}
+@keyframes ofHop{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-.16em) scale(1.08,.94)}70%{transform:translateY(0) scale(.96,1.05)}100%{transform:translateY(0) scale(1)}}
+@keyframes ofBoing{0%{transform:scale(1)}30%{transform:scale(1.18,.86)}60%{transform:scale(.92,1.1)}100%{transform:scale(1)}}
+@keyframes ofSpark{0%{transform:translateY(.05em) scale(.5);opacity:0}25%{opacity:1;transform:translateY(0) scale(1)}100%{transform:translateY(-.12em) scale(1.1);opacity:0}}
+@keyframes ofZzz{0%{transform:translate(0,.06em) scale(.6);opacity:0}40%{opacity:1}100%{transform:translate(.05em,-.14em) scale(1.2);opacity:0}}
+
+/* Rendimiento: sin extras animados en modo rendimiento / ultra / equipos muy limitados */
+body.no-animations .osito-face,body.ultra-performance .osito-face,html.low-end-device .osito-face{animation:none!important}
+body.no-animations .osito-face .of-spark,body.ultra-performance .osito-face .of-spark{display:none}
+html.mobile-lite .osito-face .of-spark{animation-duration:2.4s!important}
+
+/* ================= 4) RENDIMIENTO ================= */
+.modo-sitio-video{contain:layout paint;background-size:cover;background-position:center}
+.modo-sitio-video video.modo-bg-video{backface-visibility:hidden}
+.video-thumbnail img{content-visibility:auto}
+@media(prefers-reduced-motion:reduce){.vp-ring,.osito-face{animation:none!important}}
+body.no-animations .vp-ring,body.ultra-performance .vp-ring{animation:none;opacity:0}
+
+/* ===== Reproductor centrado: el video siempre llena la tarjeta ===== */
+.video-thumbnail{display:block}
+.video-thumbnail iframe{position:absolute;inset:0;width:100%;height:100%}
+.vc-actions{justify-content:center}
+
+/* ===== Cara: bostezo, hora de dormir, reacción al video y al chat ===== */
+.osito-face[data-expr="yawn"] .of-eye{animation:none;transform:scaleY(.2)}
+.osito-face[data-expr="yawn"] .of-brow{opacity:1;transform:translateY(-.03em)}
+.osito-face[data-expr="yawn"] .of-smile{opacity:0}
+.osito-face[data-expr="yawn"] .of-mouth{opacity:1;width:.15em;height:.15em;margin-left:-.075em;border-radius:50%;transform-origin:50% 0;animation:ofYawn 2.2s ease-in-out 1 forwards}
+.osito-face[data-expr="yawn"]{animation:ofYawnHead 2.2s ease-in-out 1}
+.osito-face[data-expr="yawn"] .of-spark::before{content:"😮‍💨"}
+.osito-face[data-expr="watch"] .of-eye{animation:none;transform:scale(1.1,1.15)}
+.osito-face[data-expr="watch"] .of-spark::before{content:"🍿"}
+.osito-face[data-expr="chat"] .of-spark::before{content:"💬"}
+.osito-face[data-expr="chat"] .of-smile{opacity:1}
+.osito-face[data-expr="hover"] .of-eyes{display:none}
+.osito-face[data-expr="hover"] .of-happy{display:flex}
+.osito-face[data-expr="hover"] .of-cheek{opacity:.9}
+.osito-face[data-expr="hover"] .of-spark::before{content:"✨"}
+.osito-face[data-expr="hover"]{animation:ofBoing .5s ease-out 1,ofBob 4.6s .5s ease-in-out infinite}
+@keyframes ofYawn{0%{transform:scale(.3,.1)}30%{transform:scale(1,1.7)}70%{transform:scale(1.05,1.8)}100%{transform:scale(.4,.15)}}
+@keyframes ofYawnHead{0%,100%{transform:translateY(0) rotate(0)}35%,70%{transform:translateY(-.03em) rotate(-4deg) scale(1.04)}}
+body.no-animations .osito-face[data-expr],body.ultra-performance .osito-face[data-expr]{animation:none!important}
+
+/* ================= V49.2 — CARA CON VIDA PROPIA =================
+   Gestos pequeños y baratos: también funcionan en low-end-device.
+   Los modos sin animación siguen teniendo prioridad. */
+.osito-face[data-expr="blink"] .of-eye{animation:none!important;transform:scaleY(.08)!important;transition:transform .08s ease}
+.osito-face[data-expr="blink"] .of-look{transform:translateY(.01em)}
+.osito-face[data-expr="blink"] .of-smile{opacity:.55;transform:scale(.85)}
+.osito-face.of-breathe .of-card{animation:ofFaceBreath 1.25s ease-in-out 1}
+.osito-face.of-breathe .of-blob{animation-duration:4.5s}
+.osito-face[data-expr="curious"] .of-card{animation:ofCuriousLean .65s ease-in-out 1}
+.osito-face[data-expr="smile"] .of-card{animation:ofHappyNod .7s ease-out 1}
+.osito-face[data-expr="wink"] .of-card{animation:ofWinkBounce .7s ease-out 1}
+.osito-face[data-expr="joy"] .of-cheek{opacity:1}
+.osito-face[data-expr="joy"] .of-spark{animation:ofSpark .9s ease-out infinite}
+.osito-face[data-expr="joy"] .of-card{animation:ofHappyNod .65s ease-out 1}
+
+@keyframes ofFaceBreath{0%,100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(1)}50%{transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(1.035,1.025)}}
+@keyframes ofCuriousLean{0%,100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotate(0deg)}45%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotate(-3deg) translateY(-.01em)}70%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotate(2deg)}}
+@keyframes ofHappyNod{0%{transform:rotateX(var(--rx)) rotateY(var(--ry)) translateY(0) scale(1)}45%{transform:rotateX(var(--rx)) rotateY(var(--ry)) translateY(-.025em) scale(1.035)}100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) translateY(0) scale(1)}}
+@keyframes ofWinkBounce{0%,100%{transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(1)}35%{transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(1.04,.96)}65%{transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(.98,1.02)}}
+
+/* Incluso en low-end-device la cara conserva solo estas animaciones ligeras. */
+html.low-end-device body:not(.no-animations):not(.ultra-performance) .osito-face{animation:ofBob 5.8s ease-in-out infinite}
+html.low-end-device body:not(.no-animations):not(.ultra-performance) .osito-face .of-blob{animation:ofSpin 18s linear infinite}
+html.low-end-device body:not(.no-animations):not(.ultra-performance) .osito-face .of-eye{animation-duration:13s}
+
+body.no-animations .osito-face.of-breathe .of-card,
+body.ultra-performance .osito-face.of-breathe .of-card,
+body.no-animations .osito-face[data-expr] .of-card,
+body.ultra-performance .osito-face[data-expr] .of-card{animation:none!important}
+
+
+/* V49.2 — conteos de reacciones visibles para toda la comunidad */
+.vc-actions{gap:4px!important;min-height:42px}
+.vc-count{min-width:1.35rem;text-align:center;font-size:.72rem;font-weight:800;color:#aeb9c5;line-height:1;user-select:none}
+.vc-count.like-count{color:#7dffb8}
+.vc-count.dislike-count{color:#8db7ff}
+.vc-actions.has-likes .like-count{font-variant-numeric:tabular-nums}
+.vc-hint{font-size:.65rem;color:#8b96a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+@media(max-width:480px){.vc-actions{padding-left:5px;padding-right:5px}.vc-count{font-size:.68rem;min-width:1.1rem}.vc-hint{max-width:130px}}
+
+/* V49.2 — expresiones extra para que LAIA se sienta viva */
+.osito-face[data-expr="excited"] .of-eye{animation:none;transform:scale(1.18,1.22)}
+.osito-face[data-expr="excited"] .of-brow{opacity:1;transform:translateY(-.04em)}
+.osito-face[data-expr="excited"] .of-cheek{opacity:1}
+.osito-face[data-expr="excited"] .of-smile{opacity:1;transform:scale(1.25)}
+.osito-face[data-expr="excited"] .of-spark::before{content:"✨"}
+.osito-face[data-expr="excited"]{animation:ofHop .55s cubic-bezier(.3,1.6,.5,1) 1,ofBob 4.6s .55s ease-in-out infinite}
+.osito-face[data-expr="confused"]{--tilt:5deg}
+.osito-face[data-expr="confused"] .of-brow{opacity:1}
+.osito-face[data-expr="confused"] .of-brow.l{transform:rotate(-10deg)}
+.osito-face[data-expr="confused"] .of-brow.r{transform:translateY(.025em) rotate(12deg)}
+.osito-face[data-expr="confused"] .of-spark::before{content:"❔"}
+.osito-face[data-expr="sad"] .of-brow{opacity:1}
+.osito-face[data-expr="sad"] .of-brow.l{transform:rotate(12deg)}
+.osito-face[data-expr="sad"] .of-brow.r{transform:rotate(-12deg)}
+.osito-face[data-expr="sad"] .of-smile{border-bottom:0;border-top:.032em solid #fff;border-radius:.2em .2em 0 0;opacity:.8}
+.osito-face[data-expr="sad"] .of-spark::before{content:"💧"}
+.osito-face[data-expr="angry"] .of-brow{opacity:1}
+.osito-face[data-expr="angry"] .of-brow.l{transform:rotate(-16deg)}
+.osito-face[data-expr="angry"] .of-brow.r{transform:rotate(16deg)}
+.osito-face[data-expr="angry"] .of-cheek{opacity:.55}
+.osito-face[data-expr="angry"] .of-spark::before{content:"💢"}
+.osito-face[data-expr="sleepy"] .of-spark::before{content:"💤"}
+@media(prefers-reduced-motion:reduce){.osito-face[data-expr="excited"]{animation:none!important}}

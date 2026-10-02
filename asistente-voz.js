@@ -832,8 +832,20 @@
             setStatusLabel('Procesando...');
             document.dispatchEvent(new CustomEvent('voiceassistant:recognized', { detail: { text: rawText } }));
 
-            const command = detectIntent(rawText);
+            let command = detectIntent(rawText);
             let response = '';
+
+            // V48: la IA ahora responde cualquier pregunta con Claude. Si lo dicho es una pregunta
+            // general ("¿qué es un volcán?", "explícame...") o una frase larga, no se confunde con
+            // una orden del sitio (música, pestañas, ayuda...) y se envía a la IA.
+            const PREGUNTA_GENERAL = /^(que|como|cual|cuales|quien|quienes|por que|porque|cuando|cuanto|cuantos|cuantas|donde|explica|explicame|dime|cuentame|ayudame|sabes|puedes explicar|me puedes explicar)\b/;
+            const SOLO_SI_ES_ORDEN = ['music', 'tab', 'toggle', 'search', 'font', 'compact', 'theme', 'advanced_animation', 'promo', 'playlists'];
+            const SOLO_SI_ES_CORTO = ['greeting', 'thanks', 'help'];
+            const palabras = tokenize(rawText).length;
+            if ((PREGUNTA_GENERAL.test(normalize(rawText)) && SOLO_SI_ES_ORDEN.includes(command.type))
+                || (palabras > 5 && SOLO_SI_ES_CORTO.includes(command.type))) {
+                command = { type: 'forward', text: rawText };
+            }
 
             try {
                 response = await this.executeCommand(command, rawText);

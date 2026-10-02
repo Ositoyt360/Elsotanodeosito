@@ -1,0 +1,51 @@
+EL SÓTANO DE OSITO — V49.2
+
+ARREGLO DE LA IA + CARA CON VIDA PROPIA
+
+1) POR QUÉ LA IA MOSTRABA "mi cerebro avanzado no está conectado"
+   El frontend convertía casi cualquier fallo del servidor en el mismo mensaje genérico. Eso ocultaba la causa real.
+   Ahora el servidor diferencia:
+   - ia_clave_invalida: llave de Anthropic inválida/revocada.
+   - ia_sin_acceso: la cuenta/llave no tiene acceso.
+   - ia_modelo_no_disponible: el modelo configurado no existe o ya no está disponible.
+   - ia_solicitud_invalida: Anthropic rechazó la solicitud (400).
+   - ia_proveedor_limite: límite temporal de Anthropic (429).
+   - ia_proveedor_no_disponible: Anthropic devolvió 5xx.
+   - ia_tiempo_agotado: Claude tardó demasiado.
+   - ia_servidor_no_disponible: la página no encontró /api/ia.
+
+2) CONFIGURACIÓN
+   El modelo por defecto sigue siendo claude-haiku-4-5-20251001.
+   NUNCA pongas ANTHROPIC_API_KEY dentro de index.html o un .js.
+   En un servidor Node/Render/Railway/VPS crea la variable:
+     ANTHROPIC_API_KEY=TU_LLAVE_NUEVA
+   Opcional:
+     ANTHROPIC_MODEL=claude-haiku-4-5-20251001
+
+   Si la página está en hosting estático (por ejemplo GitHub Pages) y Node está en otro servidor,
+   configura en index.html:
+     <meta name="osito-ia-url" content="https://TU-SERVIDOR">
+   y, en el servidor, puedes limitar los orígenes con:
+     IA_ALLOWED_ORIGINS=https://TU-SITIO
+
+3) SEGURIDAD
+   El ZIP de entrada contenía un archivo .env con una llave de Anthropic. La versión V49.2 entregada
+   NO incluye ese .env para evitar volver a distribuir una credencial. Si esa llave fue compartida fuera
+   del servidor, revócala y crea una nueva en Anthropic.
+
+4) ESTADO DE LA IA
+   La cabecera ya no dice falsamente "En línea · con Claude" mientras no se haya comprobado el servidor.
+   Ahora muestra "Comprobando Claude…" y luego indica si el servidor no existe, está sin llave o está configurado.
+
+5) CARA DE LA IA
+   La cara ahora tiene microgestos independientes: parpadeos, pequeñas miradas, inclinaciones, respiración,
+   sonrisas, guiños, curiosidad, rebote al recibir una respuesta y reacción al mensaje del usuario.
+   En móviles de gama baja se conservan estas animaciones ligeras; se siguen apagando completamente en
+   Modo sin animaciones / Ultra para no perjudicar el rendimiento.
+
+V49.2 FIX IA + REACCIONES PUBLICAS
+- La pagina apunta al servidor de IA de Render: https://elsotanodeosito.onrender.com
+- ANTHROPIC_API_KEY y ANTHROPIC_MODEL permanecen solo en las variables de entorno del servidor.
+- Los conteos de Me gusta/No me gusta se sincronizan mediante Firestore para que los visitantes puedan ver los totales.
+- Cada usuario autenticado conserva una reaccion por video; cambiar de reaccion actualiza el conteo.
+- La cara de LAIA incluye expresiones adicionales: emocion, confusion, tristeza y enojo, ademas de las anteriores.

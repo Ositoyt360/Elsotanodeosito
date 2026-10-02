@@ -11,7 +11,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=v47-rendimiento-ia-actualizaciones-20261002">
+    <link rel="stylesheet" href="styles.css?v=v48-ia-claude-cara-rendimiento-20261002">
+    <link rel="stylesheet" href="v49.css?v=v49">
+    <!-- Si tu página está en hosting estático (GitHub Pages), pon aquí la URL de tu servidor con server.js, ej: https://mi-servidor.onrender.com -->
+    <meta name="osito-ia-url" content="https://elsotanodeosito.onrender.com">
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -105,7 +108,7 @@
 
     <script type="text/plain" data-firebase-modular="disabled">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, query, orderBy, limit, getDocs, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, browserLocalPersistence, setPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
@@ -156,6 +159,7 @@
         window.limitFirebase = limit;
         window.getDocsFirebase = getDocs;
         window.serverTimestampFirebase = serverTimestamp;
+        window.runTransactionFirebase = runTransaction;
         window.authPersistenceLocalFirebase = browserLocalPersistence;
         window.setPersistenceFirebase = setPersistence;
         window.createUserWithEmailAndPasswordFirebase = createUserWithEmailAndPassword;
@@ -188,12 +192,7 @@
     <script src="actualizaciones-helper.js?v=modos-v19-20260922"></script>
 
 <style id="osito-v36">
-/* Modos especiales animados */
-body.modo-cumpleanos::before{content:'🎈 🎈 🎈';position:fixed;inset:0;pointer-events:none;animation:flotar 12s linear infinite;font-size:40px;opacity:.35}
-body.modo-sanvalentin::before{content:'❤️ ❤️ ❤️';position:fixed;inset:0;pointer-events:none;animation:flotar 10s linear infinite;font-size:34px;opacity:.35}
-body.modo-navidad::before{content:'❄️ ❄️ ❄️';position:fixed;inset:0;pointer-events:none;animation:flotar 8s linear infinite;font-size:30px;opacity:.35}
-body.modo-halloween::before{content:'🦇 🎃 🦇';position:fixed;inset:0;pointer-events:none;animation:flotar 14s linear infinite;font-size:34px;opacity:.35}
-@keyframes flotar{from{transform:translateY(100vh)}to{transform:translateY(-100vh)}}
+/* V48: los emojis de los modos ya caen desde el JS; se quitaron las capas duplicadas a pantalla completa. */
 
 .sidebar button,.side-menu button{
 border-radius:14px!important;
@@ -783,7 +782,7 @@ accent-color:#00ff88;
                 <div class="spinner1 ia-bubble-spinner1"></div>
             </div>
             <button class="ia-toggle-bubble" id="ia-bubble" onclick="toggleIAPanel()" type="button" aria-label="Abrir asistente de IA" aria-expanded="false">
-                <span class="ia-bubble-icon" aria-hidden="true">🤖</span>
+                <span class="ia-bubble-icon" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></span>
                 <span class="ia-bubble-close-icon" aria-hidden="true">✕</span>
                 <span class="ia-bubble-badge" title="IA Lista"></span>
             </button>
@@ -791,9 +790,10 @@ accent-color:#00ff88;
         <section class="ia-section" id="ai-section">
                 <div class="ia-header">
                     <div class="ia-header-title">
-                        <span class="ia-status-dot" aria-hidden="true"></span>
-                        <div>
-                            <h3><span aria-hidden="true">🤖</span> Asistente de Inteligencia</h3>
+                        <span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span>
+                        <div class="ia-header-text">
+                            <h3>Asistente de Inteligencia</h3>
+                            <p><span class="ia-status-dot" aria-hidden="true"></span><span id="ia-face-status-text">Comprobando Claude…</span></p>
                         </div>
                         <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
                             <span class="live-dot"></span> 🔴 EN VIVO
@@ -823,30 +823,18 @@ accent-color:#00ff88;
                         <div class="ia-messages" id="ai-messages" role="log" aria-live="polite"> 
                             <div class="msg bot">🤖 Identidad requerida: ¿Eres Osito o Osita?</div>
                         </div>
-                        <div class="ai-suggestions" aria-label="Preguntas rápidas" style="margin-top:10px;">
-                            <button class="btn-action ai-suggestion" data-question="¿Qué puedo hacer aquí?">
-                                <span>💡</span> Info del sitio
-                            </button>
-                            <button class="btn-action ai-suggestion" data-question="¿Vas a volver a hacer directos?">
-                                <span>🔴</span> Directos
-                            </button>
-                            <button class="btn-action ai-suggestion" data-question="¿Cuáles son tus juegos favoritos para grabar?">
-                                <span>🎮</span> Juegos
-                            </button>
-                            <button class="btn-action ai-suggestion" data-question="¿Cuál fue tu primer canal?">
-                                <span>📺</span> Primer canal
-                            </button>
+                        <div class="ai-suggestions" aria-label="Preguntas rápidas">
+                            <ul><li><button class="btn-action ai-suggestion" type="button" data-question="¿Qué puedo hacer aquí?"><span>💡</span> Info del sitio</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Vas a volver a hacer directos?"><span>🔴</span> Directos</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Cuáles son tus juegos favoritos para grabar?"><span>🎮</span> Juegos</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Cuál fue tu primer canal?"><span>📺</span> Primer canal</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="Cuéntame un chiste corto"><span>😂</span> Un chiste</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="Dime un dato curioso"><span>🤯</span> Dato curioso</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Me ayudas con una tarea?"><span>📚</span> Ayuda con tarea</button></li></ul>
+                            <ul aria-hidden="true"><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Qué puedo hacer aquí?"><span>💡</span> Info del sitio</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Vas a volver a hacer directos?"><span>🔴</span> Directos</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Cuáles son tus juegos favoritos para grabar?"><span>🎮</span> Juegos</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Cuál fue tu primer canal?"><span>📺</span> Primer canal</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="Cuéntame un chiste corto"><span>😂</span> Un chiste</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="Dime un dato curioso"><span>🤯</span> Dato curioso</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Me ayudas con una tarea?"><span>📚</span> Ayuda con tarea</button></li></ul>
                         </div>
-                        <form class="ai-input-row" id="ai-form" style="padding-top: 10px; border-top: 1px solid var(--glass-border); display: flex; gap: 8px; align-items: center;">
-                            <input id="ai-input" class="input-gamer" autocomplete="off" placeholder="Escribe o pulsa el micrófono..." aria-label="Pregunta para la IA">
+                        <form class="ai-input-row" id="ai-form">
+                            <textarea id="ai-input" rows="1" maxlength="500" autocomplete="off" placeholder="Pregúntame lo que quieras..." aria-label="Pregunta para la IA"></textarea>
                             <button class="ai-mic-btn" id="ai-mic-btn" type="button" aria-label="Pulsar para hablar por voz" title="Pulsar para hablar">
                                 <span class="mic-icon">🎙️</span>
                                 <span class="mic-pulse-ring"></span>
                             </button>
                             <button class="btn-send" type="submit" aria-label="Enviar pregunta">
-                                <svg class="send-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                                </svg>
+                                <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="30" height="30" fill="currentColor"><path d="M16 8A8 8 0 1 0 0 8a8 8 0 0 0 16 0m-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z"/></svg>
                             </button>
                         </form>
                         <div class="ai-voice-status" id="ai-voice-status" style="font-size: 11px; color: var(--text-muted, #888); margin-top: 4px; text-align: center;">
@@ -963,166 +951,72 @@ accent-color:#00ff88;
             };
             eventos.forEach(ev => document.addEventListener(ev, reintentar, { capture: true, passive: true }));
         }
-        document.addEventListener('visibilitychange', () => { if (!document.hidden) reproducirVideoFondoActivo(); });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) { reproducirVideoFondoActivo(); return; }
+            const v = document.querySelector('#modo-sitio-video video');
+            if (v && !v.paused) { try { v.pause(); } catch (e) {} }
+        });
 
-        // Fondo de video por modo especial.
-        // Normal: reproduce en bucle con una segunda copia que entra en fade
-        // durante el cierre del clip para que el reinicio no se vea brusco.
+        // Fondo de video por modo especial (V48 — rendimiento).
+        // Un solo <video loop> de 480p cuyo final ya se funde con su inicio (bucle sin corte,
+        // preparado en el propio archivo). Antes había 2 videos 720p decodificando a la vez,
+        // un filtro CSS por fotograma y temporizadores de fundido: eso hacía lento el celular.
         // Rendimiento/Ultra: congela el primer fotograma del MISMO video.
         function sincronizarVideoModo(theme) {
             const layer = document.getElementById('modo-sitio-video');
             if (!layer) return;
-            const videos = Array.from(layer.querySelectorAll('video'));
-            if (!videos.length) return;
+            const video = layer.querySelector('video');
+            if (!video) return;
 
-            // V47: el video se congela SOLO en modo rendimiento (Quitar animaciones)
-            // y en Modo ultra. En móviles o con "movimiento reducido" del sistema
-            // sigue reproduciéndose.
-            const isReduced = () => document.body.classList.contains('ultra-performance')
+            const reducido = document.body.classList.contains('ultra-performance')
                 || document.body.classList.contains('no-animations');
-            const reduced = isReduced();
             const themeActive = () => document.documentElement.dataset.siteTheme === theme;
 
-            videos.forEach((video, index) => {
-                video.muted = true;
-                video.defaultMuted = true;
-                video.playsInline = true;
-                video.autoplay = false;
-                video.loop = false;
-                video.preload = index === 0 ? 'auto' : 'metadata';
-                video.setAttribute('muted', '');
-                video.setAttribute('playsinline', '');
-                video.setAttribute('aria-hidden', 'true');
-            });
+            video.muted = true;
+            video.defaultMuted = true;
+            video.playsInline = true;
+            video.loop = true;
+            video.autoplay = false;
+            video.preload = 'auto';
+            video.classList.add('is-active');
+            layer.classList.toggle('modo-video-playing', !reducido);
+            layer.classList.toggle('modo-video-frozen', reducido);
 
-            const state = layer.__videoState || (layer.__videoState = {
-                activeIndex: 0,
-                transitioning: false,
-                timer: null,
-                bound: false
-            });
-            state.activeIndex = Math.min(state.activeIndex, videos.length - 1);
-            layer.classList.toggle('modo-video-playing', !reduced);
-            layer.classList.toggle('modo-video-frozen', reduced);
-
-            if (reduced) {
-                if (state.timer) { clearTimeout(state.timer); state.timer = null; }
-                state.transitioning = false;
-                videos.forEach((video, index) => {
-                    video.classList.toggle('is-active', index === 0);
-                    video.style.opacity = index === 0 ? '1' : '0';
-                    video.style.zIndex = index === 0 ? '2' : '1';
-                    try { video.pause(); } catch (e) {}
-                });
-                state.activeIndex = 0;
+            if (reducido) {
+                try { video.pause(); } catch (e) {}
                 const freeze = () => {
                     if (!themeActive()) return;
-                    try { videos[0].pause(); } catch (e) {}
-                    try { videos[0].currentTime = 0; } catch (e) {}
+                    try { video.pause(); } catch (e) {}
+                    try { video.currentTime = 0; } catch (e) {}
                 };
-                if (videos[0].readyState >= 2) freeze();
-                else if (!videos[0].dataset.freezeBound) {
-                    videos[0].dataset.freezeBound = '1';
-                    videos[0].addEventListener('loadeddata', freeze, { once: true });
-                    videos[0].addEventListener('canplay', freeze, { once: true });
+                if (video.readyState >= 2) freeze();
+                else if (!video.dataset.freezeBound) {
+                    video.dataset.freezeBound = '1';
+                    video.addEventListener('loadeddata', freeze, { once: true });
+                    video.addEventListener('canplay', freeze, { once: true });
                 }
                 return;
             }
 
-            const transitionMs = 1100;
-            const prepareAndPlay = (video) => {
-                if (!themeActive()) return;
+            const start = () => {
+                if (!themeActive() || document.hidden) return;
+                if (!video.paused) return;
                 const p = video.play();
                 if (p && typeof p.catch === 'function') p.catch(() => esperarGestoVideoFondo());
             };
-
-            const crossfadeToNext = () => {
-                if (state.transitioning || !themeActive()) return;
-                const currentIndex = state.activeIndex;
-                const nextIndex = (currentIndex + 1) % videos.length;
-                const current = videos[currentIndex];
-                const next = videos[nextIndex];
-                if (!current || !next) return;
-                state.transitioning = true;
-
-                try { next.currentTime = 0; } catch (e) {}
-                next.style.zIndex = '3';
-                next.style.opacity = '0';
-                next.classList.add('is-active');
-                prepareAndPlay(next);
-
-                // El mismo MP4 se desvanece hacia su inicio; esto oculta el corte.
-                requestAnimationFrame(() => {
-                    if (!themeActive()) return;
-                    current.style.opacity = '0';
-                    next.style.opacity = '1';
-                });
-
-                state.timer = window.setTimeout(() => {
-                    if (!themeActive()) return;
-                    try { current.pause(); } catch (e) {}
-                    try { current.currentTime = 0; } catch (e) {}
-                    current.classList.remove('is-active');
-                    current.style.opacity = '0';
-                    current.style.zIndex = '1';
-                    next.style.opacity = '1';
-                    next.style.zIndex = '2';
-                    state.activeIndex = nextIndex;
-                    state.transitioning = false;
-                    state.timer = null;
-                }, transitionMs);
-            };
-
-            if (!state.bound) {
-                state.bound = true;
-                videos.forEach((video, index) => {
-                    video.addEventListener('timeupdate', () => {
-                        if (state.activeIndex !== index || state.transitioning || isReduced() || !themeActive()) return;
-                        const duration = Number(video.duration);
-                        if (!Number.isFinite(duration) || duration <= 0) return;
-                        // Empezar la transición solo al final para conservar casi todo el clip.
-                        if (video.currentTime >= duration - 1.15) crossfadeToNext();
-                    }, { passive: true });
-                    video.addEventListener('ended', () => {
-                        if (state.activeIndex === index && !state.transitioning && !isReduced() && themeActive()) {
-                            crossfadeToNext();
-                        }
-                    });
-                });
-            }
-
-            videos.forEach((video, index) => {
-                const isActive = index === state.activeIndex;
-                video.classList.toggle('is-active', isActive);
-                video.style.opacity = isActive ? '1' : '0';
-                video.style.zIndex = isActive ? '2' : '1';
-            });
-            state.transitioning = false;
-            if (state.timer) { clearTimeout(state.timer); state.timer = null; }
-
-            const active = videos[state.activeIndex];
-            const start = () => {
-                if (!themeActive() || isReduced()) return;
-                // Pre-cargar el segundo clip para que la transición no deje un frame negro.
-                const next = videos[(state.activeIndex + 1) % videos.length];
-                if (next) {
-                    next.preload = 'auto';
-                    try { next.load(); } catch (e) {}
-                }
-                prepareAndPlay(active);
-            };
-            if (active.readyState >= 2) start();
-            else if (!active.dataset.startBound) {
-                active.dataset.startBound = '1';
-                active.addEventListener('loadeddata', start, { once: true });
-                active.addEventListener('canplay', start, { once: true });
+            if (video.readyState >= 2) start();
+            else if (!video.dataset.startBound) {
+                video.dataset.startBound = '1';
+                video.addEventListener('loadeddata', start, { once: true });
+                video.addEventListener('canplay', start, { once: true });
             }
         }
 
         function crearVideoFondoModo(theme) {
             const old = document.getElementById('modo-sitio-video');
             if (old) old.remove();
-            const src = MODE_BACKGROUND_VIDEO[theme];
+            const srcOriginal = MODE_BACKGROUND_VIDEO[theme];
+            const src = window.OsitoV49 ? window.OsitoV49.fuenteFondo(theme, srcOriginal) : srcOriginal;
             if (!src && theme === 'san-valentin') {
                 // No hay mp4 de San Valentín: fondo animado con CSS (zoom lento + brillo que respira).
                 const sv = document.createElement('div');
@@ -1140,25 +1034,25 @@ accent-color:#00ff88;
             layer.className = `modo-sitio-video modo-video-${theme}`;
             layer.setAttribute('aria-hidden', 'true');
 
-            const makeVideo = (preload) => {
-                const video = document.createElement('video');
-                video.src = src;
-                video.preload = preload;
-                video.muted = true;
-                video.defaultMuted = true;
-                video.playsInline = true;
-                video.autoplay = false;
-                video.loop = false;
-                video.className = 'modo-bg-video';
-                video.setAttribute('muted', '');
-                video.setAttribute('playsinline', '');
-                video.setAttribute('aria-hidden', 'true');
-                return video;
-            };
-
-            layer.appendChild(makeVideo('auto'));
-            layer.appendChild(makeVideo('metadata'));
+            const portada = window.OsitoV49 ? window.OsitoV49.portadaFondo(theme) : '';
+            if (portada) { layer.style.backgroundImage = `url("${portada}")`; }
+            const video = document.createElement('video');
+            if (portada) video.poster = portada;
+            video.preload = 'auto';
+            video.muted = true;
+            video.defaultMuted = true;
+            video.playsInline = true;
+            video.autoplay = false;
+            video.loop = true;
+            video.disablePictureInPicture = true;
+            video.disableRemotePlayback = true;
+            video.className = 'modo-bg-video is-active';
+            video.setAttribute('muted', '');
+            video.setAttribute('playsinline', '');
+            video.setAttribute('aria-hidden', 'true');
+            layer.appendChild(video);
             document.body.insertBefore(layer, document.body.firstChild);
+            if (window.OsitoV49) window.OsitoV49.cargarDiferido(video, src); else video.src = src;
             sincronizarVideoModo(theme);
         }
 
@@ -1181,7 +1075,11 @@ accent-color:#00ff88;
             }[theme];
             if (!config) return;
 
-            for (let i = 0; i < config.count; i++) {
+            // V48: menos emojis en celulares (cada uno es una capa animada). Desktop ~65%, celular ~40%, gama muy baja ~25%.
+            const htmlCls = document.documentElement.classList;
+            const factor = htmlCls.contains('low-end-device') ? 0.25 : (htmlCls.contains('mobile-lite') ? 0.4 : 0.65);
+            const total = Math.max(5, Math.round(config.count * factor));
+            for (let i = 0; i < total; i++) {
                 const item = document.createElement('span');
                 const emoji = config.emojis[i % config.emojis.length];
                 item.className = 'modo-decor-item decor-emoji' + (emoji === '🦇' ? ' emoji-bat' : '');
@@ -2816,7 +2714,8 @@ accent-color:#00ff88;
         }
 
         function obtenerMiniaturaVideo(id) {
-            return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+            const ligera = window.OsitoV49 && window.OsitoV49.equipoLimitado();
+            return `https://i.ytimg.com/vi/${id}/${ligera ? 'mqdefault' : 'hqdefault'}.jpg`;
         }
 
         function reproducirVideo(id, boton) {
@@ -2825,14 +2724,17 @@ accent-color:#00ff88;
 
             contenedor.dataset.playing = 'true';
             contenedor.innerHTML = `
+                <div class="vp-loading"><span class="vp-spin"></span></div>
                 <iframe 
                     src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
                     title="Reproductor de YouTube"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerpolicy="strict-origin-when-cross-origin"
-                    allowfullscreen>
+                    allowfullscreen
+                    onload="var l=this.parentNode.querySelector('.vp-loading');if(l)l.remove()">
                 </iframe>
             `;
+            if (window.OsitoV49) setTimeout(window.OsitoV49.revisarReproductor, 300);
         }
 
         function crearTarjetaVideo(id) {
@@ -2845,8 +2747,9 @@ accent-color:#00ff88;
                     <div class="${favClass}" onclick="toggleFavorito('${id}', event)" title="Añadir a favoritos">⭐</div>
                     <div class="video-thumbnail">
                         <img src="${miniatura}" alt="Miniatura del video" loading="lazy" decoding="async">
-                        <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video"></button>
+                        <button class="video-play-btn" type="button" onclick="reproducirVideo('${id}', this)" aria-label="Reproducir video">${window.OsitoV49 ? window.OsitoV49.playHTML : ''}</button>
                     </div>
+                    ${window.OsitoV49 ? window.OsitoV49.accionesHTML(id) : ''}
                 </div>
             `;
         }
@@ -2885,6 +2788,7 @@ accent-color:#00ff88;
             if(!grid) return;
             grid.innerHTML = videosPorCategoria.videos.map(video => crearTarjetaVideo(video)).join('');
             animarAparicionTarjetas('#main-video-grid');
+            if (window.OsitoV49) setTimeout(window.OsitoV49.prepararConteos, 0);
         }
 
         function renderizarDirectos() {
@@ -2892,6 +2796,7 @@ accent-color:#00ff88;
             if(!grid) return;
             grid.innerHTML = videosPorCategoria.directos.map(video => crearTarjetaVideo(video)).join('');
             animarAparicionTarjetas('#main-directos-grid');
+            if (window.OsitoV49) setTimeout(window.OsitoV49.prepararConteos, 0);
         }
 
         function renderizarCategoria(categoria) {
@@ -2904,6 +2809,7 @@ accent-color:#00ff88;
             if (!grid) return;
             grid.innerHTML = videosPorCategoria[categoria].map(video => crearTarjetaVideo(video)).join('');
             animarAparicionTarjetas(`#${config.grid}`);
+            if (window.OsitoV49) setTimeout(window.OsitoV49.prepararConteos, 0);
         }
 
         function obtenerNombreSerie(titulo) {
@@ -2941,6 +2847,7 @@ accent-color:#00ff88;
                 </section>
             `).join('');
             animarAparicionTarjetas('#series-board');
+            if (window.OsitoV49) setTimeout(window.OsitoV49.prepararConteos, 0);
         }
 
         function renderizarFavoritos() {
@@ -2952,6 +2859,7 @@ accent-color:#00ff88;
             }
             grid.innerHTML = listaFavoritos.map(id => crearTarjetaVideo(id)).join('');
             animarAparicionTarjetas('#fav-video-grid');
+            if (window.OsitoV49) setTimeout(window.OsitoV49.prepararConteos, 0);
         }
 
         function toggleFavorito(id, event) {
@@ -3005,6 +2913,12 @@ accent-color:#00ff88;
 
             function draw() {
                 if(!animacionesActivas || document.hidden) { animationFrameId = requestAnimationFrame(draw); return; } 
+                // V48: en celular, con un modo especial activo el video/fondo tapa las partículas: no se dibujan.
+                if (document.documentElement.classList.contains('mobile-lite') && /^(halloween|navidad|cumpleanos|san-valentin)$/.test(document.documentElement.dataset.siteTheme || '')) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    setTimeout(() => { animationFrameId = requestAnimationFrame(draw); }, 500);
+                    return;
+                }
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
                 const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
@@ -3086,7 +3000,9 @@ accent-color:#00ff88;
         }); 
     </script> 
 
-    <script src="base-conocimiento.js"></script>
+    <script src="base-conocimiento.js?v=v48"></script>
+    <script src="v49.js?v=v49"></script>
+    <script src="ia-claude.js?v=v49" defer></script>
     <script>
         (function(){
             const aiMessages = document.getElementById('ai-messages');
@@ -3153,6 +3069,7 @@ accent-color:#00ff88;
                         text: texto
                     }).catch(() => {});
                 }
+                document.dispatchEvent(new CustomEvent('osito:ia-message', { detail: { role: tipo, text: texto } }));
                 if (tipo === 'bot') {
                     hablarIA(texto);
                 }
@@ -3464,8 +3381,12 @@ accent-color:#00ff88;
                     }
                 }
 
-                // 9. REGLA ESTRICTA: NO INVENTAR INFORMACIÓN
-                // Si algo no está en esta base, responde que todavía no está disponible en la base de datos
+                // 9. V48: si la pregunta no está en la base local, se devuelve null
+                // y enviarPreguntaIA se la pasa a Claude (vía /api/ia en el servidor).
+                return null;
+            }
+
+            function mensajeNoDisponibleLocal() {
                 const noDisponible = (window.OsitoConocimiento && window.OsitoConocimiento.MENSAJES_NO_DISPONIBLE) || [
                     'Esa información todavía no está disponible en la base de datos y podría agregarse en el futuro.'
                 ];
@@ -3527,7 +3448,24 @@ accent-color:#00ff88;
                 if (aiInput) aiInput.value = '';
 
                 const respuestaLocal = responderIA(limpia);
-                setTimeout(() => agregarMensajeIA(respuestaLocal, 'bot'), 180);
+                if (respuestaLocal !== null) {
+                    setTimeout(() => agregarMensajeIA(respuestaLocal, 'bot'), 180);
+                    return;
+                }
+
+                // No está en la base local: responde Claude (si el servidor no lo permite, mensaje de siempre).
+                if (!window.OsitoIA) {
+                    setTimeout(() => agregarMensajeIA(mensajeNoDisponibleLocal(), 'bot'), 180);
+                    return;
+                }
+                const resultado = await window.OsitoIA.preguntar(limpia, { nombre: aiNombre, genero: aiGenero });
+                if (resultado && resultado.texto) {
+                    agregarMensajeIA(resultado.texto, 'bot');
+                } else {
+                    const aviso = window.OsitoIA.mensajeDeError(resultado && resultado.error);
+                    const libre = window.OsitoIA.respuestaLibre ? window.OsitoIA.respuestaLibre(limpia) : null;
+                    agregarMensajeIA(aviso || libre || window.OsitoIA.mensajeSinClaude(resultado && resultado.error) || mensajeNoDisponibleLocal(), 'bot');
+                }
             }
 
             aiGenderBtns.forEach(btn => {

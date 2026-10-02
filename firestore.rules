@@ -14,6 +14,29 @@ service cloud.firestore {
         get(/databases/$(database)/documents/moderation/$(uid)).data.bannedUntil > request.time.toMillis();
     }
 
+
+    // Reacciones públicas de videos: todos pueden ver los conteos; cada usuario
+    // autenticado solo puede modificar su propia reacción.
+    match /videoLikeCounts/{videoId} {
+      allow read: if true;
+      allow create, update: if signedIn()
+        && request.resource.data.likes is int
+        && request.resource.data.dislikes is int
+        && request.resource.data.likes >= 0
+        && request.resource.data.dislikes >= 0
+        && request.resource.data.likes <= 1000000
+        && request.resource.data.dislikes <= 1000000;
+      allow delete: if isCreator();
+    }
+
+    match /videoLikeUsers/{videoId}/users/{userId} {
+      allow read: if true;
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.reaction in ['like', 'dislike'];
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isCreator());
       allow create, update: if signedIn() && (request.auth.uid == userId || isCreator());

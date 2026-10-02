@@ -58,6 +58,9 @@
       setThemeUI(settings.theme||'normal');
       const titleInput=$('site-title');
       if(titleInput && settings.title) titleInput.value=settings.title;
+      // Si el creador guardó una lista vacía, debe permanecer vacía: no
+      // volver a insertar los conteos de ejemplo automáticamente.
+      renderCountdownEditor(Object.prototype.hasOwnProperty.call(settings, 'countdowns') ? settings.countdowns : defaultCountdowns());
     } catch (error) {
       console.warn('[Moderador] No se pudo leer siteSettings/public en Firestore.', error);
       setThemeUI('normal');
@@ -90,8 +93,8 @@
     await saveSiteSettings({title});
     toast('Título guardado para todos los visitantes.');
   }
-  function defaultCountdowns(){return [{id:'ositoexpo',title:'OsitoExpo',emoji:'🎃',subtitle:'Nuevas sorpresas para la comunidad',targetAt:''},{id:'youtube-aniversario',title:'5 años en YouTube',emoji:'▶️',subtitle:'Aniversario de OsitoYT360',targetAt:''}];}
-  function renderCountdownEditor(items){const list=Array.isArray(items)&&items.length?items:defaultCountdowns();$('countdowns-editor').innerHTML=list.map((c,i)=>`<div class="countdown-editor-row" data-countdown-row><div class="inline-controls"><input data-cd-title maxlength="70" value="${esc(c.title||'')}" placeholder="Nombre del evento"><input data-cd-emoji maxlength="4" value="${esc(c.emoji||'⏳')}" title="Emoji"><input data-cd-date type="datetime-local" value="${toLocalInput(c.targetAt)}"><button class="btn small danger" data-remove-countdown type="button">Eliminar</button></div><input data-cd-subtitle maxlength="120" value="${esc(c.subtitle||'')}" placeholder="Texto debajo del conteo (opcional)"><input type="hidden" data-cd-id value="${esc(c.id||`countdown-${i+1}`)}"></div>`).join('');}
+  function defaultCountdowns(){return [];}
+  function renderCountdownEditor(items){const list=Array.isArray(items)?items:[];$('countdowns-editor').innerHTML=list.map((c,i)=>`<div class="countdown-editor-row" data-countdown-row><input type="hidden" data-cd-id value="${esc(c.id||`countdown-${i+1}`)}"><div class="inline-controls"><input data-cd-title maxlength="70" value="${esc(c.title||'')}" placeholder="Nombre del evento"><input data-cd-emoji maxlength="4" value="${esc(c.emoji||'⏳')}" title="Emoji"><input data-cd-date type="datetime-local" value="${toLocalInput(c.targetAt)}"><button class="btn small danger" data-remove-countdown type="button">Eliminar</button></div><textarea data-cd-subtitle maxlength="180" placeholder="Texto si no hay fecha o descripción">${esc(c.subtitle||'')}</textarea><input data-cd-media type="file" accept="image/*,video/*"><input type="hidden" data-cd-media-url value="${esc(c.mediaUrl||'')}"><input type="hidden" data-cd-media-type value="${esc(c.mediaType||'')}"><small class="countdown-media-help">${c.mediaUrl?'Contenido multimedia actual guardado.':'Imagen/video opcional.'}</small></div>`).join('');}
   function toMillis(value){
     if(value==null||value==='') return NaN;
     if(typeof value==='number') return value;
@@ -102,16 +105,41 @@
     const d=new Date(value); return d.getTime();
   }
   function toLocalInput(value){const ms=toMillis(value);if(!Number.isFinite(ms))return '';const d=new Date(ms);const pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
-  function collectCountdowns(){return [...document.querySelectorAll('[data-countdown-row]')].map((row,i)=>{const v=s=>String(row.querySelector(s)?.value||'').trim();const raw=v('[data-cd-date]');let targetAt='';if(raw){const ms=new Date(raw).getTime();if(Number.isFinite(ms)) targetAt=ms;}return {id:v('[data-cd-id]')||`countdown-${i+1}`,title:v('[data-cd-title]')||'Nuevo evento',emoji:v('[data-cd-emoji]')||'⏳',subtitle:v('[data-cd-subtitle]'),targetAt};}).filter(c=>c.title);}
+  function collectCountdowns(){return [...document.querySelectorAll('[data-countdown-row]')].map((row,i)=>{const v=s=>String(row.querySelector(s)?.value||'').trim();const raw=v('[data-cd-date]');let targetAt='';if(raw){const ms=new Date(raw).getTime();if(Number.isFinite(ms)) targetAt=ms;}return {id:v('[data-cd-id]')||`countdown-${i+1}`,title:v('[data-cd-title]')||'Nuevo evento',emoji:v('[data-cd-emoji]')||'⏳',subtitle:v('[data-cd-subtitle]'),mediaUrl:v('[data-cd-media-url]'),mediaType:v('[data-cd-media-type]'),targetAt};}).filter(c=>c.title);}
+  async function uploadCountdownMedia(file,user,id){
+    if(!file)return '';
+    if(!user)throw new Error('La sesión de creador no está disponible.');
+    if(file.size>150*1024*1024)throw new Error('El archivo multimedia debe pesar menos de 150 MB.');
+    if(!/^(image\/(jpeg|png|webp|gif)|video\/(mp4|webm|ogg|quicktime))$/i.test(file.type||''))throw new Error('Solo se permiten JPG, PNG, WEBP, GIF, MP4, WEBM, OGG o MOV.');
+    const safeName=String(file.name||'media').replace(/[^a-z0-9._-]/gi,'_').slice(-80);
+    const path=`countdowns/${user.uid}/${id}-${Date.now()}-${safeName}`;
+    try{
+      const ref=storage.ref(path);
+      await ref.put(file,{contentType:file.type,cacheControl:'public,max-age=31536000'});
+      return await ref.getDownloadURL();
+    }catch(error){
+      console.error('[Conteos] Error al subir multimedia',error);
+      throw new Error(`No se pudo subir el archivo: ${error?.message||'Firebase Storage rechazó la subida.'}`);
+    }
+  }
+  async function deleteCountdownMedia(url){
+    if(!url||!storage)return;
+    try{await storage.refFromURL(url).delete();}
+    catch(error){console.warn('[Conteos] No se pudo borrar el archivo multimedia anterior.',error);}
+  }
   function addCountdown(){const current=collectCountdowns();current.push({id:`countdown-${Date.now()}`,title:'Nuevo evento',emoji:'⏳',subtitle:'',targetAt:''});renderCountdownEditor(current);}
   async function saveCountdowns(){
+    const rows=[...document.querySelectorAll('[data-countdown-row]')];
     const countdowns=collectCountdowns();
-    const invalid=countdowns.filter(c=>!Number.isFinite(Number(c.targetAt)) || Number(c.targetAt)<=Date.now());
+    const invalid=countdowns.filter(c=>Number(c.targetAt) && Number(c.targetAt)<=Date.now());
     if(!countdowns.length) { await saveSiteSettings({countdowns:[]}); renderCountdownEditor([]); toast('Conteos eliminados.'); return; }
-    if(invalid.length) throw new Error('Cada conteo debe tener una fecha y hora futura.');
-    await saveSiteSettings({countdowns});
+    if(invalid.length) throw new Error('La fecha y hora, si se usan, deben ser futuras.');
+    const user=auth.currentUser;
+    for(const row of rows){const id=String(row.querySelector('[data-cd-id]')?.value||`countdown-${Date.now()}`);const file=row.querySelector('[data-cd-media]')?.files?.[0];if(file){const url=await uploadCountdownMedia(file,user,id);row.querySelector('[data-cd-media-url]').value=url;row.querySelector('[data-cd-media-type]').value=file.type.startsWith('video/')?'video':'image';}}
+    const finalCountdowns=collectCountdowns();
+    await saveSiteSettings({countdowns:finalCountdowns});
     const snap=await siteSettingsRef.get();
-    const saved=snap.exists && Array.isArray(snap.data()?.countdowns) ? snap.data().countdowns : countdowns;
+    const saved=snap.exists && Array.isArray(snap.data()?.countdowns) ? snap.data().countdowns : finalCountdowns;
     renderCountdownEditor(saved);
     toast('Conteos guardados y publicados para todos.');
   }
@@ -230,6 +258,27 @@
   $('refresh-messages').addEventListener('click',()=>loadMessages().catch(e=>toast(e.message,true)));
   document.querySelectorAll('[data-theme-mode]').forEach(b=>b.addEventListener('click',()=>saveTheme(b.dataset.themeMode).catch(e=>toast(e.message,true))));
   if($('save-title')) $('save-title').addEventListener('click',()=>saveTitle().catch(e=>toast(e.message,true)));
+  if($('add-countdown')) $('add-countdown').addEventListener('click',()=>addCountdown());
+  document.addEventListener('click',async e=>{
+    const remove=e.target.closest('[data-remove-countdown]');
+    if(!remove)return;
+    e.preventDefault();
+    const row=remove.closest('[data-countdown-row]');
+    if(!row)return;
+    const id=String(row.querySelector('[data-cd-id]')?.value||'');
+    const oldUrl=String(row.querySelector('[data-cd-media-url]')?.value||'');
+    row.remove();
+    remove.disabled=true;
+    try{
+      await saveCountdowns();
+      if(oldUrl) await deleteCountdownMedia(oldUrl);
+      toast('Conteo eliminado y borrado de Firebase.');
+    }catch(error){
+      toast(error?.message||'No se pudo eliminar el conteo.',true);
+      console.error('[Conteos] Error al eliminar',id,error);
+    }
+  });
+  if($('save-countdowns')) $('save-countdowns').addEventListener('click',()=>saveCountdowns().catch(e=>toast(e.message||'No se pudieron guardar los conteos.',true)));
   if($('publish-announcement')) $('publish-announcement').addEventListener('click',()=>publishAnnouncement().catch(e=>toast(e.message,true)));
   setupPublicationPreview();
   $('mod-logout').addEventListener('click',async()=>{await auth.signOut();location.href='index.html'});

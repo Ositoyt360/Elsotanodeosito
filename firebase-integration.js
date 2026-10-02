@@ -34,7 +34,7 @@
     const CREATOR_EMAIL = 'ositoyt360@elsotanodeosito.com';
 
     function isCreatorAccount(user) {
-        return String(user?.email || '').trim().toLowerCase() === CREATOR_EMAIL;
+        return String(user?.email || '').trim().toLowerCase() === CREATOR_EMAIL || String(user?.displayName || '').trim().toLowerCase() === 'ositoyt360';
     }
 
     function snapshotExists(snapshot) {

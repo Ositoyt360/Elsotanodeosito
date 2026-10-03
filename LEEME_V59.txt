@@ -1,0 +1,19 @@
+EL SOTANO DE OSITO — V59
+
+1) Mascota más lenta (osito-aburrimiento.js)
+- Cada objeto dura 3 minutos antes de guardarse y sacar otro.
+- Cada expresión/gesto dura 1 minuto antes de pasar a la siguiente.
+- Para cambiar los tiempos, edita estas dos líneas al inicio de osito-aburrimiento.js:
+    var OBJETO_MS=180000;     // 3 min  (60000 = 1 min)
+    var EXPRESION_MS=60000;   // 1 min  (180000 = 3 min)
+- La página del libro/periódico pasa cada 20 s (antes 8 s).
+- Mientras Osito tiene un objeto ya no cambia de personalidad (personalidades-1000.js),
+  porque esos cambios pisaban la expresión lenta cada ~30 s.
+
+2) Creador OsitoYT360 en móvil (styles.css)
+- Los editores de "Conteos regresivos" y "Editar actualizaciones" estaban ocultos en celular
+  con display:none. Ahora se muestran en móvil solo cuando inicias sesión con OsitoYT360.
+- Campos a ancho completo, letra de 16 px (sin zoom en iPhone) y botones grandes.
+
+3) Caché: styles.css, osito-aburrimiento.js y personalidades-1000.js suben a ?v=v59.
+Instalación: reemplaza los archivos y recarga con Ctrl + F5 (en móvil, borra caché del sitio).

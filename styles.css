@@ -5876,11 +5876,35 @@ html.mobile-lite .osito-face .of-card { transition: none; }
     .sidebar-subscribe > .btn-directos-nav,
     .sidebar-subscribe > .cuenta-personalizacion,
     .sidebar-subscribe > #ultra-performance-card,
-    .sidebar-subscribe > #interface-settings-card,
-    .sidebar-subscribe > .creator-countdown-editor,
-    .sidebar-subscribe > .creator-updates-editor {
+    .sidebar-subscribe > #interface-settings-card {
         display: none !important;
     }
+
+    /* V59: el creador (OsitoYT360) SÍ puede editar conteos y actualizaciones desde el celular.
+       Para el resto de personas siguen ocultos porque el JS les pone el atributo [hidden]. */
+    .sidebar-subscribe > .creator-countdown-editor:not([hidden]),
+    .sidebar-subscribe > .creator-updates-editor:not([hidden]) {
+        display: grid !important;
+        order: 1 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 0 10px !important;
+        padding: 12px !important;
+    }
+    .sidebar-subscribe > .creator-updates-editor:not([hidden]) { order: 2 !important; }
+    .sidebar-subscribe > .creator-countdown-editor[hidden],
+    .sidebar-subscribe > .creator-updates-editor[hidden] { display: none !important; }
+    .creator-countdown-editor textarea,
+    .creator-countdown-editor input,
+    .creator-countdown-editor select {
+        width: 100%; min-width: 0; box-sizing: border-box;
+        font-size: 16px; /* evita el zoom automático de iPhone al escribir */
+        border: 1px solid rgba(88,255,154,.18); border-radius: 8px; padding: 10px;
+        background: rgba(3,10,7,.72); color: #ecfff3; font-family: inherit;
+    }
+    .creator-countdown-editor textarea { min-height: 72px; resize: vertical; }
+    .creator-countdown-editor .btn-action { min-height: 44px; width: 100%; }
+    .creator-countdown-field { display: grid; gap: 4px; font-size: 12px; }
 
     /* El menú es el único sitio de controles secundarios en teléfono. */
     .header-menu-dropdown #music-card {

@@ -1,0 +1,28 @@
+EL SOTANO DE OSITO — V58
+
+Cambios incluidos en esta versión:
+- Se conserva el diseño 3D del libro morado y del teléfono/mando; sus modelos HTML y CSS no se reemplazaron.
+- La cara y los emojis tienen más profundidad 3D: la cabeza añade 8 capas y cada emoji usa 7 capas de extrusión.
+- Se mantienen las 1,000 animaciones/personajes existentes. Sus movimientos de tarjeta se suavizaron para evitar desplazamientos y giros bruscos que hacían temblar al personaje.
+- Se quitó el balanceo lateral continuo de la cabeza. Las expresiones, los ojos, los objetos y las transiciones siguen animándose.
+- Cada actividad con objeto dura 20 segundos antes de salir suavemente y dar paso a otra. El ciclo evita repetir inmediatamente la misma actividad.
+- Se añadieron sonidos a gestos de lectura, concentración, teléfono, café y música; las expresiones faciales conservan sus sonidos existentes.
+- Se actualizaron los parámetros de caché a V57 para que el navegador cargue los archivos editados.
+
+Instalación:
+1. Haz una copia de seguridad de tu versión actual.
+2. Extrae la carpeta osito_edit y reemplaza los archivos del proyecto por los de esta carpeta.
+3. No cambies las rutas de los archivos ni los nombres de los recursos.
+4. Recarga el sitio con Ctrl + F5 para limpiar la caché.
+
+Nota: los sonidos generados por WebAudio empiezan después de la primera interacción con la página, por las restricciones normales del navegador.
+
+
+V58 — Repertorio ampliado:
+- Se añadieron 15 actividades 3D: audífonos, taza de chocolate, control de videojuegos, peluche, pizza, manzana, micrófono, laptop, mochila, balón, varita mágica, caja de regalo, consola portátil, vaso y cámara.
+- El teléfono ahora se representa apaisado, como una pantalla de juego horizontal.
+- Cada actividad dura 20 segundos y se selecciona mediante una bolsa para evitar repetir la misma inmediatamente.
+- Cada objeto tiene una animación propia, expresiones distintas, entrada/salida y sonidos procedurales propios mediante WebAudio.
+- Las manos son volumétricas y aparecen solo en objetos que Osito debe sostener.
+- El libro conserva el aspecto del libro morado de la referencia: abierto hacia el frente, no invertido, con páginas visibles y animación de pasar página cada 8 segundos.
+- Se mantiene la corrección para que la cabeza/personaje no tiemble durante las actividades.

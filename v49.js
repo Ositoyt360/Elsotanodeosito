@@ -268,7 +268,7 @@
     });
 
     /* ---------- Botón de reproducir ---------- */
-    var PLAY_HTML = '<span class="vp-ring"></span><span class="vp-core"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.53.85l10.4-6.5a1 1 0 0 0 0-1.7L9.53 4.65A1 1 0 0 0 8 5.5z"/></svg></span>';
+    var PLAY_HTML = '<span class="vp-ring"></span><span class="vp-core"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 6.6v10.8L17.9 12z"/></svg></span>';
 
     /* ---------- Rendimiento: fondos de video (se mantienen, solo más livianos) ---------- */
     var NOMBRES = { halloween: 1, navidad: 1, cumpleanos: 1 };

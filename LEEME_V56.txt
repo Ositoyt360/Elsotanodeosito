@@ -1,0 +1,26 @@
+EL SÓTANO DE OSITO — V56 — CARA 3D, EXPRESIONES SUAVES, MÁS OBJETOS Y REPRODUCTOR CENTRADO
+
+1) CARA DE LA IA EN 3D (osito-cara3d.css / osito-cara3d.js)
+- La cara ahora tiene grosor (6 capas), ojos con volumen y brillo, cejas y boca que "flotan" delante de la pantalla y un cristal con brillo que se mueve al girar la cabeza.
+- Balanceo 3D suave y lento de toda la cabeza (sin temblor). En modo rendimiento / equipos muy limitados queda quieta en una pose 3D fija.
+- EMOJIS 3D: los emojis que salen en la cara (✨ ❤ 💢 ❓ 🎵 💧 …) ahora son capas con grosor que giran en 3D al aparecer.
+
+2) EXPRESIONES CON TRANSICIÓN (nada cambia "de la nada")
+- Cada expresión ENTRA con su propia animación 3D (enojada se inclina hacia adelante, triste se hunde, tímida gira la cabeza, sorprendida/alegre salta, etc.) y los ojos se abren.
+- Al cambiar de una expresión a otra, la vieja SALE con un parpadeo y recién entra la nueva.
+- Al dejar una expresión y volver a la cara normal hay animación de SALIDA con su propio emoji: enojada suelta aire 💨, risa termina con 😅, tristeza 🌈, amor 💞, etc.
+- Ojos normales y ojos felices ahora se funden en vez de cambiar de golpe.
+
+3) OBJETOS CUANDO OSITO SE ABURRE (10 s sin actividad)
+Salen ahora 7 objetos 3D (cada uno con manitas, se saca y se guarda con animación):
+- PERIÓDICO (pasa de hoja cada 8 s) y TELÉFONO (pantalla que scrollea, notificaciones, vibra) -> salen primero en la primera vuelta.
+- Libro, mando, TAZA DE CAFÉ (vapor, sopla y toma sorbitos), AUDÍFONOS (notas musicales, baila al ritmo), CUBO DE RUBIK (3D real).
+- Más la escena "libre" (solo expresiones). Cada objeto tiene sus propias expresiones de la cara.
+Probar en consola: OsitoAburrimiento.activar('periodico') | 'telefono' | 'cafe' | 'audifonos' | 'cubo' | 'diario' | 'juego' | 'libre'. Quitar: OsitoAburrimiento.detener()
+
+4) REPRODUCTOR DE VIDEOS CENTRADO
+- El círculo verde y el anillo que pulsa ahora se centran con inset:0 + margin:auto (ya no dependen de márgenes negativos).
+- El triángulo de play era demasiado grande hacia la derecha (tenía un margen extra): se dibujó uno nuevo con el centro exacto y sin margen.
+
+ARCHIVOS NUEVOS: osito-cara3d.css, osito-cara3d.js
+ARCHIVOS CAMBIADOS: ia-claude.js (transiciones), osito-aburrimiento.js (objetos nuevos), v49.css y v49.js (reproductor), index.html (?v=v56).

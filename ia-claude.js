@@ -71,7 +71,7 @@
             cara.dataset.estado = estado;
             if (estado === 'speaking') {
                 cara.classList.add('of-speaking-friendly');
-                if (!cara.getAttribute('data-expr')) { cara.setAttribute('data-expr','smile'); cara.dataset.speakingSmile='1'; }
+                if (!cara.getAttribute('data-expr')) { if (window.OsitoFace && window.OsitoFace.poner) window.OsitoFace.poner(cara,'smile',0); else cara.setAttribute('data-expr','smile'); cara.dataset.speakingSmile='1'; }
             } else {
                 cara.classList.remove('of-speaking-friendly');
             }
@@ -172,7 +172,7 @@
     function detenerLabios() {
         clearTimeout(lipTimer); lipTimer = 0;
         caras.forEach(function (c) {
-            if (c.dataset.speakingSmile === '1') { c.removeAttribute('data-expr'); delete c.dataset.speakingSmile; }
+            if (c.dataset.speakingSmile === '1') { if (window.OsitoFace && window.OsitoFace.poner) window.OsitoFace.poner(c,null,0); else c.removeAttribute('data-expr'); delete c.dataset.speakingSmile; }
             c.classList.remove('of-lipsync', 'of-emph');
             c.style.removeProperty('--mw'); c.style.removeProperty('--mh'); c.style.removeProperty('--mr');
         });
@@ -494,10 +494,46 @@
         if (card && !card.querySelector('.of-tear')) card.insertAdjacentHTML('beforeend', '<i class="of-tear l"></i><i class="of-tear r"></i>');
     });
 
+    /* V56 — Transiciones entre expresiones.
+     * Nada cambia "de la nada": la expresión vieja SALE (parpadeo, data-fase="out") y la nueva
+     * ENTRA con su propia animación 3D (data-fase="in"). Al volver a la cara normal hay un
+     * "back" suave (data-fase="back", con data-leave = la expresión que se deja).
+     * Todo el estilo vive en osito-cara3d.css. */
+    var T_OUT = 200, T_IN = 460, T_BACK = 620;
+    function fase(cara, f, ms) {
+        clearTimeout(cara.__tf);
+        if (f) {
+            cara.setAttribute('data-fase', f);
+            if (ms) cara.__tf = setTimeout(function () { cara.removeAttribute('data-fase'); cara.removeAttribute('data-leave'); }, ms);
+        } else { cara.removeAttribute('data-fase'); cara.removeAttribute('data-leave'); }
+    }
     function poner(cara, expr, ms) {
-        if (expr) cara.setAttribute('data-expr', expr); else cara.removeAttribute('data-expr');
+        var sig = expr || '';
         clearTimeout(cara.__t);
-        if (expr && ms) cara.__t = setTimeout(function () { cara.removeAttribute('data-expr'); }, ms);
+        var actual = cara.__tw ? cara.__pend : (cara.getAttribute('data-expr') || '');
+        if (sig && ms) cara.__t = setTimeout(function () { poner(cara, null, 0); }, ms);
+        if (sig === actual) return;
+        var vieja = cara.getAttribute('data-expr') || '';
+        clearTimeout(cara.__tw); cara.__tw = 0; cara.__pend = sig;
+        var animar = !quieta() && !document.hidden && cara.offsetParent;
+        if (!animar) {
+            fase(cara, null);
+            if (sig) cara.setAttribute('data-expr', sig); else cara.removeAttribute('data-expr');
+            return;
+        }
+        function entrar() {
+            cara.__tw = 0;
+            if (sig) cara.setAttribute('data-expr', sig); else cara.removeAttribute('data-expr');
+            if (vieja) cara.setAttribute('data-prev', vieja); else cara.removeAttribute('data-prev');
+            if (sig) { cara.removeAttribute('data-leave'); fase(cara, 'in', T_IN); }
+            else { fase(cara, 'back', T_BACK); if (vieja) cara.setAttribute('data-leave', vieja); }
+        }
+        // Expresión -> otra expresión: la vieja sale (parpadeo) y entra la nueva.
+        // Expresión -> cara normal: se relaja enseguida con una salida suave.
+        if (vieja && sig) {
+            fase(cara, 'out', 0);
+            cara.__tw = setTimeout(entrar, T_OUT);
+        } else entrar();
     }
     function paraTodas(expr, ms) {
         caras.forEach(function (c) { if (c.offsetParent) poner(c, expr, ms); });
@@ -587,13 +623,11 @@
         cara.addEventListener('pointerenter', function (e) {
             if (quieta() || e.pointerType === 'touch') return;
             activa();
-            clearTimeout(cara.__t);
-            cara.setAttribute('data-expr', 'hover');
+            poner(cara, 'hover', 0);
         });
         cara.addEventListener('pointerleave', function (e) {
             if (e.pointerType === 'touch') return;
-            clearTimeout(cara.__t);
-            if (cara.getAttribute('data-expr') === 'hover') cara.__t = setTimeout(function () { cara.removeAttribute('data-expr'); }, 3200);
+            if (cara.getAttribute('data-expr') === 'hover') poner(cara, 'hover', 3200);
         });
     });
 

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Test Expresiones 3D - Osito V57</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .viewport-3d {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .osito-face-demo {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #7e22ce 100%);
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .expresion-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            min-width: 200px;
+        }
+
+        .expresion-info h3 {
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .expresion-info p {
+            font-size: 12px;
+            opacity: 0.8;
+            margin: 4px 0;
+        }
+
+        .control-panel {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-height: 100vh;
+        }
+
+        .control-panel h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .control-section h3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .control-section h3:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6d3f91 100%);
+        }
+
+        .expresion-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            color: #333;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .expresion-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .expresion-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .stats p {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .stats strong {
+            color: #667eea;
+        }
+
+        .controls-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .controls-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .control-panel {
+                width: 100%;
+                max-height: 40vh;
+            }
+
+            .controls-toggle {
+                display: flex;
+            }
+
+            .control-panel {
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                width: 100%;
+                max-height: 60vh;
+                border-radius: 20px 20px 0 0;
+                z-index: 999;
+                transform: translateY(100%);
+                transition: transform 0.3s ease;
+            }
+
+            .control-panel.visible {
+                transform: translateY(0);
+            }
+        }
+
+        .emoji-display {
+            font-size: 48px;
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            animation: sparkIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes sparkIn {
+            0% {
+                opacity: 0;
+                scale: 0.3;
+                rotate: 0deg;
+            }
+            50% {
+                rotate: 180deg;
+            }
+            100% {
+                opacity: 1;
+                scale: 1;
+                rotate: 360deg;
+            }
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10000;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .expresion-btn:hover .tooltip {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="viewport-3d">
+            <div class="expresion-info">
+                <h3 id="nombre-expresion">Cargando...</h3>
+                <p><strong>Entrada:</strong> <span id="emoji-entrada">-</span></p>
+                <p><strong>Salida:</strong> <span id="emoji-salida">-</span></p>
+            </div>
+            <div class="osito-face-demo">
+                <div id="emoji-display" class="emoji-display"></div>
+            </div>
+        </div>
+
+        <div class="control-panel" id="controlPanel">
+            <h2>🎭 Expresiones 3D</h2>
+            
+            <div class="stats">
+                <p><strong id="total-expresiones">0</strong> expresiones disponibles</p>
+                <p>Versión: <strong>V57 MEJORADO</strong></p>
+                <p>Emojis: <strong>150+ únicos</strong></p>
+                <p>Capas 3D: <strong>7</strong></p>
+            </div>
+
+            <div class="control-section">
+                <h3>😊 Expresiones Emocionales</h3>
+                <div id="section-emocional"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎬 Expresiones Activas</h3>
+                <div id="section-activo"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎭 Expresiones Temáticas</h3>
+                <div id="section-tematico"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>🌍 Expresiones Naturales</h3>
+                <div id="section-natural"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>🐾 Expresiones Animales</h3>
+                <div id="section-animal"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎵 Expresiones de Objetos</h3>
+                <div id="section-objeto"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="controls-toggle" id="toggleBtn">☰</button>
+
+    <script>
+        // Datos de expresiones
+        const ENTRADA = {
+            // Emocionales
+            smile: '✨', joy: '🎉', love: '💖', wink: '⭐', wow: '❗',
+            excited: '🌟', curious: '❓', confused: '❔', angry: '💢',
+            sad: '💧', shy: '💗', cool: '😎', kiss: '💋', laugh: '😂',
+            dance: '🎵', dizzy: '💫', yawn: '🥱', sleepy: '💤',
+            watch: '🍿', chat: '💬', hover: '✨',
+            thinking: '💭', shocked: '😲', blushing: '😳',
+            wicked: '😏', nervous: '😰', relieved: '😌',
+            determined: '💪', party: '🎊', sparkle: '✨',
+            // Activos
+            rocket: '🚀', flying: '🚁', diving: '🤿',
+            surfing: '🏄', skateboard: '🛹', guitar: '🎸',
+            piano: '🎹', drum: '🥁', trumpet: '🎺',
+            // Temáticos
+            vampire: '🧛', angel: '😇', devil: '😈',
+            ninja: '🥷', alien: '👽', robot: '🤖',
+            clown: '🤡', pirate: '🏴‍☠️', astronaut: '👨‍🚀',
+            // Naturales
+            fire: '🔥', ice: '❄️', lightning: '⚡',
+            water: '💧', earth: '🌍', rainbow: '🌈',
+            magical: '🪄', star: '⭐', moon: '🌙',
+            sun: '☀️', cloud: '☁️',
+            // Animales
+            cat: '🐱', dog: '🐶', bear: '🐻',
+            panda: '🐼', koala: '🐨', fox: '🦊',
+            rabbit: '🐰', monkey: '🐵', lion: '🦁',
+            penguin: '🐧', butterfly: '🦋',
+            // Objetos
+            book: '📚', camera: '📷', phone: '📱',
+            gift: '🎁', crown: '👑', trophy: '🏆',
+            gem: '💎', money: '💰'
+        };
+
+        const SALIDA = {
+            smile: '😊', joy: '😊', love: '💞', wink: '⭐',
+            wow: '😌', excited: '🎊', curious: '💡',
+            confused: '🤔', angry: '💨', sad: '🌈',
+            shy: '😊', cool: '😌', kiss: '😘',
+            laugh: '😅', dance: '🎶', dizzy: '😵',
+            thinking: '💡', shocked: '😲', blushing: '😊'
+        };
+
+        const categorias = {
+            emocional: [
+                'smile', 'joy', 'love', 'wink', 'wow', 'excited', 'curious',
+                'confused', 'angry', 'sad', 'shy', 'cool', 'kiss', 'laugh',
+                'dance', 'dizzy', 'yawn', 'sleepy', 'watch', 'chat', 'hover',
+                'thinking', 'shocked', 'blushing', 'wicked', 'nervous', 'relieved',
+                'determined', 'party'
+            ],
+            activo: [
+                'rocket', 'flying', 'diving', 'surfing', 'skateboard',
+                'guitar', 'piano', 'drum', 'trumpet'
+            ],
+            tematico: [
+                'vampire', 'angel', 'devil', 'ninja', 'alien', 'robot',
+                'clown', 'pirate', 'astronaut'
+            ],
+            natural: [
+                'fire', 'ice', 'lightning', 'water', 'earth', 'rainbow',
+                'magical', 'star', 'moon', 'sun', 'cloud'
+            ],
+            animal: [
+                'cat', 'dog', 'bear', 'panda', 'koala', 'fox',
+                'rabbit', 'monkey', 'lion', 'penguin', 'butterfly'
+            ],
+            objeto: [
+                'book', 'camera', 'phone', 'gift', 'crown',
+                'trophy', 'gem', 'money'
+            ]
+        };
+
+        let expresionActual = null;
+
+        function cambiarExpresion(nombre) {
+            expresionActual = nombre;
+            const emojiEntrada = ENTRADA[nombre] || '';
+            const emojiSalida = SALIDA[nombre] || '';
+
+            document.getElementById('nombre-expresion').textContent = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+            document.getElementById('emoji-entrada').textContent = emojiEntrada;
+            document.getElementById('emoji-salida').textContent = emojiSalida;
+
+            const display = document.getElementById('emoji-display');
+            display.textContent = emojiEntrada;
+            display.style.animation = 'none';
+            setTimeout(() => {
+                display.style.animation = '';
+            }, 10);
+
+            // Activar botón
+            document.querySelectorAll('.expresion-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-expr="${nombre}"]`).classList.add('active');
+        }
+
+        function crearBoton(nombre) {
+            const btn = document.createElement('button');
+            btn.className = 'expresion-btn';
+            btn.setAttribute('data-expr', nombre);
+            btn.innerHTML = `${nombre} ${ENTRADA[nombre]}`;
+            btn.addEventListener('click', () => cambiarExpresion(nombre));
+            return btn;
+        }
+
+        function inicializar() {
+            // Cargar estadísticas
+            document.getElementById('total-expresiones').textContent = Object.keys(ENTRADA).length;
+
+            // Llenar secciones
+            for (const [categoria, expresiones] of Object.entries(categorias)) {
+                const container = document.getElementById(`section-${categoria}`);
+                expresiones.forEach(expr => {
+                    container.appendChild(crearBoton(expr));
+                });
+            }
+
+            // Mostrar primera expresión
+            cambiarExpresion('smile');
+
+            // Toggle en mobile
+            const toggleBtn = document.getElementById('toggleBtn');
+            const controlPanel = document.getElementById('controlPanel');
+            
+            toggleBtn.addEventListener('click', () => {
+                controlPanel.classList.toggle('visible');
+            });
+
+            // Cerrar panel al seleccionar en mobile
+            if (window.innerWidth <= 1024) {
+                document.querySelectorAll('.expresion-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        controlPanel.classList.remove('visible');
+                    });
+                });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

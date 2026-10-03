@@ -1,4 +1,4 @@
-/* V53 — LIBRO Y MANDO 3D DE OSITO (diseño nuevo) + EXPRESIONES SUAVES
+/* V58 — LIBRO Y REPERTORIO 3D DE OSITO + EXPRESIONES SUAVES
  * Libro morado abierto visto desde atrás (lomo claro, cinta roja, hojas crema arriba)
  * y mando oscuro horizontal con cámara, ambos sostenidos por manitas blancas redondas.
  * Hecho solo con CSS 3D (preserve-3d). Todo se mide en "em" de la cara (1em = tamaño de la cara).
@@ -335,4 +335,513 @@ body.no-animations .osito-face .of-boredom-prop,
 body.ultra-performance .osito-face .of-boredom-prop{animation:none!important}
 @media (prefers-reduced-motion:reduce){
   .osito-face .of-boredom-prop,.osito-face .of-boredom-prop *{animation:none!important}
+}
+
+
+/* =====================================================================
+ * V58 — REPERTORIO 3D AMPLIADO
+ * 15 objetos nuevos: audífonos, chocolate, control, peluche, pizza,
+ * manzana, micrófono, laptop, mochila, balón, varita, regalo, consola,
+ * vaso y cámara. Todo está construido en CSS 3D; no usa emojis como
+ * sustitutos de los objetos. Cada objeto conserva la entrada/salida común,
+ * manos volumétricas cuando corresponde y una coreografía propia.
+ * ===================================================================== */
+
+/* ---------- Personaje: volumen 3D estable, sin sacudidas ---------- */
+.osito-face{
+  transform-style:preserve-3d;
+  isolation:isolate;
+}
+.osito-face .of-rig{transform-style:preserve-3d!important}
+.osito-face[data-boredom]{
+  animation:none!important;
+  translate:0 0!important;
+  rotate:0deg!important;
+}
+.osito-face[data-boredom] .of-card{
+  transform-style:preserve-3d!important;
+  filter:drop-shadow(0 .035em .07em rgba(0,0,0,.28));
+  animation:none!important;
+}
+
+/* ---------- Libro: mismo lenguaje visual que la referencia, de frente ----------
+   El lomo queda en el centro, las hojas crema miran hacia Osito y las cubiertas
+   moradas son las caras delanteras. Así nunca se muestra el libro "al revés". */
+.osito-face .of-book{
+  transform:rotateX(2deg) rotateY(0deg)!important;
+  transform-style:preserve-3d;
+  animation:ofBookFrontFloat 8s ease-in-out infinite!important;
+}
+@keyframes ofBookFrontFloat{
+  0%,100%{transform:translateY(0) rotateX(2deg) rotateY(-2deg)}
+  50%{transform:translateY(-.012em) rotateX(3deg) rotateY(2deg)}
+}
+.osito-face .bk-cov{
+  z-index:3;
+  background:
+    radial-gradient(100% 80% at 25% 8%,rgba(255,255,255,.28),transparent 50%),
+    linear-gradient(155deg,#8b4cff 0%,#662bd9 55%,#4b1fb0 100%)!important;
+  box-shadow:
+    inset 0 .008em .012em rgba(255,255,255,.45),
+    inset 0 -.025em .03em rgba(28,8,88,.45),
+    0 .025em .05em rgba(0,0,0,.38);
+  backface-visibility:visible!important;
+}
+.osito-face .bk-cov.l{transform:rotateY(-8deg) translateZ(.025em)!important}
+.osito-face .bk-cov.r{transform:rotateY(8deg) translateZ(.025em)!important}
+.osito-face .bk-pg{
+  z-index:4;
+  background:
+    repeating-linear-gradient(180deg,#fff9e9 0 .018em,#e6d7b4 .019em .024em),
+    linear-gradient(180deg,#fffaf0,#e7d5a7)!important;
+  box-shadow:inset 0 0 .018em rgba(90,60,20,.25);
+}
+.osito-face .bk-page-lines{
+  z-index:5; top:.075em; width:.41em; height:.34em; opacity:.48;
+  background:repeating-linear-gradient(180deg,transparent 0 .055em,rgba(125,95,150,.22) .056em .062em);
+  transform:translateZ(.045em);
+  pointer-events:none;
+}
+.osito-face .bk-page-lines.l{left:.075em;clip-path:polygon(0 0,100% 5%,100% 100%,0 94%)}
+.osito-face .bk-page-lines.r{right:.075em;clip-path:polygon(0 5%,100% 0,100% 94%,0 100%)}
+.osito-face .bk-flip{
+  z-index:8;
+  background:linear-gradient(90deg,#eadbb9,#fffaf0 38%,#fffdf5)!important;
+  box-shadow:0 .01em .035em rgba(50,30,10,.3);
+}
+.osito-face .bk-ribbon{z-index:9}
+
+/* ---------- Teléfono apaisado: Osito juega con un juego horizontal ---------- */
+.osito-face .of-boredom-prop[data-mode="telefono"]{
+  top:.68em;width:1.05em;height:.46em;margin-left:-.525em;
+}
+.osito-face .of-tel{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  transform:rotateX(-5deg) rotateY(-3deg);
+  animation:ofTelIdle 6s ease-in-out infinite;
+}
+@keyframes ofTelIdle{0%,100%{transform:rotateX(-5deg) rotateY(-3deg) translateY(0)}50%{transform:rotateX(-4deg) rotateY(3deg) translateY(-.012em)}}
+.osito-face .of-tel .of-slab{
+  position:absolute;inset:0;border-radius:.09em;
+  background:linear-gradient(145deg,#5c6477,#242938 62%,#151927);
+  transform:translateZ(calc(var(--i)*-.012em));
+  box-shadow:inset 0 0 .01em rgba(255,255,255,.25);
+}
+.osito-face .of-tel .tl-body{
+  position:absolute;inset:0;border-radius:.09em;
+  background:linear-gradient(150deg,#4b5368,#202536 58%,#151927);
+  box-shadow:inset 0 0 0 .007em rgba(255,255,255,.22),0 .035em .06em rgba(0,0,0,.5);
+  transform:translateZ(.025em);
+}
+.osito-face .of-tel .tl-screen{
+  position:absolute;left:.18em;top:.07em;width:.69em;height:.32em;border-radius:.045em;
+  overflow:hidden;background:linear-gradient(145deg,#1a2344,#0b1227);
+  box-shadow:inset 0 0 .012em rgba(255,255,255,.55),0 0 .018em rgba(50,90,255,.28);
+  transform:translateZ(.05em);
+}
+.osito-face .of-tel .tl-game{
+  position:absolute;left:.05em;top:.045em;width:.59em;height:.19em;border-radius:.025em;
+  background:
+    radial-gradient(circle at 17% 52%,#f6c65b 0 .022em,transparent .023em),
+    radial-gradient(circle at 72% 44%,#7de4ff 0 .028em,transparent .029em),
+    linear-gradient(140deg,#3c5fb8,#1e2c65 60%,#101a3a);
+  box-shadow:inset 0 0 .018em rgba(255,255,255,.25);
+  animation:ofTelGame 2.8s ease-in-out infinite;
+}
+@keyframes ofTelGame{0%,100%{filter:brightness(.9);transform:translateX(0)}50%{filter:brightness(1.25);transform:translateX(.018em)}}
+.osito-face .of-tel .tl-bar{position:absolute;left:.06em;right:.06em;bottom:.03em;height:.012em;background:#6b7eea;border-radius:1em;opacity:.8}
+.osito-face .of-tel .tl-notif{position:absolute;right:.04em;top:.035em;width:.04em;height:.04em;border-radius:50%;background:#ff5c75;box-shadow:0 0 .015em #ff8090}
+.osito-face .of-tel .tl-speaker{position:absolute;left:.08em;top:.16em;width:.04em;height:.12em;border-radius:.02em;background:linear-gradient(#8e98ae,#3e465a);transform:translateZ(.055em)}
+.osito-face .of-tel .tl-dot{position:absolute;right:.08em;top:.07em;width:.025em;height:.025em;border-radius:50%;background:#8c96aa;transform:translateZ(.055em)}
+.osito-face .of-tel .of-mitt{width:.27em;height:.29em;top:.08em;z-index:10}
+.osito-face .of-tel .of-mitt.ml{left:-.145em}.osito-face .of-tel .of-mitt.mr{right:-.145em}
+.osito-face .of-boredom-prop[data-mode="telefono"][data-beat="tap"] .tl-screen{animation:ofScreenTap .55s ease 1}
+@keyframes ofScreenTap{50%{scale:1.03;filter:brightness(1.4)}}
+
+/* ---------- Audífonos 3D ---------- */
+.osito-face .of-boredom-prop[data-mode="audifonos"]{top:.48em;width:.78em;height:.62em;margin-left:-.39em}
+.osito-face .of-hp{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(-3deg);animation:ofHpBob 4.8s ease-in-out infinite}
+@keyframes ofHpBob{0%,100%{transform:rotateX(-3deg) translateY(0)}50%{transform:rotateX(1deg) translateY(-.018em)}}
+.osito-face .hp-band{position:absolute;left:.18em;top:-.02em;width:.42em;height:.42em;border:.07em solid #24263a;border-bottom-color:transparent;border-radius:50%;transform:translateZ(.01em)}
+.osito-face .hp-pad,.osito-face .hp-cup{position:absolute;width:.23em;height:.29em;border-radius:.08em;background:linear-gradient(145deg,#51566e,#171a28);box-shadow:inset .015em .012em .018em rgba(255,255,255,.3),0 .03em .05em rgba(0,0,0,.45);transform:translateZ(.06em)}
+.osito-face .hp-pad{left:.28em;top:.13em;width:.22em;height:.26em;background:radial-gradient(circle at 35% 25%,#8a93b2,#33384e 48%,#171927)}
+.osito-face .hp-cup.l{left:.09em;top:.13em}.osito-face .hp-cup.r{right:.09em;top:.13em}
+.osito-face .hp-n{position:absolute;color:#9aa7ff;text-shadow:0 0 .03em #5e7cff;font-weight:900;font-size:.12em;transform:translateZ(.08em);animation:ofNoteFloat 2.8s ease-in-out infinite}
+.osito-face .hp-n.n1{left:.05em;top:.02em}.osito-face .hp-n.n2{right:.02em;top:.02em;animation-delay:.6s}.osito-face .hp-n.n3{right:.17em;top:-.05em;animation-delay:1.1s}
+@keyframes ofNoteFloat{0%,100%{opacity:.35;translate:0 .02em}50%{opacity:1;translate:.015em -.05em}}
+
+/* ---------- Chocolate caliente ---------- */
+.osito-face .of-boredom-prop[data-mode="chocolate"],.osito-face .of-boredom-prop[data-mode="cafe"]{top:.60em;width:.72em;height:.56em;margin-left:-.36em}
+.osito-face .of-cup{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(-5deg);animation:ofCupIdle 5s ease-in-out infinite}
+@keyframes ofCupIdle{0%,100%{transform:rotateX(-5deg) rotateY(-2deg)}50%{transform:rotateX(-2deg) rotateY(3deg) translateY(-.01em)}}
+.osito-face .of-cup .cf-saucer{position:absolute;left:.11em;top:.36em;width:.5em;height:.13em;border-radius:50%;background:linear-gradient(#fff,#d9d7e8);box-shadow:0 .025em .04em rgba(0,0,0,.35);transform:translateZ(.02em)}
+.osito-face .of-cup .cf-body{position:absolute;left:.18em;top:.13em;width:.36em;height:.28em;border-radius:.06em .06em .11em .11em;background:linear-gradient(150deg,#fff,#d8d7e4);box-shadow:inset -.03em -.02em .04em rgba(90,80,120,.35),0 .03em .05em rgba(0,0,0,.35);transform:translateZ(.055em)}
+.osito-face .of-cup .cf-rim{position:absolute;left:.17em;top:.095em;width:.38em;height:.095em;border-radius:50%;background:linear-gradient(#fff,#cbc9da);transform:translateZ(.09em)}
+.osito-face .of-cup .cf-handle{position:absolute;left:.47em;top:.17em;width:.15em;height:.17em;border:.045em solid #d5d3e1;border-left-color:transparent;border-radius:50%;transform:translateZ(.045em)}
+.osito-face .of-cup .cf-choco{position:absolute;left:.185em;top:.103em;width:.35em;height:.08em;border-radius:50%;background:radial-gradient(circle at 40% 25%,#9b5a38,#5b2d1c 70%);transform:translateZ(.1em);box-shadow:inset 0 .008em .01em rgba(255,255,255,.35)}
+.osito-face .of-cup .cf-foam{position:absolute;left:.22em;top:.095em;width:.26em;height:.045em;border-radius:50%;background:#f3d9b7;transform:translateZ(.11em)}
+.osito-face .cf-marshmallow{position:absolute;width:.07em;height:.045em;border-radius:.02em;background:#fff5df;transform:translateZ(.12em);box-shadow:0 .005em .01em rgba(0,0,0,.2)}
+.osito-face .cf-marshmallow.m1{left:.24em;top:.08em;rotate:-12deg}.osito-face .cf-marshmallow.m2{left:.36em;top:.07em;rotate:15deg}
+.osito-face .cf-steam{position:absolute;width:.018em;height:.13em;border-radius:1em;background:linear-gradient(transparent,rgba(255,255,255,.7),transparent);transform:translateZ(.13em);animation:ofSteam 2.7s ease-in-out infinite}
+.osito-face .cf-steam.s1{left:.25em;top:-.02em}.osito-face .cf-steam.s2{left:.35em;top:-.06em;animation-delay:.7s}.osito-face .cf-steam.s3{left:.43em;top:-.01em;animation-delay:1.2s}
+@keyframes ofSteam{0%,100%{opacity:.2;transform:translateZ(.13em) translateY(.02em) scaleX(.7)}50%{opacity:.8;transform:translateZ(.13em) translateY(-.035em) scaleX(1.2)}}
+.osito-face .of-cup .of-mitt{width:.24em;height:.26em;top:.22em}.osito-face .of-cup .of-mitt.ml{left:-.07em}.osito-face .of-cup .of-mitt.mr{right:-.07em}
+.osito-face .of-boredom-prop[data-beat="sip"] .of-cup{animation:ofCupSip .9s ease 1}
+@keyframes ofCupSip{50%{transform:translateY(-.045em) rotateX(-8deg) rotateY(2deg)}}
+
+/* ---------- Control de videojuegos 3D ---------- */
+.osito-face .of-boredom-prop[data-mode="juego"],.osito-face .of-boredom-prop[data-mode="control"]{top:.68em;width:1em;height:.48em;margin-left:-.5em}
+.osito-face .of-control{position:absolute;inset:0;transform-style:preserve-3d;animation:ofControlIdle 5s ease-in-out infinite}
+@keyframes ofControlIdle{0%,100%{transform:rotateX(-6deg) rotateY(-3deg)}50%{transform:rotateX(-4deg) rotateY(3deg) translateY(-.012em)}}
+.osito-face .ct-body{position:absolute;left:.08em;top:.07em;width:.84em;height:.32em;border-radius:.12em .12em .16em .16em;background:linear-gradient(145deg,#565c73,#202435 65%,#121521);box-shadow:inset 0 .01em .02em rgba(255,255,255,.3),0 .035em .06em rgba(0,0,0,.5);transform:translateZ(.03em)}
+.osito-face .ct-dpad{position:absolute;left:.22em;top:.17em;width:.13em;height:.13em;transform:translateZ(.07em);background:linear-gradient(#596178,#242a3c);clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%)}
+.osito-face .ct-stick{position:absolute;top:.19em;width:.08em;height:.08em;border-radius:50%;background:radial-gradient(circle at 35% 25%,#9ba4bd,#30364a);box-shadow:0 .012em .02em rgba(0,0,0,.4);transform:translateZ(.075em)}
+.osito-face .ct-stick.l{left:.41em}.osito-face .ct-stick.r{left:.51em}
+.osito-face .ct-btn{position:absolute;width:.065em;height:.065em;border-radius:50%;background:linear-gradient(145deg,#ff7b8e,#8d2740);box-shadow:0 .01em .018em rgba(0,0,0,.4);transform:translateZ(.08em)}
+.osito-face .ct-btn.a{right:.21em;top:.15em}.osito-face .ct-btn.b{right:.14em;top:.20em}.osito-face .ct-btn.x{right:.28em;top:.20em;background:#66d8ff}.osito-face .ct-btn.y{right:.21em;top:.26em;background:#8b7cff}
+.osito-face .ct-led{position:absolute;top:.095em;width:.025em;height:.012em;border-radius:1em;background:#61e7ff;transform:translateZ(.08em);box-shadow:0 0 .02em #61e7ff}
+.osito-face .ct-led.l{left:.37em}.osito-face .ct-led.r{left:.60em}
+.osito-face .of-control .of-mitt{width:.28em;height:.30em;top:.12em}.osito-face .of-control .of-mitt.ml{left:-.09em}.osito-face .of-control .of-mitt.mr{right:-.09em}
+.osito-face .of-boredom-prop[data-beat="win"] .of-control{animation:ofControlWin 1s ease 1}
+@keyframes ofControlWin{50%{transform:translateY(-.05em) rotateX(-9deg) rotateY(5deg) scale(1.035)}}
+.osito-face .of-boredom-prop[data-beat="fail"] .of-control{animation:ofControlFail 1s ease 1}
+@keyframes ofControlFail{50%{transform:rotateX(3deg) rotateY(-5deg) translateY(.02em)}}
+
+/* ---------- Peluche ---------- */
+.osito-face .of-boredom-prop[data-mode="peluche"]{top:.51em;width:.72em;height:.65em;margin-left:-.36em}
+.osito-face .of-plush{position:absolute;inset:0;transform-style:preserve-3d;animation:ofPlushIdle 5s ease-in-out infinite}
+@keyframes ofPlushIdle{0%,100%{transform:rotateY(-3deg)}50%{transform:rotateY(4deg) translateY(-.012em)}}
+.osito-face .pl-ear{position:absolute;top:.03em;width:.17em;height:.17em;border-radius:50%;background:linear-gradient(145deg,#b77b63,#704533);box-shadow:inset .02em .015em .025em rgba(255,255,255,.25);transform:translateZ(.05em)}
+.osito-face .pl-ear.l{left:.18em}.osito-face .pl-ear.r{right:.18em}
+.osito-face .pl-head{position:absolute;left:.17em;top:.05em;width:.38em;height:.34em;border-radius:48% 48% 44% 44%;background:radial-gradient(circle at 32% 20%,#e7b58f,#a56d52 58%,#704330);box-shadow:inset -.03em -.03em .04em rgba(55,20,10,.3),0 .03em .05em rgba(0,0,0,.35);transform:translateZ(.07em)}
+.osito-face .pl-eye{position:absolute;top:.17em;width:.035em;height:.045em;border-radius:50%;background:#19131b;transform:translateZ(.10em)}.osito-face .pl-eye.l{left:.27em}.osito-face .pl-eye.r{right:.27em}
+.osito-face .pl-nose{position:absolute;left:.345em;top:.22em;width:.055em;height:.045em;border-radius:50%;background:#4e2430;transform:translateZ(.11em)}
+.osito-face .pl-body{position:absolute;left:.20em;top:.35em;width:.32em;height:.25em;border-radius:.11em .11em .07em .07em;background:linear-gradient(145deg,#b97c5e,#744533);box-shadow:inset -.02em -.02em .035em rgba(50,15,10,.3),0 .03em .05em rgba(0,0,0,.3);transform:translateZ(.055em)}
+.osito-face .pl-belly{position:absolute;left:.255em;top:.40em;width:.21em;height:.14em;border-radius:50%;background:#d9a27f;transform:translateZ(.09em)}
+.osito-face .pl-arm{position:absolute;top:.38em;width:.16em;height:.09em;border-radius:50%;background:#8c5943;transform:translateZ(.07em)}.osito-face .pl-arm.l{left:.10em;rotate:18deg}.osito-face .pl-arm.r{right:.10em;rotate:-18deg}
+.osito-face .of-plush .of-mitt{width:.20em;height:.21em;top:.37em}.osito-face .of-plush .of-mitt.ml{left:.02em}.osito-face .of-plush .of-mitt.mr{right:.02em}
+.osito-face .of-boredom-prop[data-beat="hug"] .of-plush{animation:ofPlushHug 1.1s ease 1}
+@keyframes ofPlushHug{50%{transform:translateY(-.025em) scale(1.06) rotateY(0)}}
+
+/* ---------- Pizza ---------- */
+.osito-face .of-boredom-prop[data-mode="pizza"]{top:.63em;width:.76em;height:.55em;margin-left:-.38em}
+.osito-face .of-pizza{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(7deg);animation:ofPizzaIdle 6s ease-in-out infinite}
+@keyframes ofPizzaIdle{0%,100%{transform:rotateX(7deg) rotateZ(-2deg)}50%{transform:rotateX(5deg) rotateZ(4deg) translateY(-.01em)}}
+.osito-face .pz-cheese{position:absolute;left:.11em;top:.13em;width:.54em;height:.37em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe77a,#f4b92f 62%,#d78318);clip-path:polygon(0 15%,100% 0,82% 100%,50% 82%,18% 100%);transform:translateZ(.07em);box-shadow:0 .03em .04em rgba(0,0,0,.3)}
+.osito-face .pz-crust{position:absolute;left:.10em;top:.11em;width:.56em;height:.10em;border-radius:50%;background:linear-gradient(#e6a64a,#a85b21);transform:translateZ(.09em) rotate(-2deg)}
+.osito-face .pz-pep{position:absolute;width:.075em;height:.055em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8b6f,#a92d2c 72%);transform:translateZ(.10em)}
+.osito-face .pz-pep.p1{left:.24em;top:.19em}.osito-face .pz-pep.p2{left:.42em;top:.16em}.osito-face .pz-pep.p3{left:.34em;top:.29em}.osito-face .pz-pep.p4{left:.18em;top:.31em}
+.osito-face .pz-melt{position:absolute;left:.40em;top:.28em;width:.06em;height:.10em;border-radius:0 0 .05em .05em;background:#ffd86b;transform:translateZ(.09em);animation:ofCheeseMelt 2.6s ease-in-out infinite}
+@keyframes ofCheeseMelt{50%{height:.14em}}
+.osito-face .of-pizza .of-mitt{width:.22em;height:.23em;top:.27em}.osito-face .of-pizza .of-mitt.ml{left:-.02em}.osito-face .of-pizza .of-mitt.mr{right:-.02em}
+.osito-face .of-boredom-prop[data-beat="lift"] .of-pizza{animation:ofPizzaLift .9s ease 1}
+@keyframes ofPizzaLift{50%{transform:translateY(-.055em) rotateX(-1deg) rotateZ(2deg) scale(1.03)}}
+
+/* ---------- Manzana ---------- */
+.osito-face .of-boredom-prop[data-mode="manzana"]{top:.58em;width:.62em;height:.56em;margin-left:-.31em}
+.osito-face .of-apple{position:absolute;inset:0;transform-style:preserve-3d;animation:ofAppleIdle 5s ease-in-out infinite}
+@keyframes ofAppleIdle{0%,100%{transform:rotateY(-5deg)}50%{transform:rotateY(6deg) translateY(-.012em)}}
+.osito-face .ap-fruit{position:absolute;left:.14em;top:.14em;width:.34em;height:.34em;border-radius:46% 54% 48% 52%;background:radial-gradient(circle at 28% 22%,#ff8c8c,#e73d4d 42%,#8e182d 100%);box-shadow:inset -.035em -.03em .04em rgba(70,0,10,.32),0 .035em .055em rgba(0,0,0,.35);transform:translateZ(.06em) rotate(-8deg)}
+.osito-face .ap-highlight{position:absolute;left:.205em;top:.18em;width:.06em;height:.10em;border-radius:50%;background:rgba(255,255,255,.65);transform:translateZ(.11em) rotate(25deg)}
+.osito-face .ap-stem{position:absolute;left:.30em;top:.075em;width:.035em;height:.11em;border-radius:1em;background:linear-gradient(#71452c,#392316);transform:translateZ(.07em) rotate(18deg)}
+.osito-face .ap-leaf{position:absolute;left:.33em;top:.08em;width:.13em;height:.07em;border-radius:100% 0 100% 0;background:linear-gradient(145deg,#8fe07a,#23763d);transform:translateZ(.08em) rotate(18deg)}
+.osito-face .of-apple .of-mitt{width:.21em;height:.22em;top:.27em}.osito-face .of-apple .of-mitt.ml{left:.00em}.osito-face .of-apple .of-mitt.mr{right:.00em}
+.osito-face .of-boredom-prop[data-beat="bite"] .ap-fruit{animation:ofAppleBite .8s ease 1}
+@keyframes ofAppleBite{50%{translate:.025em -.025em;scale:1.05}.100%{translate:0 0;scale:1}}
+
+/* ---------- Micrófono ---------- */
+.osito-face .of-boredom-prop[data-mode="microfono"]{top:.46em;width:.62em;height:.69em;margin-left:-.31em}
+.osito-face .of-mic{position:absolute;inset:0;transform-style:preserve-3d;animation:ofMicIdle 5s ease-in-out infinite}
+@keyframes ofMicIdle{0%,100%{transform:rotateY(-4deg)}50%{transform:rotateY(5deg) translateY(-.01em)}}
+.osito-face .mc-head{position:absolute;left:.22em;top:.04em;width:.18em;height:.24em;border-radius:.10em .10em .08em .08em;background:linear-gradient(145deg,#8d95a8,#353b4d 65%,#1e2230);box-shadow:inset .02em .02em .03em rgba(255,255,255,.35),0 .03em .05em rgba(0,0,0,.45);transform:translateZ(.07em)}
+.osito-face .mc-grille{position:absolute;left:.235em;top:.065em;width:.15em;height:.16em;border-radius:50%;background:repeating-linear-gradient(0deg,#b8c0d0 0 .008em,#555d70 .009em .016em);transform:translateZ(.105em);opacity:.9}
+.osito-face .mc-body{position:absolute;left:.275em;top:.25em;width:.07em;height:.20em;border-radius:.03em;background:linear-gradient(#666f83,#242a3a);transform:translateZ(.06em)}
+.osito-face .mc-ring{position:absolute;left:.255em;top:.24em;width:.11em;height:.035em;border-radius:50%;background:#8c94a7;transform:translateZ(.09em)}
+.osito-face .mc-stand{position:absolute;left:.30em;top:.42em;width:.025em;height:.16em;background:#3d4455;transform:translateZ(.03em)}
+.osito-face .mc-base{position:absolute;left:.19em;top:.55em;width:.22em;height:.045em;border-radius:50%;background:linear-gradient(#6e778b,#252a3a);transform:translateZ(.03em);box-shadow:0 .02em .03em rgba(0,0,0,.4)}
+.osito-face .of-mic .of-mitt{width:.21em;height:.22em;top:.30em}.osito-face .of-mic .of-mitt.ml{left:.02em}.osito-face .of-mic .of-mitt.mr{right:.02em}
+.osito-face .of-boredom-prop[data-beat="sing"] .mc-grille{animation:ofMicPulse .35s ease-in-out 3}
+@keyframes ofMicPulse{50%{filter:brightness(1.55);scale:1.06}}
+
+/* ---------- Laptop ---------- */
+.osito-face .of-boredom-prop[data-mode="laptop"]{top:.48em;width:.92em;height:.60em;margin-left:-.46em}
+.osito-face .of-laptop{position:absolute;inset:0;transform-style:preserve-3d;animation:ofLaptopIdle 6s ease-in-out infinite}
+@keyframes ofLaptopIdle{0%,100%{transform:rotateX(-3deg) rotateY(-3deg)}50%{transform:rotateX(-1deg) rotateY(3deg) translateY(-.012em)}}
+.osito-face .lp-screen{position:absolute;left:.15em;top:.02em;width:.62em;height:.39em;border-radius:.035em .035em .015em .015em;background:linear-gradient(145deg,#4d556b,#181d2a);box-shadow:inset 0 0 0 .012em #6f7890,0 .03em .05em rgba(0,0,0,.45);transform:translateZ(.045em) rotateX(-3deg);transform-origin:bottom}
+.osito-face .lp-glass{position:absolute;left:.18em;top:.05em;width:.56em;height:.31em;border-radius:.02em;background:
+  radial-gradient(circle at 24% 30%,#75e5ff 0 .018em,transparent .02em),
+  linear-gradient(135deg,#23386d,#10182f 62%,#172e55);transform:translateZ(.075em)}
+.osito-face .lp-base{position:absolute;left:.08em;top:.40em;width:.76em;height:.12em;border-radius:.02em .02em .08em .08em;background:linear-gradient(160deg,#858da0,#363d4f 50%,#202534);box-shadow:0 .03em .05em rgba(0,0,0,.45);transform:translateZ(.04em)}
+.osito-face .lp-keyboard{position:absolute;left:.16em;top:.415em;width:.57em;height:.06em;background:repeating-linear-gradient(90deg,#202535 0 .035em,#71798a .036em .041em);transform:translateZ(.065em);opacity:.9}
+.osito-face .lp-trackpad{position:absolute;left:.39em;top:.475em;width:.18em;height:.025em;border-radius:.01em;background:#9da5b6;transform:translateZ(.07em);opacity:.7}
+.osito-face .lp-glow{position:absolute;left:.30em;top:.16em;width:.28em;height:.08em;background:rgba(83,151,255,.18);filter:blur(.02em);transform:translateZ(.08em)}
+.osito-face .of-laptop .of-mitt{width:.22em;height:.23em;top:.43em}.osito-face .of-laptop .of-mitt.ml{left:-.02em}.osito-face .of-laptop .of-mitt.mr{right:-.02em}
+.osito-face .of-boredom-prop[data-act="lp-type"] .lp-keyboard{animation:ofKeyType .32s steps(2,end) infinite}
+@keyframes ofKeyType{50%{translate:0 .006em;filter:brightness(1.35)}}
+.osito-face .of-boredom-prop[data-act="lp-track"] .lp-trackpad{animation:ofTrack 1.2s ease-in-out infinite}
+@keyframes ofTrack{50%{translate:.04em 0}}
+
+/* ---------- Mochila ---------- */
+.osito-face .of-boredom-prop[data-mode="mochila"]{top:.49em;width:.72em;height:.65em;margin-left:-.36em}
+.osito-face .of-backpack{position:absolute;inset:0;transform-style:preserve-3d;animation:ofBagIdle 6s ease-in-out infinite}
+@keyframes ofBagIdle{0%,100%{transform:rotateY(-3deg)}50%{transform:rotateY(4deg) translateY(-.01em)}}
+.osito-face .bp-body{position:absolute;left:.18em;top:.07em;width:.36em;height:.49em;border-radius:.10em .10em .08em .08em;background:linear-gradient(145deg,#5f6dd5,#27327f 62%,#171d50);box-shadow:inset .025em .02em .03em rgba(255,255,255,.3),0 .035em .06em rgba(0,0,0,.45);transform:translateZ(.055em)}
+.osito-face .bp-pocket{position:absolute;left:.24em;top:.32em;width:.24em;height:.16em;border-radius:.035em .035em .07em .07em;background:linear-gradient(#6e79e4,#2d397f);box-shadow:inset 0 .01em .018em rgba(255,255,255,.22);transform:translateZ(.09em)}
+.osito-face .bp-flap{position:absolute;left:.19em;top:.10em;width:.34em;height:.15em;border-radius:.07em;background:linear-gradient(145deg,#7481ea,#303b91);transform:translateZ(.10em);transform-origin:top}
+.osito-face .bp-strap{position:absolute;top:.02em;width:.07em;height:.55em;border-radius:1em;background:linear-gradient(#39459e,#1a205d);transform:translateZ(.025em)}.osito-face .bp-strap.l{left:.15em}.osito-face .bp-strap.r{right:.15em}
+.osito-face .bp-buckle{position:absolute;left:.33em;top:.22em;width:.06em;height:.04em;border:.008em solid #c6b56d;border-radius:.01em;transform:translateZ(.13em)}
+.osito-face .of-backpack .of-mitt{width:.22em;height:.23em;top:.32em}.osito-face .of-backpack .of-mitt.ml{left:.02em}.osito-face .of-backpack .of-mitt.mr{right:.02em}
+.osito-face .of-boredom-prop[data-act="bk-open"] .bp-flap{animation:ofBagOpen 1s ease-in-out infinite alternate}
+@keyframes ofBagOpen{to{rotateX:-28deg;translateY:-.02em}}
+.osito-face .of-boredom-prop[data-act="bk-search"] .of-backpack{animation:ofBagSearch 1.5s ease-in-out infinite}
+@keyframes ofBagSearch{50%{rotateY(6deg) translateY(-.025em)}}
+
+/* ---------- Balón ---------- */
+.osito-face .of-boredom-prop[data-mode="balon"]{top:.50em;width:.72em;height:.62em;margin-left:-.36em}
+.osito-face .of-ball{position:absolute;inset:0;transform-style:preserve-3d;animation:ofBallIdle 4.5s ease-in-out infinite}
+@keyframes ofBallIdle{0%,100%{transform:rotateX(6deg) rotateY(-7deg)}50%{transform:rotateX(-2deg) rotateY(8deg) translateY(-.018em)}}
+.osito-face .ba-sphere{position:absolute;left:.16em;top:.09em;width:.40em;height:.40em;border-radius:50%;background:radial-gradient(circle at 30% 23%,#fff,#f3f4fb 42%,#c9cedc 100%);box-shadow:inset -.035em -.04em .05em rgba(40,45,70,.32),0 .04em .07em rgba(0,0,0,.4);transform:translateZ(.04em)}
+.osito-face .ba-patch{position:absolute;width:.10em;height:.10em;background:#22283a;clip-path:polygon(50% 0,100% 38%,81% 100%,19% 100%,0 38%);transform:translateZ(.105em)}
+.osito-face .ba-patch.p1{left:.31em;top:.17em}.osito-face .ba-patch.p2{left:.22em;top:.27em}.osito-face .ba-patch.p3{left:.39em;top:.31em}.osito-face .ba-patch.p4{left:.17em;top:.15em}
+.osito-face .of-ball .of-mitt{width:.21em;height:.22em;top:.25em}.osito-face .of-ball .of-mitt.ml{left:.00em}.osito-face .of-ball .of-mitt.mr{right:.00em}
+.osito-face .of-boredom-prop[data-beat="kick"] .of-ball{animation:ofBallKick 1s ease 1}
+@keyframes ofBallKick{50%{transform:translateY(-.07em) rotateX(18deg) rotateY(20deg)}}
+
+/* ---------- Varita mágica ---------- */
+.osito-face .of-boredom-prop[data-mode="varita"]{top:.43em;width:.76em;height:.68em;margin-left:-.38em}
+.osito-face .of-wand{position:absolute;inset:0;transform-style:preserve-3d;animation:ofWandIdle 5s ease-in-out infinite}
+@keyframes ofWandIdle{0%,100%{transform:rotateZ(-5deg)}50%{transform:rotateZ(7deg) translateY(-.01em)}}
+.osito-face .wd-stick{position:absolute;left:.34em;top:.20em;width:.045em;height:.38em;border-radius:1em;background:linear-gradient(90deg,#6d3f1e,#d69a55 48%,#70401f);transform:translateZ(.06em) rotate(-18deg);transform-origin:center bottom;box-shadow:0 .02em .035em rgba(0,0,0,.35)}
+.osito-face .wd-star{position:absolute;left:.26em;top:.07em;width:.20em;height:.20em;background:radial-gradient(circle,#fff7a0 0 20%,#ffd33d 45%,#f39a1c 100%);clip-path:polygon(50% 0,61% 36%,100% 35%,69% 56%,80% 100%,50% 72%,20% 100%,31% 56%,0 35%,39% 36%);transform:translateZ(.10em);filter:drop-shadow(0 0 .03em #ffd84a);animation:ofStarPulse 1.8s ease-in-out infinite}
+@keyframes ofStarPulse{50%{scale:1.16;filter:drop-shadow(0 0 .06em #ffe36b)}}
+.osito-face .wd-spark{position:absolute;width:.045em;height:.045em;border-radius:50%;background:#8ee7ff;transform:translateZ(.12em);box-shadow:0 0 .025em #8ee7ff;animation:ofSparkle 1.4s ease-in-out infinite}
+.osito-face .wd-spark.s1{left:.10em;top:.13em}.osito-face .wd-spark.s2{right:.10em;top:.22em;animation-delay:.4s}.osito-face .wd-spark.s3{left:.18em;top:.37em;animation-delay:.8s}
+@keyframes ofSparkle{0%,100%{opacity:.2;scale:.5}50%{opacity:1;scale:1.25}}
+.osito-face .of-wand .of-mitt{width:.21em;height:.22em;top:.45em}.osito-face .of-wand .of-mitt.ml{left:.03em}.osito-face .of-wand .of-mitt.mr{right:.03em}
+.osito-face .of-boredom-prop[data-beat="magic"] .wd-star{animation:ofMagic 1s ease 1}
+@keyframes ofMagic{50%{scale:1.35;rotate:18deg;filter:drop-shadow(0 0 .09em #ffe36b)}}
+
+/* ---------- Caja de regalo ---------- */
+.osito-face .of-boredom-prop[data-mode="regalo"]{top:.50em;width:.72em;height:.62em;margin-left:-.36em}
+.osito-face .of-gift{position:absolute;inset:0;transform-style:preserve-3d;animation:ofGiftIdle 5s ease-in-out infinite}
+@keyframes ofGiftIdle{0%,100%{transform:rotateY(-4deg)}50%{transform:rotateY(5deg) translateY(-.01em)}}
+.osito-face .gd-box{position:absolute;left:.17em;top:.24em;width:.38em;height:.27em;border-radius:.02em;background:linear-gradient(145deg,#f06b83,#9d2948);box-shadow:inset .02em .01em .02em rgba(255,255,255,.3),0 .035em .05em rgba(0,0,0,.4);transform:translateZ(.06em)}
+.osito-face .gd-lid{position:absolute;left:.14em;top:.18em;width:.44em;height:.09em;border-radius:.025em;background:linear-gradient(145deg,#ff8197,#a62b4c);transform:translateZ(.09em)}
+.osito-face .gd-ribbon-v{position:absolute;left:.335em;top:.18em;width:.055em;height:.34em;background:linear-gradient(90deg,#f7d56b,#fff0a3,#d9a934);transform:translateZ(.11em)}
+.osito-face .gd-ribbon-h{position:absolute;left:.15em;top:.285em;width:.42em;height:.055em;background:linear-gradient(#f7d56b,#c8992c);transform:translateZ(.10em)}
+.osito-face .gd-bow{position:absolute;top:.12em;width:.13em;height:.09em;border:.025em solid #f6d76c;border-radius:70% 30% 70% 30%;transform:translateZ(.12em)}
+.osito-face .gd-bow.l{left:.27em;rotate:18deg}.osito-face .gd-bow.r{left:.37em;rotate:-18deg}
+.osito-face .of-gift .of-mitt{width:.21em;height:.22em;top:.30em}.osito-face .of-gift .of-mitt.ml{left:.02em}.osito-face .of-gift .of-mitt.mr{right:.02em}
+.osito-face .of-boredom-prop[data-beat="open"] .gd-lid{animation:ofGiftOpen .9s ease 1}
+@keyframes ofGiftOpen{50%{translate:0 -.10em;rotateX(-35deg);transform-origin:center bottom}}
+
+/* ---------- Consola portátil 3D ---------- */
+.osito-face .of-boredom-prop[data-mode="consola"]{top:.63em;width:1em;height:.48em;margin-left:-.5em}
+.osito-face .of-handheld{position:absolute;inset:0;transform-style:preserve-3d;animation:ofHandheldIdle 5s ease-in-out infinite}
+@keyframes ofHandheldIdle{0%,100%{transform:rotateX(-5deg) rotateY(-3deg)}50%{transform:rotateX(-3deg) rotateY(3deg) translateY(-.012em)}}
+.osito-face .hc-body{position:absolute;left:.08em;top:.06em;width:.84em;height:.34em;border-radius:.10em;background:linear-gradient(145deg,#596174,#242a3b 65%,#171b28);box-shadow:inset 0 .012em .02em rgba(255,255,255,.3),0 .035em .06em rgba(0,0,0,.5);transform:translateZ(.035em)}
+.osito-face .hc-screen{position:absolute;left:.25em;top:.10em;width:.50em;height:.22em;border-radius:.025em;background:linear-gradient(145deg,#344d9b,#101b43);box-shadow:inset 0 0 .012em rgba(255,255,255,.35);transform:translateZ(.075em)}
+.osito-face .hc-game{position:absolute;left:.29em;top:.14em;width:.42em;height:.13em;background:linear-gradient(90deg,#5bd5ff,#5f6cff,#e86cff);opacity:.75;transform:translateZ(.09em);animation:ofHandheldGame 1.8s ease-in-out infinite}
+@keyframes ofHandheldGame{50%{filter:brightness(1.45);translate:.015em 0}}
+.osito-face .hc-dpad{position:absolute;left:.15em;top:.18em;width:.11em;height:.11em;background:#606a80;clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%);transform:translateZ(.08em)}
+.osito-face .hc-stick{position:absolute;top:.16em;width:.07em;height:.07em;border-radius:50%;background:#a1a9ba;transform:translateZ(.085em)}.osito-face .hc-stick.l{left:.14em}.osito-face .hc-stick.r{right:.14em}
+.osito-face .hc-btn{position:absolute;width:.055em;height:.055em;border-radius:50%;background:#ef6d84;transform:translateZ(.085em)}.osito-face .hc-btn.a{right:.17em;top:.16em}.osito-face .hc-btn.b{right:.12em;top:.21em;background:#69d9ff}
+.osito-face .of-handheld .of-mitt{width:.27em;height:.28em;top:.10em}.osito-face .of-handheld .of-mitt.ml{left:-.10em}.osito-face .of-handheld .of-mitt.mr{right:-.10em}
+.osito-face .of-boredom-prop[data-beat="win"] .of-handheld{animation:ofHandheldWin 1s ease 1}
+@keyframes ofHandheldWin{50%{translate:0 -.05em;rotate:0 1 0 7deg;scale:1.035}}
+
+/* ---------- Vaso ---------- */
+.osito-face .of-boredom-prop[data-mode="vaso"]{top:.55em;width:.62em;height:.62em;margin-left:-.31em}
+.osito-face .of-glass{position:absolute;inset:0;transform-style:preserve-3d;animation:ofGlassIdle 5s ease-in-out infinite}
+@keyframes ofGlassIdle{0%,100%{transform:rotateY(-4deg)}50%{transform:rotateY(5deg) translateY(-.012em)}}
+.osito-face .vs-body{position:absolute;left:.20em;top:.10em;width:.23em;height:.39em;border-radius:.025em .025em .07em .07em;background:linear-gradient(90deg,rgba(235,247,255,.18),rgba(255,255,255,.55) 42%,rgba(180,215,240,.18));border:.012em solid rgba(255,255,255,.7);transform:translateZ(.04em);box-shadow:0 .03em .05em rgba(0,0,0,.25)}
+.osito-face .vs-liquid{position:absolute;left:.215em;top:.22em;width:.20em;height:.25em;border-radius:0 0 .06em .06em;background:linear-gradient(#7bd9ff,#3d8ed6);transform:translateZ(.055em);opacity:.78}
+.osito-face .vs-rim{position:absolute;left:.19em;top:.085em;width:.25em;height:.065em;border-radius:50%;border:.012em solid rgba(255,255,255,.85);transform:translateZ(.08em)}
+.osito-face .vs-straw{position:absolute;left:.36em;top:-.03em;width:.025em;height:.27em;border-radius:1em;background:linear-gradient(#ff8ea7,#d14b68);transform:translateZ(.09em) rotate(10deg);transform-origin:bottom}
+.osito-face .vs-shine{position:absolute;left:.235em;top:.15em;width:.025em;height:.20em;border-radius:1em;background:rgba(255,255,255,.75);transform:translateZ(.09em)}
+.osito-face .of-glass .of-mitt{width:.20em;height:.21em;top:.30em}.osito-face .of-glass .of-mitt.ml{left:.03em}.osito-face .of-glass .of-mitt.mr{right:.03em}
+.osito-face .of-boredom-prop[data-beat="sip"] .of-glass{animation:ofGlassSip .9s ease 1}
+@keyframes ofGlassSip{50%{translate:0 -.045em;rotate:0 1 0 7deg}}
+
+/* ---------- Cámara ---------- */
+.osito-face .of-boredom-prop[data-mode="camara"]{top:.55em;width:.78em;height:.58em;margin-left:-.39em}
+.osito-face .of-camera{position:absolute;inset:0;transform-style:preserve-3d;animation:ofCameraIdle 5s ease-in-out infinite}
+@keyframes ofCameraIdle{0%,100%{transform:rotateY(-5deg) rotateX(-2deg)}50%{transform:rotateY(6deg) rotateX(0deg) translateY(-.012em)}}
+.osito-face .cm-body{position:absolute;left:.14em;top:.16em;width:.51em;height:.28em;border-radius:.045em;background:linear-gradient(145deg,#687184,#252b3c 62%,#151927);box-shadow:inset .02em .015em .025em rgba(255,255,255,.3),0 .035em .06em rgba(0,0,0,.45);transform:translateZ(.05em)}
+.osito-face .cm-top{position:absolute;left:.28em;top:.11em;width:.20em;height:.07em;border-radius:.025em;background:linear-gradient(#858da0,#3b4254);transform:translateZ(.07em)}
+.osito-face .cm-lens{position:absolute;left:.285em;top:.20em;width:.20em;height:.20em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8ca9ff 0 12%,#26365d 32%,#080d19 70%);box-shadow:0 0 0 .012em #8992a8,inset 0 0 .02em rgba(255,255,255,.45);transform:translateZ(.10em)}
+.osito-face .cm-lens-glass{position:absolute;left:.315em;top:.23em;width:.07em;height:.055em;border-radius:50%;background:rgba(255,255,255,.45);transform:translateZ(.13em) rotate(-20deg)}
+.osito-face .cm-flash{position:absolute;right:.18em;top:.20em;width:.05em;height:.045em;border-radius:.012em;background:#e8c87b;box-shadow:0 0 .02em #ffe7a4;transform:translateZ(.10em)}
+.osito-face .cm-grip{position:absolute;right:.10em;top:.20em;width:.07em;height:.20em;border-radius:.02em;background:linear-gradient(#3b4355,#161a27);transform:translateZ(.025em)}
+.osito-face .of-camera .of-mitt{width:.22em;height:.23em;top:.29em}.osito-face .of-camera .of-mitt.ml{left:.02em}.osito-face .of-camera .of-mitt.mr{right:.02em}
+.osito-face .of-boredom-prop[data-beat="flash"] .cm-flash{animation:ofCameraFlash .55s ease 1}
+@keyframes ofCameraFlash{0%,100%{opacity:1;box-shadow:0 0 .02em #ffe7a4}35%{background:#fff;box-shadow:0 0 .11em .03em #fff;scale:1.4}}
+
+/* ---------- Expresiones específicas: los ojos cambian, el personaje NO tiembla ---------- */
+.osito-face[data-act="ch-sip"] .of-look,
+.osito-face[data-act="vs-sip"] .of-look{transform:translate(.02em,.045em)}
+.osito-face[data-act="g-focus"] .of-look,
+.osito-face[data-act="hc-focus"] .of-look{animation:ofGameEyes 2.8s ease-in-out infinite}
+@keyframes ofGameEyes{0%,100%{transform:translate(-.03em,.015em)}50%{transform:translate(.035em,.005em)}}
+.osito-face[data-act="pl-hug"] .of-eye{scale:.9 .92}
+.osito-face[data-act="pz-smell"] .of-look,
+.osito-face[data-act="ap-smell"] .of-look{transform:translate(0,-.035em)}
+.osito-face[data-act="mc-sing"] .of-mouth{scale:1 .72}
+.osito-face[data-act="lp-type"] .of-look{animation:ofTypeEyes 2.2s ease-in-out infinite}
+@keyframes ofTypeEyes{0%,100%{transform:translate(-.025em,.025em)}50%{transform:translate(.025em,.03em)}}
+.osito-face[data-act="bk-search"] .of-look{animation:ofSearchEyes 2s ease-in-out infinite}
+@keyframes ofSearchEyes{0%,100%{transform:translate(-.03em,.02em)}50%{transform:translate(.035em,-.01em)}}
+.osito-face[data-act="ba-bounce"] .of-eye{scale:1.04 1.04}
+.osito-face[data-act="w-cast"] .of-eye{scale:1.08 1.08}
+.osito-face[data-act="gd-open"] .of-eye{scale:1.10 1.10}
+.osito-face[data-act="cm-snap"] .of-eye{scale:1.05 1.05}
+
+/* ---------- Animaciones de entrada/salida también se aplican a las piezas ---------- */
+.osito-face .of-boredom-prop[data-mode="audifonos"] .of-hp,
+.osito-face .of-boredom-prop[data-mode="chocolate"] .of-cup,
+.osito-face .of-boredom-prop[data-mode="control"] .of-control,
+.osito-face .of-boredom-prop[data-mode="peluche"] .of-plush,
+.osito-face .of-boredom-prop[data-mode="pizza"] .of-pizza,
+.osito-face .of-boredom-prop[data-mode="manzana"] .of-apple,
+.osito-face .of-boredom-prop[data-mode="microfono"] .of-mic,
+.osito-face .of-boredom-prop[data-mode="laptop"] .of-laptop,
+.osito-face .of-boredom-prop[data-mode="mochila"] .of-backpack,
+.osito-face .of-boredom-prop[data-mode="balon"] .of-ball,
+.osito-face .of-boredom-prop[data-mode="varita"] .of-wand,
+.osito-face .of-boredom-prop[data-mode="regalo"] .of-gift,
+.osito-face .of-boredom-prop[data-mode="consola"] .of-handheld,
+.osito-face .of-boredom-prop[data-mode="vaso"] .of-glass,
+.osito-face .of-boredom-prop[data-mode="camara"] .of-camera{transform-style:preserve-3d}
+
+@media (prefers-reduced-motion:reduce){
+  .osito-face .of-hp,.osito-face .of-cup,.osito-face .of-control,.osito-face .of-plush,
+  .osito-face .of-pizza,.osito-face .of-apple,.osito-face .of-mic,.osito-face .of-laptop,
+  .osito-face .of-backpack,.osito-face .of-ball,.osito-face .of-wand,.osito-face .of-gift,
+  .osito-face .of-handheld,.osito-face .of-glass,.osito-face .of-camera{animation:none!important}
+}
+html.low-end-device .osito-face .of-hp,html.low-end-device .osito-face .of-cup,
+html.low-end-device .osito-face .of-control,html.low-end-device .osito-face .of-plush,
+html.low-end-device .osito-face .of-pizza,html.low-end-device .osito-face .of-apple,
+html.low-end-device .osito-face .of-mic,html.low-end-device .osito-face .of-laptop,
+html.low-end-device .osito-face .of-backpack,html.low-end-device .osito-face .of-ball,
+html.low-end-device .osito-face .of-wand,html.low-end-device .osito-face .of-gift,
+html.low-end-device .osito-face .of-handheld,html.low-end-device .osito-face .of-glass,
+html.low-end-device .osito-face .of-camera{animation-duration:9s}
+
+/* =====================================================================
+ * V60 — OBJETOS VISTOS POR ATRÁS
+ * Osito mira la pantalla/frente del objeto; a ti (que lo ves de frente) te llega la parte de
+ * atrás: carcasa lisa, cámara del teléfono, agarres del mando, tapa de la laptop, cámara por detrás…
+ * Las partes del frente (pantallas, botones, lente) quedan ocultas detrás del cuerpo.
+ * ===================================================================== */
+
+/* ---------- Teléfono (horizontal, por atrás) ---------- */
+.osito-face .of-tel .tl-screen,.osito-face .of-tel .tl-speaker,.osito-face .of-tel .tl-dot{display:none!important}
+.osito-face .of-tel .tl-body{
+  background:linear-gradient(150deg,#7a85a0,#3a4258 48%,#212638 100%);
+  box-shadow:inset 0 0 0 .007em rgba(255,255,255,.28),inset 0 .012em .02em rgba(255,255,255,.35),0 .035em .06em rgba(0,0,0,.5);
+  transform:translateZ(.07em);
+}
+.osito-face .of-tel .tl-body::before{ /* módulo de cámaras */
+  content:"";position:absolute;left:.05em;top:.05em;width:.15em;height:.15em;border-radius:.04em;
+  background:
+    radial-gradient(circle at 30% 30%,#9db4ff 0 .012em,#1b2445 .02em .03em,transparent .032em),
+    radial-gradient(circle at 70% 30%,#9db4ff 0 .012em,#1b2445 .02em .03em,transparent .032em),
+    radial-gradient(circle at 30% 72%,#9db4ff 0 .012em,#1b2445 .02em .03em,transparent .032em),
+    linear-gradient(145deg,#1c2133,#0d111c);
+  box-shadow:inset 0 0 0 .006em rgba(255,255,255,.35),0 .01em .02em rgba(0,0,0,.5);
+}
+.osito-face .of-tel .tl-body::after{ /* logo */
+  content:"";position:absolute;left:50%;top:50%;width:.09em;height:.09em;margin:-.03em 0 0 -.045em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.75),rgba(255,255,255,.18) 70%);
+}
+
+/* ---------- Mando (por atrás: agarres y gatillos) ---------- */
+.osito-face .ct-dpad,.osito-face .ct-stick,.osito-face .ct-btn,.osito-face .ct-led{display:none!important}
+.osito-face .ct-body{
+  background:linear-gradient(160deg,#6a7189,#2b3044 55%,#161a29);
+  transform:translateZ(.08em);
+}
+.osito-face .ct-body::before{ /* gatillos arriba */
+  content:"";position:absolute;left:.08em;right:.08em;top:-.02em;height:.03em;border-radius:.02em .02em 0 0;
+  background:linear-gradient(#8a92aa,#3b4157);
+}
+.osito-face .ct-body::after{ /* etiqueta y puerto */
+  content:"";position:absolute;left:50%;top:.12em;width:.2em;height:.05em;margin-left:-.1em;border-radius:.012em;
+  background:linear-gradient(90deg,#1b1f31 0 62%,#2f3550 62% 100%);box-shadow:inset 0 0 .008em rgba(255,255,255,.28);
+}
+
+/* ---------- Consola portátil (por atrás) ---------- */
+.osito-face .hc-screen,.osito-face .hc-game,.osito-face .hc-dpad,.osito-face .hc-stick,.osito-face .hc-btn{display:none!important}
+.osito-face .hc-body{
+  background:linear-gradient(160deg,#6c748a,#2b3144 58%,#171b28);
+  transform:translateZ(.09em);
+}
+.osito-face .hc-body::before{ /* ranura de cartucho */
+  content:"";position:absolute;left:50%;top:.035em;width:.34em;height:.05em;margin-left:-.17em;border-radius:.01em;
+  background:linear-gradient(#10131d,#242a3b);box-shadow:inset 0 0 .008em rgba(255,255,255,.3);
+}
+.osito-face .hc-body::after{ /* agarres traseros */
+  content:"";position:absolute;left:.04em;right:.04em;bottom:.03em;height:.15em;
+  background:
+    radial-gradient(ellipse at 14% 50%,rgba(0,0,0,.35) 0 .07em,transparent .075em),
+    radial-gradient(ellipse at 86% 50%,rgba(0,0,0,.35) 0 .07em,transparent .075em);
+}
+
+/* ---------- Laptop (vista por atrás: tapa) ---------- */
+.osito-face .lp-glass,.osito-face .lp-glow,.osito-face .lp-keyboard,.osito-face .lp-trackpad{display:none!important}
+.osito-face .lp-screen{
+  background:linear-gradient(150deg,#9aa3b8,#5d667c 55%,#394055);
+  transform:translateZ(.09em) rotateX(-3deg);
+  box-shadow:inset 0 0 0 .01em rgba(255,255,255,.35),0 .03em .05em rgba(0,0,0,.45);
+}
+.osito-face .lp-screen::after{ /* logo en la tapa */
+  content:"";position:absolute;left:50%;top:50%;width:.07em;height:.07em;margin:-.035em 0 0 -.035em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(255,255,255,.3) 75%);
+  box-shadow:0 0 .03em rgba(255,255,255,.4);
+}
+.osito-face .lp-base{transform:translateZ(.02em)}
+
+/* ---------- Cámara (por atrás: visor, botones y dial; sin lente) ---------- */
+.osito-face .cm-lens,.osito-face .cm-lens-glass,.osito-face .cm-flash{display:none!important}
+.osito-face .cm-body{transform:translateZ(.09em)}
+.osito-face .cm-body::before{ /* visor */
+  content:"";position:absolute;left:.04em;top:.04em;width:.15em;height:.11em;border-radius:.015em;
+  background:linear-gradient(145deg,#10151f,#1f2740);box-shadow:inset 0 0 0 .006em rgba(255,255,255,.35);
+}
+.osito-face .cm-body::after{ /* botones y dial */
+  content:"";position:absolute;right:.04em;top:.04em;width:.22em;height:.2em;
+  background:
+    radial-gradient(circle at 78% 30%,#c9d0e0 0 .018em,transparent .02em),
+    radial-gradient(circle at 78% 70%,#e8c87b 0 .018em,transparent .02em),
+    radial-gradient(circle at 28% 50%,#9aa3b8 0 .045em,#3b4254 .048em .06em,transparent .062em);
+}
+
+/* ---------- Periódico (por atrás: la portada hacia ti) ---------- */
+.osito-face .np-pg::before,.osito-face .np-pg::after{display:none!important}
+.osito-face .np-pg.l,.osito-face .np-pg.r{
+  background:
+    linear-gradient(180deg,#f3efe0,#e3dcc4);
+}
+.osito-face .np-pg.l::before{display:block!important;content:"";position:absolute;left:8%;right:-3%;top:7%;height:13%;
+  background:linear-gradient(90deg,#2a2833,#3b3846);border-radius:.006em}
+.osito-face .np-pg.l::after{display:block!important;content:"";position:absolute;left:8%;right:-3%;top:26%;bottom:8%;
+  background:
+    linear-gradient(135deg,#8fbbe0,#4e7fb0) 0 0/100% 42% no-repeat,
+    repeating-linear-gradient(180deg,#8c8997 0 .007em,transparent .007em .026em) 0 100%/100% 52% no-repeat}
+.osito-face .np-pg.r::before{display:block!important;content:"";position:absolute;left:-3%;right:8%;top:7%;height:13%;
+  background:linear-gradient(90deg,#3b3846,#2a2833);border-radius:.006em}
+.osito-face .np-pg.r::after{display:block!important;content:"";position:absolute;left:-3%;right:8%;top:26%;bottom:8%;
+  background:
+    repeating-linear-gradient(180deg,#8c8997 0 .007em,transparent .007em .026em) 0 0/100% 100% no-repeat}
+.osito-face .np-flip{display:none!important} /* la hoja que pasaba se ve por dentro: no se muestra por atrás */
+
+/* ---------- Peluche (abrazado: se ve su espalda) ---------- */
+.osito-face .pl-eye,.osito-face .pl-nose,.osito-face .pl-belly{display:none!important}
+.osito-face .pl-head{
+  background:radial-gradient(circle at 32% 20%,#d9a07a,#a56d52 58%,#6a3e2c);
+}
+.osito-face .pl-body::after{ /* colita */
+  content:"";position:absolute;left:50%;bottom:.01em;width:.07em;height:.07em;margin-left:-.035em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#e7b58f,#8c5943);
 }

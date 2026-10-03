@@ -101,6 +101,8 @@
     if (document.hidden) return false;
     if (document.body && (document.body.classList.contains('no-animations') || document.body.classList.contains('ultra-performance'))) return false;
     if (window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme()) return false;
+    // V59: mientras Osito está con un objeto, no se cambia de personalidad (pisaría su expresión lenta).
+    if (document.querySelector('.osito-face[data-boredom]')) return false;
     return true;
   }
   function programar(){

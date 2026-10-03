@@ -1,0 +1,21 @@
+EL SOTANO DE OSITO — V60
+
+1) Un solo objeto en el personaje (antes se veían dos)
+- Causa: osito-cara3d.css (diseño viejo, teléfono vertical) se cargaba DESPUÉS de osito-actividades-3d.css
+  y le pisaba el tamaño al teléfono horizontal nuevo. Se dibujaban los dos juntos.
+- Arreglo: en index.html ahora osito-actividades-3d.css se carga después de osito-cara3d.css.
+- Además, osito-aburrimiento.js ahora borra TODOS los objetos que queden antes de sacar uno nuevo,
+  así nunca puede haber dos a la vez al cambiar de actividad (probado: máximo 1).
+
+2) Objetos vistos por atrás (ya no muestran su frente)
+Osito mira la pantalla/frente; tú ves la parte de atrás:
+- Teléfono: carcasa trasera con módulo de cámaras y logo (sin pantalla).
+- Mando y consola portátil: parte trasera con gatillos, ranura y agarres (sin botones ni pantalla).
+- Laptop: la tapa con logo (sin pantalla ni teclado).
+- Cámara: parte de atrás con visor, botones y dial (sin lente).
+- Periódico: la portada hacia ti.
+- Peluche: de espaldas, con colita.
+- El libro ya estaba visto por atrás y no cambió.
+
+3) Caché: index.html, osito-actividades-3d.css y osito-aburrimiento.js suben a ?v=v60.
+Instalación: reemplaza los archivos y recarga con Ctrl + F5 (en móvil, borra la caché del sitio).

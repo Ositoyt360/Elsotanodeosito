@@ -16,6 +16,39 @@
     var flags = { escuchando: false, pensando: false, hablando: false };
     var estadoActual = '';
 
+    // Decoración interna de la mascotita: cada modo especial adorna la propia cara,
+    // no solamente el fondo de la página. Se actualiza automáticamente al cambiar de modo.
+    function prepararDecoracionEspecial() {
+        caras.forEach(function (cara) {
+            var card = cara.querySelector('.of-card');
+            if (!card) return;
+            var deco = card.querySelector('.of-theme-decor');
+            if (!deco) {
+                deco = document.createElement('span');
+                deco.className = 'of-theme-decor';
+                deco.setAttribute('aria-hidden', 'true');
+                card.appendChild(deco);
+            }
+        });
+        actualizarDecoracionEspecial();
+    }
+    function actualizarDecoracionEspecial() {
+        var body = document.body;
+        if (!body) return;
+        var tema = body.classList.contains('modo-halloween') ? 'halloween' :
+            body.classList.contains('modo-navidad') ? 'navidad' :
+            body.classList.contains('modo-san-valentin') ? 'san-valentin' :
+            body.classList.contains('modo-cumpleanos') ? 'cumpleanos' : 'normal';
+        caras.forEach(function (cara) {
+            var deco = cara.querySelector('.of-theme-decor');
+            if (deco) deco.setAttribute('data-theme', tema);
+        });
+    }
+    prepararDecoracionEspecial();
+    if (window.MutationObserver && document.body) {
+        new MutationObserver(actualizarDecoracionEspecial).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+
     var TEXTOS = {
         idle: 'En línea · modo local',
         listening: 'Escuchando…',

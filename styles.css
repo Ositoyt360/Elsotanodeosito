@@ -4218,6 +4218,37 @@ html.low-end-device .content-section {
     -webkit-backdrop-filter: none !important;
 }
 
+.mobile-menu-back { display: none !important; }
+
+/* Decoración dentro de la cara de la mascotita según el modo especial. */
+.osito-face .of-theme-decor {
+    position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    display: block; opacity: 0; transform: scale(.8);
+    transition: opacity .25s ease, transform .25s ease;
+}
+.osito-face .of-theme-decor::before,
+.osito-face .of-theme-decor::after {
+    position: absolute; line-height: 1; font-size: .30em;
+    filter: drop-shadow(0 0 .08em rgba(255,255,255,.35));
+}
+.osito-face .of-theme-decor::before { left: .04em; top: .02em; }
+.osito-face .of-theme-decor::after { right: .04em; bottom: .02em; }
+body.modo-halloween .osito-face .of-theme-decor,
+body.modo-navidad .osito-face .of-theme-decor,
+body.modo-san-valentin .osito-face .of-theme-decor,
+body.modo-cumpleanos .osito-face .of-theme-decor { opacity: 1; transform: scale(1); }
+body.modo-halloween .osito-face .of-theme-decor::before { content:"🎃"; }
+body.modo-halloween .osito-face .of-theme-decor::after { content:"🦇"; animation: faceThemeFloat 1.9s ease-in-out infinite; }
+body.modo-navidad .osito-face .of-theme-decor::before { content:"🎄"; }
+body.modo-navidad .osito-face .of-theme-decor::after { content:"❄️"; animation: faceThemeSpin 2.4s linear infinite; }
+body.modo-san-valentin .osito-face .of-theme-decor::before { content:"💗"; }
+body.modo-san-valentin .osito-face .of-theme-decor::after { content:"💖"; animation: faceThemePulse 1.3s ease-in-out infinite; }
+body.modo-cumpleanos .osito-face .of-theme-decor::before { content:"🎈"; }
+body.modo-cumpleanos .osito-face .of-theme-decor::after { content:"🎉"; animation: faceThemeFloat 1.5s ease-in-out infinite; }
+@keyframes faceThemeFloat { 50% { transform: translateY(-.10em) rotate(6deg); } }
+@keyframes faceThemeSpin { to { transform: rotate(360deg); } }
+@keyframes faceThemePulse { 50% { transform: scale(1.22); } }
+
 /* Menú móvil centrado de verdad: no depende del ancho del header ni se sale por un lado. */
 @media (max-width: 768px) {
     .header-menu-wrap { position: static; }
@@ -5874,9 +5905,9 @@ html.mobile-lite .osito-face .of-card { transition: none; }
     /* La mascotita: panel suficientemente alto para que SIEMPRE se vea la caja
        de escritura y el micrófono incluso en teléfonos bajos. */
     .ia-section.active {
-        width: min(420px, calc(100vw - 12px)) !important;
-        height: min(720px, calc(100dvh - 18px)) !important;
-        max-height: calc(100dvh - 18px) !important;
+        width: min(350px, calc(100vw - 28px)) !important;
+        height: min(610px, calc(100dvh - 24px)) !important;
+        max-height: calc(100dvh - 24px) !important;
         border-radius: 16px !important;
     }
     .ia-section .ia-chat-shell {
@@ -5981,4 +6012,41 @@ body.ultra-performance .osito-face {
     body.modo-cumpleanos .osito-face {
         animation: none !important;
     }
+}
+
+
+/* V50.1 — ajustes solicitados para móvil */
+@media (max-width: 768px) {
+    .header-menu-dropdown .mobile-menu-back {
+        display: flex !important;
+        margin-top: 4px !important;
+        border-top: 1px solid rgba(255,255,255,.10) !important;
+        border-radius: 12px !important;
+        background: rgba(255,255,255,.06) !important;
+    }
+    .ia-section.active {
+        width: min(350px, calc(100vw - 28px)) !important;
+        height: min(610px, calc(100dvh - 24px)) !important;
+        max-height: calc(100dvh - 24px) !important;
+    }
+    .ia-section .ia-setup { padding: 7px 8px 8px !important; }
+    .ia-section .ai-chat-shell { gap: 6px !important; }
+    .ia-section .ai-profile-row { padding: 7px !important; }
+    .ia-section .ai-profile-actions { gap: 4px !important; }
+    .ia-section .ai-profile-actions .btn-action { min-height: 34px !important; padding: 5px 8px !important; font-size: 11px !important; }
+    .ia-section .ai-name-row { gap: 5px !important; }
+    .ia-section .ai-name-row .input-gamer { min-width: 0 !important; height: 36px !important; }
+    .ia-section .ai-name-save { min-height: 36px !important; padding: 5px 8px !important; font-size: 10px !important; }
+    .ia-section .ia-messages { min-height: 100px !important; }
+    .ia-section .ai-suggestions { margin: 0 !important; }
+    .ia-section .ai-suggestion { min-height: 30px !important; padding: 4px 9px !important; font-size: 10px !important; }
+    .ia-section .ai-input-row { min-height: 46px !important; padding: 4px 6px !important; }
+    .ia-section #ai-input { min-height: 36px !important; height: 36px !important; font-size: 14px !important; padding: 7px 5px !important; }
+    .ia-section .ai-mic-btn, .ia-section .ai-input-row .btn-send { width: 36px !important; min-width: 36px !important; height: 36px !important; }
+}
+@media (max-width: 380px) {
+    .ia-section.active { width: calc(100vw - 20px) !important; }
+    .ia-section .ia-header { padding: 8px 10px !important; }
+    .ia-section .ia-header-title .osito-face { --fs: 36px; }
+    .ia-section .ai-profile-actions .btn-action { padding-left: 5px !important; padding-right: 5px !important; }
 }

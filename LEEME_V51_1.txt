@@ -1,0 +1,14 @@
+EL SÓTANO DE OSITO — V51.1
+
+- Emojis de la cara: cada emoción lanza su emoji UNA sola vez (antes se repetía en bucle mientras duraba la emoción).
+- Las expresiones automáticas salen todas una vez antes de repetirse y nunca la misma dos veces seguidas.
+- Ronquidos: rehechos con frecuencias audibles y más volumen (antes eran tan graves que bocinas y celulares no los reproducían).
+  Ronca 3 veces, pausa corta y vuelve a roncar mientras duerme (noche o siesta).
+- De 9:00 pm a 5:30 am (hora de El Salvador) la cara está dormida; si abren la página en ese horario ya está dormida.
+- De día, 8 minutos sin actividad real de la persona = siesta. El scroll automático y los eventos de scripts ya no cuentan como actividad.
+- Nota: los navegadores no dejan sonar nada hasta que la persona toque la página al menos una vez.
+- Probar de día: OsitoNight.forzar(true) en la consola · volver a la hora real: OsitoNight.forzar(null)
+
+V51.2
+- Se quitó el punto verde de la burbuja flotante.
+- Los emojis de la cara salen ahora a la derecha, más chicos, sobresaliendo del aro de colores (las Zzz también).

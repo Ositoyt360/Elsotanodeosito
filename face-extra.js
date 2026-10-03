@@ -1,5 +1,5 @@
 /**
- * V49.6 — La cara de LAIA duerme de noche.
+ * V51.1 — La cara de LAIA duerme de noche (9:00 pm a 5:30 am) y de día se duerme tras 8 min sin actividad.
  *  - De 9:00 pm a 5:30 am (hora de El Salvador) la cara duerme normalmente.
  *  - De día, si pasan 8 minutos sin actividad del usuario, se echa una siesta de 15 minutos.
  *  - Cualquier actividad del usuario durante la siesta la despierta inmediatamente.
@@ -14,13 +14,13 @@
     var durmiendo = false;
     var enSiesta = false;
     var timerSiesta = null;
-    var ultimaConCara = Date.now(); // no entrar en sueño por un temporizador vencido al cargar
+    var ultimaConCara = Date.now();
     var ultimaActividad = Date.now();
     var forzado = null;
     try { var fz = localStorage.getItem('osito_forzar_noche'); forzado = fz === '1' ? true : (fz === '0' ? false : null); } catch (e) {}
 
     var INICIO = 21, FIN = 5.5;
-    var ESPERA_NOCHE = 0; // al llegar a las 21:00 inicia el horario nocturno
+    var ESPERA_NOCHE = 30 * 1000; // de noche duerme tras 30 s sin tocarla (así no se duerme mientras alguien escribe)
     var ESPERA_SIESTA = 8 * 60 * 1000;
     var DURACION_SIESTA = 15 * 60 * 1000;
 
@@ -30,6 +30,7 @@
         var h = d.getUTCHours() + d.getUTCMinutes() / 60;
         return h >= INICIO || h < FIN;
     }
+    if (esNoche()) ultimaConCara = 0; // si abren la página entre 9 pm y 5:30 am, ya está dormida
     function visible(c) { return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }
 
     // Zzz y burbujita de ronquido
@@ -67,7 +68,10 @@
         return eraSiesta;
     }
 
-    function registrarActividad() {
+    function registrarActividad(ev) {
+        // Ignora eventos falsos de scripts y el scroll automático de carruseles/chat: solo cuenta la persona.
+        if (ev && ev.isTrusted === false) return;
+        if (ev && ev.type === 'scroll' && ev.target !== document && ev.target !== document.documentElement && ev.target !== document.body) return;
         ultimaActividad = Date.now();
         ultimaConCara = ultimaActividad;
         if (durmiendo && !esNoche()) tocar(true);
@@ -116,7 +120,7 @@
     var campo = document.getElementById('ai-input');
     if (campo) { campo.addEventListener('input', function () { tocar(true); }, { passive: true }); campo.addEventListener('focus', function () { tocar(true); }); }
     var panel = document.getElementById('ai-section');
-    if (panel) panel.addEventListener('pointerdown', function () { registrarActividad(); }, { passive: true });
+    if (panel) panel.addEventListener('pointerdown', registrarActividad, { passive: true });
 
     // Actividad real de la página: cualquier toque/clic/tecla/scroll despierta la siesta.
     ['pointerdown','keydown','touchstart','wheel','scroll','click'].forEach(function (evento) {
@@ -127,6 +131,25 @@
         var ahora = Date.now();
         if (ahora - ultimaActividad > 900) registrarActividad();
     }, { passive: true, capture: true });
+
+    // V51.1: cada emoción nueva lanza su emoji UNA vez (si la emoción no cambia, no se repite).
+    function reiniciarEmoji(c) {
+        var sp = c.querySelector('.of-spark');
+        if (!sp) return;
+        sp.style.setProperty('animation', 'none', 'important');
+        void sp.offsetWidth;
+        sp.style.removeProperty('animation');
+    }
+    if ('MutationObserver' in window) {
+        caras.forEach(function (c) {
+            new MutationObserver(function (lista) {
+                lista.forEach(function (m) {
+                    var ahora = c.getAttribute(m.attributeName) || '';
+                    if (ahora && ahora !== (m.oldValue || '')) reiniciarEmoji(c);
+                });
+            }).observe(c, { attributes: true, attributeFilter: ['data-expr', 'data-estado'], attributeOldValue: true });
+        });
+    }
 
     window.OsitoNight = {
         duerme: function () { return durmiendo; },

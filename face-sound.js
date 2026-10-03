@@ -209,11 +209,14 @@
         // ---- V49.6 ----
         // ronquido: inhala (aire que sube) y exhala rasposo
         snore: function () {
-            ruido(0, 0.95, 0.09, 'bandpass', 260, 620, 1.4, 0.5);
-            tono(62, 95, 0.05, 0.9, 'sawtooth', 0.05, { lp: 260, am: 21, a: 0.4 });
-            ruido(1.05, 1.25, 0.15, 'lowpass', 520, 170, 0.9, 0.12);
-            tono(105, 52, 1.1, 1.2, 'sawtooth', 0.12, { lp: 320, am: 17, a: 0.1 });
-            tono(78, 48, 1.2, 1.0, 'square', 0.04, { lp: 240, am: 23 });
+            // V51.1: ronquido AUDIBLE (antes era tan grave y bajito que bocinas y celulares no lo reproducían).
+            // inhala: aire rasposo que sube
+            ruido(0, 0.8, 0.34, 'bandpass', 350, 850, 1.1, 0.4);
+            tono(150, 210, 0.05, 0.75, 'sawtooth', 0.12, { lp: 950, am: 24, a: 0.4 });
+            // exhala: vibración gutural con aire
+            ruido(0.9, 1.3, 0.46, 'bandpass', 650, 220, 0.8, 0.1);
+            tono(170, 85, 0.95, 1.25, 'sawtooth', 0.32, { lp: 1050, am: 19, a: 0.1 });
+            tono(115, 62, 1.0, 1.2, 'square', 0.1, { lp: 720, am: 27 });
         },
         // risa: ja-ja-ja-ja
         laugh: function () {
@@ -342,19 +345,20 @@
         });
     }
 
-    // V50.5: mientras la cara duerme (incluida la siesta) ronca periódicamente.
+    // V51.1: mientras la cara duerme (noche o siesta) ronca: 3 ronquidos, pausa corta y vuelve a roncar.
     var ronquidos = 0, ronqPausaHasta = 0;
     setInterval(function () {
         if (!activado || !tocoPagina || document.hidden) return;
         var duerme = caras.some(function (c) { return c.getAttribute('data-expr') === 'sleeping' && (c.offsetParent || c.getClientRects().length); });
         if (!duerme) { ronquidos = 0; return; }
+        if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
         var ahora = Date.now();
         if (ahora < ronqPausaHasta) return;
         if (reproducir('snore')) {
             ronquidos++;
-            if (ronquidos >= 3) { ronquidos = 0; ronqPausaHasta = ahora + 12000; }
+            if (ronquidos >= 3) { ronquidos = 0; ronqPausaHasta = ahora + 8000; }
         }
-    }, 5200);
+    }, 3200);
 
     // Lo que la persona hace sobre la cara marca "esto lo provocó ella".
     function marcarUsuario() { ultimoUsuarioCara = Date.now(); }

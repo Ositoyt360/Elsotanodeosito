@@ -548,3 +548,13 @@ body.ultra-performance .osito-face[data-expr="laugh"] *,body.ultra-performance .
   }
 }
 html.low-end-device .modo-decor-item{animation-duration:19s!important}
+
+
+/* ================= V51.1 — cada emoji de la cara aparece UNA sola vez por animación ================= */
+.osito-face[data-expr]:not([data-expr="sleeping"]) .of-spark,
+.osito-face[data-estado="thinking"]:not([data-expr="sleeping"]) .of-spark,
+.osito-face[data-expr="joy"]:not([data-expr="sleeping"]) .of-spark,
+.osito-face[data-expr="sleepy"] .of-spark,
+html.mobile-lite .osito-face:not([data-expr="sleeping"]) .of-spark {
+  animation: ofSpark 1.5s ease-out 1 forwards !important;
+}

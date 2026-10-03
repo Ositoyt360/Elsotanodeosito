@@ -558,14 +558,26 @@
     });
     document.addEventListener('pointermove', function () { ultimaActividad = Date.now(); if (dormida) activa(); }, { passive: true });
 
-    // Cada cierto tiempo hace un gesto distinto; si nadie la toca en ~30 s se duerme.
+    // V51.1: bolsa de expresiones: salen todas una vez antes de repetir y nunca la misma dos veces seguidas.
+    var bolsaEx = [], ultimaEx = '';
+    function siguienteExpresion() {
+        if (!bolsaEx.length) {
+            bolsaEx = EXPRESIONES.slice();
+            for (var i = bolsaEx.length - 1; i > 0; i--) { var k = Math.floor(Math.random() * (i + 1)), t = bolsaEx[i]; bolsaEx[i] = bolsaEx[k]; bolsaEx[k] = t; }
+            if (bolsaEx[bolsaEx.length - 1] === ultimaEx) { var t2 = bolsaEx[0]; bolsaEx[0] = bolsaEx[bolsaEx.length - 1]; bolsaEx[bolsaEx.length - 1] = t2; }
+        }
+        ultimaEx = bolsaEx.pop();
+        return ultimaEx;
+    }
+    // Cada cierto tiempo hace un gesto distinto (sin repetir).
     (function ciclo() {
         setTimeout(function () {
             if (!document.hidden && !quieta() && !esDeNoche()) { // de noche manda face-extra.js (dormir)
                 var libre = caras.every(function (c) { var e = c.dataset.estado; return !e || e === 'idle'; });
                 /* El sueño lo controla exclusivamente face-extra.js; no duplicar temporizadores aquí. */
-                if (libre && !dormida) {
-                    var ex = EXPRESIONES[Math.floor(Math.random() * EXPRESIONES.length)];
+                var conExpr = caras.some(function (c) { return c.offsetParent && c.getAttribute('data-expr'); });
+                if (libre && !dormida && !conExpr) {
+                    var ex = siguienteExpresion();
                     if (ex === 'yawn') bostezar(); else paraTodas(ex, 1500);
                 }
             }

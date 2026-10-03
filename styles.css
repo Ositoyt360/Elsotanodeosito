@@ -6179,3 +6179,26 @@ html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz {
   animation: ofZ 3.6s ease-out infinite !important;
   opacity: 1 !important;
 }
+
+/* ================= V51.2 — sin punto verde; emojis a la derecha, más chicos, sobresaliendo del aro de colores ================= */
+.ia-bubble-wrap .ia-bubble-badge,
+.ia-bubble-badge,
+.ia-toggle-bubble .ia-bubble-badge { display: none !important; }
+
+/* Emoji de la emoción: esquina superior derecha, saliendo del aro */
+.osito-face .of-spark {
+  left: auto !important;
+  right: -.46em !important;
+  top: -.2em !important;
+  font-size: .36em !important;
+  transform-origin: center;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.55));
+}
+/* Zzz del sueño: también a la derecha, pequeñas, subiendo hacia afuera */
+.osito-face .of-zzz { left: auto !important; right: -.30em !important; top: 0 !important; font-size: .34em !important; }
+.osito-face .of-zzz.z2 { left: auto !important; right: -.46em !important; font-size: .42em !important; }
+.osito-face .of-zzz.z3 { left: auto !important; right: -.62em !important; font-size: .50em !important; }
+/* Que nada recorte lo que sobresale */
+.ia-floating-container, .ia-bubble-wrap, .ia-toggle-bubble, .ia-bubble-icon,
+.ia-bubble-icon .osito-face { overflow: visible !important; }
+.ia-bubble-wrap .osito-face { z-index: 6; }

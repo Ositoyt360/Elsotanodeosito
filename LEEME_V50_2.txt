@@ -1,0 +1,9 @@
+EL SÓTANO DE OSITO — V50.2
+
+- Más sonidos ligeros para la cara: toque, rebote, destello, salto y suspiro.
+- Más microanimaciones: asentir, mirar de lado y curiosidad al escribir.
+- Los nuevos gestos usan transform/opacity para gastar poca GPU.
+- En móviles como Redmi 15C se conservan los fondos animados de cada modo especial, pero se evita el video de fondo pesado.
+- Halloween, Navidad, San Valentín y Cumpleaños usan movimientos de decoración diferentes y ligeros.
+- Se redujo la cantidad de elementos animados en móviles.
+- No se modifica la base de datos, cuentas, chat ni la IA local.

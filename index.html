@@ -11,8 +11,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=v48-ia-claude-cara-rendimiento-20261002">
-    <link rel="stylesheet" href="v49.css?v=v49-7">
+    <link rel="stylesheet" href="styles.css?v=v50-2-ia-cara-rendimiento-20261002">
+    <link rel="stylesheet" href="v49.css?v=v50-2">
     <!-- Si tu página está en hosting estático (GitHub Pages), pon aquí la URL de tu servidor con server.js, ej: https://mi-servidor.onrender.com -->
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
@@ -935,7 +935,9 @@ accent-color:#00ff88;
         // V46 — si el navegador bloquea el autoplay, reintenta con el primer gesto
         // del usuario (clic en "Entrar al Sótano", tecla o toque) y al volver a la pestaña.
         function reproducirVideoFondoActivo() {
-            if (document.body.classList.contains('ultra-performance') || document.body.classList.contains('no-animations')) return;
+            if (document.documentElement.classList.contains('mobile-lite') ||
+                document.body.classList.contains('ultra-performance') ||
+                document.body.classList.contains('no-animations')) return;
             const layer = document.getElementById('modo-sitio-video');
             const v = layer && (layer.querySelector('video.is-active') || layer.querySelector('video'));
             if (!v || !v.paused) return;
@@ -1019,6 +1021,12 @@ accent-color:#00ff88;
             if (old) old.remove();
             const srcOriginal = MODE_BACKGROUND_VIDEO[theme];
             const src = window.OsitoV49 ? window.OsitoV49.fuenteFondo(theme, srcOriginal) : srcOriginal;
+            // En móviles ligeros (incluido Redmi 15C) se conserva la decoración
+            // animada, pero se evita el video de fondo para reducir GPU/CPU.
+            const movilLigero = document.documentElement.classList.contains('mobile-lite');
+            const ahorroDatos = document.documentElement.classList.contains('data-saver');
+            const captura = document.documentElement.classList.contains('capture-performance');
+            if (movilLigero || ahorroDatos || captura) return;
             if (!src && theme === 'san-valentin') {
                 // No hay mp4 de San Valentín: fondo animado con CSS (zoom lento + brillo que respira).
                 const sv = document.createElement('div');
@@ -1077,9 +1085,9 @@ accent-color:#00ff88;
             }[theme];
             if (!config) return;
 
-            // V48: menos emojis en celulares (cada uno es una capa animada). Desktop ~65%, celular ~40%, gama muy baja ~25%.
+            // V50.2: pocas capas en móviles; los movimientos siguen siendo visibles.
             const htmlCls = document.documentElement.classList;
-            const factor = htmlCls.contains('low-end-device') ? 0.16 : (htmlCls.contains('mobile-lite') ? 0.25 : 0.65);
+            const factor = htmlCls.contains('capture-performance') ? 0 : (htmlCls.contains('data-saver') ? 0.08 : (htmlCls.contains('low-end-device') ? 0.11 : (htmlCls.contains('mobile-lite') ? 0.16 : 0.65)));
             const total = Math.max(5, Math.round(config.count * factor));
             for (let i = 0; i < total; i++) {
                 const item = document.createElement('span');
@@ -3036,11 +3044,12 @@ accent-color:#00ff88;
         }); 
     </script> 
 
+    <script src="performance-lite.js?v=v50-3"></script>
     <script src="base-conocimiento.js?v=v48"></script>
-    <script src="v49.js?v=v50-1"></script>
-    <script src="face-sound.js?v=v50-1" defer></script>
-    <script src="ia-claude.js?v=v50-1" defer></script>
-    <script src="face-extra.js?v=v50-1" defer></script>
+    <script src="v49.js?v=v50-2"></script>
+    <script src="face-sound.js?v=v50-2" defer></script>
+    <script src="ia-claude.js?v=v50-2" defer></script>
+    <script src="face-extra.js?v=v50-2" defer></script>
     <script>
         (function(){
             const aiMessages = document.getElementById('ai-messages');
@@ -4749,5 +4758,6 @@ accent-color:#00ff88;
         })();
     </script>
     <script src="firebase-integration.js?v=mod-v32-20260924"></script>
-    <script src='asistente-voz.js'></script></body>
+    <script src='asistente-voz.js'></script>
+    <script src='face-100.js?v=v50-3' defer></script></body>
 </html>

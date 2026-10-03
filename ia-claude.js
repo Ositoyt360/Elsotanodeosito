@@ -67,7 +67,15 @@
     function pintarEstado(estado) {
         if (estado === estadoActual) return;
         estadoActual = estado;
-        caras.forEach(function (cara) { cara.dataset.estado = estado; });
+        caras.forEach(function (cara) {
+            cara.dataset.estado = estado;
+            if (estado === 'speaking') {
+                cara.classList.add('of-speaking-friendly');
+                if (!cara.getAttribute('data-expr')) { cara.setAttribute('data-expr','smile'); cara.dataset.speakingSmile='1'; }
+            } else {
+                cara.classList.remove('of-speaking-friendly');
+            }
+        });
         if (estadoTexto) estadoTexto.textContent = TEXTOS[estado] || TEXTOS.idle;
     }
 
@@ -154,7 +162,7 @@
             if (!c.offsetParent) return;
             c.style.setProperty('--mw', v[0]); c.style.setProperty('--mh', v[1]); c.style.setProperty('--mr', v[2]);
         });
-        lipTimer = setTimeout(pasoLabios, (cerrar ? 110 : 75 + Math.random() * 85) * (equipoLento() ? 1.7 : 1));
+        lipTimer = setTimeout(pasoLabios, (cerrar ? 145 : 105 + Math.random() * 105) * (equipoLento() ? 2.0 : 1));
     }
     function iniciarLabios() {
         if (sinAnimaciones()) return;
@@ -164,6 +172,7 @@
     function detenerLabios() {
         clearTimeout(lipTimer); lipTimer = 0;
         caras.forEach(function (c) {
+            if (c.dataset.speakingSmile === '1') { c.removeAttribute('data-expr'); delete c.dataset.speakingSmile; }
             c.classList.remove('of-lipsync', 'of-emph');
             c.style.removeProperty('--mw'); c.style.removeProperty('--mh'); c.style.removeProperty('--mr');
         });
@@ -518,8 +527,18 @@
                 cara.style.setProperty('--gx', ((Math.random() * 2 - 1) * .6).toFixed(2));
                 cara.style.setProperty('--gy', ((Math.random() * 2 - 1) * .38).toFixed(2));
                 cara.style.setProperty('--tilt-i', ((Math.random() * 8) - 4).toFixed(1) + 'deg');
-            } else if (r < .82) {
+            } else if (r < .78) {
                 poner(cara, Math.random() < .5 ? 'smile' : 'wink', 900);
+            } else if (r < .88) {
+                cara.classList.remove('of-face-nod', 'of-face-peek');
+                void cara.offsetWidth;
+                cara.classList.add(Math.random() < .55 ? 'of-face-nod' : 'of-face-peek');
+                setTimeout(function () {
+                    cara.classList.remove('of-face-nod', 'of-face-peek');
+                }, 720);
+                if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                    window.OsitoFaceSound.reproducir('hop');
+                }
             } else {
                 cara.classList.remove('of-breathe');
                 void cara.offsetWidth;
@@ -611,6 +630,9 @@
             clearTimeout(clicTimer);
             clicTimer = setTimeout(function () { clics = 0; }, 1500);
             cara.classList.remove('of-boing'); void cara.offsetWidth; cara.classList.add('of-boing');
+            if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                window.OsitoFaceSound.reproducir(clics >= 3 ? 'boing' : 'tap');
+            }
             setTimeout(function () { cara.classList.remove('of-boing'); }, 600);
             if (clics >= 7) {
                 clics = 0;
@@ -664,7 +686,16 @@
     if (campo) {
         campo.addEventListener('input', function () {
             if (quieta()) return;
-            caras.forEach(function (c) { if (c.offsetParent) { c.style.setProperty('--gx', (Math.random() * 0.6 - 0.3).toFixed(2)); c.style.setProperty('--gy', '0.9'); } });
+            caras.forEach(function (c) {
+                if (c.offsetParent) {
+                    c.style.setProperty('--gx', (Math.random() * 0.6 - 0.3).toFixed(2));
+                    c.style.setProperty('--gy', '0.9');
+                    if (!c.getAttribute('data-expr')) poner(c, 'curious', 520);
+                }
+            });
+            if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                window.OsitoFaceSound.reproducir('sparkle');
+            }
         }, { passive: true });
     }
     // Al abrir el panel de la IA se sorprende y saluda.

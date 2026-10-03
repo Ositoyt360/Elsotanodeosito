@@ -483,3 +483,68 @@ body.ultra-performance .osito-face[data-expr="laugh"] *,body.ultra-performance .
     #countdowns-container[hidden] { display: none !important; }
     .countdown-media { max-height: 220px; }
 }
+
+/* ===== V50.2 · CARA MÁS VIVA + REDMI 15C ===== */
+.osito-face.of-face-nod .of-card{animation:ofFaceNod .68s cubic-bezier(.25,.8,.35,1) 1}
+.osito-face.of-face-peek .of-card{animation:ofFacePeek .7s ease-in-out 1}
+.osito-face.of-face-nod .of-brow{opacity:1;transform:translateY(-.025em)}
+.osito-face.of-face-peek .of-brow{opacity:1}
+@keyframes ofFaceNod{
+  0%{transform:translateY(0) rotate(0)}
+  38%{transform:translateY(.025em) rotate(2deg)}
+  72%{transform:translateY(-.018em) rotate(-2deg)}
+  100%{transform:translateY(0) rotate(0)}
+}
+@keyframes ofFacePeek{
+  0%,100%{transform:translateX(0) rotate(0)}
+  42%{transform:translateX(.025em) rotate(-3deg)}
+  72%{transform:translateX(-.018em) rotate(2deg)}
+}
+.modo-sitio-decoracion{contain:strict}
+.modo-decor-item{will-change:transform,opacity;filter:none!important}
+.decor-halloween .modo-decor-item{animation-name:modoHalloweenLite}
+.decor-navidad .modo-decor-item{animation-name:modoNavidadLite}
+.decor-san-valentin .modo-decor-item{animation-name:modoValentinLite}
+.decor-cumpleanos .modo-decor-item{animation-name:modoCumpleLite}
+@keyframes modoHalloweenLite{
+  0%{transform:translate3d(0,-8vh,0) rotate(-8deg);opacity:0}
+  15%{opacity:.8} 50%{transform:translate3d(12px,52vh,0) rotate(18deg)}
+  100%{transform:translate3d(-16px,108vh,0) rotate(42deg);opacity:0}
+}
+@keyframes modoNavidadLite{
+  0%{transform:translate3d(0,-8vh,0);opacity:0}
+  15%{opacity:.8} 55%{transform:translate3d(8px,55vh,0)}
+  100%{transform:translate3d(-5px,108vh,0);opacity:0}
+}
+@keyframes modoValentinLite{
+  0%{transform:translate3d(0,108vh,0) scale(.75) rotate(-8deg);opacity:0}
+  18%{opacity:.78} 55%{transform:translate3d(12px,48vh,0) scale(1) rotate(5deg)}
+  100%{transform:translate3d(-8px,-8vh,0) scale(1.08) rotate(12deg);opacity:0}
+}
+@keyframes modoCumpleLite{
+  0%{transform:translate3d(0,108vh,0) rotate(-4deg);opacity:0}
+  18%{opacity:.8} 52%{transform:translate3d(-10px,48vh,0) rotate(5deg)}
+  100%{transform:translate3d(14px,-8vh,0) rotate(-4deg);opacity:0}
+}
+@media (max-width:768px){
+  html.mobile-lite .modo-decor-item{animation-duration:16s!important;filter:none!important;text-shadow:none!important}
+  html.mobile-lite body.modo-halloween .header,
+  html.mobile-lite body.modo-navidad .header,
+  html.mobile-lite body.modo-san-valentin .header,
+  html.mobile-lite body.modo-cumpleanos .header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  html.mobile-lite body.modo-halloween .promo-section,
+  html.mobile-lite body.modo-navidad .promo-section,
+  html.mobile-lite body.modo-san-valentin .promo-section,
+  html.mobile-lite body.modo-cumpleanos .promo-section,
+  html.mobile-lite body.modo-halloween .sidebar-card,
+  html.mobile-lite body.modo-navidad .sidebar-card,
+  html.mobile-lite body.modo-san-valentin .sidebar-card,
+  html.mobile-lite body.modo-cumpleanos .sidebar-card,
+  html.mobile-lite body.modo-halloween .content-section,
+  html.mobile-lite body.modo-navidad .content-section,
+  html.mobile-lite body.modo-san-valentin .content-section,
+  html.mobile-lite body.modo-cumpleanos .content-section{
+    box-shadow:0 8px 22px rgba(0,0,0,.22)!important;
+  }
+}
+html.low-end-device .modo-decor-item{animation-duration:19s!important}

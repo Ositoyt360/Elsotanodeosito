@@ -6050,3 +6050,39 @@ body.ultra-performance .osito-face {
     .ia-section .ia-header-title .osito-face { --fs: 36px; }
     .ia-section .ai-profile-actions .btn-action { padding-left: 5px !important; padding-right: 5px !important; }
 }
+
+/* ===== V50.3 · 100 microanimaciones ligeras de la cara ===== */
+.osito-face.of-100-anim .of-card{
+  animation: osito100Face var(--a-d,620ms) cubic-bezier(.2,.85,.25,1) 1;
+  will-change: transform;
+}
+.osito-face.of-100-anim .of-eye{animation: osito100Eyes calc(var(--a-d,620ms)*.8) ease-in-out 1;}
+.osito-face.of-100-anim .of-brow{transform:translateY(calc(var(--a-t,0deg)*.002em));}
+@keyframes osito100Face{
+  0%{transform:translate3d(0,0,0) rotate(0) scale(1)}
+  28%{transform:translate3d(var(--a-x),var(--a-y),0) rotate(var(--a-r)) scale(var(--a-s))}
+  58%{transform:translate3d(calc(var(--a-x)*-.55),calc(var(--a-y)*-.35),0) rotate(calc(var(--a-r)*-.45)) scale(calc(1 + (var(--a-s) - 1)*.35))}
+  100%{transform:translate3d(0,0,0) rotate(0) scale(1)}
+}
+@keyframes osito100Eyes{
+  0%,100%{transform:translate3d(0,0,0) scaleY(1)}
+  45%{transform:translate3d(var(--a-x),var(--a-y),0) scaleY(.72)}
+}
+/* Hablar = amable y expresivo, no cara seria. */
+.osito-face[data-estado="speaking"] .of-smile{opacity:1!important;transform:scale(1.08)!important}
+.osito-face[data-estado="speaking"] .of-brow{opacity:.85!important;transform:none!important}
+.osito-face[data-estado="speaking"] .of-cheek{opacity:.72!important}
+.osito-face[data-estado="speaking"] .of-spark::before{content:"✨"}
+/* Ahorro de datos / captura: conservar la cara, quitar trabajo visual innecesario. */
+html.data-saver .modo-sitio-decoracion,html.capture-performance .modo-sitio-decoracion,
+body.capture-performance .modo-sitio-decoracion{display:none!important}
+html.capture-performance .osito-face *{animation-duration:1.2s!important}
+html.low-end-device .modo-sitio-item{filter:none!important;text-shadow:none!important}
+html.low-end-device body.modo-halloween .content-section,html.low-end-device body.modo-navidad .content-section,
+html.low-end-device body.modo-san-valentin .content-section,html.low-end-device body.modo-cumpleanos .content-section{box-shadow:none!important}
+html.data-saver .modo-bg-video,html.capture-performance .modo-bg-video{display:none!important}
+@media(max-width:768px){
+  .osito-face.of-100-anim .of-eye{animation:none}
+  .osito-face.of-100-anim .of-card{animation-duration:520ms}
+  body.modo-halloween .header,body.modo-navidad .header,body.modo-san-valentin .header,body.modo-cumpleanos .header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}

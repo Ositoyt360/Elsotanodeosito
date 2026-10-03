@@ -31,7 +31,7 @@
         try {
             ctx = new C();
             master = ctx.createGain();
-            master.gain.value = 0.55;
+            master.gain.value = /Android|iPhone|iPad/i.test(navigator.userAgent || '') ? 0.46 : 0.55;
             var comp = ctx.createDynamicsCompressor();
             master.connect(comp);
             comp.connect(ctx.destination);
@@ -241,6 +241,31 @@
             tono(900, 300, 0.1, 0.07, 'triangle', 0.1);
             campana(1318, 0.24, 0.07, 0.6);
         },
+        // toque: efecto corto para cada toque/clic en la cara
+        tap: function () {
+            tono(420, 760, 0, 0.07, 'sine', 0.12, { a: 0.006 });
+            tono(980, 620, 0.035, 0.055, 'triangle', 0.045, { a: 0.004 });
+        },
+        // rebote: acompaña el "boing" visual
+        boing: function () {
+            tono(180, 95, 0, 0.18, 'sine', 0.18, { a: 0.01 });
+            tono(360, 720, 0.045, 0.14, 'triangle', 0.10, { a: 0.008 });
+        },
+        // destello: chispa corta
+        sparkle: function () {
+            [1568, 2093, 2637].forEach(function (f, i) {
+                tono(f, f * 1.04, i * 0.055, 0.12, 'sine', 0.055, { a: 0.008 });
+            });
+        },
+        // salto: efecto de energía muy corto
+        hop: function () {
+            tono(280, 620, 0, 0.11, 'triangle', 0.10);
+            tono(620, 980, 0.08, 0.13, 'sine', 0.075);
+        },
+        // suspiro: efecto suave
+        sigh: function () {
+            ruido(0, 0.48, 0.055, 'lowpass', 950, 300, 0.7, 0.18);
+        },
         // baile: bombo + platillos + melodía
         dance: function () {
             [0, 0.25, 0.5, 0.75].forEach(function (t) { tono(130, 48, t, 0.16, 'sine', 0.45); });
@@ -365,11 +390,41 @@
     }
     pintarBoton();
 
+    /* ---------- 100 efectos extra ligeros, generados con WebAudio ---------- */
+    function reproducirExtra(indice) {
+        indice = Math.max(0, Math.min(99, indice | 0));
+        if (!activado || !tocoPagina || document.hidden || vozHablando() || algunaEscuchando()) return false;
+        if (!crearContexto() || ctx.state !== 'running') return false;
+        var ahora = Date.now();
+        if (ahora - ultimoSolo < 650) return false;
+        ultimoSolo = ahora;
+        var t = ctx.currentTime;
+        busActual = ctx.createGain();
+        busActual.gain.value = 0.72;
+        busActual.connect(master);
+        try {
+            var familia = indice % 10, paso = Math.floor(indice / 10), base = 220 + paso * 31;
+            if (familia === 0) { tono(base, base*1.35, 0, .10, 'sine', .055); tono(base*1.6, base*2, .08, .12, 'triangle', .045); }
+            else if (familia === 1) { tono(base*1.5, base*.75, 0, .18, 'triangle', .06); ruido(.06,.045,.045,'highpass',3500,7000,1,.004); }
+            else if (familia === 2) { campana(base*1.8,0,.05,.32); campana(base*2.2,.11,.035,.24); }
+            else if (familia === 3) { ruido(0,.12,.045,'bandpass',900+paso*60,1800+paso*90,2,.008); }
+            else if (familia === 4) { tono(base,base*.92,0,.24,'sine',.05,{vib:5+paso,vibd:5}); }
+            else if (familia === 5) { [0,.09,.18].forEach(function(q,j){tono(base*(1+j*.18),base*(1+j*.18),q,.09,'square',.028);}); }
+            else if (familia === 6) { ruido(0,.07,.05,'highpass',2500+paso*120,8000,1,.002); tono(base*2,base, .04,.13,'sine',.045); }
+            else if (familia === 7) { tono(base*.7,base*1.9,0,.20,'sawtooth',.026,{lp:1700}); }
+            else if (familia === 8) { tono(base*1.2,base*1.2,.0,.12,'triangle',.05); tono(base*1.8,base*1.8,.12,.16,'triangle',.04); }
+            else { tono(base*2.4,base*.9,0,.28,'sine',.042,{vib:7,vibd:9}); }
+        } catch(e) { return false; }
+        return true;
+    }
+
     window.OsitoFaceSound = {
         marcarUsuario: marcarUsuario,
         reproducir: function (n) { marcarUsuario(); despertar(); return reproducir(n); },
         nombres: function () { return Object.keys(SONIDOS); },
         activar: function (v) { activado = !!v; try { localStorage.setItem(KEY, activado ? 'on' : 'off'); } catch (e) {} pintarBoton(); },
-        ultimo: function () { return ultimo; }
+        ultimo: function () { return ultimo; },
+        reproducirExtra: reproducirExtra,
+        efectosExtra: function () { return 100; }
     };
 }());

@@ -1021,12 +1021,13 @@ accent-color:#00ff88;
             if (old) old.remove();
             const srcOriginal = MODE_BACKGROUND_VIDEO[theme];
             const src = window.OsitoV49 ? window.OsitoV49.fuenteFondo(theme, srcOriginal) : srcOriginal;
-            // En móviles ligeros (incluido Redmi 15C) se conserva la decoración
-            // animada, pero se evita el video de fondo para reducir GPU/CPU.
+            // El video de fondo SIEMPRE se mantiene, incluso en Redmi 15C.
+            // En equipos lentos / ahorro de datos / captura se selecciona automáticamente
+            // el MP4 ligero (640x360, 15 FPS) desde fuenteFondo(), y se reducen las demás
+            // animaciones para que el video no compita con la interfaz.
             const movilLigero = document.documentElement.classList.contains('mobile-lite');
             const ahorroDatos = document.documentElement.classList.contains('data-saver');
             const captura = document.documentElement.classList.contains('capture-performance');
-            if (movilLigero || ahorroDatos || captura) return;
             if (!src && theme === 'san-valentin') {
                 // No hay mp4 de San Valentín: fondo animado con CSS (zoom lento + brillo que respira).
                 const sv = document.createElement('div');
@@ -1048,7 +1049,7 @@ accent-color:#00ff88;
             if (portada) { layer.style.backgroundImage = `url("${portada}")`; }
             const video = document.createElement('video');
             if (portada) video.poster = portada;
-            video.preload = 'auto';
+            video.preload = (movilLigero || ahorroDatos || captura) ? 'metadata' : 'auto';
             video.muted = true;
             video.defaultMuted = true;
             video.playsInline = true;

@@ -273,7 +273,11 @@
     /* ---------- Rendimiento: fondos de video (se mantienen, solo más livianos) ---------- */
     var NOMBRES = { halloween: 1, navidad: 1, cumpleanos: 1 };
     function fuenteFondo(tema, original) {
-        if (NOMBRES[tema] && equipoLimitado()) return 'fondos/' + tema + '-lite.mp4';
+        var html = document.documentElement;
+        var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        var ahorro = !!(html.classList.contains('data-saver') || (conn && conn.saveData));
+        var captura = html.classList.contains('capture-performance');
+        if (NOMBRES[tema] && (equipoLimitado() || ahorro || captura)) return 'fondos/' + tema + '-lite.mp4';
         return original;
     }
     function portadaFondo(tema) { return NOMBRES[tema] ? 'fondos/' + tema + '.jpg' : ''; }

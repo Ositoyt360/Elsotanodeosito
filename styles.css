@@ -6086,3 +6086,24 @@ html.data-saver .modo-bg-video,html.capture-performance .modo-bg-video{display:n
   .osito-face.of-100-anim .of-card{animation-duration:520ms}
   body.modo-halloween .header,body.modo-navidad .header,body.modo-san-valentin .header,body.modo-cumpleanos .header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 }
+
+/* V50.4 — fondos de video conservados y optimizados para Redmi 15C/captura */
+.modo-sitio-video { contain: strict; isolation: isolate; pointer-events:none; }
+.modo-sitio-video video.modo-bg-video { object-fit: cover; transform: translateZ(0); will-change: opacity; }
+html.mobile-lite .modo-sitio-video video.modo-bg-video,
+html.low-end-device .modo-sitio-video video.modo-bg-video,
+html.data-saver .modo-sitio-video video.modo-bg-video,
+html.capture-performance .modo-sitio-video video.modo-bg-video {
+  filter: none !important;
+  transform: translateZ(0);
+  will-change: auto;
+}
+/* Durante grabación/compartir pantalla: conserva el video, pero apaga capas costosas. */
+html.capture-performance .modo-sitio-decoracion,
+html.capture-performance .ambient-glow,
+html.capture-performance .promo-bg-fx,
+html.capture-performance .modo-decor-item { display:none !important; }
+html.capture-performance .modo-sitio-video video.modo-bg-video { opacity:.82 !important; }
+/* Redmi 15C: el video sigue visible; se eliminan filtros y efectos que fuerzan repintados. */
+html.mobile-lite .modo-sitio-video,
+html.low-end-device .modo-sitio-video { filter:none !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }

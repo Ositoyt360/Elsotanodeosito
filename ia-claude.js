@@ -563,8 +563,8 @@
         setTimeout(function () {
             if (!document.hidden && !quieta() && !esDeNoche()) { // de noche manda face-extra.js (dormir)
                 var libre = caras.every(function (c) { var e = c.dataset.estado; return !e || e === 'idle'; });
-                if (!dormida && Date.now() - ultimaActividad > 30000) { dormida = true; paraTodas('sleepy', 0); }
-                else if (libre && !dormida) {
+                /* El sueño lo controla exclusivamente face-extra.js; no duplicar temporizadores aquí. */
+                if (libre && !dormida) {
                     var ex = EXPRESIONES[Math.floor(Math.random() * EXPRESIONES.length)];
                     if (ex === 'yawn') bostezar(); else paraTodas(ex, 1500);
                 }

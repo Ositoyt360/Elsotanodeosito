@@ -23,18 +23,23 @@
     });
   }
   function ejecutar(n){ animar(n); if(S&&S.reproducirExtra) S.reproducirExtra(n); }
-  var activo=0;
+  var bolsa=[], anterior=-1;
+  function siguiente(){
+    if(!bolsa.length){ bolsa=Array.from({length:100},function(_,i){return i;});
+      for(var j=bolsa.length-1;j>0;j--){var k=Math.floor(Math.random()*(j+1)),tmp=bolsa[j];bolsa[j]=bolsa[k];bolsa[k]=tmp;}
+      if(bolsa[bolsa.length-1]===anterior){var swap=bolsa[0];bolsa[0]=bolsa[bolsa.length-1];bolsa[bolsa.length-1]=swap;}
+    }
+    anterior=bolsa.pop(); return anterior;
+  }
   function ciclo(){
     if(document.hidden || root.classList.contains('no-animations') || root.classList.contains('capture-performance')) return;
     if(document.body.classList.contains('ultra-performance')) return;
-    var estado=caras[0]&&caras[0].dataset.estado;
-    if(estado==='listening') return;
-    if(estado==='speaking') {
-      // Mientras habla: solo gestos alegres y cortos, nunca gesto serio.
-      ejecutar(20+(activo++%30));
-    } else {
-      ejecutar((activo++)%100);
-    }
+    var cara=caras.find(function(c){return c.offsetParent;});
+    if(!cara) return;
+    var expr=cara.getAttribute('data-expr');
+    var estado=cara.dataset.estado;
+    if(expr==='sleeping'||expr==='sleepy'||estado==='listening') return;
+    ejecutar(siguiente());
   }
   var timer=setInterval(ciclo, root.classList.contains('low-end-device')?5200:3300);
   document.addEventListener('visibilitychange',function(){if(document.hidden){}}, {passive:true});

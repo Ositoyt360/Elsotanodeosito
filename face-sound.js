@@ -294,8 +294,8 @@
         var ahora = Date.now();
         // Mismo sonido dos veces seguidas (hay dos caras: burbuja y encabezado) = uno solo.
         if (porNombre[nombre] && ahora - porNombre[nombre] < 450) return false;
-        if (nombre !== 'listening' && algunaEscuchando()) return false;
-        if (vozHablando()) return false;
+        if (nombre !== 'listening' && nombre !== 'snore' && algunaEscuchando()) return false;
+        if (nombre !== 'snore' && vozHablando()) return false;
         // V49.5: también suena con el panel cerrado (la cara de la burbuja). Lo que provoca la persona
         // (cursor, toque, like/dislike) suena siempre; lo que la cara hace sola, con una pausa entre sonidos.
         var provocado = ahora - ultimoUsuarioCara < 2600;
@@ -342,7 +342,7 @@
         });
     }
 
-    // V49.6: mientras la cara duerme ronca: 3 ronquidos y una pausa larga (así no cansa).
+    // V50.5: mientras la cara duerme (incluida la siesta) ronca periódicamente.
     var ronquidos = 0, ronqPausaHasta = 0;
     setInterval(function () {
         if (!activado || !tocoPagina || document.hidden) return;
@@ -352,9 +352,9 @@
         if (ahora < ronqPausaHasta) return;
         if (reproducir('snore')) {
             ronquidos++;
-            if (ronquidos >= 3) { ronquidos = 0; ronqPausaHasta = ahora + 22000; }
+            if (ronquidos >= 3) { ronquidos = 0; ronqPausaHasta = ahora + 12000; }
         }
-    }, 4200);
+    }, 5200);
 
     // Lo que la persona hace sobre la cara marca "esto lo provocó ella".
     function marcarUsuario() { ultimoUsuarioCara = Date.now(); }

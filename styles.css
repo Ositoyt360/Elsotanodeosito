@@ -2497,8 +2497,8 @@ html.mobile-lite .ia-bubble-spinner { animation: none; }
 
 .ia-bubble-badge {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: -2px;
+    left: -2px;
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -6107,3 +6107,75 @@ html.capture-performance .modo-sitio-video video.modo-bg-video { opacity:.82 !im
 /* Redmi 15C: el video sigue visible; se eliminan filtros y efectos que fuerzan repintados. */
 html.mobile-lite .modo-sitio-video,
 html.low-end-device .modo-sitio-video { filter:none !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+
+
+/* V50.5 — Ajustes solicitados: indicador verde arriba-izquierda + emojis de la cara grandes */
+.ia-bubble-wrap .ia-bubble-badge,
+.ia-bubble-badge { top: -2px !important; left: -2px !important; right: auto !important; }
+.osito-face .of-spark { font-size: .42em !important; }
+.osito-face .of-zzz { font-size: .52em !important; }
+.osito-face .of-zzz.z2 { font-size: .66em !important; }
+.osito-face .of-zzz.z3 { font-size: .80em !important; }
+/* Al hablar: se recupera la animación completa también en Redmi/Android. */
+html .osito-face[data-estado="speaking"] .of-mouth {
+  opacity: 1 !important;
+  animation: ofTalk .85s ease-in-out infinite !important;
+}
+html .osito-face[data-estado="speaking"] .of-eye {
+  animation: ofBlink 10s var(--bd) infinite, ofEyeTalk .42s ease-in-out infinite alternate !important;
+}
+html .osito-face[data-estado="speaking"] .of-card { will-change: auto !important; }
+/* Los 100 microgestos no pisan la boca/ojos mientras la IA habla. */
+html .osito-face[data-estado="speaking"].of-100-anim .of-mouth { animation: ofTalk .85s ease-in-out infinite !important; }
+html .osito-face[data-estado="speaking"].of-100-anim .of-eye { animation: ofBlink 10s var(--bd) infinite, ofEyeTalk .42s ease-in-out infinite alternate !important; }
+/* Zzz de la siesta: siempre visibles en equipos de gama baja. */
+html.low-end-device .osito-face[data-expr="sleeping"] .of-zzz,
+html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz { animation: ofZ 3.2s ease-out infinite !important; opacity: 1 !important; }
+html.low-end-device .osito-face[data-expr="sleeping"] .of-zzz.z2,
+html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz.z2 { animation-delay: 1.05s !important; }
+html.low-end-device .osito-face[data-expr="sleeping"] .of-zzz.z3,
+html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz.z3 { animation-delay: 2.10s !important; }
+/* Emojis que caen: más grandes, pero seguimos usando la misma cantidad reducida en Redmi. */
+body .modo-sitio-decoracion .modo-decor-item.decor-emoji { --emoji-extra: 1; }
+body .modo-sitio-decoracion .modo-decor-item.decor-emoji { font-size: clamp(34px, 4.6vw, 56px) !important; }
+@media (max-width: 768px) {
+  body .modo-sitio-decoracion .modo-decor-item.decor-emoji { font-size: clamp(32px, 8vw, 48px) !important; }
+}
+
+/* V50.6 — indicador y emojis en la esquina superior izquierda */
+.ia-bubble-wrap .ia-bubble-badge,
+.ia-bubble-badge {
+  top: -7px !important;
+  left: -7px !important;
+  right: auto !important;
+  width: 15px !important;
+  height: 15px !important;
+  z-index: 20 !important;
+}
+.osito-face .of-spark {
+  left: -0.22em !important;
+  right: auto !important;
+  top: -0.24em !important;
+  font-size: .68em !important;
+  transform-origin: center;
+}
+.osito-face .of-zzz {
+  left: -0.12em !important;
+  top: -8% !important;
+  font-size: .66em !important;
+}
+.osito-face .of-zzz.z2 { left: -0.02em !important; font-size: .78em !important; }
+.osito-face .of-zzz.z3 { left: .12em !important; font-size: .9em !important; }
+.osito-face[data-expr="sleeping"] .of-zzz {
+  opacity: 1 !important;
+  animation: ofZ 3.6s ease-out infinite !important;
+}
+.osito-face[data-expr="sleeping"] .of-zzz.z2 { animation-delay: 1.2s !important; }
+.osito-face[data-expr="sleeping"] .of-zzz.z3 { animation-delay: 2.4s !important; }
+body.no-animations .osito-face[data-expr="sleeping"] .of-zzz,
+body.ultra-performance .osito-face[data-expr="sleeping"] .of-zzz,
+html.low-end-device .osito-face[data-expr="sleeping"] .of-zzz,
+html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz {
+  animation: ofZ 3.6s ease-out infinite !important;
+  opacity: 1 !important;
+}

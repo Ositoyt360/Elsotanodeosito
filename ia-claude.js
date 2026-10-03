@@ -474,7 +474,7 @@
     var caras = Array.prototype.slice.call(document.querySelectorAll('.osito-face'));
     if (!caras.length) return;
     var cuerpo = document.body, html = document.documentElement;
-    var EXPRESIONES = ['smile', 'wink', 'curious', 'wow', 'love', 'yawn', 'excited', 'confused', 'laugh', 'shy', 'cool', 'kiss', 'dance'];
+    var EXPRESIONES = ['smile', 'wink', 'curious', 'wow', 'love', 'excited', 'confused', 'laugh', 'shy', 'cool', 'kiss', 'dance'];
     function esDeNoche() { return !!(window.OsitoNight && window.OsitoNight.esNoche && window.OsitoNight.esNoche()); }
     var ultimaActividad = Date.now(), dormida = false;
 
@@ -529,20 +529,11 @@
                 cara.style.setProperty('--tilt-i', ((Math.random() * 8) - 4).toFixed(1) + 'deg');
             } else if (r < .78) {
                 poner(cara, Math.random() < .5 ? 'smile' : 'wink', 900);
-            } else if (r < .88) {
-                cara.classList.remove('of-face-nod', 'of-face-peek');
-                void cara.offsetWidth;
-                cara.classList.add(Math.random() < .55 ? 'of-face-nod' : 'of-face-peek');
-                setTimeout(function () {
-                    cara.classList.remove('of-face-nod', 'of-face-peek');
-                }, 720);
-                if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
-                    window.OsitoFaceSound.reproducir('hop');
-                }
             } else {
-                cara.classList.remove('of-breathe');
-                void cara.offsetWidth;
-                cara.classList.add('of-breathe');
+                // Los nod/peek/breathe antiguos de Claude movían toda la cabeza
+                // cada pocos segundos y producían el efecto de temblor.
+                // Aquí dejamos únicamente microgestos de ojos/expresión.
+                parpadear(cara, Math.random() < .18);
             }
         });
     }
@@ -572,7 +563,7 @@
     // Cada cierto tiempo hace un gesto distinto (sin repetir).
     (function ciclo() {
         setTimeout(function () {
-            if (!document.hidden && !quieta() && !esDeNoche()) { // de noche manda face-extra.js (dormir)
+            if (!document.hidden && !quieta() && !esDeNoche() && !document.querySelector('.osito-face[data-boredom]')) { // de noche manda face-extra.js (dormir); si lee/juega manda osito-aburrimiento.js
                 var libre = caras.every(function (c) { var e = c.dataset.estado; return !e || e === 'idle'; });
                 /* El sueño lo controla exclusivamente face-extra.js; no duplicar temporizadores aquí. */
                 var conExpr = caras.some(function (c) { return c.offsetParent && c.getAttribute('data-expr'); });

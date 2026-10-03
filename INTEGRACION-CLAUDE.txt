@@ -1,0 +1,15 @@
+INTEGRACIÓN CLAUDE — NOTAS
+
+Se conservaron en el proyecto:
+- personalidades-1000.js de Claude (con dos correcciones de sintaxis necesarias para que JavaScript pueda ejecutarlo: claves 001/051 con comillas para evitar octales y una comilla interna mal cerrada en el registro 402).
+- expresiones-dinamicas.js de Claude.
+- sonidos-personalidades.js de Claude.
+- la demo y documentación originales en claude-1000-original/.
+
+Además:
+- claude-personalidades-integracion.js conecta el sistema de Claude con las dos caras .osito-face del proyecto.
+- Completa la base hasta 1000 usando la lista de personalidades ya existente cuando Claude no incluyó un ID.
+- Las 150 entradas que Claude sí proporcionó conservan sus datos; no se sustituyen por otra definición.
+- Las expresiones/sonidos que Claude nombró pero no implementó reciben un fallback para que la cara siga funcionando.
+- Sueño automático: 00:00–05:30.
+- Tras 90 s sin interacción: modo aburrido; alterna 📰 diario y 🎮 juego.

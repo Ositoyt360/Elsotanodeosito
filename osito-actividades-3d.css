@@ -1,0 +1,338 @@
+/* V53 — LIBRO Y MANDO 3D DE OSITO (diseño nuevo) + EXPRESIONES SUAVES
+ * Libro morado abierto visto desde atrás (lomo claro, cinta roja, hojas crema arriba)
+ * y mando oscuro horizontal con cámara, ambos sostenidos por manitas blancas redondas.
+ * Hecho solo con CSS 3D (preserve-3d). Todo se mide en "em" de la cara (1em = tamaño de la cara).
+ * Movimientos lentos y pequeños: la cara ya no tiembla.
+ */
+
+/* ============ CONTENEDOR (flota delante de la parte baja de la cara) ============ */
+.osito-face .of-boredom-prop{
+  position:absolute; z-index:50; left:50%; pointer-events:none;
+  perspective:4.8em; perspective-origin:50% 8%;
+  animation:ofSacar 1.4s cubic-bezier(.3,.9,.4,1) 1 backwards,ofActFloat 5s 1.4s ease-in-out infinite;
+}
+.osito-face .of-boredom-prop[data-mode="diario"]{top:.57em; width:1.1em; height:.58em; margin-left:-.55em}
+.osito-face .of-boredom-prop[data-mode="juego"]{top:.73em; width:.9em; height:.44em; margin-left:-.45em}
+@keyframes ofActFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-.015em)}}
+.osito-face .of-book,.osito-face .of-phone{position:absolute; inset:0; transform-style:preserve-3d}
+.osito-face .of-book > *,.osito-face .of-phone > *{position:absolute}
+
+/* ============ MANITAS BLANCAS (redondas, con volumen) ============ */
+.osito-face .of-mitt{
+  width:.25em; height:.26em; border-radius:50% 50% 44% 44%/54% 54% 46% 46%;
+  background:radial-gradient(circle at 35% 25%,#fff 0,#f6f3ff 34%,#d7d0ee 72%,#b3a9d6 100%);
+  box-shadow:inset -.03em -.04em .06em rgba(110,95,170,.38),inset .02em .02em .03em rgba(255,255,255,.9),0 .03em .06em rgba(0,0,0,.4);
+  transform:translateZ(.075em); transform-style:preserve-3d;
+}
+.osito-face .of-mitt::before{ /* ranuras de los dedos */
+  content:""; position:absolute; left:50%; bottom:.03em; width:.15em; height:.08em; margin-left:-.075em;
+  border-bottom:.012em solid rgba(110,95,170,.32); border-radius:0 0 50% 50%;
+}
+.osito-face .of-mitt::after{ /* pulgar */
+  content:""; position:absolute; top:-.035em; width:.125em; height:.14em; border-radius:50%;
+  background:radial-gradient(circle at 36% 28%,#fff,#ece7fb 55%,#c4bce3);
+  box-shadow:inset -.015em -.02em .03em rgba(110,95,170,.32),0 .015em .03em rgba(0,0,0,.3);
+  transform:translateZ(.02em);
+}
+.osito-face .of-mitt.ml::after{right:-.03em}
+.osito-face .of-mitt.mr::after{left:-.03em}
+
+/* ============ LIBRO 3D ============ */
+.osito-face .of-book{transform:rotateX(-4deg) rotateY(-5deg); animation:ofBookSway 8s ease-in-out infinite}
+@keyframes ofBookSway{0%,100%{transform:rotateX(-4deg) rotateY(-6deg)}50%{transform:rotateX(-6deg) rotateY(6deg)}}
+.osito-face .bk-cov{
+  top:0; width:.55em; height:.56em; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  background:radial-gradient(120% 80% at 18% 0%,rgba(255,255,255,.24),rgba(255,255,255,0) 55%),linear-gradient(165deg,#7c3df5 0%,#5a28d2 58%,#4b21b6 100%);
+  box-shadow:inset 0 .008em .012em rgba(255,255,255,.4),inset 0 -.022em .03em rgba(30,10,90,.45),0 .02em 0 #3a1b95,0 .03em .05em rgba(0,0,0,.4);
+}
+.osito-face .bk-cov.l{left:.003em; border-radius:.02em 0 0 .06em; transform-origin:100% 50%; transform:rotateY(-12deg)}
+.osito-face .bk-cov.r{right:.003em; border-radius:0 .02em .06em 0; transform-origin:0 50%; transform:rotateY(12deg);
+  background:radial-gradient(120% 80% at 80% 0%,rgba(255,255,255,.14),rgba(255,255,255,0) 55%),linear-gradient(195deg,#6e35e6 0%,#5223c4 58%,#431da5 100%)}
+.osito-face .bk-spine{
+  left:calc(50% - .036em); top:-.012em; width:.072em; height:.585em; border-radius:.03em;
+  background:linear-gradient(90deg,#4a1fb5,#9560ff 45%,#5a2ad0 70%,#3f1a9e);
+  box-shadow:inset 0 .01em .012em rgba(255,255,255,.5),0 .02em .04em rgba(0,0,0,.4);
+  transform:translateZ(.035em);
+}
+.osito-face .bk-pg{ /* hojas crema que asoman por arriba */
+  top:-.05em; width:.5em; height:.075em; transform:translateZ(-.03em);
+  background:linear-gradient(180deg,#fff6dc,#e8d5a6);
+}
+.osito-face .bk-pg.l{left:.03em; clip-path:polygon(0 0,100% 55%,100% 100%,0 100%)}
+.osito-face .bk-pg.r{right:.03em; clip-path:polygon(0 55%,100% 0,100% 100%,0 100%)}
+.osito-face .bk-flip{ /* hoja que pasa cada 8 s (la mueve osito-aburrimiento.js) */
+  left:50%; top:-.075em; width:.5em; height:.5em; transform-origin:0 50%; opacity:0;
+  background:linear-gradient(90deg,#ead8aa,#fff7e0 35%,#fffaf0);
+  border-radius:.02em .05em 0 0; box-shadow:0 0 .03em rgba(0,0,0,.25);
+  transform:translateZ(-.02em);
+}
+.osito-face .bk-flip.go{animation:ofPageFlip 1.5s cubic-bezier(.45,.05,.3,1) 1 forwards}
+@keyframes ofPageFlip{
+  0%{opacity:0; transform:translateZ(-.02em) rotateY(0) translateY(0)}
+  8%{opacity:1}
+  45%{transform:translateZ(-.02em) rotateY(78deg) translateY(-.06em)}
+  55%{transform:translateZ(-.02em) rotateY(102deg) translateY(-.06em)}
+  92%{opacity:1}
+  100%{opacity:0; transform:translateZ(-.02em) rotateY(180deg) translateY(0)}
+}
+.osito-face .bk-ribbon{
+  left:calc(50% - .03em); top:calc(100% + .01em); width:.06em; height:.15em; transform-origin:50% 0;
+  background:linear-gradient(90deg,#ff7a93,#e02350 60%,#c0163f); clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);
+  transform:translateZ(.03em); animation:ofRibbonSway 5s ease-in-out infinite;
+}
+@keyframes ofRibbonSway{0%,100%{rotate:-3deg}50%{rotate:3deg}}
+.osito-face .of-book .of-mitt.ml{left:-.115em; top:.24em}
+.osito-face .of-book .of-mitt.mr{right:-.115em; top:.23em}
+
+/* ============ MANDO 3D (oscuro, horizontal, con cámara) ============ */
+.osito-face .of-phone{transform:rotateX(-5deg) rotateY(-4deg); animation:ofPhoneSway 7s ease-in-out infinite}
+@keyframes ofPhoneSway{0%,100%{transform:rotateX(-5deg) rotateY(-5deg)}50%{transform:rotateX(-7deg) rotateY(5deg)}}
+.osito-face .of-phone .of-slab{ /* grosor del mando */
+  inset:0; border-radius:.1em; background:hsl(228 22% calc(19% - var(--i)*2.4%));
+  transform:translateZ(calc(var(--i)*-.012em));
+}
+.osito-face .ph-back{
+  inset:0; border-radius:.1em; transform:translateZ(.014em);
+  background:radial-gradient(110% 90% at 15% 0%,rgba(255,255,255,.16),rgba(255,255,255,0) 55%),linear-gradient(150deg,#4b5269 0%,#2e3447 48%,#1f2332 100%);
+  box-shadow:inset 0 0 0 .007em rgba(255,255,255,.16),inset .01em .012em .03em rgba(255,255,255,.2),0 .03em .06em rgba(0,0,0,.45);
+}
+.osito-face .ph-cam{
+  right:.09em; top:.045em; width:.2em; height:.2em; border-radius:.055em;
+  background:linear-gradient(145deg,#3d4459,#1d2231);
+  box-shadow:inset 0 0 0 .006em rgba(255,255,255,.18),0 .012em .025em rgba(0,0,0,.5); transform:translateZ(.026em);
+}
+.osito-face .ph-lens{
+  position:absolute; width:.075em; height:.075em; border-radius:50%;
+  background:radial-gradient(circle at 36% 30%,#7b88b3 0,#1b2238 38%,#04060b 72%);
+  box-shadow:0 0 0 .009em #5a6178,inset 0 0 .012em rgba(255,255,255,.4);
+}
+.osito-face .ph-lens.a{left:.02em; top:.02em}
+.osito-face .ph-lens.b{left:.02em; top:.105em}
+.osito-face .ph-flash{position:absolute; right:.026em; top:.025em; width:.03em; height:.03em; border-radius:50%; background:radial-gradient(circle at 40% 35%,#fff3cf,#e2b86a)}
+.osito-face .ph-logo{left:calc(50% - .04em); top:calc(50% - .04em); width:.08em; height:.08em; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.28),rgba(255,255,255,.06)); transform:translateZ(.02em)}
+.osito-face .ph-btn{top:-.012em; height:.016em; border-radius:.01em; background:linear-gradient(#59617a,#2c3345); transform:translateZ(.0em)}
+.osito-face .ph-btn.t1{left:.2em; width:.07em}
+.osito-face .ph-btn.t2{left:.3em; width:.07em}
+.osito-face .of-phone .of-mitt{width:.3em; height:.32em; top:.06em}
+.osito-face .of-phone .of-mitt.ml{left:-.16em}
+.osito-face .of-phone .of-mitt.mr{right:-.16em}
+.osito-face .of-phone .of-mitt::after{animation:ofThumbTap 2.6s ease-in-out infinite}
+.osito-face .of-phone .of-mitt.mr::after{animation-delay:1.1s}
+@keyframes ofThumbTap{0%,80%,100%{translate:0 0}88%{translate:0 .012em}}
+
+/* eventos del mando (suaves, sin sacudidas) */
+.osito-face .of-boredom-prop[data-beat="win"] .of-phone{animation:ofPhoneWin 1.4s ease-in-out 1}
+@keyframes ofPhoneWin{
+  0%,100%{transform:translateY(0) rotateX(-5deg) rotateY(-5deg)}
+  40%{transform:translateY(-.09em) rotateX(-8deg) rotateY(8deg) scale(1.04)}
+}
+.osito-face .of-boredom-prop[data-beat="lose"] .of-phone{animation:ofPhoneLose 1.6s ease-in-out 1}
+@keyframes ofPhoneLose{
+  0%,100%{transform:translateY(0) rotateX(-5deg) rotateY(-5deg)}
+  55%{transform:translateY(.05em) rotateX(14deg) rotateY(-5deg)}
+}
+/* evento del libro: se sorprende y lo sube un poco */
+.osito-face .of-boredom-prop[data-beat="aha"] .of-book{animation:ofBookAha .9s ease-in-out 1}
+@keyframes ofBookAha{
+  0%,100%{transform:translateY(0) rotateX(-4deg) rotateY(-6deg)}
+  40%{transform:translateY(-.05em) rotateX(-2deg) rotateY(0deg) scale(1.03)}
+}
+
+/* ============ EXPRESIONES DE LA CARA MIENTRAS LEE / JUEGA ============
+ * Se activan con data-act (lo pone osito-aburrimiento.js). Si hay una emoción normal
+ * puesta (data-expr: wow, joy, sad, angry…) esa manda; al terminar vuelve data-act.
+ */
+.osito-face[data-boredom] .of-eyes{transform:translate(-50%,-50%) !important}  /* la mirada la manda la actividad */
+.osito-face[data-boredom] .of-look{transition:transform .5s ease,translate .35s ease}
+.osito-face .of-tongue,.osito-face .of-sweat{
+  position:absolute; opacity:0; pointer-events:none; transition:opacity .18s ease;
+}
+.osito-face .of-tongue{
+  z-index:1; left:58%; top:64%; width:.085em; height:.11em; border-radius:.012em .012em .045em .045em;
+  background:linear-gradient(180deg,#ff7aa5,#e43c73); box-shadow:inset 0 .012em .014em rgba(255,255,255,.4);
+  transform-origin:50% 0;
+}
+.osito-face .of-tongue::after{content:""; position:absolute; left:50%; top:10%; width:.008em; height:50%; margin-left:-.004em; background:rgba(120,10,50,.45); border-radius:1em}
+.osito-face .of-sweat{
+  z-index:3; left:calc(50% + .27em); top:20%; width:.05em; height:.07em;
+  border-radius:50% 50% 50% 50%/62% 62% 38% 38%;
+  background:radial-gradient(circle at 35% 30%,#fff,#8fdcff 55%,#3f9bff);
+}
+/* cuando pasa la hoja, los ojos la siguen un instante */
+.osito-face[data-pg] .of-look{translate:-.03em -.025em}
+
+/* --- LEYENDO: ojos que recorren las líneas, cejas planas atentas --- */
+.osito-face[data-act="r-scan"]:not([data-expr]) .of-look{animation:ofReadScan 6s ease-in-out infinite}
+.osito-face[data-act="r-scan"]:not([data-expr]) .of-eye{scale:1 .9}
+.osito-face[data-act="r-scan"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.012em)}
+.osito-face[data-act="r-scan"]:not([data-expr]) .of-smile{opacity:0}
+@keyframes ofReadScan{
+  0%{transform:translate(-.045em,.02em)}
+  24%{transform:translate(.045em,.02em)}
+  28%{transform:translate(-.045em,.04em)}
+  52%{transform:translate(.045em,.04em)}
+  56%{transform:translate(-.045em,.06em)}
+  80%{transform:translate(.045em,.06em)}
+  86%,100%{transform:translate(0,.02em)}
+}
+/* --- LEYENDO: "mmm…" pensativa --- */
+.osito-face[data-act="r-hmm"]:not([data-expr]) .of-look{transform:translate(.05em,-.03em); animation:none}
+.osito-face[data-act="r-hmm"]:not([data-expr]) .of-eye{scale:.95 .92}
+.osito-face[data-act="r-hmm"]:not([data-expr]) .of-brow{opacity:1}
+.osito-face[data-act="r-hmm"]:not([data-expr]) .of-brow.l{transform:translateY(-.04em) rotate(-8deg)}
+.osito-face[data-act="r-hmm"]:not([data-expr]) .of-brow.r{transform:translateY(.01em) rotate(8deg)}
+.osito-face[data-act="r-hmm"]:not([data-expr]) .of-smile{opacity:0}
+/* --- LEYENDO: le da sueño, cabecea despacito --- */
+.osito-face[data-act="r-drowsy"]:not([data-expr]) .of-look{transform:translateY(.05em); animation:none}
+.osito-face[data-act="r-drowsy"]:not([data-expr]) .of-eye{scale:1 .45; transition:scale .6s ease}
+.osito-face[data-act="r-drowsy"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(.012em)}
+.osito-face[data-act="r-drowsy"]:not([data-expr]) .of-smile{opacity:0}
+.osito-face[data-act="r-drowsy"]:not([data-expr]) .of-card{animation:ofDrowsyNod 4s ease-in-out infinite}
+@keyframes ofDrowsyNod{
+  0%,100%{translate:0 0; rotate:0deg}
+  50%{translate:0 .02em; rotate:2deg}
+}
+
+/* --- JUGANDO: concentrada, cejas hacia el centro, mira la pantalla --- */
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-look,
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-look{animation:ofPlayLook 3.4s ease-in-out infinite}
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-eye,
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-eye{scale:1 .96}
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-brow,
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-brow{opacity:1}
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-brow.l{transform:translateY(.002em) rotate(14deg)}
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-brow.r{transform:translateY(.002em) rotate(-14deg)}
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-smile{opacity:.95; transform:translateX(.02em) rotate(-5deg) scale(.7,.55)}
+.osito-face[data-act="p-focus"]:not([data-expr]) .of-card,
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-card{animation:ofPlayLean 4.5s ease-in-out infinite}
+@keyframes ofPlayLook{
+  0%,100%{transform:translate(-.03em,-.025em)}
+  25%{transform:translate(.035em,-.03em)}
+  50%{transform:translate(0,-.035em)}
+  75%{transform:translate(.04em,-.015em)}
+}
+@keyframes ofPlayLean{0%,100%{rotate:-.7deg}50%{rotate:.7deg}}
+/* --- JUGANDO: cejas enojadas + lengüita (como en la imagen) --- */
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-brow.l{transform:translateY(.012em) rotate(20deg)}
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-brow.r{transform:translateY(.012em) rotate(-20deg)}
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-smile{opacity:1; transform:translateX(.02em) rotate(-7deg) scale(.8,.62)}
+.osito-face[data-act="p-tongue"]:not([data-expr]) .of-tongue{opacity:1; animation:ofTongue 1.6s ease-in-out infinite alternate}
+@keyframes ofTongue{from{transform:rotate(-3deg) scaleY(.94)}to{transform:rotate(5deg) scaleY(1.03)}}
+/* --- JUGANDO: nerviosa, sudor (sin temblor) --- */
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-look{animation:ofPlayLook 2.2s ease-in-out infinite}
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-eye{scale:1.1 1.1}
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-brow{opacity:1}
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-brow.l{transform:translateY(-.03em) rotate(-12deg)}
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-brow.r{transform:translateY(-.03em) rotate(12deg)}
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-smile{border-bottom:0; border-top:.03em solid #fff; border-radius:.2em .2em 0 0; opacity:.9; transform:scale(.62,.5) translateY(.02em)}
+.osito-face[data-act="p-sweat"]:not([data-expr]) .of-sweat{opacity:1; animation:ofSweat 1.8s ease-in infinite}
+@keyframes ofSweat{0%{translate:0 0; opacity:0}20%{opacity:1}100%{translate:.01em .26em; opacity:0}}
+/* --- JUGANDO: pícara, una ceja arriba y sonrisa de lado --- */
+.osito-face[data-act="p-smirk"]:not([data-expr]) .of-look{transform:translate(.045em,-.02em); animation:none}
+.osito-face[data-act="p-smirk"]:not([data-expr]) .of-eye{scale:1 .88}
+.osito-face[data-act="p-smirk"]:not([data-expr]) .of-brow{opacity:1}
+.osito-face[data-act="p-smirk"]:not([data-expr]) .of-brow.l{transform:translateY(.012em) rotate(10deg)}
+.osito-face[data-act="p-smirk"]:not([data-expr]) .of-brow.r{transform:translateY(-.04em) rotate(-6deg)}
+.osito-face[data-act="p-smirk"]:not([data-expr]) .of-smile{opacity:1; transform:translateX(.03em) rotate(-10deg) scale(.85,.7)}
+/* --- JUGANDO: levanta la vista y mira a quien está del otro lado --- */
+.osito-face[data-act="p-peek"]:not([data-expr]) .of-look{transform:translate(0,-.01em); animation:none}
+.osito-face[data-act="p-peek"]:not([data-expr]) .of-eye{scale:1.08 1.08}
+.osito-face[data-act="p-peek"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.035em)}
+.osito-face[data-act="p-peek"]:not([data-expr]) .of-smile{opacity:.95; transform:scale(.8,.8)}
+
+
+/* ============ V54: ANIMACIONES MÁS SUAVES Y ESCENA "LIBRE" ============ */
+/* SACAR el objeto: sube desde abajo con las manitas que llegan, rebota y se acomoda */
+@keyframes ofSacar{
+  0%{opacity:0; transform:translateY(.6em) scale(.3) rotate(-14deg)}
+  22%{opacity:1}
+  58%{transform:translateY(-.12em) scale(1.12) rotate(4deg)}
+  76%{transform:translateY(.03em) scale(.97) rotate(-1deg)}
+  100%{opacity:1; transform:translateY(0) scale(1) rotate(0)}
+}
+.osito-face .of-boredom-prop .of-mitt.ml{animation:ofMittInL 1.4s cubic-bezier(.3,1.3,.5,1) 1 backwards}
+.osito-face .of-boredom-prop .of-mitt.mr{animation:ofMittInR 1.4s cubic-bezier(.3,1.3,.5,1) 1 backwards}
+@keyframes ofMittInL{0%,35%{translate:.2em .14em; scale:.6}100%{translate:0 0; scale:1}}
+@keyframes ofMittInR{0%,35%{translate:-.2em .14em; scale:.6}100%{translate:0 0; scale:1}}
+/* GUARDAR el objeto: se levanta un poquito, baja y se encoge mientras las manitas lo sueltan */
+.osito-face .of-boredom-prop.of-out{animation:ofGuardar .9s cubic-bezier(.5,0,.8,.45) 1 forwards!important}
+@keyframes ofGuardar{
+  0%{opacity:1; transform:translateY(0) scale(1) rotate(0)}
+  22%{opacity:1; transform:translateY(-.06em) scale(1.05) rotate(-2deg)}
+  100%{opacity:0; transform:translateY(.6em) scale(.3) rotate(12deg)}
+}
+.osito-face .of-boredom-prop.of-out .of-mitt.ml{animation:ofMittOutL .9s ease-in 1 forwards}
+.osito-face .of-boredom-prop.of-out .of-mitt.mr{animation:ofMittOutR .9s ease-in 1 forwards}
+@keyframes ofMittOutL{0%,25%{translate:0 0; scale:1}100%{translate:.2em .14em; scale:.6}}
+@keyframes ofMittOutR{0%,25%{translate:0 0; scale:1}100%{translate:-.2em .14em; scale:.6}}
+/* Nubecita con chispas al sacar y al guardar */
+.osito-face .of-poof{
+  position:absolute; left:50%; top:72%; width:.56em; height:.56em; margin:-.28em 0 0 -.28em; border-radius:50%;
+  pointer-events:none; opacity:0;
+  background:radial-gradient(circle,rgba(255,255,255,0) 42%,rgba(255,255,255,.75) 56%,rgba(190,150,255,0) 72%);
+}
+.osito-face .of-poof::before,.osito-face .of-poof::after{content:"✦"; position:absolute; font-size:.15em; color:#fff; text-shadow:0 0 .05em #c9a7ff}
+.osito-face .of-poof::before{left:4%; top:10%}
+.osito-face .of-poof::after{right:4%; top:32%}
+.osito-face .of-boredom-prop .of-poof{animation:ofPoof .8s .3s ease-out 1 backwards}
+.osito-face .of-boredom-prop.of-out .of-poof{animation:ofPoof .8s .4s ease-out 1 backwards}
+@keyframes ofPoof{0%{opacity:0; transform:scale(.2)}25%{opacity:1}100%{opacity:0; transform:scale(1.8)}}
+/* Mirada mientras guarda el objeto: sigue cómo baja */
+.osito-face[data-act="g-out"]:not([data-expr]) .of-look{transform:translate(0,.05em); animation:none}
+.osito-face[data-act="g-out"]:not([data-expr]) .of-eye{scale:1 .9}
+.osito-face[data-act="g-out"]:not([data-expr]) .of-brow{opacity:1}
+.osito-face[data-act="g-out"]:not([data-expr]) .of-smile{opacity:.95; transform:scale(.9)}
+
+/* Los gestos se funden entre sí en vez de cambiar de golpe */
+.osito-face[data-boredom] .of-eye{transition:scale .4s ease,transform .12s ease,width .2s ease,height .2s ease,border-radius .2s ease,background .25s ease}
+.osito-face[data-boredom] .of-brow{transition:opacity .3s ease,transform .45s cubic-bezier(.3,1.3,.6,1)}
+.osito-face[data-boredom] .of-smile{transition:opacity .3s ease,transform .45s cubic-bezier(.3,1.3,.6,1),width .25s ease,border-radius .25s ease}
+/* Giros de cabeza en 3D, lentos y suaves (los pone osito-aburrimiento.js con --rx / --ry) */
+.osito-face[data-boredom] .of-card{transition:transform 1s cubic-bezier(.25,.8,.3,1)}
+
+/* Las emociones normales, más calmadas mientras Osito está en sus actividades */
+.osito-face[data-boredom][data-expr="angry"] .of-card{animation:ofAngryHold 1.8s ease-in-out 1}
+@keyframes ofAngryHold{0%,100%{translate:0 0;rotate:0deg}30%{translate:0 .012em;rotate:-1.2deg}65%{translate:0 .008em;rotate:1.2deg}}
+.osito-face[data-boredom][data-expr="laugh"] .of-card{animation:ofLaughSoft 1s ease-in-out infinite alternate}
+@keyframes ofLaughSoft{from{translate:0 0;rotate:-1.2deg}to{translate:0 -.012em;rotate:1.2deg}}
+.osito-face[data-boredom][data-expr="dance"]{animation:ofDanceSoft 1.3s ease-in-out infinite alternate}
+@keyframes ofDanceSoft{from{transform:translate(-.025em,0) rotate(-4deg)}to{transform:translate(.025em,-.03em) rotate(4deg)}}
+.osito-face[data-boredom][data-expr="shy"] .of-card{animation:ofShySoft 2.6s ease-in-out infinite}
+@keyframes ofShySoft{0%,100%{translate:0 0;rotate:-1.5deg}50%{translate:.012em 0;rotate:1.5deg}}
+.osito-face[data-boredom][data-expr="kiss"] .of-card{animation:ofKissSoft 1.6s ease-in-out infinite}
+@keyframes ofKissSoft{0%,100%{translate:0 0;rotate:0deg}50%{translate:.01em -.008em;rotate:-2deg}}
+
+/* --- LIBRE: sin objeto, solo cara. Mirada tranquila que pasea entre gestos --- */
+.osito-face[data-act="l-idle"]:not([data-expr]) .of-look{animation:ofIdleLook 7s ease-in-out infinite}
+.osito-face[data-act="l-idle"]:not([data-expr]) .of-smile{opacity:.92; transform:scale(1)}
+@keyframes ofIdleLook{
+  0%,100%{transform:translate(0,0)}
+  18%{transform:translate(-.05em,-.015em)}
+  40%{transform:translate(.045em,-.025em)}
+  62%{transform:translate(.03em,.025em)}
+  80%{transform:translate(-.035em,.015em)}
+}
+/* "Ooh": se asoma curiosa antes de cada escena nueva */
+.osito-face[data-act="l-peek"]:not([data-expr]) .of-look{transform:translate(0,-.02em); animation:none}
+.osito-face[data-act="l-peek"]:not([data-expr]) .of-eye{scale:1.1 1.12}
+.osito-face[data-act="l-peek"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.035em)}
+.osito-face[data-act="l-peek"]:not([data-expr]) .of-smile{opacity:.95; transform:scale(.8)}
+
+/* ============ RENDIMIENTO ============ */
+body.no-animations .osito-face .of-boredom-prop *,
+body.ultra-performance .osito-face .of-boredom-prop *,
+body.no-animations .osito-face[data-act] .of-look,
+body.ultra-performance .osito-face[data-act] .of-look,
+body.no-animations .osito-face[data-act] .of-card,
+body.ultra-performance .osito-face[data-act] .of-card,
+html.low-end-device .osito-face .of-boredom-prop .bk-ribbon,
+html.low-end-device .osito-face .of-boredom-prop .of-mitt::after{animation:none!important}
+html.low-end-device .osito-face .of-book,
+html.low-end-device .osito-face .of-phone{animation:none!important}
+body.no-animations .osito-face .of-poof,body.ultra-performance .osito-face .of-poof{display:none}
+body.no-animations .osito-face .of-boredom-prop,
+body.ultra-performance .osito-face .of-boredom-prop{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .osito-face .of-boredom-prop,.osito-face .of-boredom-prop *{animation:none!important}
+}

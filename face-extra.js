@@ -1,10 +1,10 @@
 /**
- * V51.1 — La cara de LAIA duerme de noche (9:00 pm a 5:30 am) y de día se duerme tras 8 min sin actividad.
- *  - De 9:00 pm a 5:30 am (hora de El Salvador) la cara duerme normalmente.
- *  - De día, si pasan 8 minutos sin actividad del usuario, se echa una siesta de 15 minutos.
- *  - Cualquier actividad del usuario durante la siesta la despierta inmediatamente.
+ * V51.2 — La cara de LAIA solo duerme dentro del horario nocturno configurado.
+ *  - De 12:30 am a 5:30 am (hora de El Salvador) la cara duerme normalmente.
+ *  - Fuera de ese horario NO hay siesta automática ni apagado por inactividad.
+ *  - La entrada al sueño nocturno se comprueba al llegar a las 00:30.
  *  - Los ronquidos los pone face-sound.js.
- *  - Para probarlo de día: OsitoNight.forzar(true)  ·  volver a la hora real: OsitoNight.forzar(null)
+ *  - El horario es estricto: ninguna bandera de localStorage puede adelantar el sueño.
  */
 (function () {
     'use strict';
@@ -14,23 +14,26 @@
     var durmiendo = false;
     var enSiesta = false;
     var timerSiesta = null;
+    var ULTIMO_GUARDADO = 0;
     var ultimaConCara = Date.now();
     var ultimaActividad = Date.now();
-    var forzado = null;
-    try { var fz = localStorage.getItem('osito_forzar_noche'); forzado = fz === '1' ? true : (fz === '0' ? false : null); } catch (e) {}
+    // IMPORTANTE: el sueño NO puede ser forzado por localStorage ni por otra rutina.
+    // Versiones anteriores de Claude dejaron una bandera `osito_forzar_noche=1`
+    // que podía quedarse guardada y hacer que la cara creyera que siempre era de noche.
+    try { localStorage.removeItem('osito_forzar_noche'); } catch (e) {}
 
-    var INICIO = 21, FIN = 5.5;
-    var ESPERA_NOCHE = 30 * 1000; // de noche duerme tras 30 s sin tocarla (así no se duerme mientras alguien escribe)
-    var ESPERA_SIESTA = 8 * 60 * 1000;
-    var DURACION_SIESTA = 15 * 60 * 1000;
+    var INICIO = 0.5, FIN = 5.5; // duerme de 12:30 am a 5:30 am (hora de El Salvador)
 
     function esNoche() {
-        if (forzado !== null) return forzado;
-        var d = new Date(Date.now() - 6 * 3600 * 1000); // El Salvador = UTC-6 todo el año
-        var h = d.getUTCHours() + d.getUTCMinutes() / 60;
-        return h >= INICIO || h < FIN;
+        // El Salvador es UTC-6 y no usa horario de verano.
+        // Usamos UTC directamente para evitar doble conversión con la zona del navegador.
+        var d = new Date();
+        var utc = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600;
+        var h = utc - 6;
+        if (h < 0) h += 24;
+        return h >= INICIO && h < FIN;
     }
-    if (esNoche()) ultimaConCara = 0; // si abren la página entre 9 pm y 5:30 am, ya está dormida
+    if (esNoche()) ultimaConCara = 0; // si abren la página entre 00:30 y 05:30, ya está dormida
     function visible(c) { return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }
 
     // Zzz y burbujita de ronquido
@@ -43,16 +46,18 @@
         if (timerSiesta) { clearTimeout(timerSiesta); timerSiesta = null; }
     }
     function dormir(esSiesta) {
+        // BLOQUEO ABSOLUTO: si no son las 00:30–05:30, jamás entrar en sleeping.
+        if (!esNoche()) {
+            durmiendo = false; enSiesta = false; limpiarTimerSiesta();
+            caras.forEach(function (c) {
+                if (c.getAttribute('data-expr') === 'sleeping' || c.getAttribute('data-expr') === 'sleepy') F.poner(c, 'smile', 900);
+            });
+            return false;
+        }
         limpiarTimerSiesta();
         durmiendo = true;
         enSiesta = !!esSiesta;
         caras.forEach(function (c) { F.poner(c, 'sleeping', 0); });
-        if (enSiesta) {
-            timerSiesta = setTimeout(function () {
-                timerSiesta = null;
-                if (durmiendo && enSiesta && !document.hidden) tocar(false);
-            }, DURACION_SIESTA);
-        }
     }
     // sinBostezo = true cuando otra reacción toma el control enseguida.
     function tocar(sinBostezo) {
@@ -77,6 +82,20 @@
         if (durmiendo && !esNoche()) tocar(true);
     }
 
+    // CINTURÓN PRINCIPAL: cualquier llamada externa a OsitoFace.poner('sleeping'/'sleepy')
+    // queda bloqueada durante el día. Esto incluye personalidades, Claude y código antiguo.
+    var ponerOriginal = F.poner;
+    if (typeof ponerOriginal === 'function' && !F.__ositoSleepGuard) {
+        F.poner = function (cara, expr, ms) {
+            if (!esNoche() && (expr === 'sleeping' || expr === 'sleepy')) {
+                expr = 'smile';
+                ms = ms || 900;
+            }
+            return ponerOriginal.call(F, cara, expr, ms);
+        };
+        F.__ositoSleepGuard = true;
+    }
+
     function ocupada() {
         return caras.some(function (c) { var e = c.dataset.estado; return e && e !== 'idle'; });
     }
@@ -96,18 +115,21 @@
                 caras.forEach(function (c) { if (c.getAttribute('data-expr') !== 'sleeping') F.poner(c, 'sleeping', 0); });
                 return;
             }
-            // Sueño nocturno igual que antes: solo se duerme tras estar quieta.
-            if (ahora - ultimaConCara > ESPERA_NOCHE && !exprAjena()) dormir(false);
+            // Sueño nocturno: no depende de inactividad. Si son las 00:30–05:30, duerme;
+            // antes de las 00:30 jamás debe entrar en sleeping por ningún temporizador.
+            if (!durmiendo && !exprAjena()) dormir(false);
             return;
         }
 
-        // De día NO entra el sueño nocturno: solo una siesta después de 8 min sin actividad.
-        if (durmiendo) {
-            if (exprAjena()) { tocar(true); return; }
-            caras.forEach(function (c) { if (c.getAttribute('data-expr') !== 'sleeping') F.poner(c, 'sleeping', 0); });
-            return;
+        // A las 05:30 termina el sueño nocturno y la cara vuelve a estar activa.
+        if (durmiendo && !enSiesta) {
+            tocar(true);
         }
-        if (!ocupada() && !exprAjena() && ahora - ultimaActividad >= ESPERA_SIESTA) dormir(true);
+        // De día: NUNCA se duerme automáticamente por inactividad.
+        // El único sueño automático es el nocturno de 00:30 a 05:30.
+        if (durmiendo) {
+            tocar(true);
+        }
     }, 1500);
 
     // Todo lo que la persona hace con la cara la despierta
@@ -131,6 +153,24 @@
         var ahora = Date.now();
         if (ahora - ultimaActividad > 900) registrarActividad();
     }, { passive: true, capture: true });
+
+    // CINTURÓN DE SEGURIDAD: fuera de 00:30–05:30 ninguna otra rutina puede dejar
+    // la cara en 'sleeping'/'sleepy'. Esto también protege contra código antiguo en caché
+    // o una personalidad que intente lanzar una expresión de sueño durante el día.
+    function corregirSuenoFueraDeHorario() {
+        if (esNoche()) return;
+        var ahora = Date.now();
+        if (ahora - ULTIMO_GUARDADO < 250) return;
+        ULTIMO_GUARDADO = ahora;
+        caras.forEach(function (c) {
+            var e = c.getAttribute('data-expr');
+            if (e === 'sleeping' || e === 'sleepy') {
+                F.poner(c, 'smile', 900);
+            }
+        });
+        if (durmiendo) { durmiendo = false; enSiesta = false; limpiarTimerSiesta(); }
+    }
+    setInterval(corregirSuenoFueraDeHorario, 200);
 
     // V51.1: cada emoción nueva lanza su emoji UNA vez (si la emoción no cambia, no se repite).
     function reiniciarEmoji(c) {
@@ -156,10 +196,9 @@
         esNoche: esNoche,
         tocar: tocar,
         dormir: function () { ultimaConCara = 0; ultimaActividad = Date.now(); dormir(false); },
-        forzar: function (v) {
-            forzado = (v === true || v === false) ? v : null;
-            try { if (forzado === null) localStorage.removeItem('osito_forzar_noche'); else localStorage.setItem('osito_forzar_noche', forzado ? '1' : '0'); } catch (e) {}
-            if (forzado === true) { ultimaConCara = 0; }
+        // Se conserva el nombre por compatibilidad, pero ya NO permite alterar el horario real.
+        forzar: function () {
+            try { localStorage.removeItem('osito_forzar_noche'); } catch (e) {}
             return esNoche();
         }
     };

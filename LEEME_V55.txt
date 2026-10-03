@@ -1,0 +1,16 @@
+EL SÓTANO DE OSITO — V55 — SE VE CÓMO SACA Y GUARDA EL OBJETO
+
+SACAR (1,4 s)
+- El libro o el mando sube desde abajo de la cara, rebota y se acomoda.
+- Las manitas llegan desde los lados y lo agarran.
+- Nubecita con chispas ✦ al aparecer.
+- Osito reacciona: se sorprende (libro) o se emociona (mando) antes de empezar a leer/jugar.
+
+GUARDAR (0,9 s)
+- El objeto se levanta un poquito, baja y se encoge mientras las manitas lo sueltan, con nubecita y chispas.
+- Los ojos miran hacia abajo siguiendo cómo baja y sonríe.
+- Pasa al cambiar de actividad (libro -> mando -> libre) y también cuando alguien toca, escribe o hace scroll.
+- Al cambiar de actividad, primero guarda el objeto viejo y después saca el nuevo.
+
+Archivos cambiados: osito-aburrimiento.js, osito-actividades-3d.css, index.html (?v=v55).
+Probar en consola: OsitoAburrimiento.activar('diario') y luego OsitoAburrimiento.activar('juego') para ver cómo guarda y saca.

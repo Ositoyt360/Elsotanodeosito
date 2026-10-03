@@ -1,0 +1,32 @@
+EL SÓTANO DE OSITO — V52 — DIARIO Y MANDO EN 3D + EXPRESIONES
+
+Cuando Osito pasa 90 s sin compañía, lee su diario o juega con el mando (cambia cada 30 s).
+
+OBJETOS 3D (solo CSS, sin imágenes)
+- Diario: tapa morada con estrella dorada, candadito, banda elástica, lomo, canto de hojas y cinta roja. Gira en 3D.
+- Mando: cuerpo con grosor (capas), sticks que se mueven, cruceta, botones A/B/X/Y que se aprietan, gatillos y LED.
+- Manitas blancas estilo robot sostienen cada objeto.
+
+EXPRESIONES DE LA CARA MIENTRAS LEE
+- Ojos que recorren las líneas del texto, cejas atentas.
+- "Mmm..." pensativa (mira arriba, una ceja alzada).
+- Le da sueño: cabecea y se despierta de golpe.
+- Sonríe, se ríe, se sorprende (el diario salta), se pone triste, se enamora, curiosa.
+- A veces el diario da una vuelta completa en 3D.
+
+EXPRESIONES DE LA CARA MIENTRAS JUEGA
+- Concentrada: ojos entrecerrados que miran la tele, cejas hacia el centro, cuerpo que se inclina con cada botón.
+- Saca la lengüita de la concentración.
+- Nerviosa: gota de sudor y carita temblorosa.
+- Gana: alegría y el mando da vueltas en el aire.
+- Pierde: se enoja, el mando tiembla y se cae, y luego se pone triste.
+- También: emocionada, cool, guiño, mareada.
+- Los gestos salen mezclados y nunca el mismo dos veces seguidas.
+
+ARCHIVOS
+- NUEVO: osito-actividades-3d.css
+- CAMBIADOS: osito-aburrimiento.js, ia-claude.js (no hace gestos al azar mientras lee/juega), index.html (carga el css nuevo),
+  personalidades-animaciones-1000.css (se quitó el diario/mando viejo).
+- Probar ya mismo: en la consola OsitoAburrimiento.activar('diario') o OsitoAburrimiento.activar('juego'). Para quitar: OsitoAburrimiento.detener()
+- Al tocar la página, escribir o hacer scroll, la actividad se detiene y Osito vuelve a su cara normal.
+- De 12:00 am a 5:30 am (cara dormida) no lee ni juega.

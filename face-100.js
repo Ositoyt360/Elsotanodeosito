@@ -41,7 +41,10 @@
     if(expr==='sleeping'||expr==='sleepy'||estado==='listening') return;
     ejecutar(siguiente());
   }
-  var timer=setInterval(ciclo, root.classList.contains('low-end-device')?5200:3300);
+  // V51.5: no ejecutar microanimaciones de cuerpo automáticamente.
+  // El ciclo de 3.3 s era otra fuente de sacudidas de la cara.
+  // La API pública sigue disponible para efectos explícitos cuando se necesite.
+  var timer=null;
   document.addEventListener('visibilitychange',function(){if(document.hidden){}}, {passive:true});
-  window.OsitoFace100={animar:animar, ejecutar:ejecutar, cantidad:100, detener:function(){clearInterval(timer);}};
+  window.OsitoFace100={animar:animar, ejecutar:ejecutar, cantidad:100, detener:function(){if(timer) clearInterval(timer); timer=null;}, iniciar:function(){if(!timer) timer=setInterval(ciclo, root.classList.contains('low-end-device')?5200:3300);}};
 }());

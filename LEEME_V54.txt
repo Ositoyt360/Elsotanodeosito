@@ -1,0 +1,18 @@
+EL SÓTANO DE OSITO — V54 — MÁS EXPRESIONES + ANIMACIONES MÁS SUAVES
+
+Cuando Osito pasa 10 s sin compañía ahora tiene TRES actividades (sale una vez cada una antes de repetir, nunca la misma dos veces seguidas):
+- Leer el libro (pasa una hoja cada 8 s)
+- Jugar con el mando
+- NUEVO "libre": sin objeto, solo cara, con las expresiones que ya tenía: bosteza, curiosa, confundida, sorprendida, tímida, enamorada, beso, baila, emocionada, alegre, ríe, cool, guiño, mira la tele, charla, triste, enojada, mareada y mirada tranquila.
+  En cada gesto la cabeza gira un poquito en 3D (suave, sin temblor).
+- Lee/juega: se agregaron más expresiones al juego (sonríe, sorprendida, se ríe, enamorada, curiosa...).
+
+ANIMACIONES MEJORADAS
+- El libro y el mando entran con un rebote y salen con un gesto rápido (antes aparecían y desaparecían de golpe).
+- Los gestos de ojos, cejas y boca se funden entre sí (ya no cambian de golpe).
+- Giros de cabeza en 3D lentos con transición suave.
+- Risa, baile, enojo, timidez y beso se calmaron mientras Osito está en sus actividades (menos movimiento, sin sacudidas).
+- Cambia de actividad cada 30 s (24 s la libre). Al tocar, escribir o hacer scroll se detiene.
+
+ARCHIVOS CAMBIADOS: osito-aburrimiento.js, osito-actividades-3d.css, index.html (?v=v54).
+Probar en consola: OsitoAburrimiento.activar('libre') | 'diario' | 'juego'. Quitar: OsitoAburrimiento.detener()

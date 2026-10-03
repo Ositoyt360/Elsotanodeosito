@@ -1,0 +1,21 @@
+EL SÓTANO DE OSITO — V53 — LIBRO Y MANDO NUEVOS (3D) + SIN TEMBLOR
+
+DISEÑO NUEVO (según tu imagen)
+- Libro: morado, abierto y visto desde atrás, con lomo claro, hojas crema asomando arriba y cinta roja abajo.
+- Mando: oscuro, horizontal, con cámara doble y manitas blancas redondas con pulgares.
+- Todo en 3D con CSS (se inclina despacito con perspectiva).
+
+COMPORTAMIENTO
+- Aparece tras 10 s sin actividad (antes 90 s). Al tocar, escribir o hacer scroll se quita y Osito vuelve a su cara normal.
+- El libro pasa una hoja cada 8 s (la primera a los 2,5 s) y los ojos la siguen un momento.
+- Jugando, la cara hace expresiones variadas igual que leyendo: concentrada, lengüita con cejas enojadas, nerviosa, pícara, mira de reojo, sonríe, se ríe, se sorprende, se enamora, gana, pierde...
+- Cambia entre leer y jugar cada 30 s. De 12:30 am a 5:30 am (cara dormida) no aparece.
+
+SIN TEMBLOR
+- Se quitó el temblor nervioso y la sacudida al perder. Los movimientos son lentos y pequeños.
+- Mientras lee o juega se pausa la animación de personalidad de la tarjeta (era lo que más movía la cara); al terminar vuelve sola.
+
+ARCHIVOS CAMBIADOS
+- osito-actividades-3d.css (reescrito), osito-aburrimiento.js, personalidades-animaciones-1000.js, index.html (versión ?v=v53).
+- Probar en consola: OsitoAburrimiento.activar('diario') o OsitoAburrimiento.activar('juego'). Quitar: OsitoAburrimiento.detener()
+- face-extra.js: ahora Osito se duerme a las 12:30 am (antes 12:00 am) y despierta a las 5:30 am, hora de El Salvador. Mientras duerme no lee ni juega.

@@ -12,3 +12,17 @@ EL SÓTANO DE OSITO — V51.1
 V51.2
 - Se quitó el punto verde de la burbuja flotante.
 - Los emojis de la cara salen ahora a la derecha, más chicos, sobresaliendo del aro de colores (las Zzz también).
+
+
+V51.5 — CORRECCIÓN DE TEMBLOR FACIAL
+- Se desactivó el ciclo automático de las 100 microanimaciones cada 3.3 s.
+- Se eliminaron de los microgestos automáticos los movimientos de cabeza nod/peek, respiración y giro aleatorio.
+- Se mantienen parpadeos, miradas, expresiones, animaciones de personalidad y efectos explícitos.
+
+
+V51.6 — ACTIVIDADES 3D
+- Se reemplazaron los emojis 📰/🎮 del aburrimiento por objetos 3D construidos en CSS.
+- La mascotita tiene manos que sostienen el diario o el mando.
+- El diario tiene tapa, páginas y líneas; el mando tiene sticks, cruceta, botones y LED.
+- Se añadió vapor/respiración suave en vez del emoji de actividad.
+- Se conservan las expresiones curious/excited durante la actividad.

@@ -993,7 +993,7 @@
             if (window.firebaseAuth && window.setPersistenceFirebase && window.onAuthStateChangedFirebase) {
                 return true;
             }
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 25));
         }
         return false;
     }

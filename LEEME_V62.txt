@@ -1,0 +1,32 @@
+EL SOTANO DE OSITO — V62  (todo vive en index.html (todo integrado, sin archivos nuevos))
+
+Cambio: solo se reemplaza index.html (el código nuevo va dentro de él).
+
+1) VIDEO DE FONDO (Halloween, Navidad, Cumpleaños)
+- Causas por las que no aparecía: el código viejo bloqueaba el reintento de reproducción en todo celular
+  ("mobile-lite"), trataba a cualquier Android como equipo lento, y el ahorro de datos / captura lo ocultaba con CSS.
+- Ahora SIEMPRE se muestra al entrar al sótano.
+  · Modo normal ........ el video se reproduce (versión liviana en equipos lentos).
+  · Modo rendimiento ... el video queda PAUSADO pero visible.
+  · Modo ultra ......... se quita el <video> (libera memoria) y entra un fondo simple: la portada con un zoom lento.
+    Al salir de ultra el video vuelve solo.
+- Se pausa si suena un video de YouTube o si la pestaña está oculta, y se reanuda solo.
+
+2) ENTRADA: fondo cuadriculado con animación 3D (solo CSS, carga al instante).
+- Piso y techo en perspectiva que avanzan, con vaivén de cámara. Cambia de color según el modo especial.
+- Rendimiento: más lenta · Ultra: quieta.
+
+3) CUBO DE LA MASCOTA
+- Sin objeto también mira al frente, izquierda, derecha, arriba y abajo (y los ojos lo acompañan).
+- Sigue haciendo expresiones en TODOS los modos (en rendimiento/ultra más espaciadas y lentas).
+- El puntero sigue teniendo prioridad; con un objeto en las manos mira al frente como antes.
+
+4) OPTIMIZACIÓN (sin quitar animaciones)
+- Todas las animaciones CSS corren más lentas (normal 75%, rendimiento 55%, ultra 45%). La mascota no se toca.
+- El lienzo de estrellas se limita a ~30 fps (20 en equipos lentos).
+- Lo que está fuera de pantalla no se dibuja (content-visibility), imágenes/iframes perezosos,
+  música sin precargar en la entrada, portadas pequeñas precalentadas en reposo.
+- Sin backdrop-filter en equipos lentos y en modos rendimiento/ultra.
+
+Si quieres ajustar la velocidad: en index.html (busca "const REGLAS" o "REGLAS ="), objeto REGLAS (normal / rendimiento / ultra).
+Instalación: reemplaza los archivos y recarga con Ctrl + F5 (en móvil, borra la caché del sitio).

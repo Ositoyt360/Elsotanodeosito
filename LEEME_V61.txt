@@ -1,0 +1,42 @@
+EL SOTANO DE OSITO — V61
+
+1) PANTALLA DE INICIO QUIETA Y SIN SONIDO
+- Antes de tocar "Entrar al Sótano" ya no hay video de fondo, estrellas, brillos ni rejilla animada: solo un fondo oscuro fijo.
+- El video del modo (Halloween, Navidad, cumpleaños) ni se descarga hasta que entras; aparece con un fundido suave.
+- En el inicio de sesión no suena nada: se quitó la voz de bienvenida y los sonidos de la cara se bloquean mientras está la pantalla de inicio.
+- Archivos: v61.css (nuevo), index.html, v49.js, face-sound.js.
+
+2) CUENTA MÁS RÁPIDA
+- Si el navegador ya tiene una sesión guardada, el botón "Entrar al Sótano" sale al instante (Firebase la confirma en segundo plano).
+- Se reduce la espera de respaldo (1.5 s -> 0.9 s) y la revisión de Firebase es más rápida (100 ms -> 25 ms).
+
+3) MASCOTA EN CUBO 3D
+- La cara ya no es una tarjeta plana: es un cubo de 6 caras (frente con la cara, atrás, laterales, arriba y abajo) que se balancea lento.
+- En celulares limitados queda quieto en su pose 3D para no gastar batería.
+- Archivos: osito-cara3d.js, v61.css.
+
+4) SONIDO EN CADA EXPRESIÓN Y CADA OBJETO
+- Las expresiones suenan siempre (antes, con el panel cerrado, solo una cada 7 s; ahora cada 1.2 s).
+- 34 sonidos nuevos: pasar página, leer, "hmm", "¡aha!", deslizar y teclear en el teléfono, vibración, sorbo, soplar, morder,
+  olfatear, botones de juego, ganar/perder, patada, rebote, cámara, magia, abrir regalo/mochila/laptop, micrófono, cantar, peluche, etc.
+- Cada gesto de cada objeto (leyendo, jugando, tomando café...) tiene su sonido, y cada vez que pasa la hoja del libro/periódico suena.
+- Probar en consola: OsitoFaceSound.acto('r-scan') | OsitoFaceSound.beat('win') | OsitoFaceSound.objeto('telefono')
+- Archivos: face-sound.js, osito-aburrimiento.js.
+
+5) CREADOR OsitoYT360 EN CELULAR
+- "Conteos regresivos" y "Editar actualizaciones" ahora salen al FINAL de la página en el móvil (solo con la cuenta OsitoYT360).
+- Archivo: styles.css.
+
+6) OPTIMIZACIÓN PARA CELULAR
+- Se apagan los desenfoques de fondo (backdrop-filter), que son lo más pesado de pintar en teléfonos.
+- Las tarjetas de video fuera de pantalla no se dibujan hasta que se acercan (content-visibility).
+- Sin brillos ni animaciones decorativas infinitas en equipos de gama baja.
+
+Instalación: reemplaza los archivos y recarga con Ctrl + F5 (en móvil, borra la caché del sitio).
+
+7) ACTUALIZACIÓN V61-2 — MASCOTA USANDO OBJETOS
+- Mientras usa un objeto, el cubo mira AL FRENTE (ya no queda ladeado).
+- El cubo entero se mueve: gira a la derecha, izquierda, arriba y abajo (mira al objeto, mira a los lados, levanta la cara). También sigue el cursor/dedo en todo su cuerpo, no solo la tarjeta de la cara.
+- Se quitó un filtro que aplanaba el cubo y escondía sus lados cuando usaba objetos.
+- Los objetos (teléfono, laptop, periódico, libro, mando, cámara, regalo, mochila, etc.) tienen grosor/volumen 3D con sombra, igual que la mascota.
+- Archivos: v61.css, ia-claude.js, osito-aburrimiento.js, index.html.

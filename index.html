@@ -11,8 +11,541 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=v59">
+    <link rel="stylesheet" href="styles.css?v=v61">
     <link rel="stylesheet" href="v49.css?v=v56">
+    <script id="v62-inline">
+/* =====================================================================
+ * V62 — UN SOLO ARCHIVO con todo lo nuevo (no toca el resto de la página).
+ *
+ *  1) Fondo de VIDEO de cada modo: siempre se muestra y se reproduce.
+ *       · Normal ........ video en movimiento (versión liviana en equipos lentos).
+ *       · Rendimiento ... el video se PAUSA (queda visible, quieto).
+ *       · Ultra ......... el video se QUITA y entra un fondo simple animado (barato).
+ *  2) Pantalla de entrada: fondo cuadriculado con animación 3D (solo CSS, carga al instante).
+ *  3) Cubo de la mascota: sin objeto también mira al frente / izquierda / derecha / arriba / abajo
+ *     y sigue haciendo expresiones en TODOS los modos (en Rendimiento/Ultra más lento).
+ *  4) Optimización: animaciones MÁS LENTAS (no se quitan), carga más rápida, menos trabajo fuera de pantalla.
+ *
+ *  Va integrado dentro de index.html (no necesita ningún otro archivo).
+ * ===================================================================== */
+(function () {
+    'use strict';
+    if (window.__V62) return;
+    window.__V62 = true;
+
+    var root = document.documentElement;
+    var nav = navigator;
+    var conn = nav.connection || nav.mozConnection || nav.webkitConnection || null;
+    var TEMAS_VIDEO = { halloween: 1, navidad: 1, cumpleanos: 1 };
+    var REGLAS = {
+        // velocidad de las animaciones CSS (1 = original). Más bajo = más lento.
+        normal: 0.75,
+        rendimiento: 0.55,
+        ultra: 0.45
+    };
+
+    function body() { return document.body; }
+    function bc(c) { return !!(body() && body().classList.contains(c)); }
+    function rc(c) { return root.classList.contains(c); }
+    function modo() {
+        if (bc('ultra-performance')) return 'ultra';
+        if (bc('no-animations')) return 'rendimiento';
+        return 'normal';
+    }
+    function equipoLento() {
+        var mem = Number(nav.deviceMemory || 0), hilos = Number(nav.hardwareConcurrency || 0);
+        return rc('low-end-device') || rc('mobile-lite') || rc('data-saver') ||
+            (mem > 0 && mem <= 4) || (hilos > 0 && hilos <= 4) ||
+            !!(conn && (conn.saveData || /^(slow-2g|2g|3g)$/.test(conn.effectiveType || '')));
+    }
+    function temaActual() { return root.dataset.siteTheme || 'normal'; }
+
+    /* =====================================================================
+     * CSS (se inyecta desde aquí; se mueve al final del <body> para ganar a los demás)
+     * ===================================================================== */
+    var CSS = [
+    /* ---------- 2) Entrada: cuadrícula 3D ---------- */
+    '.v62-grid3d{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;contain:strict;',
+    '  --v62-l:rgba(0,242,254,.55);--v62-l2:rgba(168,85,247,.45);--v62-glow:rgba(0,242,254,.22);',
+    '  background:radial-gradient(ellipse at 50% 50%,#0b1432 0%,#060a1c 55%,#03050f 100%)}',
+    'body.modo-halloween .v62-grid3d{--v62-l:rgba(255,140,0,.55);--v62-l2:rgba(150,60,220,.45);--v62-glow:rgba(255,120,0,.2)}',
+    'body.modo-navidad .v62-grid3d{--v62-l:rgba(90,230,255,.55);--v62-l2:rgba(255,80,80,.42);--v62-glow:rgba(120,220,255,.2)}',
+    'body.modo-cumpleanos .v62-grid3d{--v62-l:rgba(255,105,180,.55);--v62-l2:rgba(255,210,70,.42);--v62-glow:rgba(255,120,200,.2)}',
+    'body.modo-san-valentin .v62-grid3d{--v62-l:rgba(255,90,140,.55);--v62-l2:rgba(255,50,90,.42);--v62-glow:rgba(255,80,130,.2)}',
+    '.v62-persp{position:absolute;inset:0;perspective:560px;perspective-origin:50% 50%;',
+    '  transform:translateZ(0);animation:v62Sway 18s ease-in-out infinite alternate}',
+    '.v62-plane{position:absolute;left:-60%;width:220%;height:75%;will-change:transform;backface-visibility:hidden;',
+    '  background-image:linear-gradient(var(--v62-l) 2px,transparent 2px),linear-gradient(90deg,var(--v62-l) 2px,transparent 2px),',
+    '  linear-gradient(var(--v62-l2) 1px,transparent 1px),linear-gradient(90deg,var(--v62-l2) 1px,transparent 1px);',
+    '  background-size:90px 90px,90px 90px,22.5px 22.5px,22.5px 22.5px}',
+    '.v62-floor{top:50%;transform-origin:50% 0;transform:rotateX(74deg);animation:v62Floor 3.2s linear infinite}',
+    '.v62-ceil{bottom:50%;transform-origin:50% 100%;transform:rotateX(-74deg);animation:v62Ceil 3.2s linear infinite}',
+    '@keyframes v62Floor{from{transform:rotateX(74deg) translateY(0)}to{transform:rotateX(74deg) translateY(90px)}}',
+    '@keyframes v62Ceil{from{transform:rotateX(-74deg) translateY(0)}to{transform:rotateX(-74deg) translateY(-90px)}}',
+    '@keyframes v62Sway{from{transform:translateZ(0) rotateZ(-2.2deg) scale(1.04)}to{transform:translateZ(0) rotateZ(2.2deg) scale(1.1)}}',
+    '.v62-horizon{position:absolute;left:0;right:0;top:50%;height:46%;transform:translateY(-50%);pointer-events:none;',
+    '  background:radial-gradient(ellipse at 50% 50%,var(--v62-glow) 0%,transparent 62%)}',
+    '.v62-vignette{position:absolute;inset:0;pointer-events:none;',
+    '  background:linear-gradient(to bottom,#03050f 0%,rgba(3,5,15,.1) 28%,rgba(3,5,15,.1) 72%,#03050f 100%),',
+    '  radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(3,5,15,.78) 100%)}',
+    /* Rendimiento: más lenta · Ultra: quieta (no se apaga el dibujo, solo el movimiento) */
+    'body.no-animations .v62-floor,body.no-animations .v62-ceil{animation-duration:7s}',
+    'body.no-animations .v62-persp{animation-duration:40s}',
+    'body.ultra-performance .v62-floor,body.ultra-performance .v62-ceil,body.ultra-performance .v62-persp{animation:none}',
+    /* la bienvenida deja ver la cuadrícula y no se tapa con fondos viejos */
+    'html body #welcome-screen .welcome-panel{position:relative;z-index:2}',
+    'html body #welcome-screen .welcome-overlay{position:absolute;z-index:1}',
+    /* botones de entrada legibles sobre la cuadrícula */
+    'html body #welcome-screen :is(.landing-btn,.account-welcome-btn,.btn-enter-hub){color:#eafcff!important;text-shadow:0 1px 6px rgba(0,0,0,.7)}',
+
+    /* ---------- 1) Fondo de video: SIEMPRE visible ---------- */
+    /* las reglas viejas lo ocultaban con ahorro de datos / captura: ya no */
+    'html body .modo-sitio-video video.modo-bg-video{display:block!important;visibility:visible!important}',
+    'html body .modo-sitio-video{display:block!important;visibility:visible!important}',
+    'html body:has(#welcome-screen) .modo-sitio-video{display:none!important}', /* la entrada es la cuadrícula; el video aparece al entrar */
+    'html body .modo-sitio-video{background-size:cover;background-position:center;opacity:1}',
+    /* Rendimiento: el video queda pausado (ya hay un fotograma o la portada debajo) */
+    'html body.no-animations .modo-sitio-video video.modo-bg-video{opacity:.85!important}',
+    /* Ultra: sin <video>; fondo simple con la portada + respiración lenta (solo transform/opacity, GPU) */
+    'html body.ultra-performance .modo-sitio-video video{display:none!important}',
+    '.v62-ultra-bg{position:absolute;inset:-4%;background-size:cover;background-position:center;opacity:.72;',
+    '  transform:translateZ(0);will-change:transform;animation:v62Ken 46s ease-in-out infinite alternate}',
+    '.v62-ultra-tint{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 30%,rgba(0,0,0,.55) 100%);',
+    '  animation:v62Breath 12s ease-in-out infinite alternate}',
+    '@keyframes v62Ken{from{transform:translateZ(0) scale(1) translate3d(0,0,0)}to{transform:translateZ(0) scale(1.07) translate3d(-1.5%,-1%,0)}}',
+    '@keyframes v62Breath{from{opacity:.55}to{opacity:1}}',
+
+    /* ---------- 3) Cubo: se mueve siempre (más lento en equipos/modos ligeros) ---------- */
+    /* pose base AL FRENTE (antes quedaba ladeado); solo gira cuando mira a un lado */
+    'html body .osito-face,html body .osito-face[data-boredom]{--px:0deg;--py:0deg}',
+    'html body .osito-face .of-rig{transform-style:preserve-3d;',
+    '  transform:rotateX(calc(var(--px,-14deg) + var(--cx,0deg))) rotateY(calc(var(--py,-27deg) + var(--cy,0deg)))!important;',
+    '  transition:transform 1.1s cubic-bezier(.25,.8,.3,1)!important}',
+    'html body .osito-face .of-rig{animation:v62CuboIdle 14s ease-in-out infinite alternate!important}',
+    'html body.no-animations .osito-face .of-rig,html body.ultra-performance .osito-face .of-rig,html.low-end-device body .osito-face .of-rig,',
+    'html.mobile-lite body .osito-face .of-rig,html.data-saver body .osito-face .of-rig{animation:v62CuboIdle 24s ease-in-out infinite alternate!important}',
+    '@keyframes v62CuboIdle{from{rotate:0 1 0 -5deg}to{rotate:0 1 0 6deg}}',
+    '@media (prefers-reduced-motion:reduce){html body .osito-face .of-rig{animation:v62CuboIdle 30s ease-in-out infinite alternate!important}}',
+
+    /* ---------- 4) Optimización general ---------- */
+    /* lo que está fuera de pantalla no se dibuja (tampoco sus animaciones) */
+    'html body .video-card,html body .content-section,html body .sidebar-card{content-visibility:auto;contain-intrinsic-size:auto 340px}',
+    'html body .video-card{contain:layout paint style}',
+    'html body .video-card img,html body .video-thumbnail img{content-visibility:auto}',
+    /* el desenfoque de fondo es lo más caro de pintar: solo en equipos potentes y en modo normal */
+    'html.mobile-lite *,html.low-end-device *,html body.no-animations *,html body.ultra-performance *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}',
+    /* el video de fondo trabaja en su propia capa de GPU */
+    'html body .modo-sitio-video video.modo-bg-video{transform:translateZ(0);backface-visibility:hidden}'
+    ].join('\n');
+
+    var styleEl = null;
+    function inyectarCSS() {
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = 'v62-css';
+            styleEl.textContent = CSS;
+        }
+        // Al final del <body> (después de v61.css) para ganar el orden de la cascada.
+        var destino = document.body || document.head || root;
+        if (styleEl.parentNode !== destino || destino.lastElementChild !== styleEl) destino.appendChild(styleEl);
+    }
+    inyectarCSS(); // en <head> mientras no existe <body>
+
+    /* =====================================================================
+     * 2) ENTRADA: cuadrícula 3D
+     * ===================================================================== */
+    function montarCuadricula() {
+        var ws = document.getElementById('welcome-screen');
+        if (!ws || ws.querySelector('.v62-grid3d')) return;
+        var g = document.createElement('div');
+        g.className = 'v62-grid3d';
+        g.setAttribute('aria-hidden', 'true');
+        g.innerHTML = '<div class="v62-persp"><div class="v62-plane v62-floor"></div><div class="v62-plane v62-ceil"></div></div>' +
+            '<div class="v62-horizon"></div><div class="v62-vignette"></div>';
+        ws.insertBefore(g, ws.firstChild);
+    }
+
+    /* =====================================================================
+     * 1) VIDEO DE FONDO
+     * ===================================================================== */
+    var ultimoVideoSrc = '';
+    var gestoEsperando = false;
+
+    function capaVideo() { return document.getElementById('modo-sitio-video'); }
+    function videoFondo() { var l = capaVideo(); return l ? l.querySelector('video') : null; }
+    function yaEntro() { return !document.getElementById('welcome-screen') || window.__ositoEntro === true; }
+    function hayYouTubeSonando() { return !!document.querySelector('.video-thumbnail[data-playing="true"] iframe'); }
+
+    function fuenteDelTema(tema) {
+        var originales = { halloween: 'video hallowen.mp4', navidad: 'Fondo Navidad.mp4', cumpleanos: 'fondo de cumple.mp4' };
+        var ori = originales[tema];
+        if (!ori) return '';
+        // Equipo lento / ahorro de datos → versión liviana ya incluida en /fondos
+        if (equipoLento() || modo() !== 'normal') return 'fondos/' + tema + '-lite.mp4';
+        return ori;
+    }
+    function portadaDelTema(tema) { return TEMAS_VIDEO[tema] ? 'fondos/' + tema + '.jpg' : ''; }
+
+    function esperarGesto() {
+        if (gestoEsperando) return;
+        gestoEsperando = true;
+        var ev = ['pointerdown', 'keydown', 'touchstart', 'click'];
+        var f = function () {
+            gestoEsperando = false;
+            ev.forEach(function (e) { document.removeEventListener(e, f, true); });
+            aplicarVideo();
+        };
+        ev.forEach(function (e) { document.addEventListener(e, f, { capture: true, passive: true }); });
+    }
+
+    function ponerFuente(v, tema) {
+        var src = fuenteDelTema(tema);
+        if (!src) return false;
+        var actual = v.getAttribute('src') || '';
+        if (actual) { ultimoVideoSrc = actual; return true; }
+        v.src = src;
+        ultimoVideoSrc = src;
+        v.preload = 'auto';
+        try { v.load(); } catch (e) {}
+        return true;
+    }
+
+    function activarUltra(layer, tema) {
+        var v = layer.querySelector('video');
+        if (v) {
+            try { v.pause(); } catch (e) {}
+            if (v.getAttribute('src')) {
+                ultimoVideoSrc = v.getAttribute('src');
+                v.removeAttribute('src'); // suelta la descarga y la memoria del decodificador
+                try { v.load(); } catch (e) {}
+            }
+        }
+        if (!layer.querySelector('.v62-ultra-bg')) {
+            var portada = portadaDelTema(tema);
+            var bg = document.createElement('div');
+            bg.className = 'v62-ultra-bg';
+            if (portada) bg.style.backgroundImage = 'url("' + portada + '")';
+            var tint = document.createElement('div');
+            tint.className = 'v62-ultra-tint';
+            layer.insertBefore(bg, layer.firstChild);
+            layer.appendChild(tint);
+        }
+    }
+    function quitarUltra(layer) {
+        Array.prototype.forEach.call(layer.querySelectorAll('.v62-ultra-bg,.v62-ultra-tint'), function (n) { n.remove(); });
+    }
+
+    // Aplica lo que corresponde según el modo. Es seguro llamarlo muchas veces.
+    function aplicarVideo() {
+        var layer = capaVideo();
+        if (!layer || !body()) return;
+        var tema = temaActual();
+        var v = layer.querySelector('video');
+        if (!v) return; // San Valentín: ya es un fondo CSS animado
+        var m = modo();
+
+        // propiedades que hacen falta para que el navegador deje reproducir
+        v.muted = true; v.defaultMuted = true; v.playsInline = true; v.loop = true; v.autoplay = false;
+        v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+        v.classList.add('is-active');
+        layer.classList.toggle('modo-video-frozen', m === 'rendimiento');
+        layer.classList.toggle('modo-video-playing', m === 'normal');
+
+        if (m === 'ultra') { activarUltra(layer, tema); return; }
+        quitarUltra(layer);
+        if (!yaEntro()) return; // durante la entrada solo se ve la cuadrícula (carga más rápido)
+
+        if (!v.getAttribute('src')) {
+            // vuelve de Ultra o nunca se cargó: se pone de nuevo
+            if (ultimoVideoSrc) { v.src = ultimoVideoSrc; try { v.load(); } catch (e) {} }
+            else ponerFuente(v, tema);
+        }
+        var portada = portadaDelTema(tema);
+        if (portada && !layer.style.backgroundImage) layer.style.backgroundImage = 'url("' + portada + '")';
+
+        if (m === 'rendimiento') {
+            // Rendimiento: queda pausado. Si ya hay un fotograma lo deja ahí; si no, carga uno y se detiene.
+            var congelar = function () { try { v.pause(); } catch (e) {} };
+            if (v.readyState >= 2) { congelar(); }
+            else {
+                v.preload = 'auto';
+                var una = function () {
+                    v.removeEventListener('loadeddata', una);
+                    // se mueve a un fotograma real y se detiene
+                    try { if (v.currentTime === 0) v.currentTime = 0.05; } catch (e) {}
+                    congelar();
+                };
+                v.addEventListener('loadeddata', una);
+                // un play+pause corto fuerza el primer fotograma en móviles que ignoran preload
+                var p = v.play(); if (p && p.then) p.then(function () { setTimeout(congelar, 60); }).catch(function () {});
+            }
+            return;
+        }
+
+        // Modo normal: reproducir (se pausa solo si suena un video de YouTube, o si la pestaña está oculta)
+        if (document.hidden || hayYouTubeSonando() || rc('capture-performance')) { try { v.pause(); } catch (e) {} return; }
+        if (!v.paused) return;
+        var pr = v.play();
+        if (pr && pr.catch) pr.catch(function () { esperarGesto(); });
+    }
+
+    // Reemplazos de las funciones viejas (eran las que bloqueaban el video en celulares)
+    function parchearFunciones() {
+        var origSync = window.sincronizarVideoModo;
+        if (typeof origSync === 'function' && !origSync.__v62) {
+            var nuevaSync = function (tema) {
+                try { origSync.apply(this, arguments); } catch (e) {}
+                aplicarVideo();
+            };
+            nuevaSync.__v62 = true;
+            window.sincronizarVideoModo = nuevaSync;
+        }
+        var origRepro = window.reproducirVideoFondoActivo;
+        if (typeof origRepro === 'function' && !origRepro.__v62) {
+            var nuevaRepro = function () { aplicarVideo(); };
+            nuevaRepro.__v62 = true;
+            window.reproducirVideoFondoActivo = nuevaRepro;
+        }
+        // El código viejo pausa/reanuda el video según "low-end-device" (cualquier Android):
+        // dejamos que lo decida aplicarVideo().
+        if (window.OsitoV49 && !window.OsitoV49.__v62) {
+            window.OsitoV49.__v62 = true;
+            window.OsitoV49.revisarReproductor = function () { aplicarVideo(); };
+        }
+    }
+
+    // Cuando se crea la capa del video (o cambia el modo) se aplica de inmediato
+    function vigilarCapaVideo() {
+        if (!window.MutationObserver || !body()) return;
+        new MutationObserver(function (list) {
+            for (var i = 0; i < list.length; i++) {
+                var nodos = list[i].addedNodes || [];
+                for (var j = 0; j < nodos.length; j++) {
+                    var n = nodos[j];
+                    if (n.nodeType === 1 && (n.id === 'modo-sitio-video' || (n.querySelector && n.querySelector('#modo-sitio-video')))) {
+                        parchearFunciones();
+                        // los eventos del video aseguran que arranque en cuanto tenga datos
+                        var v = n.querySelector ? n.querySelector('video') : null;
+                        if (v) {
+                            ['loadeddata', 'canplay'].forEach(function (e) { v.addEventListener(e, aplicarVideo, { once: true }); });
+                        }
+                        aplicarVideo();
+                    }
+                }
+            }
+        }).observe(document.body, { childList: true });
+        // cambios de modo (Rendimiento / Ultra) = cambia la clase del <body>
+        var ultimo = '';
+        new MutationObserver(function () {
+            var m = modo() + '|' + (yaEntro() ? 1 : 0);
+            if (m === ultimo) return;
+            ultimo = m;
+            aplicarVideo();
+        }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    /* =====================================================================
+     * 3) CUBO: mirada libre y expresiones en todos los modos
+     * ===================================================================== */
+    var MIRADAS = [
+        [0, 0], [0, 0], [0, 0], [0, 0],   // al frente (más frecuente)
+        [-32, 0], [32, 0],            // izquierda / derecha
+        [-20, 0], [20, 0],
+        [0, -14], [0, 12]             // arriba / abajo
+    ];
+    var EXPRESIONES = ['smile', 'wink', 'love', 'surprised', 'happy', 'think', 'excited', 'sad', 'angry'];
+    var ultimaExpr = 0;
+    var punteroHasta = 0;
+
+    function caras() { return (window.OsitoFace && window.OsitoFace.caras) ? window.OsitoFace.caras : []; }
+
+    function mirarLibre() {
+        if (document.hidden) return;
+        if (Date.now() < punteroHasta) return;
+        var m = MIRADAS[Math.floor(Math.random() * MIRADAS.length)];
+        var lento = modo() !== 'normal' || equipoLento();
+        caras().forEach(function (c) {
+            if (!c.offsetParent) return;
+            if (c.hasAttribute('data-boredom')) return; // usando un objeto: ya mira al frente
+            var estado = c.dataset.estado;
+            if (estado === 'thinking' || estado === 'speaking') return;
+            c.style.setProperty('--cy', m[0] + 'deg');
+            c.style.setProperty('--cx', m[1] + 'deg');
+            // los ojos acompañan el giro
+            c.style.setProperty('--gx', (m[0] / 30).toFixed(2));
+            c.style.setProperty('--gy', (m[1] / 22).toFixed(2));
+        });
+        programarMirada(lento);
+    }
+    var timerMirada = 0;
+    function programarMirada(lento) {
+        clearTimeout(timerMirada);
+        var base = lento ? 4200 : 2600;
+        timerMirada = setTimeout(mirarLibre, base + Math.random() * 2600);
+    }
+
+    // Expresión suave de vez en cuando; funciona aunque los módulos viejos estén apagados por el modo
+    function expresionAlAzar() {
+        var F = window.OsitoFace;
+        if (!F || !F.poner || document.hidden) return;
+        var m = modo();
+        var ahora = Date.now();
+        var minimo = m === 'normal' ? 9000 : 14000; // en modos ligeros, más espaciadas
+        if (ahora - ultimaExpr < minimo) return;
+        caras().forEach(function (c) {
+            if (!c.offsetParent) return;
+            if (c.hasAttribute('data-boredom') || c.getAttribute('data-expr')) return;
+            var estado = c.dataset.estado;
+            if (estado === 'thinking' || estado === 'speaking' || estado === 'listening') return;
+            var e = EXPRESIONES[Math.floor(Math.random() * EXPRESIONES.length)];
+            try { F.poner(c, e, 2200); } catch (err) {}
+        });
+        ultimaExpr = ahora;
+    }
+
+    function iniciarCubo() {
+        // el puntero tiene prioridad sobre la mirada libre
+        document.addEventListener('pointermove', function () { punteroHasta = Date.now() + 2200; }, { passive: true });
+        programarMirada(false);
+        setInterval(expresionAlAzar, 4000);
+        // Al volver a la pestaña, el cubo retoma su movimiento
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) programarMirada(false); });
+    }
+
+    /* =====================================================================
+     * 4) OPTIMIZACIÓN
+     * ===================================================================== */
+    // 4a) Animaciones CSS más lentas (no se quitan). La mascota no se toca: sus expresiones van con temporizadores.
+    function velocidad() { return REGLAS[modo()] * (equipoLento() ? 0.85 : 1); }
+    function ralentizar(a) {
+        try {
+            if (!a || a.animationName === undefined) return; // solo animaciones CSS (no transiciones)
+            var t = a.effect && a.effect.target;
+            if (!t) return;
+            if (t.closest && (t.closest('.osito-face') || t.closest('#modo-sitio-video') || t.closest('.v62-grid3d'))) return;
+            a.playbackRate = velocidad();
+        } catch (e) {}
+    }
+    function ralentizarTodas() {
+        try { document.getAnimations().forEach(ralentizar); } catch (e) {}
+    }
+    function iniciarRalentizado() {
+        document.addEventListener('animationstart', function (e) {
+            var t = e.target;
+            if (!t || !t.getAnimations) return;
+            if (t.closest && (t.closest('.osito-face') || t.closest('#modo-sitio-video') || t.closest('.v62-grid3d'))) return;
+            t.getAnimations().forEach(ralentizar);
+        }, true);
+        ralentizarTodas();
+        // al cambiar de modo se reajusta la velocidad
+        if (window.MutationObserver && body()) {
+            var ult = '';
+            new MutationObserver(function () {
+                var m = modo(); if (m === ult) return; ult = m;
+                ralentizarTodas();
+            }).observe(body(), { attributes: true, attributeFilter: ['class'] });
+        }
+    }
+
+    // 4b) El lienzo de estrellas (función "draw") se limita a ~30 fps (20 en equipos lentos): no se quita, va más suave en batería
+    function limitarLienzo() {
+        var raf0 = window.requestAnimationFrame.bind(window);
+        var cancel0 = window.cancelAnimationFrame.bind(window);
+        var mapa = Object.create(null), tok = 1e9;
+        window.requestAnimationFrame = function (cb) {
+            if (typeof cb !== 'function' || cb.name !== 'draw') return raf0(cb);
+            var id = ++tok;
+            var paso = function (t) {
+                if (!mapa[id]) return;
+                var intervalo = equipoLento() || modo() !== 'normal' ? 50 : 33;
+                if (t - (cb.__v62t || 0) < intervalo - 6) { mapa[id] = raf0(paso); return; }
+                cb.__v62t = t;
+                delete mapa[id];
+                cb(t);
+            };
+            mapa[id] = raf0(paso);
+            return id;
+        };
+        window.cancelAnimationFrame = function (id) {
+            if (mapa[id]) { cancel0(mapa[id]); delete mapa[id]; } else cancel0(id);
+        };
+    }
+
+    // 4c) Carga más rápida: iframes/imágenes perezosos, decodificación asíncrona y prioridad baja a lo decorativo
+    function perezoso(n) {
+        if (n.nodeType !== 1) return;
+        var lista = n.tagName === 'IMG' || n.tagName === 'IFRAME' ? [n] : (n.querySelectorAll ? Array.prototype.slice.call(n.querySelectorAll('img,iframe')) : []);
+        lista.forEach(function (el) {
+            if (!el.getAttribute('loading')) el.setAttribute('loading', 'lazy');
+            if (el.tagName === 'IMG') {
+                if (!el.getAttribute('decoding')) el.setAttribute('decoding', 'async');
+                if (!el.getAttribute('fetchpriority') && !el.closest('#welcome-screen')) el.setAttribute('fetchpriority', 'low');
+            }
+        });
+    }
+    function iniciarCargaRapida() {
+        perezoso(document.documentElement);
+        if (window.MutationObserver) {
+            new MutationObserver(function (list) {
+                list.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes || [], perezoso); });
+            }).observe(document.body, { childList: true, subtree: true });
+        }
+        // La música no se descarga hasta que hace falta (ahorra ancho de banda en la entrada)
+        var audio = document.getElementById('bg-music');
+        if (audio && audio.preload !== 'none' && !yaEntro()) audio.preload = 'none';
+        // Portadas de los 3 modos con video: pequeñas, se calientan en reposo para que el fondo aparezca al instante
+        var calentar = function () {
+            ['halloween', 'navidad', 'cumpleanos'].forEach(function (t) {
+                var i = new Image(); i.decoding = 'async'; i.src = 'fondos/' + t + '.jpg';
+            });
+        };
+        if ('requestIdleCallback' in window) requestIdleCallback(calentar, { timeout: 3000 }); else setTimeout(calentar, 2000);
+    }
+
+    // 4d) Si la pestaña está oculta, el video de fondo se pausa; al volver, se reanuda
+    document.addEventListener('visibilitychange', function () { aplicarVideo(); });
+
+    /* =====================================================================
+     * ARRANQUE
+     * ===================================================================== */
+    function iniciar() {
+        inyectarCSS();
+        montarCuadricula();
+        parchearFunciones();
+        vigilarCapaVideo();
+        iniciarCubo();
+        iniciarRalentizado();
+        iniciarCargaRapida();
+        aplicarVideo();
+        window.addEventListener('osito:entro', function () {
+            parchearFunciones();
+            aplicarVideo();
+            setTimeout(aplicarVideo, 600);
+            setTimeout(aplicarVideo, 2500);
+        });
+        window.addEventListener('load', function () {
+            inyectarCSS(); // por si algún estilo se agregó después
+            parchearFunciones();
+            aplicarVideo();
+            ralentizarTodas();
+        });
+        // red de seguridad: cada 3 s confirma que el video está en el estado correcto
+        setInterval(aplicarVideo, 3000);
+    }
+
+    limitarLienzo();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
+    else iniciar();
+
+    window.OsitoV62 = {
+        aplicarVideo: aplicarVideo,
+        modo: modo,
+        mirar: mirarLibre,
+        velocidad: velocidad
+    };
+}());
+
+    </script>
     <!-- Si tu página está en hosting estático (GitHub Pages), pon aquí la URL de tu servidor con server.js, ej: https://mi-servidor.onrender.com -->
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
@@ -364,7 +897,7 @@ accent-color:#00ff88;
             var vozHablando = false;
 
             function vozLandingActiva() {
-                return localStorage.getItem('osito_ai_voz') !== 'false' && ('speechSynthesis' in window);
+                return false; /* V61: sin voz ni sonidos en la pantalla de inicio de sesión */
             }
 
             function hablarBienvenidaLanding() {
@@ -453,6 +986,18 @@ accent-color:#00ff88;
                 }
             };
 
+            /* V61: carga rápida de la cuenta. Si el navegador ya tiene una sesión guardada de Firebase,
+               se muestra "Entrar al Sótano" al instante; Firebase la confirma en segundo plano. */
+            (function cuentaRapida() {
+                try {
+                    var guardada = false;
+                    for (var i = 0; i < localStorage.length; i++) {
+                        if ((localStorage.key(i) || '').indexOf('firebase:authUser:') === 0) { guardada = true; break; }
+                    }
+                    if (guardada) window.__osCuentaRapida = true;
+                } catch (e) {}
+            })();
+
             window.osMostrarEleccionLanding = function osMostrarEleccionLanding() {
                 var esResolucionInicial = !window.__osAuthBootHandled;
                 if (esResolucionInicial) {
@@ -500,11 +1045,15 @@ accent-color:#00ff88;
             // Respaldo: si por alguna razón Firebase tarda demasiado en confirmar
             // si hay sesión activa, mostramos la pantalla de elección de todas formas
             // para no dejar al usuario viendo solo "Cargando...".
+            if (window.__osCuentaRapida) {
+                var arranque = function () { if (!window.__osAuthBootHandled) window.osMostrarCuentaLanding(); };
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arranque, { once: true }); else arranque();
+            }
             setTimeout(function () {
                 if (!window.__osAuthBootHandled) {
                     window.osMostrarEleccionLanding();
                 }
-            }, 1500);
+            }, 900);
 
             // Algunos navegadores bloquean la voz hasta el primer gesto del usuario;
             // este respaldo la reproduce en cuanto haya un toque/clic si aún no sonó.
@@ -2462,6 +3011,8 @@ accent-color:#00ff88;
             // regresivo se muestre siempre, sin depender de que la escucha
             // inicial (antes de este momento) haya tenido éxito.
             window.conectarModoSitio?.();
+            window.__ositoEntro = true;
+            try { window.dispatchEvent(new Event('osito:entro')); } catch (e) {}
             sincronizarVideoModo(document.documentElement.dataset.siteTheme || 'normal');
             if(animacionesActivas) iniciarEspacio();
             verificarCelebracion();
@@ -2928,6 +3479,7 @@ accent-color:#00ff88;
         }
 
         function iniciarEspacio() {
+            if (document.getElementById('welcome-screen') && !window.__ositoEntro) return; /* V61: sin movimiento antes de entrar */
             const canvas = document.getElementById('space-canvas');
             if (document.documentElement.classList.contains('low-end-device')) {
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -3047,17 +3599,18 @@ accent-color:#00ff88;
 
     <script src="performance-lite.js?v=v50-3"></script>
     <script src="base-conocimiento.js?v=v48"></script>
-    <script src="v49.js?v=v56"></script>
-    <script src="face-sound.js?v=v51-3" defer></script>
-    <script src="ia-claude.js?v=v56" defer></script>
+    <script src="v49.js?v=v61"></script>
+    <script src="face-sound.js?v=v61" defer></script>
+    <script src="ia-claude.js?v=v61-2" defer></script>
     <link rel="stylesheet" href="personalidades-animaciones-1000.css?v=v58">
-    <link rel="stylesheet" href="osito-cara3d.css?v=v60">
-    <link rel="stylesheet" href="osito-actividades-3d.css?v=v60">
+    <link rel="stylesheet" href="osito-cara3d.css?v=v61">
+    <link rel="stylesheet" href="osito-actividades-3d.css?v=v61">
+    <link rel="stylesheet" href="v61.css?v=v61-2">
     <script src="personalidades-animaciones-1000.js?v=v58" defer></script>
     <script src="personalidades-1000.js?v=v59" defer></script>
     <script src="face-extra.js?v=v53-1" defer></script>
-    <script src="osito-aburrimiento.js?v=v60" defer></script>
-    <script src="osito-cara3d.js?v=v58" defer></script>
+    <script src="osito-aburrimiento.js?v=v61-2" defer></script>
+    <script src="osito-cara3d.js?v=v61" defer></script>
     <script>
         (function(){
             const aiMessages = document.getElementById('ai-messages');

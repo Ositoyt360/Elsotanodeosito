@@ -130,13 +130,13 @@
                     dx = Math.max(-1, Math.min(1, dx));
                     dy = Math.max(-1, Math.min(1, dy));
                     mirar(cara, dx, dy);
-                    cara.style.setProperty('--ry', (dx * 12).toFixed(1) + 'deg');
-                    cara.style.setProperty('--rx', (-dy * 10).toFixed(1) + 'deg');
+                    cara.style.setProperty('--cy', (dx * 30).toFixed(1) + 'deg'); /* V61: gira el cubo entero */
+                    cara.style.setProperty('--cx', (-dy * 22).toFixed(1) + 'deg');
                 });
             });
         }, { passive: true });
         document.addEventListener('pointerleave', function () {
-            caras.forEach(function (cara) { mirar(cara, 0, 0); cara.style.setProperty('--rx', '0deg'); cara.style.setProperty('--ry', '0deg'); });
+            caras.forEach(function (cara) { mirar(cara, 0, 0); cara.style.setProperty('--cx', '0deg'); cara.style.setProperty('--cy', '0deg'); });
         });
     }
 

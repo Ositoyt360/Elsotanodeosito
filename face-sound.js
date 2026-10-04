@@ -275,8 +275,75 @@
             [0.125, 0.375, 0.625, 0.875].forEach(function (t) { ruido(t, 0.05, 0.1, 'highpass', 6000, 0, 1, 0.002); });
             [523, 659, 784, 659, 880, 784].forEach(function (f, i) { tono(f, f, 0.1 + i * 0.14, 0.13, 'triangle', 0.11); });
         },
+
+        // ================= V61 — sonidos de objetos y actividades =================
+        // lectura / periódico
+        pagina: function () { ruido(0, 0.18, 0.2, 'bandpass', 1800, 5200, 0.8, 0.012); ruido(0.07, 0.1, 0.09, 'highpass', 3000, 0, 1, 0.004); },
+        leer: function () { ruido(0, 0.55, 0.06, 'bandpass', 2200, 3200, 0.7, 0.18); tono(1500, 1500, 0.2, 0.03, 'square', 0.025); tono(1700, 1700, 0.38, 0.03, 'square', 0.02); },
+        hmm: function () { tono(215, 190, 0, 0.45, 'sine', 0.16, { vib: 5, vibd: 6, lp: 800 }); },
+        somnoliento: function () { ruido(0, 0.6, 0.06, 'lowpass', 900, 280, 0.6, 0.2); tono(320, 190, 0.05, 0.8, 'sine', 0.08, { a: 0.2 }); },
+        aha: function () { tono(500, 900, 0, 0.1, 'triangle', 0.11); campana(1318, 0.1, 0.17, 0.6); campana(1760, 0.2, 0.13, 0.7); },
+        // teléfono
+        deslizar: function () { ruido(0, 0.24, 0.1, 'bandpass', 600, 3000, 1.2, 0.05); },
+        teclear: function () { for (var i = 0; i < 6; i++) { var t = i * 0.085 + Math.random() * 0.03; ruido(t, 0.03, 0.16, 'bandpass', 2600 + Math.random() * 900, 0, 3, 0.001); tono(900, 650, t, 0.025, 'square', 0.025); } },
+        vibrar: function () { [0, 0.17].forEach(function (t) { tono(160, 160, t, 0.12, 'square', 0.1, { lp: 600, am: 45 }); }); },
+        // bebidas / comida
+        sorbo: function () { ruido(0, 0.36, 0.09, 'bandpass', 500, 1300, 1.5, 0.06); tono(260, 430, 0.05, 0.22, 'sine', 0.06); tono(190, 110, 0.42, 0.13, 'sine', 0.14); },
+        soplar: function () { ruido(0, 0.75, 0.12, 'lowpass', 1500, 500, 0.5, 0.25); },
+        morder: function () { ruido(0, 0.07, 0.32, 'bandpass', 2500, 1500, 3, 0.002); ruido(0.1, 0.09, 0.24, 'bandpass', 2000, 1200, 3, 0.002); tono(210, 120, 0, 0.1, 'triangle', 0.08); tono(180, 110, 0.5, 0.12, 'sine', 0.1); },
+        olfatear: function () { [0, 0.16, 0.32].forEach(function (t) { ruido(t, 0.09, 0.09, 'bandpass', 1100, 2000, 1.2, 0.02); }); },
+        pulir: function () { ruido(0, 0.45, 0.08, 'bandpass', 3000, 4600, 0.9, 0.12); tono(1800, 2300, 0.3, 0.08, 'sine', 0.04); },
+        // música / voz
+        ritmo: function () { [0, 0.3, 0.6].forEach(function (t) { tono(125, 50, t, 0.14, 'sine', 0.38); }); [0.15, 0.45, 0.75].forEach(function (t) { ruido(t, 0.04, 0.09, 'highpass', 6500, 0, 1, 0.002); }); [660, 784, 988].forEach(function (f, i) { tono(f, f, 0.05 + i * 0.3, 0.16, 'triangle', 0.09); }); },
+        cantar: function () { tono(440, 523, 0, 0.3, 'sine', 0.16, { vib: 6, vibd: 10 }); tono(523, 659, 0.32, 0.55, 'sine', 0.17, { vib: 6, vibd: 14 }); },
+        probarmic: function () { [0, 0.2].forEach(function (t) { ruido(t, 0.05, 0.22, 'lowpass', 500, 200, 0.7, 0.003); tono(120, 80, t, 0.06, 'sine', 0.2); }); },
+        // juegos
+        botones: function () { [0, 0.13, 0.29, 0.38].forEach(function (t) { tono(1250, 850, t, 0.035, 'square', 0.06); ruido(t, 0.02, 0.07, 'highpass', 4000, 0, 1, 0.001); }); },
+        clic: function () { tono(1500, 1000, 0, 0.035, 'square', 0.07); ruido(0, 0.02, 0.06, 'highpass', 4000, 0, 1, 0.001); },
+        ganar: function () { [523, 659, 784, 1047].forEach(function (f, i) { tono(f, f, i * 0.09, 0.2, 'triangle', 0.15); }); campana(1568, 0.4, 0.13, 0.7); },
+        perder: function () { [392, 330, 262].forEach(function (f, i) { tono(f, f * 0.94, i * 0.26, 0.3, 'sawtooth', 0.1, { lp: 800, vib: 6, vibd: 8 }); }); tono(150, 70, 0.8, 0.45, 'sawtooth', 0.08, { lp: 420 }); },
+        patada: function () { tono(165, 60, 0, 0.16, 'sine', 0.42); ruido(0, 0.08, 0.22, 'lowpass', 800, 200, 0.7, 0.003); },
+        rebote: function () { [0, 0.26].forEach(function (t, i) { tono(190 - i * 20, 90, t, 0.18, 'sine', 0.3 - i * 0.08); }); },
+        giro: function () { tono(300, 900, 0, 0.3, 'triangle', 0.08); tono(900, 350, 0.3, 0.3, 'triangle', 0.07); },
+        // otros objetos
+        obturador: function () { ruido(0, 0.04, 0.32, 'highpass', 3500, 0, 1, 0.001); ruido(0.08, 0.05, 0.26, 'highpass', 2500, 0, 1, 0.001); tono(1800, 1200, 0, 0.03, 'square', 0.04); },
+        enfocar: function () { tono(1400, 1700, 0, 0.12, 'sine', 0.08); tono(1700, 1400, 0.14, 0.1, 'sine', 0.06); },
+        magia: function () { tono(900, 1900, 0, 0.35, 'sine', 0.09, { vib: 10, vibd: 30 }); [1568, 2093, 2637, 3136].forEach(function (f, i) { tono(f, f * 1.03, 0.15 + i * 0.07, 0.14, 'sine', 0.06); }); },
+        abrir: function () { ruido(0, 0.28, 0.09, 'bandpass', 400, 1500, 2, 0.06); campana(1568, 0.32, 0.12, 0.8); campana(2093, 0.42, 0.08, 0.7); },
+        peluche: function () { tono(700, 1150, 0, 0.1, 'sine', 0.11, { vib: 20, vibd: 30 }); tono(950, 620, 0.13, 0.13, 'sine', 0.09); },
+        nervios: function () { tono(900, 900, 0, 0.2, 'sine', 0.07, { vib: 25, vibd: 35 }); },
+        picaro: function () { tono(500, 720, 0, 0.1, 'triangle', 0.11); tono(720, 480, 0.11, 0.16, 'triangle', 0.1); },
+        abrirlaptop: function () { ruido(0, 0.22, 0.08, 'bandpass', 500, 1500, 2, 0.05); tono(660, 990, 0.25, 0.1, 'sine', 0.09); tono(990, 1320, 0.35, 0.14, 'sine', 0.08); },
+        rebuscar: function () { [0, 0.18, 0.36].forEach(function (t) { ruido(t, 0.14, 0.09, 'bandpass', 1000 + Math.random() * 800, 2800, 1.2, 0.03); }); },
+        cremallera: function () { ruido(0, 0.42, 0.09, 'bandpass', 1500, 4000, 3, 0.06); },
+        varita: function () { tono(800, 1700, 0, 0.3, 'sine', 0.08, { vib: 9, vibd: 26 }); campana(1760, 0.28, 0.08, 0.6); },
     };
     SONIDOS.sleeping = SONIDOS.sleepy; // al quedarse dormida suena la nana
+
+    /* V61 — cada gesto de cada objeto tiene su sonido. */
+    var SONIDO_ACTO = {
+        'r-scan': 'leer', 'r-hmm': 'hmm', 'r-drowsy': 'somnoliento',
+        't-scroll': 'deslizar', 't-type': 'teclear',
+        'c-sip': 'sorbo', 'ch-sip': 'sorbo', 'vs-sip': 'sorbo', 'c-blow': 'soplar', 'ch-blow': 'soplar', 'vs-hold': 'clic',
+        'm-bop': 'ritmo', 'mc-check': 'probarmic', 'mc-sing': 'cantar',
+        'p-focus': 'thinking', 'p-tongue': 'picaro', 'p-sweat': 'nervios', 'p-smirk': 'picaro', 'p-peek': 'tap',
+        'g-focus': 'clic', 'g-press': 'botones', 'hc-focus': 'clic', 'hc-tap': 'botones', 'g-out': 'hop',
+        'pl-hug': 'peluche', 'pl-pat': 'peluche', 'pl-squeeze': 'peluche',
+        'pz-smell': 'olfatear', 'pz-spin': 'giro', 'pz-take': 'morder',
+        'ap-polish': 'pulir', 'ap-smell': 'olfatear', 'ap-bite': 'morder',
+        'lp-open': 'abrirlaptop', 'lp-type': 'teclear', 'lp-track': 'clic',
+        'bk-open': 'cremallera', 'bk-search': 'rebuscar', 'bk-close': 'cremallera',
+        'ba-bounce': 'rebote', 'ba-spin': 'giro',
+        'w-wave': 'varita', 'w-cast': 'magia',
+        'gd-hold': 'clic', 'gd-open': 'abrir', 'gd-close': 'clic',
+        'cm-focus': 'enfocar', 'cm-aim': 'enfocar', 'cm-snap': 'obturador',
+        'l-idle': 'sigh', 'l-peek': 'tap'
+    };
+    var SONIDO_BEAT = {
+        aha: 'aha', buzz: 'vibrar', sip: 'sorbo', blow: 'soplar', win: 'ganar', lose: 'perder', fail: 'perder',
+        bite: 'morder', kick: 'patada', magic: 'magia', open: 'abrir', flash: 'obturador', lift: 'morder', sing: 'cantar'
+    };
+    function nombreActo(a) { return SONIDO_ACTO[a] || (a ? 'tap' : ''); }
 
     /* ---------- Cuándo puede sonar ---------- */
     function panelAbierto() {
@@ -293,6 +360,7 @@
 
     function reproducir(nombre) {
         if (!activado || !tocoPagina || document.hidden || !SONIDOS[nombre]) return false;
+        if (document.getElementById('welcome-screen')) return false; // V61: nada suena en la pantalla de inicio de sesión
         if (!crearContexto() || ctx.state !== 'running') { if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} } return false; }
         var ahora = Date.now();
         // Mismo sonido dos veces seguidas (hay dos caras: burbuja y encabezado) = uno solo.
@@ -304,7 +372,7 @@
         var provocado = ahora - ultimoUsuarioCara < 2600;
         var libre = (nombre === 'snore' || nombre === 'sleeping'); // la cara dormida suena sola, de noche
         if (!libre && !panelAbierto() && !provocado) {
-            if (ahora - ultimoSolo < 7000) return false;
+            if (ahora - ultimoSolo < 1200) return false; // V61: antes 7 s; ahora cada expresión suena
             ultimoSolo = ahora;
         }
         porNombre[nombre] = ahora;
@@ -398,6 +466,7 @@
     function reproducirExtra(indice) {
         indice = Math.max(0, Math.min(99, indice | 0));
         if (!activado || !tocoPagina || document.hidden || vozHablando() || algunaEscuchando()) return false;
+        if (document.getElementById('welcome-screen')) return false;
         if (!crearContexto() || ctx.state !== 'running') return false;
         var ahora = Date.now();
         if (ahora - ultimoSolo < 650) return false;
@@ -429,6 +498,9 @@
         activar: function (v) { activado = !!v; try { localStorage.setItem(KEY, activado ? 'on' : 'off'); } catch (e) {} pintarBoton(); },
         ultimo: function () { return ultimo; },
         reproducirExtra: reproducirExtra,
+        acto: function (a) { var n = nombreActo(a); return n ? reproducir(n) : false; },
+        beat: function (b) { var n = SONIDO_BEAT[b]; return n ? reproducir(n) : false; },
+        objeto: function (m) { return reproducir(m === 'periodico' || m === 'diario' ? 'pagina' : m === 'telefono' ? 'vibrar' : m === 'audifonos' ? 'ritmo' : m === 'camara' ? 'enfocar' : m === 'regalo' || m === 'mochila' ? 'abrir' : m === 'varita' ? 'varita' : m === 'peluche' ? 'peluche' : m === 'balon' ? 'rebote' : m === 'laptop' ? 'abrirlaptop' : m === 'microfono' ? 'probarmic' : m === 'cafe' || m === 'chocolate' || m === 'vaso' ? 'sorbo' : m === 'pizza' || m === 'manzana' ? 'olfatear' : m === 'juego' || m === 'control' || m === 'consola' ? 'botones' : m === 'cubo' ? 'giro' : 'hop'); },
         efectosExtra: function () { return 100; }
     };
 }());

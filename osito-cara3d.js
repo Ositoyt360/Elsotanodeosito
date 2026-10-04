@@ -6,8 +6,7 @@
  */
 (function () {
     'use strict';
-    var CAPAS = 8;
-
+    
     // Emoji que aparece mientras dura cada expresión
     var ENTRADA = {
         smile: '✨', joy: '🎉', love: '💖', wink: '⭐', wow: '❗', excited: '🌟', curious: '❓', confused: '❔',
@@ -60,11 +59,11 @@
             card.parentNode.insertBefore(rig, card);
             rig.appendChild(card);
         }
-        // 2) grosor de la cabeza
-        if (!card.querySelector('.of-d')) {
-            var h = '';
-            for (var i = 1; i <= CAPAS; i++) h += '<i class="of-d' + (i === CAPAS ? ' end' : '') + '" style="--i:' + i + '"></i>';
-            card.insertAdjacentHTML('afterbegin', h);
+        // 2) V61: la cabeza es un CUBO de verdad. La tarjeta es la cara frontal; se agregan las otras 5 caras.
+        if (!card.querySelector('.of-cube-f')) {
+            card.insertAdjacentHTML('afterbegin',
+                '<i class="of-cube-f cf-back"></i><i class="of-cube-f cf-left"></i><i class="of-cube-f cf-right"></i>' +
+                '<i class="of-cube-f cf-top"></i><i class="of-cube-f cf-bottom"></i>');
         }
         // 3) emoji 3D
         if (!face.querySelector('.of-spark')) face.insertAdjacentHTML('beforeend', '<i class="of-spark"></i>');

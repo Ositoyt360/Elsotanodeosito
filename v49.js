@@ -284,9 +284,15 @@
 
     // La portada se ve al instante; el video empieza a bajar cuando el navegador ya pintó la página.
     function cargarDiferido(video, src) {
-        var poner = function () { if (video.isConnected !== false) { video.src = src; try { video.load(); } catch (e) {} } };
-        if ('requestIdleCallback' in window) requestIdleCallback(poner, { timeout: 1500 });
-        else setTimeout(poner, 400);
+        var poner = function () { if (video.isConnected !== false && !video.getAttribute('src')) { video.src = src; try { video.load(); } catch (e) {} } };
+        var programar = function () {
+            if ('requestIdleCallback' in window) requestIdleCallback(poner, { timeout: 1500 });
+            else setTimeout(poner, 400);
+        };
+        /* V61: el video de fondo NO se descarga ni se mueve en la pantalla de inicio;
+           empieza cuando la persona toca "Entrar al Sótano". */
+        if (document.getElementById('welcome-screen') && !window.__ositoEntro) window.addEventListener('osito:entro', programar, { once: true });
+        else programar();
     }
 
     // Mientras suena un video de YouTube, el video de fondo se pausa (no decodificar dos a la vez).

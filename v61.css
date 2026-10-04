@@ -1,0 +1,153 @@
+/* =====================================================================
+ * V61 — Se carga al FINAL de todo para ganar a los estilos viejos.
+ *  1) Pantalla de inicio QUIETA: sin video, sin estrellas, sin brillos que se muevan.
+ *     El fondo de movimiento aparece solo después de tocar "Entrar al Sótano".
+ *  2) La mascota (cara de la IA) es un CUBO 3D de verdad: 6 caras, no un cuadro plano.
+ *  3) Optimización para celulares: menos efectos caros, menos repintado.
+ * ===================================================================== */
+
+/* ------------------------- 1) Inicio sin movimiento ------------------------- */
+body:has(#welcome-screen) #space-canvas,
+body:has(#welcome-screen) .ambient-glow,
+body:has(#welcome-screen) .modo-sitio-video,
+body:has(#welcome-screen) .modo-sitio-decoracion {
+    display: none !important;
+}
+html body[class] #welcome-screen,
+html body #welcome-screen {
+    background-color: #060912 !important;
+    background-image: radial-gradient(circle at 50% 28%, rgba(0, 242, 254, .10), transparent 58%) !important;
+}
+html body #welcome-screen::before,
+html body #welcome-screen .gamer-grid,
+html body #welcome-screen .gamer-grid::after {
+    animation: none !important;
+    display: none !important;
+}
+html body[class] #welcome-screen .welcome-overlay,
+html body #welcome-screen .welcome-overlay {
+    background: transparent !important;
+}
+/* Entrada simple (sin desenfoque animado): el panel aparece al instante */
+html body #welcome-screen .welcome-panel,
+html body #welcome-screen .landing-gate,
+html body #welcome-screen .account-welcome,
+html body #welcome-screen .auth-panel.auth-panel-visible {
+    animation: none !important;
+    filter: none !important;
+}
+html body #welcome-screen .landing-btn::before,
+html body #welcome-screen .account-welcome-btn::before {
+    display: none !important;
+}
+/* Al entrar, el fondo de movimiento aparece suavemente */
+.modo-sitio-video, .modo-sitio-decoracion { animation: v61FondoEntra .8s ease both; }
+@keyframes v61FondoEntra { from { opacity: 0; } to { opacity: 1; } }
+
+/* ----------------------------- 2) Mascota CUBO 3D ----------------------------- */
+/* La tarjeta es la cara de ADELANTE; las otras 5 caras las agrega osito-cara3d.js.
+   Todo gira alrededor del centro del cubo (profundidad = 1em = lado del cubo). */
+html body .osito-face { perspective: 7em; perspective-origin: 50% 40%; }
+html body .osito-face { --rx: 0deg; --ry: 0deg; --hx: 0deg; --hy: 0deg; --px: -14deg; --py: -27deg; --cx: 0deg; --cy: 0deg; }
+html body .osito-face .of-rig {
+    transform-origin: 50% 50% -.5em;
+    /* pose base de 3/4 + giro que le da el puntero o la actividad (--cx arriba/abajo, --cy izquierda/derecha) */
+    transform: rotateX(calc(var(--px) + var(--cx))) rotateY(calc(var(--py) + var(--cy)));
+    transition: transform .7s cubic-bezier(.25,.8,.3,1);
+    scale: .8;
+    animation: v61CuboIdle 9s ease-in-out infinite alternate !important;
+}
+@keyframes v61CuboIdle { from { rotate: 0 1 0 -6deg; } to { rotate: 0 1 0 8deg; } }
+/* Usando un objeto: el cubo mira AL FRENTE (sin ladeo) y solo mueve la cara */
+html body .osito-face[data-boredom] { --px: 0deg; --py: 0deg; }
+html body .osito-face[data-boredom] .of-rig { animation: none !important; rotate: none; }
+html body .osito-face .of-card {
+    transform-origin: 50% 50% -.5em !important;
+    border-radius: .13em !important;
+    transform-style: preserve-3d !important;
+}
+html body .osito-face .of-blob { border-radius: .13em; }
+html body .osito-face .of-d { display: none !important; } /* las capas finas de antes ya no se usan */
+
+.osito-face .of-cube-f {
+    position: absolute; inset: 0; display: block; pointer-events: none;
+    border-radius: .13em; backface-visibility: hidden;
+    box-shadow: inset 0 0 .04em rgba(255, 255, 255, .22);
+}
+.osito-face .cf-back   { transform: translateZ(-1em) rotateY(180deg); background: linear-gradient(160deg, #3a2a78, #1b1240); }
+.osito-face .cf-left   { transform-origin: 0 50%;   transform: translateZ(-1em) rotateY(-90deg);  background: linear-gradient(90deg, #6a4cc8, #3d2c8c); }
+.osito-face .cf-right  { transform-origin: 100% 50%; transform: translateZ(-1em) rotateY(90deg); background: linear-gradient(90deg, #2c1f6c, #1d1349); }
+.osito-face .cf-top    { transform-origin: 50% 0;    transform: translateZ(-1em) rotateX(90deg); background: linear-gradient(#9a7bff, #6d51dc); }
+.osito-face .cf-bottom { transform-origin: 50% 100%; transform: translateZ(-1em) rotateX(-90deg);  background: #150e33; }
+
+/* Sombra del cubo en el piso */
+html body .osito-face::after {
+    content: ""; position: absolute; left: 12%; right: 12%; bottom: -.1em; height: .14em;
+    border-radius: 50%; background: radial-gradient(rgba(0, 0, 0, .45), transparent 70%);
+    pointer-events: none; z-index: -1;
+}
+
+/* Equipos limitados / sin animaciones: el cubo queda quieto en su pose 3D */
+body.no-animations .osito-face .of-rig,
+body.ultra-performance .osito-face .of-rig,
+html.low-end-device .osito-face .of-rig,
+html.data-saver .osito-face .of-rig {
+    animation: none !important;
+}
+html.mobile-lite body:not(.no-animations):not(.ultra-performance) .osito-face .of-rig { animation-duration: 16s !important; }
+@media (prefers-reduced-motion: reduce) {
+    html body .osito-face .of-rig { animation: none !important; }
+}
+
+/* ------------------------- 3) Optimización para celular ------------------------- */
+/* Los desenfoques de fondo (backdrop-filter) son lo más caro de pintar en un teléfono. */
+html.mobile-lite *,
+html.mobile-lite *::before,
+html.mobile-lite *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+/* No pintar lo que no se ve: las tarjetas fuera de pantalla no gastan CPU/GPU hasta que se acercan */
+html.mobile-lite .video-card,
+html.mobile-lite .content-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 340px;
+}
+html.mobile-lite .video-card { contain: layout paint style; }
+/* Sin brillos ni sombras animadas en tarjetas dentro del teléfono */
+html.mobile-lite .video-card:hover,
+html.mobile-lite .sidebar-card:hover { transform: none !important; }
+html.mobile-lite .gamer-grid,
+html.mobile-lite .ambient-glow,
+html.mobile-lite .promo-bg-fx { display: none !important; }
+/* Teléfonos de gama baja: las animaciones decorativas infinitas se detienen */
+html.low-end-device body:not(.no-animations) :is(.live-dot, .promo-title-main, .section-heading) {
+    animation: none !important;
+}
+
+/* El brillo de cristal pegado a la cara de adelante (antes flotaba y se veía como un panel gris suelto) */
+html body .osito-face .of-card::after { translate: 0 0 .004em !important; border-radius: .13em !important; }
+
+/* Un "filter" aplana el 3D y escondía los lados del cubo mientras usa objetos: se quita y la sombra va al piso */
+html body .osito-face[data-boredom] .of-card { filter: none !important; }
+
+/* ---------------- Objetos con VOLUMEN (como el cubo de la mascota) ----------------
+   Cada objeto tiene grosor (extrusión) y se orienta un poco hacia donde gira la cabeza. */
+html body .osito-face .of-boredom-prop { transform-style: preserve-3d; }
+html body .osito-face .of-boredom-prop > span:first-child {
+    transform-style: preserve-3d;
+    rotate: 1 0 0 -8deg;
+}
+html body .osito-face .of-boredom-prop :is(.tl-body, .lp-screen, .lp-base, .ct-body, .hc-body, .cm-body, .gd-box, .bp-body, .np-pg, .bk-pg, .vs-body, .cf-body, .pl-body, .pl-head, .mc-body, .hp-cup) {
+    box-shadow:
+        .006em .008em 0 rgba(0,0,0,.42), .012em .016em 0 rgba(0,0,0,.40), .018em .024em 0 rgba(0,0,0,.38),
+        .024em .032em 0 rgba(0,0,0,.36), .030em .040em 0 rgba(0,0,0,.34), .036em .048em 0 rgba(0,0,0,.30),
+        .042em .060em .03em rgba(0,0,0,.35),
+        inset .008em .008em .014em rgba(255,255,255,.22), inset -.01em -.012em .02em rgba(0,0,0,.28) !important;
+}
+html body .osito-face .of-boredom-prop :is(.ba-sphere, .ap-fruit, .cb-cube) {
+    box-shadow: inset -.04em -.05em .08em rgba(0,0,0,.4), inset .03em .03em .06em rgba(255,255,255,.3), .02em .05em .05em rgba(0,0,0,.35) !important;
+}
+html.mobile-lite .osito-face .of-boredom-prop :is(.tl-body, .lp-screen, .lp-base, .ct-body, .hc-body, .cm-body, .gd-box, .bp-body, .np-pg, .bk-pg, .vs-body, .cf-body, .pl-body, .pl-head, .mc-body, .hp-cup) {
+    box-shadow: .012em .018em 0 rgba(0,0,0,.4), .024em .036em 0 rgba(0,0,0,.34), .03em .05em .02em rgba(0,0,0,.3) !important;
+}

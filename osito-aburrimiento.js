@@ -351,13 +351,13 @@
   }
   function ocultar(){
     aburrido=false; modo=''; ultimoCambio=0; token++;
-    clearTimeout(timerActo); timerActo=null;
+    clearTimeout(timerActo); timerActo=null; clearTimeout(timerCabeza); timerCabeza=null;
     clearInterval(timerPag); timerPag=null;
     clearTimeout(timerCambio); timerCambio=null;
     caras().forEach(function(c){
       var estaba=c.hasAttribute('data-boredom');
       c.removeAttribute('data-boredom'); c.removeAttribute('data-act'); c.removeAttribute('data-pg');
-      if(estaba){ c.style.setProperty('--rx','0deg'); c.style.setProperty('--ry','0deg'); }
+      if(estaba){ c.style.setProperty('--cx','0deg'); c.style.setProperty('--cy','0deg'); }
       quitarProp(c,true);
       if(estaba) restaurarPersonalidad(c);
     });
@@ -380,6 +380,7 @@
       var h=c.querySelector('.of-boredom-prop .bk-flip, .of-boredom-prop .np-flip'); if(!h) return;
       h.classList.remove('go'); void h.offsetWidth; h.classList.add('go');
       c.setAttribute('data-pg','1');
+      if(S && S.reproducir) S.reproducir('pagina');
       setTimeout(function(){ c.removeAttribute('data-pg'); },1300);
     });
   }
@@ -412,8 +413,22 @@
   function cabeza(rx,ry){
     caras().forEach(function(c){
       if(!c.hasAttribute('data-boredom')) return;
-      c.style.setProperty('--rx',rx+'deg'); c.style.setProperty('--ry',ry+'deg');
+      c.style.setProperty('--cx',rx+'deg'); c.style.setProperty('--cy',ry+'deg');
     });
+  }
+  /* V61: mientras usa un objeto, el cubo mira al FRENTE y mueve la cara: abajo (al objeto), derecha, izquierda, arriba. */
+  var timerCabeza=null, ultimaMirada=-1;
+  var MIRADAS=[[-13,0],[-10,-22],[-10,22],[8,0],[-4,-30],[-4,30],[10,-14],[10,14],[-16,0]]; // [rx (neg = abajo), ry (neg = izquierda)]
+  function moverCabeza(miToken){
+    if(miToken!==token || !aburrido) return;
+    var i; do{ i=Math.floor(Math.random()*MIRADAS.length); }while(i===ultimaMirada);
+    ultimaMirada=i; cabeza(MIRADAS[i][0],MIRADAS[i][1]);
+    // vuelve a mirar al objeto antes de la siguiente mirada
+    timerCabeza=setTimeout(function(){
+      if(miToken!==token || !aburrido) return;
+      cabeza(-12,0);
+      timerCabeza=setTimeout(function(){ moverCabeza(miToken); },1800+Math.random()*1600);
+    },1600+Math.random()*900);
   }
 
   /* ---------- Guion de expresiones: nunca el mismo gesto dos veces seguidas ---------- */
@@ -444,25 +459,16 @@
       else if(modo==='libre') c.setAttribute('data-act','l-idle');
     });
     // V58: no inclinar ni sacudir la cabeza; solo se animan ojos, boca y objeto.
-    cabeza(0,0);
+    if(!timerCabeza){ cabeza(-12,0); timerCabeza=setTimeout(function(){ moverCabeza(miToken); },1800); }
     if(acto.f && F.paraTodas) F.paraTodas(acto.f,acto.ms);
-    else if(acto.a && S){
-      /* Cada objeto tiene una familia sonora propia; el efecto se genera con WebAudio,
-         así no necesitamos archivos de audio pesados. */
-      var sonidoBase = SONIDO[modo];
-      var sonidoHash = 0;
-      for(var si=0; si<acto.a.length; si++) sonidoHash += acto.a.charCodeAt(si) * (si + 1);
-      if(S.reproducirExtra && sonidoBase !== undefined) S.reproducirExtra((sonidoBase * 5 + sonidoHash) % 100);
-      else if(S.reproducir){
-        var sonidoActo = /^r-/.test(acto.a) ? 'thinking' :
-          /^p-/.test(acto.a) ? 'thinking' :
-          /^t-/.test(acto.a) ? 'tap' :
-          /^c-/.test(acto.a) ? 'sigh' :
-          /^m-/.test(acto.a) ? 'dance' : 'tap';
-        S.reproducir(sonidoActo);
-      }
+    else if(acto.a && S && S.acto){
+      /* V61: cada gesto de cada objeto (leer, deslizar, teclear, sorber, morder, disparar…) tiene su propio sonido. */
+      S.acto(acto.a);
     }
-    if(acto.beat) beat(acto.beat,BEAT_MS);
+    if(acto.beat){
+      beat(acto.beat,BEAT_MS);
+      if(S && S.beat) setTimeout(function(){ if(miToken===token && aburrido) S.beat(acto.beat); },650);
+    }
     var espera=acto.ms+(acto.luego?acto.luego.ms:0)+250;
     if(acto.luego) setTimeout(function(){ if(miToken===token && aburrido) F.paraTodas(acto.luego.f,acto.luego.ms); },acto.ms+60);
     timerActo=setTimeout(function(){ ejecutar(acto.sig||siguienteActo(),miToken); },espera);
@@ -495,8 +501,7 @@
     caras().forEach(function(c){mostrarProp(c,m);});
     // Arranca siempre con su gesto base (leyendo / concentrada) y luego sigue el guion.
     var inicio=INICIO[m]||INICIO.libre;
-    if(S && S.reproducirExtra && SONIDO[m] !== undefined) S.reproducirExtra(SONIDO[m] % 100);
-    else if(S && S.reproducir && m==='diario') S.reproducir('tap');
+    if(S && S.objeto) S.objeto(m);
     clearInterval(timerPag); timerPag=null;
     if(m==='diario' || m==='periodico'){ setTimeout(function(){ if(miToken===token) pasarPagina(); },2500); timerPag=setInterval(pasarPagina,PAGINA_MS); }
     ejecutar(inicio,miToken);
@@ -507,7 +512,7 @@
     var hay=aburrido && caras().some(function(c){ return c.querySelector('.of-boredom-prop:not(.of-out)'); });
     if(!hay){ comenzar(m); return; }
     // Primero guarda el objeto que tenía (se ve cómo baja) y después saca el nuevo.
-    clearTimeout(timerActo); timerActo=null; clearInterval(timerPag); timerPag=null; token++;
+    clearTimeout(timerActo); timerActo=null; clearTimeout(timerCabeza); timerCabeza=null; clearInterval(timerPag); timerPag=null; token++;
     ultimoCambio=Date.now(); modo=m;
     caras().forEach(function(c){
       if(c.hasAttribute('data-boredom')) c.setAttribute('data-act','g-out');

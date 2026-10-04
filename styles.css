@@ -5885,13 +5885,13 @@ html.mobile-lite .osito-face .of-card { transition: none; }
     .sidebar-subscribe > .creator-countdown-editor:not([hidden]),
     .sidebar-subscribe > .creator-updates-editor:not([hidden]) {
         display: grid !important;
-        order: 1 !important;
+        order: 120 !important; /* V61: al FINAL de la página en el celular (después de todo) */
         width: 100% !important;
         box-sizing: border-box !important;
         margin: 0 0 10px !important;
         padding: 12px !important;
     }
-    .sidebar-subscribe > .creator-updates-editor:not([hidden]) { order: 2 !important; }
+    .sidebar-subscribe > .creator-updates-editor:not([hidden]) { order: 121 !important; }
     .sidebar-subscribe > .creator-countdown-editor[hidden],
     .sidebar-subscribe > .creator-updates-editor[hidden] { display: none !important; }
     .creator-countdown-editor textarea,

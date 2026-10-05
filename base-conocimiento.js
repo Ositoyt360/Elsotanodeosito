@@ -1,9 +1,10 @@
 /**
  * BASE DE CONOCIMIENTO Y MOTOR INTELIGENTE DE LA IA - EL SÓTANO DE OSITO
  *
- * Incluye las 19 preguntas y respuestas oficiales, datos extras,
- * reconocimiento de preguntas similares con tolerancia a errores ortográficos,
- * sinónimos y lenguaje informal, detección de hora y ubicación local del usuario,
+ * Incluye las 19 preguntas y respuestas oficiales, datos extras e información
+ * oficial del canal (como la edad de Osito, cumpleaños, aniversario del canal,
+ * país, editor, colaborador, serie y reglas), reconocimiento preciso sin
+ * confundir preguntas, detección de hora y ubicación local del usuario,
  * y límite de 5 preguntas para el modo invitado.
  */
 
@@ -11,7 +12,68 @@
     'use strict';
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // BASE DE CONOCIMIENTO OFICIAL
+    // INFORMACIÓN OFICIAL DEL CANAL Y DE OSITO
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const INFO_CANAL = {
+        canal: 'OsitoGamer360YT',
+        canalTexto: 'Osito Gamer 360 YouTube',
+        primerCanal: 'Momentos Divertidos con OsitoGamer',
+        primerVideo: 'Episodio 1 temporada 1 Las Perrerías de Mike',
+        fechaPrimerVideo: '22 de octubre de 2021',
+        cumpleCanal: { mes: 5, dia: 2, anioInicio: 2022, fechaTexto: '2 de junio de 2022' },
+        cumpleCreador: { mes: 8, dia: 28, anio: 2008, fechaTexto: '28 de septiembre de 2008' },
+        pais: 'El Salvador',
+        contenido: 'videojuegos de todo tipo, especialmente Minecraft, Roblox, Free Fire, Craftman/Craftsman, gameplays, directos, shorts, canciones y series',
+        favoritos: 'Minecraft y Roblox',
+        origen: 'De niño tenía un Nintendo y grababa videos como si estuviera haciendo vlogs en 2019, usando un peluche de panda en vez de mostrar su cara. De ahí nació OsitoGamer360.',
+        inspiracion: 'Maxwhish (Max Wish), Los Compas y Mikecrack',
+        editor: 'Santiago',
+        serie: 'Survivalang',
+        logro: 'llegar a 1000 suscriptores',
+        videoFavorito: 'Osito Expo 2026',
+        videoFavoritoExtra: 'un vlog armando el árbol de Navidad',
+        videoMasDificil: 'Osito Expo 2026',
+        colaborador: 'Allay MC',
+        reglasDirectos: 'no insultos, no humillar a la gente y mantener todo humildemente',
+        meta: 'terminar sus estudios, seguir con el canal y hacer crecer más la comunidad'
+    };
+
+    function calcularEdadCreador(fecha) {
+        const hoy = fecha instanceof Date ? fecha : new Date();
+        const nac = INFO_CANAL.cumpleCreador;
+        let edad = hoy.getFullYear() - nac.anio;
+        const yaCumplio = hoy.getMonth() > nac.mes || (hoy.getMonth() === nac.mes && hoy.getDate() >= nac.dia);
+        if (!yaCumplio) edad -= 1;
+        return edad;
+    }
+
+    function calcularAnosCanal(fecha) {
+        const hoy = fecha instanceof Date ? fecha : new Date();
+        const c = INFO_CANAL.cumpleCanal;
+        let anos = hoy.getFullYear() - c.anioInicio;
+        const yaCumplio = hoy.getMonth() > c.mes || (hoy.getMonth() === c.mes && hoy.getDate() >= c.dia);
+        if (!yaCumplio) anos -= 1;
+        return Math.max(0, anos);
+    }
+
+    function obtenerTiempoFaltaCanal(targetYears) {
+        const ahora = new Date();
+        const c = INFO_CANAL.cumpleCanal;
+        const anosMeta = Number(targetYears) || (calcularAnosCanal(ahora) + 1);
+        const anioMeta = c.anioInicio + anosMeta;
+        const fechaObjetivo = new Date(anioMeta, c.mes, c.dia);
+        if (ahora >= fechaObjetivo) {
+            return `¡El canal ya cumplió los ${anosMeta} años en YouTube! 🎉`;
+        }
+        const diffMs = fechaObjetivo - ahora;
+        const diffDiasTotal = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const meses = Math.floor(diffDiasTotal / 30.4375);
+        const diasRestantes = Math.floor(diffDiasTotal % 30.4375);
+        return `El aniversario del canal es el 2 de junio. Para cumplir ${anosMeta} años en YouTube (el 2 de junio de ${anioMeta}) faltan aproximadamente ${meses} meses y ${diasRestantes} días. 🎂`;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // BASE DE CONOCIMIENTO OFICIAL (19 PREGUNTAS INTACTAS)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const BASE_CONOCIMIENTO = [
         {
@@ -29,7 +91,7 @@
                 '¿Quién fue tu inspiración?',
                 '¿De dónde vino tu inspiración para YouTube?'
             ],
-            keywords: ['interesarte', 'interesar', 'youtube', '2019', 'maxwhish', 'inspiro', 'inspiracion', 'comenzaste', 'empezaste', 'querer ser youtuber', 'haces contenido']
+            keywords: ['interesarte', 'interesar', '2019', 'maxwhish', 'inspiro', 'inspiracion', 'querer ser youtuber', 'haces contenido', 'gusta youtube']
         },
         {
             id: 2,
@@ -44,7 +106,7 @@
                 '¿Cuál fue tu canal anterior?',
                 '¿Nombre de tu primer canal?'
             ],
-            keywords: ['primer canal', 'canal original', 'canal antes de ositoyt360', 'nombre primer canal', 'momentos divertidos con ositogamer']
+            keywords: ['primer canal', 'canal original', 'canal antes de ositoyt360', 'canal anterior', 'nombre primer canal', 'momentos divertidos con ositogamer']
         },
         {
             id: 3,
@@ -59,7 +121,7 @@
                 '¿Primer video del canal?',
                 '¿Nombre de tu primer video?'
             ],
-            keywords: ['primer video', 'video primero', 'subiste primero', 'primer video youtube', 'hiciste al principio', 'perrerias de mike']
+            keywords: ['cual fue tu primer video', 'que video subiste primero', 'como se llamaba tu primer video', 'primer video de youtube', 'hiciste al principio', 'perrerias de mike', 'nombre de tu primer video']
         },
         {
             id: 4,
@@ -76,7 +138,7 @@
                 '¿Cuándo vas a mostrar tu cara?',
                 '¿Por qué te tapas la cara?'
             ],
-            keywords: ['mostrar cara', 'ensenar cara', 'rostro', 'face reveal', 'ocultas cara', 'inseguridades', 'tapas la cara', 'no muestras']
+            keywords: ['mostrar cara', 'ensenar cara', 'ensenar rostro', 'face reveal', 'ocultas cara', 'inseguridades', 'tapas la cara', 'muestras tu cara']
         },
         {
             id: 5,
@@ -105,7 +167,7 @@
                 '¿Qué disfrutas siendo youtuber?',
                 '¿Qué es lo mejor de hacer videos?'
             ],
-            keywords: ['mas te gusta crear contenido', 'disfrutas hacer videos', 'parte crear contenido', 'como creador', 'disfrutas siendo youtuber', 'hablar con la comunidad', 'editar']
+            keywords: ['mas te gusta de crear contenido', 'disfrutas de hacer videos', 'parte de crear contenido', 'hacer como creador', 'disfrutas siendo youtuber', 'lo mejor de hacer videos']
         },
         {
             id: 7,
@@ -135,7 +197,7 @@
                 '¿En qué fecha comenzaste?',
                 '¿Fecha exacta de tu primer video?'
             ],
-            keywords: ['fecha primer video', 'cuando primer video primer canal', 'dia comenzaste', 'fecha comenzaste', 'cuando subiste primer video', '22 de octubre', '2021']
+            keywords: ['fecha primer video', 'cuando fue tu primer video', 'dia comenzaste', 'fecha comenzaste', 'cuando subiste tu primer video', '22 de octubre']
         },
         {
             id: 9,
@@ -150,7 +212,7 @@
                 '¿Por qué elegiste ese nombre?',
                 '¿Por qué te pusiste OsitoGamer360?'
             ],
-            keywords: ['elegiste el nombre', 'salio ositogamer360', 'llamas ositogamer360', 'significa ositogamer360', 'nacio ese nombre', 'peluche panda', 'nintendo', 'origen nombre']
+            keywords: ['elegiste el nombre', 'salio ositogamer360', 'llamas ositogamer360', 'significa ositogamer360', 'nacio ese nombre', 'peluche de panda', 'pusiste ositogamer360']
         },
         {
             id: 10,
@@ -176,7 +238,7 @@
                 '¿Qué video te dio más trabajo?',
                 '¿Cuál fue el proyecto más difícil de editar?'
             ],
-            keywords: ['mas dificil de editar', 'costo mas editar', 'edicion mas dificil', 'dio mas trabajo editar', 'proyecto mas dificil editar']
+            keywords: ['mas dificil de editar', 'costo mas editar', 'edicion mas dificil', 'dio mas trabajo', 'proyecto mas dificil de editar']
         },
         {
             id: 12,
@@ -189,7 +251,7 @@
                 '¿Cuál es tu actividad favorita?',
                 '¿Qué haces cuando quieres divertirte?'
             ],
-            keywords: ['mas disfrutas hacer', 'te gusta hacer mas', 'disfrutas mas', 'actividad favorita', 'quieres divertirte', 'para divertirte']
+            keywords: ['mas disfrutas hacer', 'te gusta hacer mas', 'que disfrutas mas', 'actividad favorita', 'quieres divertirte', 'para divertirte']
         },
         {
             id: 13,
@@ -205,7 +267,7 @@
                 '¿Quieres mejorar tu voz?',
                 '¿En qué quieres mejorar?'
             ],
-            keywords: ['quieres mejorar', 'mejorar videos', 'mejorar canal', 'mejorar creador', 'mejorar edicion', 'mejorar miniaturas', 'mejorar voz', 'trabarme al hablar']
+            keywords: ['quieres mejorar', 'mejorar en tus videos', 'mejorar de tu canal', 'mejorar como creador', 'mejorar tu edicion', 'mejorar tus miniaturas', 'mejorar tu voz', 'trabarme al hablar']
         },
         {
             id: 14,
@@ -219,7 +281,7 @@
                 '¿Cuáles son los juegos favoritos de tu comunidad?',
                 '¿Qué contenido disfruta más tu comunidad?'
             ],
-            keywords: ['gusta a tus seguidores', 'gusta a tu comunidad', 'prefieren tus seguidores', 'quieren ver tus seguidores', 'favoritos de tu comunidad', 'disfruta tu comunidad']
+            keywords: ['gusta a tus seguidores', 'gusta a tu comunidad', 'prefieren tus seguidores', 'quieren ver tus seguidores', 'favoritos de tu comunidad', 'disfruta mas tu comunidad']
         },
         {
             id: 15,
@@ -234,7 +296,7 @@
                 '¿Tendrás transmisiones en vivo?',
                 '¿Cuándo harás en vivo?'
             ],
-            keywords: ['volver a hacer directos', 'volveras a hacer streams', 'directos otra vez', 'regresar livestreams', 'cuando volveran directos', 'transmisiones en vivo', 'horario directos']
+            keywords: ['volver a hacer directos', 'volveras a hacer streams', 'directos otra vez', 'regresar a los livestreams', 'cuando volveran los directos', 'transmisiones en vivo', 'horario directos']
         },
         {
             id: 16,
@@ -248,7 +310,7 @@
                 '¿Harás otro evento?',
                 '¿Tienes algún proyecto grande?'
             ],
-            keywords: ['evento grande', 'planeado evento', 'habra evento', 'evento preparado', 'haras otro evento', 'proyecto grande']
+            keywords: ['evento grande', 'planeado algun evento', 'habra un evento', 'evento preparado', 'haras otro evento', 'proyecto grande']
         },
         {
             id: 17,
@@ -263,7 +325,7 @@
                 '¿Vas a revivir la comunidad de Craftsman?',
                 '¿Qué planes tienes para BedWars?'
             ],
-            keywords: ['planes craftsman', 'quieres hacer craftsman', 'volver a craftsman', 'proyectos craftsman', 'revivir craftsman', 'revivir comunidad craftsman', 'planes bedwars']
+            keywords: ['planes tienes para craftsman', 'quieres hacer con craftsman', 'volver a craftsman', 'proyectos para craftsman', 'quieres revivir craftsman', 'revivir la comunidad de craftsman', 'planes tienes para bedwars']
         },
         {
             id: 18,
@@ -278,7 +340,7 @@
                 '¿Qué tiene de especial esa comunidad?',
                 '¿Por qué te da nostalgia Craftsman?'
             ],
-            keywords: ['por que revivir craftsman', 'por que revivir comunidad', 'motivo revivirla', 'recuperar servidores craftsman', 'especial comunidad', 'nostalgia craftsman', 'servidores apagados']
+            keywords: ['por que quieres revivir', 'porque quieres revivir', 'motivo a revivirla', 'por que quieres recuperar esos servidores', 'especial esa comunidad', 'nostalgia craftsman', 'servidores apagados']
         },
         {
             id: 19,
@@ -292,7 +354,7 @@
                 '¿Qué quieres recuperar de esa época?',
                 '¿Qué mapas quieres volver a ver?'
             ],
-            keywords: ['recuperar antiguos servidores', 'traer de vuelta', 'extranas servidores', 'mas nostalgico', 'recuperar epoca', 'mapas antiguos', 'mapas volver a ver']
+            keywords: ['recuperar de los antiguos servidores', 'traer de vuelta', 'extranas de esos servidores', 'era lo mas nostalgico', 'recuperar de esa epoca', 'mapas quieres volver a ver']
         }
     ];
 
@@ -306,12 +368,20 @@
         directosHorario: 'Los directos volverán, pero todavía no tienen horario fijo.'
     };
 
-    // Mensajes para respuestas no encontradas en la base (NO INVENTAR INFORMACIÓN)
+    // Mensajes para respuestas no encontradas en la base (respaldo conversacional amigable, nunca da error)
     const MENSAJES_NO_DISPONIBLE = [
-        'Esa información todavía no está disponible en la base de datos y podría agregarse en el futuro.',
-        'Por el momento esa información no está disponible en la base de datos, pero podría agregarse en el futuro.',
-        'Ese dato todavía no está registrado en la base de conocimiento y podría agregarse más adelante.'
+        '¡Qué buena pregunta! Sobre la vida privada de Osito solo comparto los datos oficiales del canal, pero si quieres podemos platicar de Minecraft, Roblox, Craftsman, tus tareas o cualquier curiosidad. 😊',
+        'De ese detalle específico del canal todavía no hay un registro oficial, ¡pero pregúntame lo que quieras sobre los videos de Osito, videojuegos, matemáticas, historias o chistes! 🎮',
+        'Todavía no tengo ese dato exacto anotado en el Sótano, pero estoy lista para ayudarte con cualquier duda de juegos, tareas escolares, curiosidades o platicar un rato. 😄'
     ];
+
+    // Filtro estricto contra preguntas personales o privadas
+    function esPreguntaPersonalPrivada(textoNorm) {
+        if (!textoNorm) return false;
+        return /(ubicacion exacta|direccion exacta|donde vive|donde vivis|donde vives|en que (ciudad|municipio|departamento|colonia|calle|casa|barrio) (vive|vives|esta)|cual es (tu|su) (direccion|telefono|numero|celular|whatsapp|correo personal|apellido|nombre real|documento|dui)|dame (tu|su) (numero|telefono|whatsapp|celular|direccion)|apellido (completo|de osito|real)|como se llama osito en la vida real|nombre real de osito|en que (colegio|instituto|escuela|universidad) (estudia|estudias)|donde (estudia|estudias)|como se llaman (tus|sus) (padres|papas|hermanos|familiares)|tienes (novia|novio|pareja)|quien es (tu|su) (novia|novio|pareja|mama|papa)|mostrar.*ubicacion|mandame.*ubicacion)/.test(textoNorm);
+    }
+
+    const RESPUESTA_PRIVACIDAD = 'No puedo responder a esta pregunta, vete a la chingada.';
 
     // Mensajes variados cuando el invitado alcanza el límite de 5 preguntas
     const MENSAJES_LIMITE_INVITADO = [
@@ -354,19 +424,27 @@
         return palabras.join(' ');
     }
 
+    // Quita saludos iniciales ("hola osito dime...", "buenas una pregunta...") para analizar la pregunta real
+    function quitarSaludoInicial(textoNorm) {
+        if (!textoNorm) return '';
+        return textoNorm
+            .replace(/^(hola|buenas|buenos dias|buenas tardes|buenas noches|que onda|que tal|hey|oye|disculpa|por favor|porfa)\s+/g, '')
+            .replace(/^(osito|osita|mascotita|bot|ia)\s+/g, '')
+            .replace(/^(dime|cuentame|respondeme|una pregunta|quiero saber|me dices|me puedes decir|sabes)\s+/g, '')
+            .trim();
+    }
+
     // Simplificación fonética básica para tolerancia a errores ortográficos en español
     function simplificarFonetica(texto) {
         let t = normalizarTexto(texto);
-        // Reducir letras repetidas consecutivas (ej: hooolaaa -> hola, sii -> si)
         t = t.replace(/(.)\1+/g, '$1');
-        // Cambios fonéticos habituales en español
         t = t.replace(/v/g, 'b');
         t = t.replace(/z/g, 's');
         t = t.replace(/c(?=[ei])/g, 's');
         t = t.replace(/qu(?=[ei])/g, 'k');
         t = t.replace(/c(?=[aou])/g, 'k');
         t = t.replace(/ll/g, 'y');
-        t = t.replace(/h/g, ''); // h muda
+        t = t.replace(/h/g, '');
         return t.trim();
     }
 
@@ -398,27 +476,129 @@
         return (2 * interseccion) / total;
     }
 
+    // Detecta si el mensaje tiene múltiples preguntas distintas a la vez (para que Gemini las responda completas)
+    function esPreguntaCompuesta(norm) {
+        const signos = (String(norm || '').match(/\b(que|como|cual|cuales|quien|por que|porque|cuando|cuantos|cuantas|donde)\b/g) || []);
+        if (signos.length >= 2 && /\b(y|tambien|ademas)\b/.test(norm)) {
+            // Permitir frases cortas de una sola intención como "qué haces cuando quieres divertirte"
+            if (!/(haces cuando|cuando empezaste a|por que cuando)/.test(norm) && norm.split(' ').length >= 8) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MOTOR DE BÚSQUEDA Y COINCIDENCIA EN LA BASE
+    // MOTOR DE BÚSQUEDA Y COINCIDENCIA EN LA BASE (SIN CONFUNDIR PREGUNTAS)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    function buscarEnBaseConocimiento(preguntaUsuario) {
-        const normUsuario = normalizarTexto(preguntaUsuario);
-        const fonUsuario = simplificarFonetica(preguntaUsuario);
+    function buscarEnBaseConocimiento(preguntaUsuario, opciones) {
+        const opts = opciones || {};
+        const normOriginal = normalizarTexto(preguntaUsuario);
+        const normUsuario = quitarSaludoInicial(normOriginal) || normOriginal;
 
         if (!normUsuario) return null;
 
-        // 1. REVISIÓN DE INTENCIONES ESPECÍFICAS / REGLAS DIRECTAS CON ALTA PRIORIDAD
+        // Bloqueo inmediato de preguntas personales o privadas
+        if (esPreguntaPersonalPrivada(normUsuario)) {
+            return RESPUESTA_PRIVACIDAD;
+        }
+
+        // Aviso amable si piden crear o generar imágenes
+        if (/\b(crea|crear|genera|generar|haz|hacer|dibuja|dibujar)\s+(una\s+|la\s+|algunas\s+)?(imagen|imagenes|foto|fotos|dibujo|ilustracion)\b/.test(normUsuario)) {
+            return 'No genero imágenes, pero puedo responderte cualquier pregunta, ayudarte con tus tareas, explicarte cosas de videojuegos o platicar contigo de lo que quieras. 😊';
+        }
+
+        // Si el usuario hace varias preguntas distintas en un mismo mensaje y Gemini está activo,
+        // dejamos que Gemini responda todas juntas con los datos oficiales.
+        if (!opts.modoOffline && esPreguntaCompuesta(normUsuario)) {
+            return null;
+        }
+
+        // 0. DATOS OFICIALES DE OSITO Y DEL CANAL (Edad de Osito, cumpleaños, años del canal, país, editor, etc.)
+        // =========================================================================
+
+        // 0.0 Nombre del creador de la IA / de la página ("Mi creador se llama Osito.")
+        if (/(como se llama (tu|el) creador|quien (es (tu|el) creador|te creo|te hizo|te programo|creo (esta ia|el sitio|la pagina|el sotano))|cual es el nombre de (tu|el) creador|nombre de tu creador)/.test(normUsuario)) {
+            return 'Mi creador se llama Osito.';
+        }
+
+        // 0.0b Nombre actual del CANAL en YouTube (sin confundir con "primer canal" ni con "primer video")
+        if (/(como se llama (el|tu|su) canal|cual es (el nombre de(l| tu| su) canal|(tu|su|el) canal( de youtube)?|el canal de osito)|nombre (actual |oficial )?de(l| tu| su) canal|como te llamas en youtube|como se llama osito en youtube|como aparece (el canal|en youtube)|como busco (el|tu) canal|canal de youtube de osito)/.test(normUsuario) &&
+            !/(primer|primero|anterior|original|antes|llamaba|video|serie|editor)/.test(normUsuario)) {
+            return 'El canal se llama OsitoGamer360YT (Osito Gamer 360 YouTube).';
+        }
+
+        // 0.1 Edad o años del CANAL en YouTube (diferenciar de la edad de Osito)
+        if (/(canal|youtube|ositoyt360|ositogamer360yt|ositogamer360|sotano)/.test(normUsuario) &&
+            /(cuantos (anos|años)|que edad|cuanto tiempo lleva|aniversario|cumpleanos del canal|cumple del canal|cuando se creo el canal)/.test(normUsuario)) {
+            if (/cuanto falta/.test(normUsuario)) {
+                const mNum = normUsuario.match(/(\d+)\s*(anos|años)/);
+                return obtenerTiempoFaltaCanal(mNum ? Number(mNum[1]) : undefined);
+            }
+            const anos = calcularAnosCanal();
+            return `El canal OsitoGamer360YT tiene ${anos} años en YouTube. Su aniversario es el 2 de junio (empezó el 2 de junio de 2022). 🎉`;
+        }
+
+        if (/cuanto falta para.*(aniversario|cumpleanos del canal|anos en youtube|años en youtube)/.test(normUsuario)) {
+            const mNum = normUsuario.match(/(\d+)\s*(anos|años)/);
+            return obtenerTiempoFaltaCanal(mNum ? Number(mNum[1]) : undefined);
+        }
+
+        // 0.2 Edad de Osito / cuántos años tiene Osito / cuándo nació / cuándo es su cumpleaños
+        if (/(cuantos (anos|años) (tiene|tienes|tenes)|que edad (tiene|tienes|tenes)|cual es (la edad de osito|tu edad)|edad de osito|anos tiene osito|años tiene osito)/.test(normUsuario) &&
+            !/(canal|youtube)/.test(normUsuario)) {
+            const edad = calcularEdadCreador();
+            return `Osito tiene ${edad} años (nació el 28 de septiembre de 2008).`;
+        }
+
+        if (/(cuando (cumple|cumples) (anos|años)|cuando es (el cumpleanos de osito|tu cumpleanos|el cumple de osito|tu cumple)|fecha de nacimiento de osito|en que (ano|año|fecha) (nacio osito|naciste)|cuando (nacio osito|naciste))/.test(normUsuario)) {
+            const edad = calcularEdadCreador();
+            return `Osito nació el 28 de septiembre de 2008, así que su cumpleaños es el 28 de septiembre y actualmente tiene ${edad} años. 🎂`;
+        }
+
+        // 0.3 País / nacionalidad de Osito
+        if (/(de que pais (es osito|eres)|de donde (es osito|eres)|en que pais (vive|nacio) osito|cual es (tu pais|el pais de osito|la nacionalidad de osito|tu nacionalidad))/.test(normUsuario)) {
+            return 'Osito es de El Salvador. 🇸🇻';
+        }
+
+        // 0.4 Editor de Osito (Santiago)
+        if (/(quien (es tu editor|es el editor|edita tus videos|edita los videos|te edita)|como se llama (tu editor|el editor)|quien es santiago)/.test(normUsuario)) {
+            return 'El editor del canal es Santiago.';
+        }
+
+        // 0.5 Colaborador de Osito (Allay MC)
+        if (/(quien es (tu colaborador|el colaborador|allay mc)|con quien colaboras|colaborador del canal)/.test(normUsuario)) {
+            return 'El colaborador del canal es Allay MC.';
+        }
+
+        // 0.6 Serie de Minecraft (Survivalang)
+        if (/(como se llama (tu serie|la serie)|cual es (tu serie|la serie de minecraft)|que es survivalang|serie del canal)/.test(normUsuario) &&
+            !normUsuario.includes('seguidores') && !normUsuario.includes('comunidad')) {
+            return 'La serie de Minecraft del canal se llama Survivalang.';
+        }
+
+        // 0.7 Mayor logro del canal (1000 suscriptores)
+        if (/(cual (es|fue|ha sido) (tu mayor logro|el logro del canal|tu logro)|logro (mas importante|del canal))/.test(normUsuario)) {
+            return 'Uno de los mayores logros del canal ha sido llegar a los 1000 suscriptores.';
+        }
+
+        // 0.8 Reglas en los directos
+        if (/(reglas (de los directos|del directo|en los directos|del canal))/.test(normUsuario)) {
+            return 'Las reglas en los directos son: no insultos, no humillar a la gente y mantener todo humildemente.';
+        }
+
+        // 1. REVISIÓN EXACTA DE LAS 19 PREGUNTAS OFICIALES
         // =========================================================================
 
         // Item 4: Cara / Face reveal / Rostro
-        if (/(face.*reveal|feis.*ribil|mostrar.*cara|ensenar.*cara|ocultas.*cara|tapas.*cara|tu.*rostro|ver.*tu.*cara|no.*muestras.*cara|no.*ensenas.*cara|algun.*dia.*cara)/.test(normUsuario) ||
-            /(cara|rostro).*(inseguridad|mostrar|ensenar|ocultar|feis)/.test(normUsuario)) {
+        if (/(face.*reveal|feis.*ribil|mostrar.*(tu )?cara|ensenar.*(tu )?(cara|rostro)|ocultas.*(tu )?cara|tapas.*(la |tu )?cara|ver.*tu.*cara|no.*muestras.*(tu )?cara|no.*ensenas.*(tu )?(cara|rostro)|algun.*dia.*mostraras.*tu.*cara)/.test(normUsuario) ||
+            /(por que|porque|cuando).*(cara|rostro|face reveal)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 4).respuesta;
         }
 
         // Item 11: Video más difícil de editar
         if (/(dificil|costo.*mas|dio.*mas.*trabajo|mas.*complicado).*(editar|edicion|proyecto)/.test(normUsuario) ||
-            /(video|edicion).*(mas.*dificil|costo.*mas)/.test(normUsuario)) {
+            /(video|edicion|proyecto).*(mas.*dificil|costo.*mas|dio.*mas.*trabajo)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 11).respuesta;
         }
 
@@ -428,87 +608,87 @@
             return BASE_CONOCIMIENTO.find(i => i.id === 10).respuesta;
         }
 
+        // Item 1: Cuándo empezaste a interesarte por YouTube / quién te inspiró (antes de Item 8 para no confundir "interesarte/inspiró" con fecha del primer video)
+        if (/(cuando.*(interesarte|interesar).*youtube|desde.*cuando.*te.*gusta.*youtube|quien.*(te.*inspiro|fue.*tu.*inspiracion)|inspiracion.*youtube|querer.*ser.*youtuber|desde.*cuando.*haces.*contenido|por.*que.*empezaste.*en.*youtube|cuando.*comenzaste.*con.*youtube|maxwhish|max wish)/.test(normUsuario)) {
+            return BASE_CONOCIMIENTO.find(i => i.id === 1).respuesta;
+        }
+
         // Item 8: Fecha o día del primer video / cuándo empezaste en YouTube
-        if (/(cuando.*(primer.*video|subiste.*primer|empezaste.*en.*youtube|comenzaste.*en.*youtube)|fecha.*(primer.*video|comenzaste|empezaste)|que.*dia.*comenzaste|en.*que.*fecha.*comenzaste)/.test(normUsuario) ||
+        if (/(cuando.*(fue.*tu.*primer.*video|subiste.*tu.*primer.*video|empezaste.*en.*youtube|comenzaste.*en.*youtube)|fecha.*(de.*tu.*primer.*video|exacta.*de.*tu.*primer.*video|comenzaste|empezaste)|que.*dia.*comenzaste|en.*que.*fecha.*comenzaste)/.test(normUsuario) ||
             /22.*de.*octubre/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 8).respuesta;
         }
 
-        // Item 2: Nombre del primer canal
-        if (/(primer.*canal|canal.*original|canal.*antes.*de.*ositoyt360|nombre.*de.*tu.*primer.*canal|como.*se.*llamaba.*tu.*canal)/.test(normUsuario) ||
-            /(como.*llamaba.*primer.*canal|cual.*fue.*tu.*primer.*canal)/.test(normUsuario)) {
+        // Item 2: Nombre del primer canal (sin confundir con "primer video del canal")
+        if (/(primer\s+canal|canal\s+original|canal\s+antes\s+de\s+ositoyt360|canal\s+anterior|nombre\s+de\s+tu\s+primer\s+canal|como\s+se\s+llamaba\s+tu\s+(primer\s+)?canal|cual\s+(fue|era)\s+tu\s+primer\s+canal)/.test(normUsuario) &&
+            !normUsuario.includes('video')) {
             return BASE_CONOCIMIENTO.find(i => i.id === 2).respuesta;
         }
 
         // Item 3: Cuál fue tu primer video (título/nombre del video, no fecha)
-        if (/(cual.*fue.*tu.*primer.*video|que.*video.*subiste.*primero|como.*se.*llamaba.*tu.*primer.*video|primer.*video.*de.*youtube|que.*video.*hiciste.*al.*principio)/.test(normUsuario) ||
+        if (/(cual.*fue.*tu.*primer.*video|que.*video.*subiste.*primero|como.*se.*llamaba.*tu.*primer.*video|primer.*video.*(de.*youtube|del.*canal)|que.*video.*hiciste.*al.*principio|nombre.*de.*tu.*primer.*video)/.test(normUsuario) ||
             /perrerias.*de.*mike/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 3).respuesta;
         }
 
         // Item 18: Por qué revivir Craftsman (motivo, nostalgia, servidores apagados)
-        if (/(por.*que.*(revivir|volver).*craftsman|motivo.*revivir|por.*que.*recuperar.*servidores|que.*tiene.*de.*especial.*comunidad|nostalgia.*craftsman|servidores.*apagados)/.test(normUsuario) ||
-            /(porque.*quieres.*revivir.*craftsman)/.test(normUsuario)) {
+        if (/(por.*que.*(quieres.*)?(revivir|volver|recuperar).*(craftsman|comunidad|servidores)|motivo.*revivir|que.*te.*motivo.*a.*revivir|que.*tiene.*de.*especial.*esa.*comunidad|por.*que.*te.*da.*nostalgia.*craftsman|servidores.*apagados)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 18).respuesta;
         }
 
         // Item 19: Qué quieres recuperar de los antiguos servidores (mapas nostálgicos)
-        if (/(recuperar.*(antiguos.*servidores|servidores|mapas|epoca)|traer.*de.*vuelta|extranas.*de.*esos.*servidores|mas.*nostalgico|mapas.*quieres.*volver.*a.*ver)/.test(normUsuario)) {
+        if (/(que.*quieres.*recuperar.*(de.*los.*antiguos.*servidores|de.*esa.*epoca)|que.*quieres.*traer.*de.*vuelta|que.*extranas.*de.*esos.*servidores|que.*era.*lo.*mas.*nostalgico|que.*mapas.*quieres.*volver.*a.*ver)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 19).respuesta;
         }
 
         // Item 17: Planes para Craftsman / BedWars (planes a futuro)
-        if (/(planes.*(craftsman|bedwars)|quieres.*hacer.*con.*craftsman|vas.*a.*volver.*a.*craftsman|proyectos.*para.*craftsman|revivir.*craftsman|revivir.*comunidad.*craftsman)/.test(normUsuario)) {
+        if (/(planes.*(tienes.*para.*)?(craftsman|bedwars)|que.*quieres.*hacer.*con.*craftsman|vas.*a.*volver.*a.*craftsman|proyectos.*para.*craftsman|quieres.*revivir.*craftsman|vas.*a.*revivir.*la.*comunidad.*de.*craftsman)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 17).respuesta;
         }
 
         // Item 9: Por qué elegiste el nombre OsitoGamer360
-        if (/(por.*que.*elegiste.*(nombre|ositogamer360)|de.*donde.*salio.*ositogamer360|por.*que.*te.*llamas.*ositogamer360|que.*significa.*ositogamer360|como.*nacio.*(ese.*)?nombre|peluche.*de.*panda)/.test(normUsuario)) {
+        if (/(por.*que.*(elegiste|te.*pusiste|te.*llamas).*(nombre|ositogamer360|ositoyt360)|de.*donde.*salio.*(ositogamer360|el.*nombre)|que.*significa.*ositogamer360|como.*nacio.*(ese.*|el.*)?nombre|peluche.*de.*panda)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 9).respuesta;
         }
 
-        // Item 1: Cuándo empezaste a interesarte por YouTube / quién te inspiró
-        if (/(cuando.*(interesarte|interesar).*youtube|desde.*cuando.*te.*gusta.*youtube|quien.*te.*inspiro|inspiracion|querer.*ser.*youtuber|desde.*cuando.*haces.*contenido|maxwhish)/.test(normUsuario)) {
-            return BASE_CONOCIMIENTO.find(i => i.id === 1).respuesta;
-        }
-
         // Item 7: Sueño / meta con YouTube
-        if (/(sueno.*con.*youtube|meta.*como.*youtuber|mayor.*sueno|quieres.*lograr.*con.*youtube|hasta.*donde.*quieres.*llegar|conseguir.*con.*tu.*canal|centroamerica)/.test(normUsuario)) {
+        if (/(sueno.*con.*youtube|meta.*como.*youtuber|mayor.*(sueno|meta)|que.*quieres.*(lograr|conseguir).*con.*(youtube|tu.*canal)|hasta.*donde.*quieres.*llegar)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 7).respuesta;
         }
 
         // Item 13: Qué quieres mejorar en tus videos
-        if (/(quieres.*mejorar|aspectos.*mejorar|mejorar.*(edicion|miniaturas|voz|canal|hablar|videos)|trabarme.*al.*hablar)/.test(normUsuario)) {
+        if (/(que.*(aspectos.*)?quieres.*mejorar|en.*que.*quieres.*mejorar|quieres.*mejorar.*(tu.*|tus.*)?(edicion|miniaturas|voz|canal|videos)|trabarme.*al.*hablar)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 13).respuesta;
         }
 
-        // Item 14: Qué les gusta a tus seguidores
-        if (/(les.*gusta.*a.*tus.*seguidores|contenido.*le.*gusta.*a.*tu.*comunidad|juegos.*prefieren.*tus.*seguidores|quieren.*ver.*tus.*seguidores|favoritos.*de.*tu.*comunidad|contenido.*disfruta.*comunidad)/.test(normUsuario)) {
+        // Item 14: Qué les gusta a tus seguidores (antes de Item 5 para evitar colisión en "juegos favoritos de tu comunidad")
+        if (/(que.*les.*gusta.*a.*tus.*seguidores|que.*contenido.*(le.*gusta|disfruta).*tu.*comunidad|que.*(juegos|contenido).*(prefieren|quieren.*ver).*tus.*seguidores|juegos.*favoritos.*de.*tu.*comunidad)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 14).respuesta;
         }
 
         // Item 15: Vas a volver a hacer directos
-        if (/(volver.*a.*hacer.*directos|volveras.*a.*hacer.*streams|directos.*otra.*vez|regresar.*a.*los.*livestreams|cuando.*volveran.*los.*directos|tendras.*transmisiones.*en.*vivo|horario.*directos)/.test(normUsuario)) {
+        if (/(volver.*a.*hacer.*directos|volveras.*a.*hacer.*(directos|streams)|haras.*directos.*otra.*vez|regresar.*a.*los.*(directos|livestreams)|cuando.*(volveran.*los.*directos|haras.*en.*vivo|haras.*directo)|tendras.*transmisiones.*en.*vivo|horario.*de.*directos)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 15).respuesta;
         }
 
         // Item 16: Evento grande planeado
-        if (/(evento.*grande|planeado.*algun.*evento|habra.*un.*evento.*grande|evento.*preparado|haras.*otro.*evento|proyecto.*grande)/.test(normUsuario)) {
+        if (/(planeado.*algun.*evento|vas.*a.*hacer.*algun.*evento|habra.*un.*evento.*grande|tienes.*algun.*(evento|proyecto).*(grande|preparado)|haras.*otro.*evento)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 16).respuesta;
         }
 
         // Item 5: Juegos favoritos para grabar (Minecraft y Roblox)
-        if (/(juegos.*favoritos.*grabar|juego.*favorito|juegos.*te.*gusta.*grabar|juegos.*haces.*en.*tu.*canal|tambien.*juegas.*roblox|te.*gusta.*minecraft)/.test(normUsuario)) {
+        if (/(cuales.*son.*tus.*juegos.*favoritos|cual.*es.*tu.*juego.*favorito|que.*(juegos|videojuegos).*(te.*gusta.*grabar|haces.*en.*tu.*canal|juegas.*para.*tus.*videos)|tambien.*juegas.*roblox|te.*gusta.*minecraft)/.test(normUsuario) &&
+            !normUsuario.includes('seguidores') && !normUsuario.includes('comunidad')) {
             return BASE_CONOCIMIENTO.find(i => i.id === 5).respuesta;
         }
 
         // Item 6: Qué te gusta más de crear contenido (distinto de jugar en general)
-        if (/(mas.*te.*gusta.*de.*crear.*contenido|disfrutas.*de.*hacer.*videos|parte.*de.*crear.*contenido|te.*gusta.*hacer.*como.*creador|disfrutas.*siendo.*youtuber)/.test(normUsuario)) {
+        if (/(mas.*te.*gusta.*de.*crear.*contenido|que.*disfrutas.*de.*hacer.*videos|que.*parte.*de.*crear.*contenido.*te.*gusta|que.*te.*gusta.*hacer.*como.*creador|que.*disfrutas.*siendo.*youtuber|que.*es.*lo.*mejor.*de.*hacer.*videos)/.test(normUsuario)) {
             return BASE_CONOCIMIENTO.find(i => i.id === 6).respuesta;
         }
 
         // Item 12: Qué es lo que más disfrutas hacer (actividad general: Jugar)
-        if (/(mas.*disfrutas.*hacer|te.*gusta.*hacer.*mas|disfrutas.*mas|(actividad|pasatiempo|hobby).*favorit|haces.*cuando.*quieres.*divertirte|para.*divertirte)/.test(normUsuario) &&
+        if (/(que.*es.*lo.*que.*mas.*disfrutas.*hacer|que.*te.*gusta.*hacer.*mas|que.*disfrutas.*mas|cual.*es.*tu.*(actividad|pasatiempo|hobby).*favorit|que.*haces.*cuando.*quieres.*divertirte)/.test(normUsuario) &&
             !normUsuario.includes('crear') && !normUsuario.includes('video') && !normUsuario.includes('contenido') &&
             !normUsuario.includes('comida') && !normUsuario.includes('color') && !normUsuario.includes('pelicula') && !normUsuario.includes('cancion') && !normUsuario.includes('animal')) {
             return BASE_CONOCIMIENTO.find(i => i.id === 12).respuesta;
@@ -520,44 +700,53 @@
         }
 
         // Extras: Osito Expo 2026
-        if (/(osito.*expo|expo.*2026)/.test(normUsuario)) {
+        if (/(cuando.*osito.*expo|que.*es.*osito.*expo|se.*viene.*osito.*expo|^osito.*expo.*2026$)/.test(normUsuario)) {
             return INFORMACION_EXTRA.expo2026;
         }
 
-        // 2. COINCIDENCIA POR SIMILITUD DE TEXTO Y BIGRAMAS CONTRA TODAS LAS VARIACIONES
+        // 2. COINCIDENCIA ESTRICTA CONTRA LAS VARIACIONES OFICIALES (EVITA FALSOS POSITIVOS)
         // =========================================================================
+        // No forzar coincidencias en preguntas de cultura general, matemáticas, tutoriales o temas ajenos
+        if (/\b(como (hacer|se hace|puedo|funciona)|que significa (?!ositogamer)|cual es la capital|quien (invento|descubrio|fue el presidente)|explicame|resuelve|traduce|cuanto (es|son|da|cuesta)|historia de|receta de|comida favorita|color favorito|animal favorito|pelicula favorita)\b/.test(normUsuario)) {
+            return null;
+        }
+
+        const fonUsuario = simplificarFonetica(normUsuario);
         let mejorCoincidencia = null;
         let mejorPuntaje = 0;
 
         for (const item of BASE_CONOCIMIENTO) {
             for (const variacion of item.variaciones) {
                 const normVariacion = normalizarTexto(variacion);
+                if (normUsuario === normVariacion) {
+                    return item.respuesta;
+                }
                 const fonVariacion = simplificarFonetica(variacion);
+                if (fonUsuario === fonVariacion) {
+                    return item.respuesta;
+                }
 
                 const puntajeNorm = calcularSimilitudBigramas(normUsuario, normVariacion);
                 const puntajeFon = calcularSimilitudBigramas(fonUsuario, fonVariacion);
                 const puntaje = Math.max(puntajeNorm, puntajeFon);
 
-                // Bono por coincidencia de palabras clave importantes
-                let bonoKeywords = 0;
-                let tieneKeyword = false;
+                let tieneKeywordFrase = false;
                 if (item.keywords) {
                     for (const kw of item.keywords) {
-                        if (normUsuario.includes(normalizarTexto(kw))) {
-                            bonoKeywords += 0.15;
-                            tieneKeyword = true;
+                        const kwNorm = normalizarTexto(kw);
+                        if (kwNorm && normUsuario.includes(kwNorm)) {
+                            tieneKeywordFrase = true;
+                            break;
                         }
                     }
                 }
 
-                // Evitar falsos positivos en preguntas genéricas (ej: "¿cuál es tu comida favorita?")
-                // que solo comparten palabras auxiliares pero no el tema central.
-                if (!tieneKeyword && puntaje < 0.78) {
+                // Exigimos alta similitud real con la variación oficial para NUNCA equivocarse de pregunta
+                if (!tieneKeywordFrase && puntaje < 0.86) {
                     continue;
                 }
 
-                const puntajeTotal = puntaje + bonoKeywords;
-
+                const puntajeTotal = puntaje + (tieneKeywordFrase ? 0.08 : 0);
                 if (puntajeTotal > mejorPuntaje) {
                     mejorPuntaje = puntajeTotal;
                     mejorCoincidencia = item;
@@ -565,8 +754,8 @@
             }
         }
 
-        // Umbral de confianza exigente para evitar respuestas falsas/inventadas
-        if (mejorCoincidencia && mejorPuntaje >= 0.60) {
+        const umbralMinimo = opts.modoOffline ? 0.72 : 0.84;
+        if (mejorCoincidencia && mejorPuntaje >= umbralMinimo) {
             return mejorCoincidencia.respuesta;
         }
 
@@ -650,7 +839,6 @@
             else if (lang.includes('DO')) pais = 'República Dominicana';
         }
 
-        // Obtener la hora local exacta según la zona horaria del usuario
         if (zonaHoraria) {
             try {
                 const partes = new Intl.DateTimeFormat('en-US', {
@@ -665,7 +853,6 @@
             } catch (err) {}
         }
 
-        // Saludo según la hora local: mañana, tarde o noche
         let saludo = 'Buenos días';
         if (hora >= 5 && hora < 12) {
             saludo = 'Buenos días';
@@ -699,10 +886,16 @@
     // EXPORTACIÓN A WINDOW O MÓDULO
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const OsitoConocimiento = {
+        INFO_CANAL,
         BASE_CONOCIMIENTO,
         INFORMACION_EXTRA,
         MENSAJES_NO_DISPONIBLE,
         MENSAJES_LIMITE_INVITADO,
+        RESPUESTA_PRIVACIDAD,
+        esPreguntaPersonalPrivada,
+        calcularEdadCreador,
+        calcularAnosCanal,
+        obtenerTiempoFaltaCanal,
         normalizarTexto,
         simplificarFonetica,
         calcularSimilitudBigramas,

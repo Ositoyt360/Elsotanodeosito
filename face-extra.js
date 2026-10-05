@@ -158,9 +158,9 @@
     // la cara en 'sleeping'/'sleepy'. Esto también protege contra código antiguo en caché
     // o una personalidad que intente lanzar una expresión de sueño durante el día.
     function corregirSuenoFueraDeHorario() {
-        if (esNoche()) return;
+        if (document.hidden || esNoche()) return;
         var ahora = Date.now();
-        if (ahora - ULTIMO_GUARDADO < 250) return;
+        if (ahora - ULTIMO_GUARDADO < 900) return;
         ULTIMO_GUARDADO = ahora;
         caras.forEach(function (c) {
             var e = c.getAttribute('data-expr');
@@ -170,7 +170,25 @@
         });
         if (durmiendo) { durmiendo = false; enSiesta = false; limpiarTimerSiesta(); }
     }
-    setInterval(corregirSuenoFueraDeHorario, 200);
+    setInterval(corregirSuenoFueraDeHorario, 2200);
+
+    // Reacción extra de la mascota al hacer doble clic o abrir llamada
+    var ANIM_MASCOTA_EXTRA = ['of-spin-joy', 'of-wiggle', 'of-flip-3d', 'of-party-bounce'];
+    var SONIDOS_MASCOTA_EXTRA = ['magic', 'party', 'jump', 'robot'];
+    caras.forEach(function (c) {
+        c.addEventListener('dblclick', function () {
+            var anim = ANIM_MASCOTA_EXTRA[Math.floor(Math.random() * ANIM_MASCOTA_EXTRA.length)];
+            var snd = SONIDOS_MASCOTA_EXTRA[Math.floor(Math.random() * SONIDOS_MASCOTA_EXTRA.length)];
+            c.classList.remove('of-spin-joy', 'of-wiggle', 'of-flip-3d', 'of-party-bounce');
+            void c.offsetWidth;
+            c.classList.add(anim);
+            F.poner(c, 'excited', 1600);
+            if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                window.OsitoFaceSound.reproducir(snd);
+            }
+            setTimeout(function () { c.classList.remove(anim); }, 700);
+        });
+    });
 
     // V51.1: cada emoción nueva lanza su emoji UNA vez (si la emoción no cambia, no se repite).
     function reiniciarEmoji(c) {

@@ -929,34 +929,51 @@ body.guest-mode .livechat-floating-container {
 .promo-dot-nav { width: 28px; height: 4px; background: rgba(255,255,255,0.16); border-radius: 999px; cursor: pointer; transition: var(--transition-premium); }
 .promo-dot-nav.active { background: var(--primary-color); width: 46px; border-radius: 999px; box-shadow: 0 0 12px rgba(0, 242, 254, 0.24); }
 
-.promo-arrow {
+.promo-arrow,
+button.promo-arrow {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 3;
-    width: 40px;
-    height: 40px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    transform: scale(1) !important;
+    animation: none !important;
+    z-index: 45 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 14, 24, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(10, 14, 24, 0.78);
     color: #e7eef9;
     display: grid;
     place-items: center;
     cursor: pointer;
-    transition: var(--transition-premium);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
-.promo-arrow:hover {
-    border-color: rgba(0, 242, 254, 0.25);
-    box-shadow: 0 0 0 1px rgba(0, 242, 254, 0.18), 0 0 18px rgba(0, 242, 254, 0.12);
-    transform: translateY(-50%) scale(1.04);
+@media (hover: hover) {
+    .promo-arrow:hover,
+    button.promo-arrow:not(:disabled):hover {
+        border-color: rgba(0, 242, 254, 0.45);
+        background: rgba(16, 24, 40, 0.92);
+        box-shadow: 0 0 0 1px rgba(0, 242, 254, 0.25), 0 0 18px rgba(0, 242, 254, 0.18);
+        transform: scale(1.08) !important;
+    }
 }
 
-.promo-arrow-left { left: 16px; }
-.promo-arrow-right { right: 16px; }
+.promo-arrow:active,
+button.promo-arrow:not(:disabled):active {
+    transform: scale(0.92) !important;
+}
+
+.promo-arrow-left { left: 14px; }
+.promo-arrow-right { right: 14px; }
 
 /* --- TOAST NOTIFICACIONES --- */
 .toast-notification { 
@@ -1882,16 +1899,16 @@ body.ultra-performance #header-btn-ultra-performance {
     .welcome-title { font-size: 2.3rem; }
     .header-actions { justify-content: center; width: 100%; }
     .theme-selector { width: 100%; justify-content: space-between; }
-    .promo-container { padding: 34px 18px 50px; }
-    .promo-arrow { width: 36px; height: 36px; }
-    .promo-arrow-left { left: 10px; }
-    .promo-arrow-right { right: 10px; }
+    .promo-container { padding: 30px 48px 46px; }
+    .promo-arrow, button.promo-arrow { width: 38px; height: 38px; font-size: 16px; }
+    .promo-arrow-left { left: 6px; }
+    .promo-arrow-right { right: 6px; }
     .preset-grid { grid-template-columns: 1fr; }
     .setting-row { flex-direction: column; align-items: flex-start; }
     .setting-row input[type="range"] { width: 100%; }
     .page-layout { padding: 12px 3%; gap: 14px; }
     .content-right, .main-content { gap: 14px; }
-    .promo-container { min-height: 190px; padding: 24px 14px 42px; }
+    .promo-container { min-height: 190px; padding: 26px 46px 42px; }
     .promo-desc { font-size: 12px; line-height: 1.4; }
     .countdown-box { padding: 14px 10px; }
     .countdown-timer { font-size: 18px; letter-spacing: 0; }
@@ -2360,17 +2377,20 @@ body.no-animations .video-card {
     top: 82px;
     right: 14px;
     align-items: flex-end;
+    pointer-events: none;
 }
 
 .ia-toggle-bubble {
     width: 54px;
     height: 54px;
+    pointer-events: auto;
 }
 
-.ia-section {
+.ia-section.active {
     width: min(360px, calc(100vw - 24px));
     max-height: calc(100vh - 96px);
     border-radius: 10px;
+    pointer-events: auto;
 }
 
 .ia-chat-shell {
@@ -4005,12 +4025,11 @@ body.solo-invitado .cuenta-personalizacion {
     display: none !important;
 }
 
-/* El micrófono del asistente de IA solo funciona con cuenta iniciada;
-   en modo invitado se muestra apagado/deshabilitado visualmente. */
+/* El micrófono del asistente de IA y el modo llamada están activos para todos */
 body.solo-invitado .ai-mic-btn {
-    opacity: 0.4;
-    filter: grayscale(1);
-    cursor: not-allowed;
+    opacity: 1;
+    filter: none;
+    cursor: pointer;
 }
 
 /* ===== Decoración estacional (Halloween / Navidad) ===== */
@@ -6459,7 +6478,7 @@ html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz {
     }
 }
 
-/* ================= V64 — FLUIDEZ ADAPTATIVA (60Hz / 90Hz / 120Hz), MODO CARGA Y SEGUNDO PLANO ================= */
+/* ================= V65 — FLUIDEZ EXTREMA PARA XIAOMI REDMI 15C / GAMA BAJA, MODO CARGA Y VIDEO DE FONDO POR HARDWARE ================= */
 html.high-refresh-hz body,
 html.hz-120 body,
 html.hz-90 body {
@@ -6467,32 +6486,1576 @@ html.hz-90 body {
     -webkit-overflow-scrolling: touch;
 }
 html.charging-fluid-mode *,
-html.hz-fluid-boost * {
+html.charging-fluid-mode *::before,
+html.charging-fluid-mode *::after,
+html.redmi-fluid-mode *,
+html.redmi-fluid-mode *::before,
+html.redmi-fluid-mode *::after,
+html.hz-fluid-boost *,
+html.hz-fluid-boost *::before,
+html.hz-fluid-boost *::after {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.charging-fluid-mode .ambient-glow,
 html.charging-fluid-mode .promo-bg-fx,
+html.charging-fluid-mode #space-canvas,
+html.redmi-fluid-mode .ambient-glow,
+html.redmi-fluid-mode .promo-bg-fx,
+html.redmi-fluid-mode #space-canvas,
 html.hz-fluid-boost .ambient-glow,
 html.hz-fluid-boost .promo-bg-fx {
     display: none !important;
 }
+/* Promoción directa del video de fondo al plano Hardware Composer (HWC) en Android / Mali-G52 (Redmi 15C):
+   opacity: 1 + filter: none evita que la GPU tenga que mezclar píxeles en cada cuadro mientras el video se reproduce */
+html.charging-fluid-mode .modo-sitio-video video.modo-bg-video,
+html.redmi-fluid-mode .modo-sitio-video video.modo-bg-video,
+html.low-end-device .modo-sitio-video video.modo-bg-video,
+html.mobile-lite .modo-sitio-video video.modo-bg-video {
+    opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+    transform: translate3d(0, 0, 0) !important;
+    backface-visibility: hidden !important;
+    will-change: transform !important;
+    transition: none !important;
+}
 html.charging-fluid-mode .video-card,
 html.charging-fluid-mode .sidebar-card,
 html.charging-fluid-mode .content-section,
+html.redmi-fluid-mode .video-card,
+html.redmi-fluid-mode .sidebar-card,
+html.redmi-fluid-mode .content-section,
 html.hz-fluid-boost .video-card,
 html.hz-fluid-boost .sidebar-card {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32) !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.38) !important;
+    background-color: rgba(10, 14, 24, 0.94) !important;
     transform: translateZ(0);
+    contain: layout style paint;
 }
-html.charging-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(even),
-html.hz-fluid-boost .modo-sitio-decoracion .modo-decor-item:nth-child(3n) {
+html.charging-fluid-mode :is(.section-heading, .promo-title-main, .hero-title, .section-title, .live-dot),
+html.redmi-fluid-mode :is(.section-heading, .promo-title-main, .hero-title, .section-title, .live-dot) {
+    animation: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+html.charging-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(n+4),
+html.redmi-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(n+5),
+html.hz-fluid-boost .modo-sitio-decoracion .modo-decor-item:nth-child(even) {
     display: none !important;
 }
+html.app-in-background *,
+html.app-in-background *::before,
+html.app-in-background *::after,
 html.app-backgrounded *,
 html.app-backgrounded *::before,
 html.app-backgrounded *::after {
     animation-play-state: paused !important;
 }
+
+/* =========================================================================
+   V66 — MODO LLAMADA CON LA IA (ORBE ANIMADO), ARREGLO DEFINITIVO DE FLECHAS
+   DEL BANNER (MÓVIL Y PC), MÁS ANIMACIÓN DE MASCOTA Y OPTIMIZACIÓN GAMA BAJA
+   ========================================================================= */
+
+/* 1. Arreglo definitivo de las flechas del banner en teléfono y computadora:
+      - Centrado vertical con top:0; bottom:0; margin:auto 0 (sin translateY(-50%))
+        para que la regla global button:not(:disabled):hover / :active jamás baje la flecha.
+      - Área táctil limpia, z-index superior y pointer-events garantizado en móvil. */
+html body .promo-container .promo-arrow,
+html body button.promo-arrow {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin: auto 0 !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    z-index: 60 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none !important;
+    transform: scale(1) !important;
+    animation: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+}
+html body .promo-container .promo-arrow-left,
+html body button.promo-arrow.promo-arrow-left {
+    left: 12px !important;
+    right: auto !important;
+}
+html body .promo-container .promo-arrow-right,
+html body button.promo-arrow.promo-arrow-right {
+    right: 12px !important;
+    left: auto !important;
+}
+@media (hover: hover) and (pointer: fine) {
+    html body .promo-container .promo-arrow:not(:disabled):hover,
+    html body button.promo-arrow:not(:disabled):hover {
+        transform: scale(1.08) !important;
+        border-color: rgba(0, 242, 254, 0.55) !important;
+        background: rgba(16, 24, 40, 0.94) !important;
+        box-shadow: 0 0 0 1px rgba(0, 242, 254, 0.28), 0 0 18px rgba(0, 242, 254, 0.22) !important;
+    }
+}
+html body .promo-container .promo-arrow:not(:disabled):active,
+html body button.promo-arrow:not(:disabled):active {
+    transform: scale(0.93) !important;
+}
+@media (max-width: 639px) {
+    html body .promo-container {
+        padding-left: 48px !important;
+        padding-right: 48px !important;
+    }
+    html body .promo-container .promo-arrow,
+    html body button.promo-arrow {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 16px !important;
+        background: rgba(10, 14, 24, 0.88) !important;
+        border: 1px solid rgba(255, 255, 255, 0.26) !important;
+    }
+    html body .promo-container .promo-arrow-left,
+    html body button.promo-arrow.promo-arrow-left {
+        left: 6px !important;
+    }
+    html body .promo-container .promo-arrow-right,
+    html body button.promo-arrow.promo-arrow-right {
+        right: 6px !important;
+    }
+    /* Evita que el contenedor flotante de la IA bloquee toques sobre el banner cuando está cerrado */
+    html body .ia-floating-container {
+        pointer-events: none !important;
+    }
+    html body .ia-floating-container .ia-bubble-wrap,
+    html body .ia-floating-container .ia-toggle-bubble,
+    html body .ia-floating-container .ia-section.active {
+        pointer-events: auto !important;
+    }
+}
+
+/* 2. Código exacto del nuevo Orbe para el modo voz con la IA + animación al hablar */
+.orb {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #0a0a0a, #001a1a);
+  animation:
+    float 6s ease-in-out infinite,
+    pulse 4s infinite ease-in-out;
+  box-shadow:
+    0 0 60px rgba(0, 255, 200, 0.9),
+    0 0 140px rgba(0, 200, 255, 0.7),
+    0 0 240px rgba(200, 0, 255, 0.5);
+  overflow: hidden;
+  cursor: pointer;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+.orb::before {
+  content: "";
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(
+    from 0deg,
+    #00ffff,
+    #00ffcc,
+    #ff00ff,
+    #ff6600,
+    #ff0000,
+    #6600ff,
+    #00ffff
+  );
+  animation: spin 8s linear infinite;
+  filter: blur(100px);
+  opacity: 0.8;
+  mix-blend-mode: screen;
+}
+
+.orb::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: repeating-radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0px,
+    rgba(255, 255, 255, 0.05) 80px,
+    transparent 150px
+  );
+  filter: blur(80px);
+  animation: gasFlow 30s infinite linear;
+  opacity: 0.9;
+  mix-blend-mode: lighten;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orb .aura {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.2), transparent 70%);
+  animation: auraPulse 6s ease-in-out infinite;
+  filter: blur(40px);
+}
+
+.orb .core {
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9),
+    transparent 70%
+  );
+  filter: blur(12px);
+  opacity: 0.7;
+}
+
+.orb .ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgba(0, 255, 255, 0.4);
+  animation: ringSpin 20s linear infinite;
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+}
+
+.orb .particles {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orb .particles span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fff, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: particleFloat 6s infinite;
+}
+
+.orb .particles span:nth-child(1) {
+  top: 20%;
+  left: 40%;
+  animation-delay: 0s;
+}
+.orb .particles span:nth-child(2) {
+  top: 60%;
+  left: 70%;
+  animation-delay: 1s;
+}
+.orb .particles span:nth-child(3) {
+  top: 50%;
+  left: 25%;
+  animation-delay: 2s;
+}
+.orb .particles span:nth-child(4) {
+  top: 35%;
+  left: 55%;
+  animation-delay: 3s;
+}
+.orb .particles span:nth-child(5) {
+  top: 70%;
+  left: 45%;
+  animation-delay: 4s;
+}
+.orb .particles span:nth-child(6) {
+  top: 25%;
+  left: 65%;
+  animation-delay: 5s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) scale(1.08);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 70px #00ffcc,
+      0 0 160px #00ffff,
+      0 0 260px #ff00ff;
+  }
+  50% {
+    box-shadow:
+      0 0 100px #ff00ff,
+      0 0 200px #ff6600,
+      0 0 300px #6600ff;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gasFlow {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes auraPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.9;
+  }
+}
+
+@keyframes ringSpin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-20px) scale(1);
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Estados del Orbe: se mueve con toda su animación y colores cuando la IA está hablando (.is-speaking),
+   y permanece en reposo suave cuando espera o escucha */
+.orb:not(.is-speaking):not(:hover),
+.orb:not(.is-speaking):not(:hover)::before,
+.orb:not(.is-speaking):not(:hover)::after,
+.orb:not(.is-speaking):not(:hover) .aura,
+.orb:not(.is-speaking):not(:hover) .ring,
+.orb:not(.is-speaking):not(:hover) .particles span {
+  animation-play-state: paused;
+}
+
+.orb.is-speaking,
+.orb.is-speaking::before,
+.orb.is-speaking::after,
+.orb.is-speaking .aura,
+.orb.is-speaking .ring,
+.orb.is-speaking .particles span {
+  animation-play-state: running !important;
+}
+
+.orb.is-speaking .core {
+  opacity: 0.95;
+  animation: auraPulse 1.4s ease-in-out infinite !important;
+}
+
+.orb.is-listening {
+  box-shadow:
+    0 0 55px rgba(88, 255, 154, 0.85),
+    0 0 120px rgba(0, 255, 200, 0.55),
+    0 0 190px rgba(0, 200, 255, 0.4);
+}
+.orb.is-listening .ring {
+  animation-play-state: running;
+  border-color: rgba(88, 255, 154, 0.65);
+}
+
+.orb.is-thinking::before {
+  animation-play-state: running;
+  animation-duration: 5s;
+}
+
+/* 3. En Modo Llamada desaparece por completo el chat de la IA y solo queda la zona de animación */
+body.ia-call-mode-active .ai-chat-shell,
+.ia-section.ia-call-active .ai-chat-shell,
+.ai-chat-shell[hidden] {
+  display: none !important;
+}
+
+body.ia-call-mode-active .ia-setup,
+.ia-section.ia-call-active .ia-setup {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Animación al activar el Modo Llamada */
+@keyframes iaCallStageEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.015) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes iaCallOrbEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ia-call-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 470px;
+  height: 100%;
+  box-sizing: border-box;
+  gap: 14px;
+  padding: 18px 16px 18px;
+  margin: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(0, 255, 200, 0.14), rgba(102, 0, 255, 0.12) 48%, rgba(5, 8, 16, 0.98) 80%);
+  border: 1px solid rgba(0, 255, 220, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 14px 36px rgba(0, 0, 0, 0.55),
+    0 0 28px rgba(0, 255, 200, 0.14);
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.ia-call-view.ia-call-view-enter {
+  animation: iaCallStageEnter 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ia-call-view.ia-call-view-enter .ia-call-orb-stage {
+  animation: iaCallOrbEntrance 0.54s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.ia-call-view[hidden] {
+  display: none !important;
+}
+
+/* 4. Diseño premium para el botón de activar Modo Voz (en la barra de escribir y en la cabecera, sin emoji de teléfono) */
+@keyframes callWaveBounce {
+  0%, 100% { transform: scaleY(0.45); opacity: 0.75; }
+  50% { transform: scaleY(1.18); opacity: 1; }
+}
+
+.call-wave-bars {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5px;
+  height: 16px;
+}
+.call-wave-bars i {
+  display: block;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #00ffff, #00ffcc, #ff00ff);
+  box-shadow: 0 0 6px rgba(0, 255, 220, 0.65);
+  animation: callWaveBounce 1.25s ease-in-out infinite;
+}
+.call-wave-bars i:nth-child(1) { height: 8px; animation-delay: 0s; }
+.call-wave-bars i:nth-child(2) { height: 15px; animation-delay: 0.18s; }
+.call-wave-bars i:nth-child(3) { height: 11px; animation-delay: 0.36s; }
+.call-wave-bars i:nth-child(4) { height: 7px; animation-delay: 0.52s; }
+
+/* Botón junto al micrófono en la barra inferior del chat (.ai-call-inline-btn) */
+.ai-call-inline-btn,
+button.ai-call-inline-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 220, 0.45);
+  background: linear-gradient(145deg, rgba(8, 22, 34, 0.95), rgba(20, 12, 42, 0.92));
+  color: #eaffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.42),
+    0 0 16px rgba(0, 255, 200, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.ai-call-inline-btn .ai-call-btn-glow {
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle, rgba(0, 255, 200, 0.28), rgba(255, 0, 255, 0.16), transparent 70%);
+  pointer-events: none;
+  opacity: 0.75;
+  transition: opacity 0.22s ease;
+}
+.ai-call-inline-btn:not(:disabled):hover {
+  transform: translateY(-2px) scale(1.06) !important;
+  border-color: rgba(0, 255, 255, 0.85);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(0, 255, 220, 0.48),
+    0 0 36px rgba(255, 0, 255, 0.25);
+}
+.ai-call-inline-btn:not(:disabled):active {
+  transform: scale(0.94) !important;
+}
+.ai-call-inline-btn.active {
+  background: linear-gradient(135deg, #00c8aa, #0088ff, #8c00ff);
+  border-color: #ffffff;
+  box-shadow: 0 0 24px rgba(0, 255, 220, 0.65);
+}
+
+/* Botón de modo voz en la cabecera del panel (.ia-call-header-btn) */
+.ia-call-header-btn,
+button.ia-call-header-btn {
+  height: 34px;
+  padding: 0 10px;
+  gap: 5px;
+  border-radius: 11px;
+  border: 1px solid rgba(0, 255, 220, 0.4);
+  background: linear-gradient(135deg, rgba(8, 24, 34, 0.9), rgba(22, 12, 44, 0.88));
+  color: #e8fff9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 12px rgba(0, 255, 200, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+}
+.ia-call-header-btn .call-btn-mic-glyph {
+  font-size: 13px;
+  line-height: 1;
+}
+.ia-call-header-btn:not(:disabled):hover {
+  transform: translateY(-1px) scale(1.05) !important;
+  border-color: rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 18px rgba(0, 255, 220, 0.42);
+}
+.ia-call-header-btn.active {
+  background: linear-gradient(135deg, #00d2b4, #008cff, #9b00ff);
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(0, 255, 220, 0.58);
+}
+.ia-call-header-btn.active .call-wave-bars i {
+  background: #ffffff;
+}
+
+/* Elementos internos de la vista de modo voz */
+.ia-call-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #c9d8f0;
+  z-index: 2;
+}
+.ia-call-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 255, 200, 0.14);
+  border: 1px solid rgba(0, 255, 200, 0.42);
+  color: #7affea;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+}
+.ia-call-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ffcc;
+  box-shadow: 0 0 10px #00ffcc;
+}
+.ia-call-timer {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e4f0ff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+.ia-call-state-badge {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #9bf6ff;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(0, 200, 255, 0.12);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  z-index: 2;
+}
+.ia-call-orb-stage {
+  padding: 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  z-index: 1;
+}
+.ia-call-subtitle {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #eef7ff;
+  max-height: 76px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(8, 14, 26, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 2;
+}
+.ia-call-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 2px;
+  z-index: 2;
+}
+.ia-call-ctrl-btn {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 220, 0.28);
+  background: linear-gradient(145deg, rgba(14, 26, 44, 0.92), rgba(10, 16, 30, 0.95));
+  color: #eef7ff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.38);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.ia-call-mic-waves {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 13px;
+}
+.ia-call-mic-waves i {
+  display: block;
+  width: 2.5px;
+  height: 6px;
+  border-radius: 999px;
+  background: #00ffcc;
+  opacity: 0.45;
+}
+.ia-call-ctrl-btn.active-mic {
+  background: linear-gradient(135deg, rgba(0, 210, 150, 0.28), rgba(0, 160, 255, 0.24));
+  border-color: rgba(0, 255, 200, 0.78);
+  color: #b8ffea;
+  box-shadow: 0 0 20px rgba(0, 255, 200, 0.28);
+}
+.ia-call-ctrl-btn.active-mic .ia-call-mic-waves i {
+  opacity: 1;
+  animation: callWaveBounce 0.9s ease-in-out infinite;
+}
+.ia-call-ctrl-btn.active-mic .ia-call-mic-waves i:nth-child(2) {
+  height: 12px;
+  animation-delay: 0.15s;
+}
+.ia-call-ctrl-btn.active-mic .ia-call-mic-waves i:nth-child(3) {
+  height: 9px;
+  animation-delay: 0.3s;
+}
+.ia-call-hangup {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #e2ecff;
+}
+.ia-call-hangup:not(:disabled):hover {
+  background: rgba(255, 75, 95, 0.22);
+  border-color: rgba(255, 110, 125, 0.55);
+  color: #ffd8de;
+}
+
+/* 5. Mejora de la animación de las respuestas del chat de IA */
+@keyframes iaMsgReveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+.ia-messages .msg.ia-msg-enter {
+  animation: iaMsgReveal 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+.ia-messages .msg.bot.ia-speaking-msg {
+  border-color: rgba(0, 255, 220, 0.65) !important;
+  box-shadow: 0 0 14px rgba(0, 255, 220, 0.22), inset 0 0 10px rgba(255, 0, 255, 0.08) !important;
+}
+
+/* 6. Más animaciones interactivas para la mascota (clic, saludo, baile, giro) */
+@keyframes ofSpinJoy {
+  0% { transform: scale(1) rotate(0deg); }
+  45% { transform: scale(1.14) rotate(190deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+@keyframes ofWiggleFun {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-14deg) scale(1.08); }
+  40% { transform: rotate(14deg) scale(1.1); }
+  60% { transform: rotate(-10deg) scale(1.08); }
+  80% { transform: rotate(8deg) scale(1.04); }
+}
+@keyframes ofFlip3D {
+  0% { transform: perspective(300px) rotateY(0deg) scale(1); }
+  50% { transform: perspective(300px) rotateY(180deg) scale(1.12); }
+  100% { transform: perspective(300px) rotateY(360deg) scale(1); }
+}
+@keyframes ofPartyBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-7px) scale(1.1, 0.92); }
+  50% { transform: translateY(0) scale(0.94, 1.08); }
+  75% { transform: translateY(-4px) scale(1.05, 0.96); }
+}
+.osito-face.of-spin-joy .of-card { animation: ofSpinJoy 0.62s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.osito-face.of-wiggle .of-card { animation: ofWiggleFun 0.58s ease-in-out; }
+.osito-face.of-flip-3d .of-card { animation: ofFlip3D 0.64s ease-in-out; }
+.osito-face.of-party-bounce .of-card { animation: ofPartyBounce 0.56s ease-in-out; }
+
+/* 7. Optimización profunda de la IA para dispositivos de bajos recursos (gama baja / ultrabaja):
+      - Pausa efectos secundarios mientras la IA habla o está en modo llamada.
+      - Mantiene el Orbe con sus mismos colores y movimiento al hablar pero con blur ligero por GPU
+        para que no caliente ni dé tirones en teléfonos económicos. */
+html.ia-speaking-mode .ambient-glow,
+html.ia-speaking-mode .promo-bg-fx,
+html.ia-speaking-mode .modo-sitio-decoracion .modo-decor-item,
+html.ia-speaking-mode .ia-bubble-spinner,
+html.ia-speaking-mode .ai-suggestions ul,
+body.ia-call-mode-active .ambient-glow,
+body.ia-call-mode-active .promo-bg-fx,
+body.ia-call-mode-active .ia-bubble-spinner,
+body.ia-call-mode-active .ai-suggestions ul {
+  animation-play-state: paused !important;
+}
+
+html.low-end-device .ai-suggestions ul,
+html.mobile-lite .ai-suggestions ul,
+html.perf-lite .ai-suggestions ul,
+body.ultra-performance .ai-suggestions ul {
+  animation-duration: 38s !important;
+}
+
+html.low-end-device .orb,
+html.mobile-lite .orb,
+html.perf-lite .orb,
+html.redmi-fluid-mode .orb,
+html.charging-fluid-mode .orb,
+body.ultra-performance .orb {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout paint;
+  box-shadow:
+    0 0 32px rgba(0, 255, 200, 0.78),
+    0 0 68px rgba(0, 200, 255, 0.52) !important;
+}
+html.low-end-device .orb::before,
+html.mobile-lite .orb::before,
+html.perf-lite .orb::before,
+html.redmi-fluid-mode .orb::before,
+html.charging-fluid-mode .orb::before,
+body.ultra-performance .orb::before {
+  filter: blur(22px) !important;
+  mix-blend-mode: normal !important;
+  opacity: 0.72 !important;
+  will-change: transform;
+}
+html.low-end-device .orb::after,
+html.mobile-lite .orb::after,
+html.perf-lite .orb::after,
+html.redmi-fluid-mode .orb::after,
+html.charging-fluid-mode .orb::after,
+body.ultra-performance .orb::after {
+  filter: blur(16px) !important;
+  mix-blend-mode: normal !important;
+}
+html.low-end-device .orb .aura,
+html.mobile-lite .orb .aura,
+html.perf-lite .orb .aura,
+html.redmi-fluid-mode .orb .aura,
+html.charging-fluid-mode .orb .aura,
+body.ultra-performance .orb .aura {
+  filter: blur(14px) !important;
+}
+html.low-end-device.ia-speaking-mode .ia-messages .msg,
+html.mobile-lite.ia-speaking-mode .ia-messages .msg,
+body.ultra-performance .ia-messages .msg {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   V62 — DISEÑO DEL INPUT DE IA (.ai-input), MEJORA VISUAL DEL CHAT DE IA,
+   MODO LLAMADA, SOPORTE DE IMÁGENES Y REDISEÑO ANIMADO DEL CHAT EN VIVO
+   ========================================================================== */
+
+:root {
+  --ai-primary-color: #7e22ce;
+  --ai-secondary-color: #4c1d95;
+  --ai-accent-color: #d946ef;
+  --ai-text-color: #00ffcc;
+  --ai-bg-color: #1e1e1e;
+  --ai-input-bg: #2d2d2d;
+  --ai-animation-color: #a855f7;
+  --ai-glow-color: rgba(168, 85, 247, 0.6);
+}
+
+.ai-input * {
+  box-sizing: border-box;
+}
+
+.ai-input.ai-input-row {
+  display: block;
+  width: 100%;
+  padding: 6px 0 2px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ai-input .container {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 4px;
+  animation: container-pulse 8s ease-in-out infinite;
+}
+
+@keyframes container-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+.ai-input .ai-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.ai-input .ai-input-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--ai-input-bg);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 20px rgba(126, 34, 206, 0.22);
+  transition: all 0.3s ease;
+  animation:
+    float-rotate 8s ease-in-out infinite,
+    subtle-float 6s ease-in-out infinite;
+}
+
+@keyframes float-rotate {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-0.35deg);
+  }
+  75% {
+    transform: translateY(2px) rotate(0.35deg);
+  }
+}
+
+@keyframes subtle-float {
+  0%,
+  100% {
+    box-shadow:
+      0 8px 16px rgba(0, 0, 0, 0.25),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 0 20px rgba(126, 34, 206, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.35),
+      inset 0 0 0 1px rgba(217, 70, 239, 0.28),
+      0 0 28px rgba(168, 85, 247, 0.35);
+  }
+}
+
+.ai-input .ai-input-field:focus-within {
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 2px var(--ai-accent-color),
+    0 0 32px var(--ai-glow-color);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.ai-input .twinkle-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.ai-input .twinkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 8px #00ffcc, 0 0 14px #d946ef;
+  opacity: 0;
+  animation: twinkle-anim 4s ease-in-out infinite;
+}
+
+.ai-input .twinkle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+.ai-input .twinkle:nth-child(2) { top: 70%; left: 22%; animation-delay: 0.4s; }
+.ai-input .twinkle:nth-child(3) { top: 30%; left: 35%; animation-delay: 0.8s; }
+.ai-input .twinkle:nth-child(4) { top: 80%; left: 48%; animation-delay: 1.2s; }
+.ai-input .twinkle:nth-child(5) { top: 25%; left: 60%; animation-delay: 1.6s; }
+.ai-input .twinkle:nth-child(6) { top: 65%; left: 72%; animation-delay: 2s; }
+.ai-input .twinkle:nth-child(7) { top: 18%; left: 82%; animation-delay: 2.4s; }
+.ai-input .twinkle:nth-child(8) { top: 75%; left: 90%; animation-delay: 2.8s; }
+.ai-input .twinkle:nth-child(9) { top: 45%; left: 16%; animation-delay: 3.2s; }
+.ai-input .twinkle:nth-child(10) { top: 50%; left: 52%; animation-delay: 3.6s; }
+
+@keyframes twinkle-anim {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.25);
+  }
+}
+
+.ai-input .flare {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168, 85, 247, 0.16),
+    rgba(0, 255, 204, 0.14),
+    transparent
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  animation: flare-move 6s ease-in-out infinite;
+}
+
+@keyframes flare-move {
+  0% { left: -100%; }
+  45%, 100% { left: 160%; }
+}
+
+.ai-input .floating-label {
+  position: absolute;
+  top: 5px;
+  left: 18px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(0, 255, 204, 0.72);
+  pointer-events: none;
+  transition: all 0.25s ease;
+  opacity: 0.85;
+  z-index: 2;
+}
+
+.ai-input .ai-input-field:focus-within .floating-label {
+  color: #d946ef;
+  text-shadow: 0 0 8px rgba(217, 70, 239, 0.6);
+}
+
+.ai-input #ai-input {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  color: var(--ai-text-color) !important;
+  font-size: 14px !important;
+  font-weight: 500;
+  padding: 20px 76px 10px 18px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  line-height: 1.3;
+  box-shadow: none !important;
+}
+
+.ai-input #ai-input::placeholder {
+  color: rgba(0, 255, 204, 0.48) !important;
+}
+
+.ai-input .animation-container {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ai-input .pulse-animation {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ai-accent-color);
+  box-shadow: 0 0 10px var(--ai-accent-color);
+  animation: ai-pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes ai-pulse-dot {
+  0%, 100% { transform: scale(0.8); opacity: 0.55; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+.ai-input .wave-animation {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+}
+
+.ai-input .wave-animation span {
+  display: block;
+  width: 2px;
+  height: 8px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #00ffcc, #a855f7);
+  animation: ai-wave-bar 1.2s ease-in-out infinite;
+}
+
+.ai-input .wave-animation span:nth-child(1) { animation-delay: 0s; }
+.ai-input .wave-animation span:nth-child(2) { animation-delay: 0.15s; }
+.ai-input .wave-animation span:nth-child(3) { animation-delay: 0.3s; }
+.ai-input .wave-animation span:nth-child(4) { animation-delay: 0.45s; }
+.ai-input .wave-animation span:nth-child(5) { animation-delay: 0.6s; }
+.ai-input .wave-animation span:nth-child(6) { animation-delay: 0.75s; }
+
+@keyframes ai-wave-bar {
+  0%, 100% { transform: scaleY(0.45); opacity: 0.55; }
+  50% { transform: scaleY(1.45); opacity: 1; }
+}
+
+.ai-input .typing-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ai-input .typing-indicator span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #00ffcc;
+  opacity: 0.45;
+  animation: ai-typing-bounce 1.4s ease-in-out infinite;
+}
+
+.ai-input .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.ai-input .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes ai-typing-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+.ai-input #send-button {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--ai-primary-color), var(--ai-accent-color));
+  color: #00ffcc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 6px 16px rgba(126, 34, 206, 0.45),
+    0 0 18px rgba(217, 70, 239, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  animation: send-btn-pulse 3.5s ease-in-out infinite;
+}
+
+.ai-input #send-button svg {
+  width: 21px;
+  height: 21px;
+  stroke: #00ffcc;
+  filter: drop-shadow(0 0 6px rgba(0, 255, 204, 0.65));
+  transition: transform 0.25s ease;
+}
+
+.ai-input #send-button:hover {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow:
+    0 10px 24px rgba(126, 34, 206, 0.65),
+    0 0 28px rgba(0, 255, 204, 0.5);
+}
+
+.ai-input #send-button:hover svg {
+  transform: translate(2px, -2px) rotate(-8deg);
+}
+
+.ai-input #send-button:active {
+  transform: scale(0.94);
+}
+
+@keyframes send-btn-pulse {
+  0%, 100% {
+    box-shadow:
+      0 6px 16px rgba(126, 34, 206, 0.45),
+      0 0 16px rgba(217, 70, 239, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 8px 22px rgba(168, 85, 247, 0.65),
+      0 0 24px rgba(0, 255, 204, 0.42);
+  }
+}
+
+/* Botón para adjuntar imágenes y barra de vista previa */
+.ai-attach-img-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 204, 0.32);
+  background: radial-gradient(circle at 30% 30%, rgba(126, 34, 206, 0.38), rgba(20, 24, 42, 0.92));
+  color: #00ffcc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 14px rgba(0, 255, 204, 0.16);
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.ai-attach-img-btn:hover,
+.ai-attach-img-btn.has-image {
+  transform: translateY(-2px) scale(1.06);
+  border-color: #d946ef;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(217, 70, 239, 0.42), 0 0 18px rgba(0, 255, 204, 0.35);
+}
+
+.ai-image-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 6px 6px;
+  padding: 7px 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(45, 22, 78, 0.88), rgba(14, 25, 45, 0.92));
+  border: 1px solid rgba(0, 255, 204, 0.38);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 16px rgba(168, 85, 247, 0.25);
+  animation: iaPreviewSlideIn 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ai-image-preview-bar[hidden] {
+  display: none !important;
+}
+
+@keyframes iaPreviewSlideIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+#ai-image-preview-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1.5px solid #00ffcc;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.35);
+}
+
+.ai-image-preview-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2f8ff;
+}
+
+.ai-image-preview-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 100, 130, 0.5);
+  background: rgba(255, 60, 95, 0.2);
+  color: #ff9bb3;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.ai-image-preview-remove:hover {
+  transform: scale(1.1);
+  background: rgba(255, 60, 95, 0.42);
+  color: #fff;
+}
+
+.ia-msg-user-img {
+  display: block;
+  max-width: min(230px, 100%);
+  max-height: 210px;
+  border-radius: 14px;
+  margin-bottom: 6px;
+  border: 1.5px solid rgba(0, 255, 204, 0.45);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  object-fit: cover;
+}
+
+.ia-msg-user-text {
+  display: block;
+}
+
+/* ==========================================================================
+   MEJORA DEL INTERFAZ DEL CHAT DE LA IA Y MODO LLAMADA
+   ========================================================================== */
+#ai-section .ia-card {
+  background: linear-gradient(160deg, rgba(14, 18, 36, 0.96) 0%, rgba(22, 13, 46, 0.96) 52%, rgba(9, 16, 32, 0.98) 100%) !important;
+  border: 1px solid rgba(0, 255, 204, 0.34) !important;
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.68),
+    0 0 38px rgba(126, 34, 206, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+}
+
+#ai-section .ia-header {
+  background: linear-gradient(90deg, rgba(126, 34, 206, 0.24), rgba(0, 242, 254, 0.14), rgba(217, 70, 239, 0.2)) !important;
+  border-bottom: 1px solid rgba(0, 255, 204, 0.22) !important;
+}
+
+#ai-section .ia-messages {
+  background:
+    radial-gradient(circle at 18% 15%, rgba(126, 34, 206, 0.14), transparent 46%),
+    radial-gradient(circle at 82% 80%, rgba(0, 255, 204, 0.10), transparent 50%),
+    rgba(8, 11, 24, 0.78) !important;
+  border: 1px solid rgba(168, 85, 247, 0.24) !important;
+  border-radius: 18px !important;
+}
+
+#ai-section .ia-messages .msg.bot {
+  background: linear-gradient(135deg, rgba(30, 22, 58, 0.92), rgba(16, 29, 52, 0.92)) !important;
+  border: 1px solid rgba(0, 255, 204, 0.30) !important;
+  color: #f2fbff !important;
+  border-radius: 18px 18px 18px 5px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), 0 0 14px rgba(0, 255, 204, 0.10) !important;
+}
+
+#ai-section .ia-messages .msg.user {
+  background: linear-gradient(135deg, rgba(126, 34, 206, 0.88), rgba(217, 70, 239, 0.82)) !important;
+  border: 1px solid rgba(0, 255, 204, 0.42) !important;
+  color: #ffffff !important;
+  border-radius: 18px 18px 5px 18px !important;
+  box-shadow: 0 6px 18px rgba(126, 34, 206, 0.36) !important;
+}
+
+.ia-call-voice-hint {
+  font-size: 12px;
+  color: rgba(214, 248, 255, 0.82);
+  background: rgba(0, 255, 204, 0.08);
+  border: 1px solid rgba(0, 255, 204, 0.25);
+  border-radius: 999px;
+  padding: 5px 14px;
+  margin: -2px auto 6px;
+  text-align: center;
+  max-width: 92%;
+}
+
+.ia-call-voice-hint strong {
+  color: #00ffcc;
+}
+
+/* ==========================================================================
+   MEJORA DEL DISEÑO Y ANIMACIÓN DEL CHAT EN VIVO (OPTIMIZADO PARA GAMA BAJA)
+   ========================================================================== */
+.livechat-toggle-bubble {
+  background: linear-gradient(135deg, #00f2fe 0%, #7e22ce 52%, #d946ef 100%) !important;
+  border: 2px solid rgba(0, 255, 204, 0.65) !important;
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.48),
+    0 0 22px rgba(0, 242, 254, 0.45),
+    0 0 36px rgba(217, 70, 239, 0.32) !important;
+  animation: livechatBubbleFloat 3.8s ease-in-out infinite !important;
+  will-change: transform;
+}
+
+@keyframes livechatBubbleFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -5px, 0) scale(1.05); }
+}
+
+.livechat-panel {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(126, 34, 206, 0.22), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(0, 242, 254, 0.16), transparent 46%),
+    linear-gradient(165deg, rgba(10, 14, 28, 0.97) 0%, rgba(18, 12, 38, 0.98) 60%, rgba(8, 13, 25, 0.99) 100%) !important;
+  border: 1px solid rgba(0, 255, 204, 0.36) !important;
+  border-radius: 24px !important;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.72),
+    0 0 36px rgba(0, 242, 254, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  transform-origin: bottom left;
+}
+
+.livechat-panel.open {
+  animation: livechatPanelOpen 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+@keyframes livechatPanelOpen {
+  0% { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.94); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.livechat-header {
+  background: linear-gradient(90deg, rgba(0, 242, 254, 0.18), rgba(126, 34, 206, 0.26), rgba(217, 70, 239, 0.18)) !important;
+  border-bottom: 1px solid rgba(0, 255, 204, 0.26) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.livechat-header::after {
+  content: "";
+  position: absolute;
+  left: -60%;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  transform: skewX(-24deg);
+  animation: livechatHeaderShimmer 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes livechatHeaderShimmer {
+  0% { transform: translate3d(0, 0, 0) skewX(-24deg); }
+  45%, 100% { transform: translate3d(440%, 0, 0) skewX(-24deg); }
+}
+
+.livechat-messages {
+  background:
+    radial-gradient(circle at 50% 25%, rgba(0, 242, 254, 0.06), transparent 60%),
+    rgba(6, 10, 22, 0.65) !important;
+}
+
+.livechat-msg {
+  background: linear-gradient(135deg, rgba(24, 30, 56, 0.90), rgba(16, 20, 40, 0.92)) !important;
+  border: 1px solid rgba(0, 242, 254, 0.22) !important;
+  border-radius: 16px 16px 16px 6px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28) !important;
+  animation: livechatMsgSlide 0.26s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+  will-change: transform, opacity;
+  transition: transform 0.2s ease, border-color 0.2s ease !important;
+}
+
+.livechat-msg:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: rgba(0, 255, 204, 0.45) !important;
+}
+
+.livechat-msg.own-msg {
+  background: linear-gradient(135deg, rgba(88, 28, 155, 0.88), rgba(32, 68, 128, 0.90)) !important;
+  border: 1px solid rgba(0, 255, 204, 0.42) !important;
+  border-radius: 16px 16px 6px 16px !important;
+  box-shadow: 0 6px 18px rgba(126, 34, 206, 0.30) !important;
+}
+
+@keyframes livechatMsgSlide {
+  0% { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.97); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.livechat-input-area {
+  background: linear-gradient(180deg, rgba(15, 20, 40, 0.92), rgba(10, 14, 28, 0.98)) !important;
+  border-top: 1px solid rgba(0, 255, 204, 0.24) !important;
+}
+
+.livechat-input-wrapper {
+  background: rgba(28, 32, 58, 0.92) !important;
+  border: 1px solid rgba(168, 85, 247, 0.38) !important;
+  border-radius: 999px !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease !important;
+}
+
+.livechat-input-wrapper:focus-within {
+  border-color: #00ffcc !important;
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.28), 0 0 24px rgba(168, 85, 247, 0.22) !important;
+  transform: translate3d(0, -1px, 0);
+}
+
+.livechat-send-btn {
+  background: linear-gradient(135deg, #00f2fe 0%, #7e22ce 55%, #d946ef 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(0, 255, 204, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.45) !important;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease !important;
+}
+
+.livechat-send-btn:hover {
+  transform: translate3d(0, -1px, 0) scale(1.06);
+  box-shadow: 0 6px 20px rgba(0, 242, 254, 0.52) !important;
+}
+
+/* Optimización de las nuevas animaciones (.ai-input y Chat en Vivo) para dispositivos de bajos recursos:
+   conserva la animación fluida usando únicamente transform/opacity por GPU y sin sombras pesadas */
+html.low-end-device .ai-input .ai-input-field,
+html.mobile-lite .ai-input .ai-input-field,
+html.perf-lite .ai-input .ai-input-field,
+body.ultra-performance .ai-input .ai-input-field {
+  animation: float-rotate 10s ease-in-out infinite !important;
+  box-shadow: inset 0 0 0 1px rgba(217, 70, 239, 0.35), 0 4px 10px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.low-end-device .ai-input .twinkle:nth-child(even),
+html.mobile-lite .ai-input .twinkle:nth-child(even),
+html.perf-lite .ai-input .twinkle:nth-child(even),
+body.ultra-performance .ai-input .twinkle:nth-child(even) {
+  display: none !important;
+}
+
+html.low-end-device .ai-input .twinkle,
+html.mobile-lite .ai-input .twinkle,
+html.perf-lite .ai-input .twinkle {
+  box-shadow: none !important;
+}
+
+html.low-end-device .livechat-panel,
+html.mobile-lite .livechat-panel,
+html.perf-lite .livechat-panel,
+body.ultra-performance .livechat-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.low-end-device .livechat-msg,
+html.mobile-lite .livechat-msg,
+html.perf-lite .livechat-msg,
+body.ultra-performance .livechat-msg {
+  box-shadow: none !important;
+  animation-duration: 0.2s !important;
+}
+
+
+
 
 

@@ -50,7 +50,7 @@
     }
 
     var TEXTOS = {
-        idle: 'En línea · modo local',
+        idle: 'En línea · IA Gemini',
         listening: 'Escuchando…',
         thinking: 'Pensando…',
         speaking: 'Hablando…'
@@ -145,13 +145,20 @@
     var pendientes = 0;
     var vigilante = null;
 
-    /* Sincronía labial: la boca cambia de forma con cada "sílaba" (ancho, alto, redondez). */
+    /* Sincronía labial: la boca cambia de forma con cada "sílaba" (ancho, alto, redondez).
+       En gama baja / ultrabaja se usa solo la animación CSS por GPU (0 timers JS y 0 reflujos). */
     var VISEMAS = [[.5, .16, 0], [.85, .6, .2], [1, 1, 0], [.62, .95, 1], [.92, .42, 0], [.45, .1, 0], [.75, .8, .6]];
-    var lipTimer = 0, visemaPrevio = -1, emphTimer = 0;
-    function equipoLento() { var h = document.documentElement.classList; return h.contains('low-end-device') || h.contains('mobile-lite'); }
+    var lipTimer = 0, visemaPrevio = -1, emphTimer = 0, ultimoBoundaryTs = 0;
+    function equipoLento() {
+        var h = document.documentElement.classList;
+        var b = document.body ? document.body.classList : h;
+        return h.contains('low-end-device') || h.contains('mobile-lite') || h.contains('perf-lite') ||
+               h.contains('fps-drop') || h.contains('redmi-fluid-mode') || h.contains('charging-fluid-mode') ||
+               b.contains('ultra-performance') || b.contains('no-animations');
+    }
     function pasoLabios() {
         lipTimer = 0;
-        if (!flags.hablando) return;
+        if (!flags.hablando || equipoLento()) return;
         var cerrar = Math.random() < .18, v;
         if (cerrar) v = [.5, .05, 0];
         else {
@@ -162,51 +169,79 @@
             if (!c.offsetParent) return;
             c.style.setProperty('--mw', v[0]); c.style.setProperty('--mh', v[1]); c.style.setProperty('--mr', v[2]);
         });
-        lipTimer = setTimeout(pasoLabios, (cerrar ? 145 : 105 + Math.random() * 105) * (equipoLento() ? 2.0 : 1));
+        lipTimer = setTimeout(pasoLabios, cerrar ? 175 : 135 + Math.random() * 110);
     }
     function iniciarLabios() {
-        if (sinAnimaciones()) return;
+        if (sinAnimaciones() || equipoLento()) return;
         caras.forEach(function (c) { c.classList.add('of-lipsync'); });
         if (!lipTimer) pasoLabios();
     }
     function detenerLabios() {
         clearTimeout(lipTimer); lipTimer = 0;
+        clearTimeout(emphTimer); emphTimer = 0;
         caras.forEach(function (c) {
             if (c.dataset.speakingSmile === '1') { if (window.OsitoFace && window.OsitoFace.poner) window.OsitoFace.poner(c,null,0); else c.removeAttribute('data-expr'); delete c.dataset.speakingSmile; }
             c.classList.remove('of-lipsync', 'of-emph');
             c.style.removeProperty('--mw'); c.style.removeProperty('--mh'); c.style.removeProperty('--mr');
         });
     }
-    // Énfasis: en cada palabra (si el navegador avisa) las cejas dan un saltito y la boca se abre más.
+    // Énfasis: en equipos normales da un saltito ligero; en gama baja se omite para máxima fluidez.
     function enfatizar() {
-        if (!flags.hablando || sinAnimaciones()) return;
+        if (!flags.hablando || sinAnimaciones() || equipoLento()) return;
+        var ahora = Date.now();
+        if (ahora - ultimoBoundaryTs < 240) return;
+        ultimoBoundaryTs = ahora;
         caras.forEach(function (c) {
             if (!c.offsetParent) return;
-            c.style.setProperty('--mw', 1); c.style.setProperty('--mh', 1); c.style.setProperty('--mr', 0);
             c.classList.add('of-emph');
         });
         clearTimeout(emphTimer);
-        emphTimer = setTimeout(function () { caras.forEach(function (c) { c.classList.remove('of-emph'); }); }, 170);
+        emphTimer = setTimeout(function () { caras.forEach(function (c) { c.classList.remove('of-emph'); }); }, 150);
+    }
+
+    function marcarMensajeHablando(activo) {
+        document.documentElement.classList.toggle('ia-speaking-mode', Boolean(activo));
+        var orb = document.getElementById('ia-call-orb');
+        if (orb) {
+            orb.classList.toggle('is-speaking', Boolean(activo));
+        }
+        var contenedor = document.getElementById('ai-messages');
+        if (!contenedor) return;
+        contenedor.classList.toggle('ia-speaking-active', Boolean(activo));
+        var bots = contenedor.querySelectorAll('.msg.bot:not(.typing)');
+        for (var i = 0; i < bots.length; i++) {
+            bots[i].classList.remove('ia-speaking-msg');
+        }
+        if (activo && bots.length) {
+            bots[bots.length - 1].classList.add('ia-speaking-msg');
+        }
     }
 
     function empezoAHablar() {
         flags.hablando = true;
         iniciarLabios();
+        marcarMensajeHablando(true);
         recalcular();
+        document.dispatchEvent(new CustomEvent('osito:tts-start'));
         if (!vigilante) {
-            // Por si el navegador cancela la voz sin avisar: apaga la boca.
+            // Por si el navegador cancela la voz sin avisar: apaga la boca y avisa a la llamada.
             vigilante = setInterval(function () {
                 if (synth && !synth.speaking && !synth.pending) { pendientes = 0; terminoDeHablar(true); }
-            }, 900);
+            }, 450);
         }
     }
     function terminoDeHablar(forzar) {
         if (!forzar) pendientes = Math.max(0, pendientes - 1);
         if (pendientes > 0) return;
+        var estabaHablando = flags.hablando;
         flags.hablando = false;
         detenerLabios();
+        marcarMensajeHablando(false);
         if (vigilante) { clearInterval(vigilante); vigilante = null; }
         recalcular();
+        if (estabaHablando) {
+            document.dispatchEvent(new CustomEvent('osito:tts-end'));
+        }
     }
 
     if (synth && typeof synth.speak === 'function') {
@@ -215,7 +250,9 @@
             try {
                 pendientes += 1;
                 utterance.addEventListener('start', empezoAHablar);
-                utterance.addEventListener('boundary', enfatizar);
+                if (!equipoLento()) {
+                    utterance.addEventListener('boundary', enfatizar);
+                }
                 utterance.addEventListener('end', function () { terminoDeHablar(false); });
                 utterance.addEventListener('error', function () { terminoDeHablar(false); });
             } catch (e) { /* si algo falla, la voz sigue funcionando igual */ }
@@ -254,21 +291,108 @@
     function mostrarEscribiendo() {
         if (!aiMessages) return function () {};
         var burbuja = document.createElement('div');
-        burbuja.className = 'msg bot typing';
-        burbuja.setAttribute('aria-label', 'La mascotita del Sotano está escribiendo');
-        burbuja.innerHTML = '<i></i><i></i><i></i>';
+        burbuja.className = 'msg bot typing ia-thinking-bubble';
+        burbuja.setAttribute('aria-label', 'La mascotita del Sotano está respondiendo');
+        burbuja.innerHTML =
+            '<span class="ia-thinking-head"><span class="ia-thinking-orb" aria-hidden="true">🤖</span><span class="ia-thinking-label">Pensando respuesta</span></span>' +
+            '<span class="ia-thinking-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>';
         aiMessages.appendChild(burbuja);
         aiMessages.scrollTop = aiMessages.scrollHeight;
+        if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+            window.OsitoFaceSound.reproducir('thinking');
+        }
         return function () { if (burbuja.parentNode) burbuja.parentNode.removeChild(burbuja); };
     }
 
+    var cacheClienteIA = Object.create(null);
+
+    function obtenerEndpointsIA() {
+        var urls = [];
+        var meta = document.querySelector('meta[name="osito-ia-url"]');
+        var custom = meta && meta.content ? String(meta.content).trim().replace(/\/+$/, '') : '';
+        if (custom) urls.push(custom + '/api/ia');
+        var proto = window.location && window.location.protocol;
+        if (proto === 'http:' || proto === 'https:') {
+            urls.push('/api/ia');
+        }
+        var remoto = 'https://ais-pre-3tuqw52dr436btgaqjk2om-121219840903.us-east5.run.app/api/ia';
+        if (urls.indexOf(remoto) === -1) urls.push(remoto);
+        return urls;
+    }
+
     /**
-     * Pregunta a Claude. Devuelve { texto } o { error }.
-     * error: 'sin_conexion' | 'ia_no_configurada' | 'muy_rapido' | 'limite_dia' | 'limite_total' | 'ia_no_disponible'
+     * Pregunta a la IA Gemini en el servidor (/api/ia) enviando historial de conversación.
+     * Devuelve { texto } o { error }.
      */
-    function preguntar() {
-        // V49.5: la IA funciona 100% local. No se llama a ningún servidor.
-        return Promise.resolve({ error: 'ia_local' });
+    async function preguntar(pregunta, opciones) {
+        var opts = opciones || {};
+        var imagen = typeof opts.imagen === 'string' && opts.imagen.startsWith('data:image/') ? opts.imagen : '';
+        var textoPregunta = String(pregunta || '').trim() || (imagen ? '¿Qué ves en esta imagen? Descríbela y ayúdame con lo que aparece.' : '');
+        if (!textoPregunta && !imagen) return { error: 'pregunta_vacia' };
+
+        var nombre = opts.nombre || localStorage.getItem('osito_ai_nombre') || '';
+        var genero = opts.genero || localStorage.getItem('osito_ai_genero') || '';
+        var historial = Array.isArray(opts.historial) ? opts.historial : historialDesdePantalla(textoPregunta);
+
+        var claveCache = !imagen ? (nombre + '|' + genero + '|' + textoPregunta.toLowerCase()) : '';
+        if (!imagen && historial.length <= 1 && claveCache && cacheClienteIA[claveCache]) {
+            return { texto: cacheClienteIA[claveCache] };
+        }
+
+        pidiendoAClaude = true;
+        flags.pensando = true;
+        recalcular();
+        var quitarEscribiendo = mostrarEscribiendo();
+
+        var endpoints = obtenerEndpointsIA();
+        var ultimoError = 'ia_no_disponible';
+
+        try {
+            for (var i = 0; i < endpoints.length; i++) {
+                var url = endpoints[i];
+                var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 16000 : 9500) : 0;
+                try {
+                    var payload = {
+                        pregunta: textoPregunta,
+                        nombre: nombre,
+                        genero: genero,
+                        historial: historial
+                    };
+                    if (imagen) payload.imagen = imagen;
+                    var res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        signal: ctrl ? ctrl.signal : undefined
+                    });
+                    if (timer) clearTimeout(timer);
+                    var data = await res.json().catch(function () { return {}; });
+                    if (res.ok && data && data.texto) {
+                        var limpio = String(data.texto).trim();
+                        if (!imagen && historial.length <= 1 && claveCache) cacheClienteIA[claveCache] = limpio;
+                        return { texto: limpio };
+                    }
+                    if (data && data.error) {
+                        ultimoError = data.error;
+                    }
+                } catch (err) {
+                    if (timer) clearTimeout(timer);
+                    ultimoError = (err && err.name === 'AbortError') ? 'ia_tiempo_agotado' : 'sin_conexion';
+                }
+            }
+            if (imagen) {
+                return { texto: 'Vi tu imagen adjunta 📷, pero en este momento la conexión con el motor visual tardó en responder. Intenta enviarla de nuevo o dime qué aparece en ella y te ayudo enseguida. 😊' };
+            }
+            var respaldoLocal = respuestaLibre(textoPregunta);
+            if (respaldoLocal) return { texto: respaldoLocal };
+            return { error: ultimoError };
+        } finally {
+            quitarEscribiendo();
+            pidiendoAClaude = false;
+            flags.pensando = false;
+            recalcular();
+        }
     }
 
     /* ---------- Respuestas libres sin Claude (chistes, datos, cuentas, charla) ---------- */
@@ -397,19 +521,33 @@
     function respuestaLibre(pregunta) {
         var t = plano(pregunta);
         if (!t) return null;
+        if (/\b(crea|crear|genera|generar|haz|hacer|dibuja|dibujar)\s+(una\s+|la\s+|algunas\s+)?(imagen|imagenes|foto|fotos|dibujo|ilustracion)\b/.test(t)) {
+            return 'No genero imágenes, pero puedo responderte cualquier pregunta, ayudarte con tus tareas, contarte sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube) o platicar contigo. 😊';
+        }
+        if (/(como se llama (tu|el) creador|quien (es (tu|el) creador|te creo|te hizo|te programo|creo (esta ia|el sitio|la pagina|el sotano))|cual es el nombre de (tu|el) creador|nombre de tu creador)/.test(t)) {
+            return 'Mi creador se llama Osito.';
+        }
+        if (/(como se llama (el|tu|su) canal|cual es (el nombre de(l| tu| su) canal|(tu|su|el) canal)|nombre de(l| tu| su) canal)/.test(t) && !/(primer|anterior|original|antes|video)/.test(t)) {
+            return 'El canal se llama OsitoGamer360YT (Osito Gamer 360 YouTube).';
+        }
         if (/\b(chiste|broma|hazme reir|chistoso)\b/.test(t)) return siguiente(CHISTES, 'chiste');
-        if (/dato curioso|curiosidad|sabias que|dime algo (interesante|curioso)/.test(t)) return siguiente(DATOS, 'dato');
+        if (/dato curioso|curiosidad|sabias que|dime algo (interesante|curioso)|cuentame algo/.test(t)) return siguiente(DATOS, 'dato');
         var c = calcular(pregunta); if (c) return c;
-        if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy para lo que necesites. 😄';
-        if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano. 👋';
-        if (/como estas|que tal estas|como te va|como andas/.test(t)) return '¡Muy bien, con mucha energía! Gracias por preguntar. ¿Y tú cómo estás? 😊';
-        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy La mascotita del Sotano, vivo aquí mismo en la página. Puedo contarte sobre el canal, chistes, datos curiosos y más. 🤖';
-        if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return 'Claro. Cuéntame de qué materia es y qué te piden, y lo vemos paso a paso. 📚';
+        if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy en El Sótano de Osito para lo que necesites. 😄';
+        if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano de Osito. 👋';
+        if (/como estas|que tal estas|como te va|como andas|todo bien/.test(t)) return '¡Muy bien, con mucha energía! Gracias por preguntar. ¿Y tú cómo estás hoy? 😊';
+        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy La mascotita del Sótano, la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoGamer360YT (Osito Gamer 360 YouTube). Puedo conversar contigo en chat o en llamada, responder todas las preguntas del canal, ayudarte con tareas, matemáticas y mucho más. 🤖✨';
+        if (/quien es osito|hablame de osito|sobre osito/.test(t)) return 'Osito (creador del canal OsitoGamer360YT / Osito Gamer 360 YouTube) es un creador de contenido salvadoreño nacido el 28 de septiembre de 2008. Su canal actual empezó el 2 de junio de 2022 y sube videos de Minecraft, Roblox, Craftsman, BedWars y más. 🎮';
+        if (/minecraft|survivalang/.test(t)) return '¡Minecraft es uno de los juegos favoritos de Osito para grabar! Además en el canal OsitoGamer360YT tiene la serie Survivalang y le encanta construir, jugar survival y BedWars con la comunidad. ⛏️';
+        if (/roblox/.test(t)) return '¡Roblox es de los juegos que más disfruta grabar Osito junto con Minecraft! También les encanta a los seguidores del canal OsitoGamer360YT. 🎮';
+        if (/craftsman|bedwars/.test(t)) return 'Craftsman y BedWars son súper especiales en el canal: Osito planea crear un servidor y revivir esa comunidad tan nostálgica con los mapas antiguos. ⚔️';
+        if (/estoy aburrido|me aburro|que hago/.test(t)) return '¡Para quitar el aburrimiento puedes ver un video o directo de OsitoGamer360YT aquí en la página, iniciar una llamada conmigo, pedirme un chiste o un dato curioso! 😄';
+        if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return '¡Claro! Dime exactamente qué pregunta de tu tarea o qué cuenta matemática tienes y te la explico paso a paso. 📚';
         return null;
     }
     function mensajeSinClaude(codigo) {
         if (codigo === 'ia_local' || codigo === 'ia_no_configurada' || codigo === 'ia_no_disponible' || codigo === 'ia_tiempo_agotado' || codigo === 'ia_sin_respuesta') {
-            return 'Eso todavía no lo sé. Pregúntame sobre el canal, pídeme un chiste, un dato curioso o una cuenta sencilla. 🙏';
+            return '¡Qué interesante! Pregúntame lo que quieras sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube), videojuegos como Minecraft y Roblox, cuentas matemáticas, datos curiosos o platica conmigo. 😊';
         }
         return null;
     }
@@ -451,13 +589,26 @@
         var rol = e && e.detail && e.detail.role;
         if (rol === 'bot') {
             if (window.OsitoFace) window.OsitoFace.reaccionarTexto(e.detail.text);
+            if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                window.OsitoFaceSound.reproducir('msg_receive');
+            }
             caras.forEach(function (cara) {
-                cara.classList.remove('of-boing');
+                cara.classList.remove('of-boing', 'of-spin-joy');
                 void cara.offsetWidth;
-                cara.classList.add('of-boing');
+                cara.classList.add(Math.random() < 0.35 ? 'of-spin-joy' : 'of-boing');
+                setTimeout(function () { cara.classList.remove('of-spin-joy'); }, 780);
             });
         } else if (rol === 'user') {
             paraTodas('curious', 950);
+            if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                window.OsitoFaceSound.reproducir('msg_send');
+            }
+            caras.forEach(function (cara) {
+                cara.classList.remove('of-wiggle');
+                void cara.offsetWidth;
+                cara.classList.add('of-wiggle');
+                setTimeout(function () { cara.classList.remove('of-wiggle'); }, 620);
+            });
         }
     });
 
@@ -659,28 +810,34 @@
         hayVideo = ahora;
     }, 1200);
 
-    // Clic/toque en la cara: reacciona. Si le das clic muy rápido se marea, se enoja y luego pide perdón.
+    // Clic/toque en la cara: reacciona con más animaciones y sonidos variados.
     var clics = 0, clicTimer = 0;
+    var CLASES_ANIM_EXTRA = ['of-boing', 'of-spin-joy', 'of-wiggle', 'of-flip-3d', 'of-party-bounce'];
+    var SONIDOS_CLIC_EXTRA = ['tap', 'jump', 'party', 'robot', 'boing', 'sparkle'];
     caras.forEach(function (cara) {
         cara.addEventListener('click', function () {
             if (quieta()) return;
             clics += 1;
             clearTimeout(clicTimer);
-            clicTimer = setTimeout(function () { clics = 0; }, 1500);
-            cara.classList.remove('of-boing'); void cara.offsetWidth; cara.classList.add('of-boing');
+            clicTimer = setTimeout(function () { clics = 0; }, 1600);
+            var claseExtra = CLASES_ANIM_EXTRA[clics % CLASES_ANIM_EXTRA.length];
+            CLASES_ANIM_EXTRA.forEach(function (cls) { cara.classList.remove(cls); });
+            void cara.offsetWidth;
+            cara.classList.add(claseExtra);
             if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
-                window.OsitoFaceSound.reproducir(clics >= 3 ? 'boing' : 'tap');
+                var sPick = clics >= 4 ? 'party' : SONIDOS_CLIC_EXTRA[(clics - 1) % SONIDOS_CLIC_EXTRA.length];
+                window.OsitoFaceSound.reproducir(sPick);
             }
-            setTimeout(function () { cara.classList.remove('of-boing'); }, 600);
+            setTimeout(function () { cara.classList.remove(claseExtra); }, 720);
             if (clics >= 7) {
                 clics = 0;
                 paraTodas('angry', 1800);
                 setTimeout(function () { paraTodas('sad', 1800); }, 1900);
             } else if (clics >= 5) paraTodas('dizzy', 1200);
-            else if (clics === 4) poner(cara, 'confused', 1100);
-            else if (clics === 3) poner(cara, 'excited', 1300);
+            else if (clics === 4) poner(cara, 'excited', 1300);
+            else if (clics === 3) poner(cara, 'dance', 1400);
             else if (clics === 2) poner(cara, 'wink', 1000);
-            else { var v1 = ['love', 'joy', 'shy', 'laugh', 'cool', 'kiss', 'dance']; poner(cara, v1[Math.floor(Math.random() * v1.length)], 1700); }
+            else { var v1 = ['love', 'joy', 'shy', 'laugh', 'cool', 'kiss', 'dance', 'excited']; poner(cara, v1[Math.floor(Math.random() * v1.length)], 1700); }
         });
     });
 

@@ -12,7 +12,7 @@
     const API_BASE = 'https://www.googleapis.com/youtube/v3';
     const MASCOT_NAME = 'La mascotita del Sotano';
     const DEFAULT_HINT = 'Pulsa el microfono para hablar';
-    const CHANNEL_NAME = 'OsitoYT360';
+    const CHANNEL_NAME = 'OsitoGamer360YT';
     const LIVE_URL = 'https://www.youtube.com/@OsitoYT360/live';
     const CHANNEL_URL = 'https://www.youtube.com/@OsitoYT360';
 
@@ -583,8 +583,51 @@
     }
 
     // Tiempos de espera del micrófono (en milisegundos).
-    const ESPERA_SIN_HABLAR_MS = 15000; // Si nadie dice nada, se apaga a los 15s.
-    const ESPERA_TRAS_HABLAR_MS = 2000; // Al terminar de hablar, espera 2s de silencio y corta.
+    const ESPERA_SIN_HABLAR_MS = 12000; // Si nadie dice nada, se apaga a los 12s.
+    const ESPERA_TRAS_HABLAR_MS = 1150; // Al terminar de hablar, espera ~1.1s de silencio y envía de inmediato.
+
+    function escribirEnCajaChatEnVivo(texto, esParcial) {
+        const input = getEl('ai-input');
+        const form = getEl('ai-form');
+        const callSub = getEl('ia-call-subtitle');
+        const callBadge = getEl('ia-call-state-badge');
+        if (input) {
+            if (input.disabled) {
+                // Si el usuario aún no había tocado Osito/Osita, seleccionamos Osito automáticamente al hablar por micrófono
+                const btnMale = document.querySelector('.ai-gender-btn[data-gender="male"]');
+                if (btnMale) btnMale.click();
+                input.disabled = false;
+            }
+            input.value = texto;
+            input.classList.toggle('ia-input-dictating', Boolean(esParcial && texto));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.scrollTop = input.scrollHeight;
+        }
+        if (callSub && window.ositoEnLlamadaIA) {
+            callSub.textContent = texto
+                ? `🎙️ Tú: "${texto}"`
+                : '🎙️ Micrófono encendido · Te escucho, habla cuando quieras...';
+        }
+        if (callBadge && window.ositoEnLlamadaIA && esParcial) {
+            callBadge.textContent = texto ? '🎙️ Escuchando tu voz...' : '🎙️ Tu turno · Micrófono activo';
+        }
+        if (form) {
+            let banner = form.querySelector('.ia-mic-live-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.className = 'ia-mic-live-banner';
+                banner.setAttribute('aria-live', 'polite');
+                banner.innerHTML =
+                    '<span class="ia-mic-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>' +
+                    '<span class="ia-mic-live-text">Escuchando tu voz...</span>';
+                form.insertBefore(banner, form.firstChild);
+            }
+            const txtEl = banner.querySelector('.ia-mic-live-text');
+            if (txtEl) {
+                txtEl.textContent = texto ? `🎙️ "${texto}"` : '🎙️ Escuchando... habla ahora';
+            }
+        }
+    }
 
     function esModoInvitado() {
         if (typeof window.osEsInvitado === 'function') return window.osEsInvitado();
@@ -641,6 +684,12 @@
                 this.sessionFinalResults = Object.create(null);
                 this.isListening = true;
                 this.setState(State.LISTENING, { label: 'Escuchando... habla ahora' });
+                if (!this.hasHeardSpeech) {
+                    escribirEnCajaChatEnVivo('', true);
+                    if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                        window.OsitoFaceSound.reproducir('mic_on');
+                    }
+                }
                 this.scheduleDeadlineCheck();
             };
 
@@ -674,7 +723,25 @@
                 if (finalAdded || interimText) {
                     this.hasHeardSpeech = true;
                     this.lastSpeechTime = Date.now();
-                    setStatusLabel('Escuchando... habla ahora');
+                    const textoEnVivo = [this.accumulatedTranscript, this.pendingSpeech]
+                        .filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+                    const normEnVivo = normalize(textoEnVivo);
+                    if (window.ositoEnLlamadaIA && /\b(cuelga( la llamada)?|colgar( la llamada)?|termina(r)?( la)? llamada|finaliza(r)?( la)? llamada|corta(r)?( la)? llamada|cierra( la)? llamada|salir de( la)? llamada)\b/.test(normEnVivo)) {
+                        this.accumulatedTranscript = '';
+                        this.pendingSpeech = null;
+                        this.stopListening();
+                        const input = getEl('ai-input');
+                        if (input) {
+                            input.value = '';
+                            input.classList.remove('ia-input-dictating');
+                        }
+                        if (typeof window.finalizarLlamadaIA === 'function') {
+                            window.finalizarLlamadaIA();
+                        }
+                        return;
+                    }
+                    escribirEnCajaChatEnVivo(textoEnVivo, true);
+                    setStatusLabel(textoEnVivo ? `🎙️ ${textoEnVivo}` : 'Escuchando... habla ahora');
                     this.scheduleDeadlineCheck();
                 }
             };
@@ -729,8 +796,26 @@
                 const transcript = (this.accumulatedTranscript || this.pendingSpeech || '').trim();
                 this.accumulatedTranscript = '';
                 this.pendingSpeech = null;
+                const inputEl = getEl('ai-input');
+                if (inputEl) inputEl.classList.remove('ia-input-dictating');
                 if (transcript) {
+                    escribirEnCajaChatEnVivo(transcript, false);
+                    if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
+                        window.OsitoFaceSound.reproducir('mic_off');
+                    }
+                    const callBadge = getEl('ia-call-state-badge');
+                    if (callBadge && window.ositoEnLlamadaIA) {
+                        callBadge.textContent = '⚡ Micrófono apagado · Pensando respuesta...';
+                    }
                     this.process(transcript);
+                    return;
+                }
+                if (window.ositoEnLlamadaIA && !this.manualStop && !(window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending))) {
+                    setTimeout(() => {
+                        if (window.ositoEnLlamadaIA && !this.isListening && !(window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending))) {
+                            this.startListening(true);
+                        }
+                    }, 260);
                     return;
                 }
                 if (this.state === State.LISTENING) {
@@ -740,14 +825,15 @@
             };
         }
 
-        // Calcula cuánto falta para el próximo límite de tiempo (15s sin hablar,
-        // o 2s de silencio tras la última palabra) y programa una sola revisión
+        // Calcula cuánto falta para el próximo límite de tiempo (12s sin hablar,
+        // o ~1s de silencio tras la última palabra) y programa una sola revisión
         // en ese momento. Se reprograma cada vez que llega audio nuevo, así que
         // sobrevive sin problema a los reinicios silenciosos del micrófono.
         scheduleDeadlineCheck() {
             this.detenerTemporizadorDeadline();
+            const esperaSilencio = window.ositoEnLlamadaIA ? 980 : ESPERA_TRAS_HABLAR_MS;
             const deadline = this.hasHeardSpeech
-                ? this.lastSpeechTime + ESPERA_TRAS_HABLAR_MS
+                ? this.lastSpeechTime + esperaSilencio
                 : this.sessionStartTime + ESPERA_SIN_HABLAR_MS;
             const delay = Math.max(0, deadline - Date.now());
             this.deadlineTimeoutId = setTimeout(() => this.checkDeadline(), delay);
@@ -756,13 +842,20 @@
         checkDeadline() {
             if (!this.isListening) return;
             const ahora = Date.now();
+            const esperaSilencio = window.ositoEnLlamadaIA ? 980 : ESPERA_TRAS_HABLAR_MS;
             if (this.hasHeardSpeech) {
-                if ((ahora - this.lastSpeechTime) >= ESPERA_TRAS_HABLAR_MS) {
+                if ((ahora - this.lastSpeechTime) >= esperaSilencio) {
                     this.finalizarEscucha();
                 } else {
                     this.scheduleDeadlineCheck();
                 }
             } else if ((ahora - this.sessionStartTime) >= ESPERA_SIN_HABLAR_MS) {
+                if (window.ositoEnLlamadaIA) {
+                    // En modo llamada mantiene el micrófono atento esperando a que la persona hable
+                    this.sessionStartTime = Date.now();
+                    this.scheduleDeadlineCheck();
+                    return;
+                }
                 setStatusLabel('No escuché nada, inténtalo de nuevo.');
                 this.finalizarEscucha();
             } else {
@@ -779,6 +872,47 @@
                 this.recognition?.stop();
             } catch (error) {
                 console.warn('[VoiceAssistant]', error);
+            }
+        }
+
+        stopListening() {
+            this.manualStop = true;
+            this.intentionalStop = true;
+            this.detenerTemporizadorDeadline();
+            if (this.isListening) {
+                try {
+                    this.recognition?.stop();
+                } catch (e) {}
+            }
+            this.isListening = false;
+        }
+
+        startListening(silencioso = false) {
+            if (!this.recognition) {
+                if (!silencioso) showToast('Este navegador no admite reconocimiento de voz.');
+                return false;
+            }
+            if (this.isListening) return true;
+            if (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+                if (!window.ositoEnLlamadaIA) {
+                    window.speechSynthesis.cancel();
+                } else {
+                    return false;
+                }
+            }
+            this.manualStop = false;
+            this.intentionalStop = false;
+            this.hasHeardSpeech = false;
+            this.sessionStartTime = Date.now();
+            this.lastSpeechTime = 0;
+            this.accumulatedTranscript = '';
+            this.pendingSpeech = null;
+            try {
+                this.recognition.start();
+                return true;
+            } catch (error) {
+                console.warn('[VoiceAssistant]', error);
+                return false;
             }
         }
 
@@ -813,39 +947,24 @@
                 window.speechSynthesis?.cancel();
                 this.setState(State.IDLE, { label: DEFAULT_HINT });
                 setStatusLabel(DEFAULT_HINT);
+                if (window.ositoEnLlamadaIA) {
+                    setTimeout(() => this.startListening(true), 180);
+                }
                 return;
             }
 
             if (this.isListening) {
-                this.manualStop = true;
-                this.recognition?.stop();
+                if (this.hasHeardSpeech && (this.accumulatedTranscript || this.pendingSpeech)) {
+                    this.finalizarEscucha();
+                } else {
+                    this.stopListening();
+                    this.setState(State.IDLE, { label: DEFAULT_HINT });
+                    setStatusLabel(DEFAULT_HINT);
+                }
                 return;
             }
 
-            if (esModoInvitado()) {
-                showToast('Inicia sesión para usar el micrófono de La mascotita del Sotano.');
-                setStatusLabel('Micrófono disponible solo con cuenta');
-                return;
-            }
-
-            if (!this.recognition) {
-                showToast('Este navegador no admite reconocimiento de voz.');
-                return;
-            }
-
-            this.manualStop = false;
-            this.intentionalStop = false;
-            this.hasHeardSpeech = false;
-            this.sessionStartTime = Date.now();
-            this.lastSpeechTime = 0;
-            this.accumulatedTranscript = '';
-            this.pendingSpeech = null;
-
-            try {
-                this.recognition.start();
-            } catch (error) {
-                console.warn('[VoiceAssistant]', error);
-            }
+            this.startListening(false);
         }
 
         async process(rawText) {
@@ -858,15 +977,26 @@
             let command = detectIntent(rawText);
             let response = '';
 
-            // V48: la IA ahora responde cualquier pregunta con Claude. Si lo dicho es una pregunta
-            // general ("¿qué es un volcán?", "explícame...") o una frase larga, no se confunde con
-            // una orden del sitio (música, pestañas, ayuda...) y se envía a la IA.
-            const PREGUNTA_GENERAL = /^(que|como|cual|cuales|quien|quienes|por que|porque|cuando|cuanto|cuantos|cuantas|donde|explica|explicame|dime|cuentame|ayudame|sabes|puedes explicar|me puedes explicar)\b/;
+            // La IA ahora responde cualquier pregunta y conversa con Gemini. Si lo dicho es una pregunta
+            // o una frase conversacional, no se confunde con una orden del sitio y se envía al panel de IA.
+            const normRaw = normalize(rawText);
+            if (/\b(cuelga( la llamada)?|colgar( la llamada)?|termina(r)?( la)? llamada|finaliza(r)?( la)? llamada|corta(r)?( la)? llamada|cierra( la)? llamada|salir de( la)? llamada)\b/.test(normRaw)) {
+                const input = getEl('ai-input');
+                if (input) input.value = '';
+                if (typeof window.finalizarLlamadaIA === 'function') {
+                    window.finalizarLlamadaIA();
+                }
+                this.setState(State.IDLE, { label: DEFAULT_HINT });
+                setStatusLabel(DEFAULT_HINT);
+                return;
+            }
+            const PREGUNTA_O_CHARLA = /\b(que|como|cual|cuales|quien|quienes|por que|porque|cuando|cuanto|cuantos|cuantas|donde|explica|explicame|dime|cuentame|ayudame|sabes|puedes|vas a|volveras|haras|tienes|te gusta|juegas|osito|edad|anos|años|cumpleanos|canal|primer|favorito|craftsman|bedwars|santiago|survivalang|creador)\b/;
+            const ES_ORDEN_EXPLICITA = /^(abre|abrir|ir a|ve a|llevame a|mostrar|muestrame|ver pestana|cambia a|activar|desactivar|modo ultra|pausa|reanuda|silencia)\b/;
             const SOLO_SI_ES_ORDEN = ['music', 'tab', 'toggle', 'search', 'font', 'compact', 'theme', 'advanced_animation', 'promo', 'playlists'];
             const SOLO_SI_ES_CORTO = ['greeting', 'thanks', 'help'];
             const palabras = tokenize(rawText).length;
-            if ((PREGUNTA_GENERAL.test(normalize(rawText)) && SOLO_SI_ES_ORDEN.includes(command.type))
-                || (palabras > 5 && SOLO_SI_ES_CORTO.includes(command.type))) {
+            if ((SOLO_SI_ES_ORDEN.includes(command.type) && (PREGUNTA_O_CHARLA.test(normRaw) || !ES_ORDEN_EXPLICITA.test(normRaw)))
+                || (palabras > 3 && SOLO_SI_ES_CORTO.includes(command.type))) {
                 command = { type: 'forward', text: rawText };
             }
 
@@ -1053,7 +1183,7 @@
                 ].join(' ');
             }
 
-            if (command.type === 'forward') {
+            if (command.type === 'forward' || command.type === 'unknown') {
                 const input = getEl('ai-input');
                 const form = getEl('ai-form');
                 if (input && form) {
@@ -1070,7 +1200,7 @@
                 return '';
             }
 
-            return 'No entendi esa orden. Prueba con otra frase.';
+            return '';
         }
 
         openTab(tab) {
@@ -1180,9 +1310,14 @@
 
         document.addEventListener('voiceassistant:state', ({ detail }) => {
             const active = detail.state !== State.IDLE;
+            const form = getEl('ai-form');
+            const panel = getEl('ai-section');
             mic?.classList.toggle('listening', detail.state === State.LISTENING);
             mic?.classList.toggle('processing', detail.state === State.PROCESSING);
             mic?.classList.toggle('speaking', detail.state === State.SPEAKING);
+            form?.classList.toggle('mic-listening-active', detail.state === State.LISTENING);
+            form?.classList.toggle('mic-processing-active', detail.state === State.PROCESSING);
+            panel?.classList.toggle('ia-panel-listening', detail.state === State.LISTENING);
             mic?.setAttribute('aria-pressed', detail.state === State.LISTENING ? 'true' : 'false');
             mic?.setAttribute('title', detail.state === State.LISTENING ? 'Detener escucha' : 'Pulsar para hablar');
             if (status) status.textContent = detail.label || DEFAULT_HINT;

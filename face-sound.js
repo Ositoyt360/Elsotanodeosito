@@ -317,8 +317,98 @@
         rebuscar: function () { [0, 0.18, 0.36].forEach(function (t) { ruido(t, 0.14, 0.09, 'bandpass', 1000 + Math.random() * 800, 2800, 1.2, 0.03); }); },
         cremallera: function () { ruido(0, 0.42, 0.09, 'bandpass', 1500, 4000, 3, 0.06); },
         varita: function () { tono(800, 1700, 0, 0.3, 'sine', 0.08, { vib: 9, vibd: 26 }); campana(1760, 0.28, 0.08, 0.6); },
+        // Sonidos del chat de IA y micrófono en vivo
+        mic_on: function () {
+            tono(523, 784, 0, 0.09, 'sine', 0.18);
+            tono(784, 1175, 0.08, 0.14, 'triangle', 0.15);
+            campana(1568, 0.15, 0.09, 0.45);
+        },
+        mic_off: function () {
+            tono(988, 659, 0, 0.09, 'sine', 0.15);
+            tono(784, 1047, 0.09, 0.12, 'triangle', 0.14);
+        },
+        msg_send: function () {
+            tono(440, 880, 0, 0.075, 'sine', 0.15, { a: 0.005 });
+            tono(880, 1320, 0.055, 0.08, 'triangle', 0.09, { a: 0.005 });
+        },
+        msg_receive: function () {
+            campana(988, 0, 0.14, 0.45);
+            campana(1319, 0.07, 0.13, 0.5);
+            tono(1568, 1976, 0.14, 0.18, 'sine', 0.08);
+        },
+        call_start: function () {
+            campana(523, 0, 0.14, 0.35);
+            campana(659, 0.09, 0.14, 0.4);
+            campana(784, 0.18, 0.14, 0.45);
+            campana(1047, 0.27, 0.16, 0.6);
+        },
+        call_end: function () {
+            tono(784, 523, 0, 0.14, 'triangle', 0.15);
+            tono(523, 330, 0.12, 0.18, 'sine', 0.15);
+        },
+        party: function () {
+            [523, 659, 784, 1047, 1319].forEach(function (f, i) {
+                campana(f, i * 0.055, 0.12, 0.42);
+            });
+            tono(1047, 1568, 0.28, 0.22, 'triangle', 0.11, { vib: 12, vibd: 25 });
+        },
+        robot: function () {
+            [680, 920, 540, 1180, 860].forEach(function (f, i) {
+                tono(f, f * 1.08, i * 0.045, 0.04, 'square', 0.06, { a: 0.003 });
+            });
+        },
+        jump: function () {
+            tono(260, 740, 0, 0.16, 'sine', 0.18, { a: 0.006 });
+            tono(740, 980, 0.12, 0.11, 'triangle', 0.11);
+        },
+        // Sonidos dedicados al dar Like / Dislike en videos
+        like_click: function () {
+            tono(523, 784, 0, 0.08, 'sine', 0.22, { a: 0.003 });
+            tono(784, 1047, 0.06, 0.10, 'triangle', 0.20, { a: 0.003 });
+            campana(1568, 0.12, 0.14, 0.45);
+        },
+        dislike_click: function () {
+            tono(440, 294, 0, 0.12, 'triangle', 0.20, { a: 0.004 });
+            tono(294, 196, 0.10, 0.18, 'sawtooth', 0.14, { lp: 650 });
+        },
+        like_remove: function () {
+            tono(659, 440, 0, 0.09, 'sine', 0.14, { a: 0.004 });
+        },
+        // Sonidos de expresiones emocionales mientras duerme / sueña
+        sleep_giggle: function () {
+            [587, 698, 784, 880].forEach(function (f, i) {
+                tono(f, f * 1.12, i * 0.08, 0.09, 'sine', 0.12, { a: 0.006 });
+            });
+            campana(1175, 0.32, 0.07, 0.35);
+        },
+        sleep_love: function () {
+            tono(523, 659, 0, 0.22, 'sine', 0.12, { vib: 5, vibd: 10 });
+            tono(659, 784, 0.20, 0.28, 'sine', 0.12, { vib: 6, vibd: 12 });
+            campana(1319, 0.42, 0.08, 0.45);
+        },
+        sleep_mumble: function () {
+            [280, 340, 260, 370, 310].forEach(function (f, i) {
+                tono(f, f * 0.92, i * 0.09, 0.08, 'triangle', 0.11, { lp: 900, vib: 8, vibd: 12 });
+            });
+        },
+        sleep_shiver: function () {
+            tono(420, 380, 0, 0.26, 'sine', 0.12, { vib: 26, vibd: 32 });
+            tono(360, 280, 0.28, 0.22, 'sine', 0.10);
+        },
+        sleep_chew: function () {
+            [0, 0.16, 0.32].forEach(function (t, i) {
+                tono(330 + i * 30, 440, t, 0.07, 'sine', 0.11);
+                ruido(t + 0.02, 0.04, 0.06, 'bandpass', 1400, 2600, 1.4, 0.004);
+            });
+        },
+        sleep_sigh: function () {
+            tono(494, 330, 0, 0.42, 'sine', 0.13, { a: 0.03 });
+            ruido(0.04, 0.35, 0.05, 'bandpass', 600, 1200, 1.2, 0.04);
+        }
     };
     SONIDOS.sleeping = SONIDOS.sleepy; // al quedarse dormida suena la nana
+    SONIDOS.happy = SONIDOS.joy;
+    SONIDOS.surprised = SONIDOS.wow;
 
     /* V61 — cada gesto de cada objeto tiene su sonido. */
     var SONIDO_ACTO = {
@@ -331,6 +421,7 @@
         'pl-hug': 'peluche', 'pl-pat': 'peluche', 'pl-squeeze': 'peluche',
         'pz-smell': 'olfatear', 'pz-spin': 'giro', 'pz-take': 'morder',
         'ap-polish': 'pulir', 'ap-smell': 'olfatear', 'ap-bite': 'morder',
+        'f-bite': 'morder', 'f-chew': 'morder',
         'lp-open': 'abrirlaptop', 'lp-type': 'teclear', 'lp-track': 'clic',
         'bk-open': 'cremallera', 'bk-search': 'rebuscar', 'bk-close': 'cremallera',
         'ba-bounce': 'rebote', 'ba-spin': 'giro',
@@ -341,7 +432,7 @@
     };
     var SONIDO_BEAT = {
         aha: 'aha', buzz: 'vibrar', sip: 'sorbo', blow: 'soplar', win: 'ganar', lose: 'perder', fail: 'perder',
-        bite: 'morder', kick: 'patada', magic: 'magia', open: 'abrir', flash: 'obturador', lift: 'morder', sing: 'cantar'
+        bite: 'morder', 'eat-bite': 'morder', 'eat-finish': 'morder', 'chew-half': 'morder', kick: 'patada', magic: 'magia', open: 'abrir', flash: 'obturador', lift: 'morder', sing: 'cantar'
     };
     function nombreActo(a) { return SONIDO_ACTO[a] || (a ? 'tap' : ''); }
 
@@ -363,14 +454,17 @@
         if (document.getElementById('welcome-screen')) return false; // V61: nada suena en la pantalla de inicio de sesión
         if (!crearContexto() || ctx.state !== 'running') { if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} } return false; }
         var ahora = Date.now();
-        // Mismo sonido dos veces seguidas (hay dos caras: burbuja y encabezado) = uno solo.
-        if (porNombre[nombre] && ahora - porNombre[nombre] < 450) return false;
-        if (nombre !== 'listening' && nombre !== 'snore' && algunaEscuchando()) return false;
-        if (nombre !== 'snore' && vozHablando()) return false;
+        var esReaccionLike = (nombre === 'like_click' || nombre === 'dislike_click' || nombre === 'like_remove');
+        // Mismo sonido dos veces seguidas (hay dos caras: burbuja y encabezado) = uno solo, excepto en clics rápidos de like/dislike.
+        if (!esReaccionLike && porNombre[nombre] && ahora - porNombre[nombre] < 450) return false;
+        var esSonidoChat = (nombre === 'mic_on' || nombre === 'mic_off' || nombre === 'msg_send' || nombre === 'msg_receive' || nombre === 'thinking' || nombre === 'call_start' || nombre === 'call_end' || esReaccionLike);
+        var esSueno = (nombre === 'snore' || nombre === 'sleeping' || nombre.indexOf('sleep_') === 0);
+        if (!esSonidoChat && nombre !== 'listening' && !esSueno && algunaEscuchando()) return false;
+        if (!esSonidoChat && !esSueno && vozHablando()) return false;
         // V49.5: también suena con el panel cerrado (la cara de la burbuja). Lo que provoca la persona
         // (cursor, toque, like/dislike) suena siempre; lo que la cara hace sola, con una pausa entre sonidos.
-        var provocado = ahora - ultimoUsuarioCara < 2600;
-        var libre = (nombre === 'snore' || nombre === 'sleeping'); // la cara dormida suena sola, de noche
+        var provocado = esReaccionLike || (ahora - ultimoUsuarioCara < 2600);
+        var libre = esSueno; // la cara dormida y sus sueños suenan solos de noche
         if (!libre && !panelAbierto() && !provocado) {
             if (ahora - ultimoSolo < 1200) return false; // V61: antes 7 s; ahora cada expresión suena
             ultimoSolo = ahora;
@@ -413,20 +507,50 @@
         });
     }
 
-    // V51.1: mientras la cara duerme (noche o siesta) ronca: 3 ronquidos, pausa corta y vuelve a roncar.
-    var ronquidos = 0, ronqPausaHasta = 0;
+    // V62: mientras la mascota duerme, no solo ronca: alterna ronquidos con expresiones emocionales de sueño (sonrisa, amor, murmullo, bostezo, escalofrío, comer en sueños, suspiro) y sus sonidos.
+    var pasoSueno = 0, ronqPausaHasta = 0, idxEmoSueno = 0;
+    var EMOCIONES_SUENO = [
+        { emo: 'dream-smile', snd: 'sleep_giggle', ms: 3100 },
+        { emo: 'dream-mumble', snd: 'sleep_mumble', ms: 2900 },
+        { emo: 'dream-love', snd: 'sleep_love', ms: 3200 },
+        { emo: 'dream-chew', snd: 'sleep_chew', ms: 2800 },
+        { emo: 'dream-yawn', snd: 'yawn', ms: 2700 },
+        { emo: 'dream-shiver', snd: 'sleep_shiver', ms: 2400 },
+        { emo: 'dream-sigh', snd: 'sleep_sigh', ms: 3000 }
+    ];
     setInterval(function () {
-        if (!activado || !tocoPagina || document.hidden) return;
+        if (document.hidden) return;
         var duerme = caras.some(function (c) { return c.getAttribute('data-expr') === 'sleeping' && (c.offsetParent || c.getClientRects().length); });
-        if (!duerme) { ronquidos = 0; return; }
+        if (!duerme) {
+            pasoSueno = 0;
+            caras.forEach(function (c) { if (c.hasAttribute('data-sleep-emo')) c.removeAttribute('data-sleep-emo'); });
+            return;
+        }
         if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
         var ahora = Date.now();
         if (ahora < ronqPausaHasta) return;
-        if (reproducir('snore')) {
-            ronquidos++;
-            if (ronquidos >= 3) { ronquidos = 0; ronqPausaHasta = ahora + 8000; }
+        pasoSueno++;
+        // Alterna: 1 ronquido -> 1 expresión emocional con sonido -> 1 ronquido -> siguiente expresión emocional
+        if (pasoSueno % 2 === 1) {
+            caras.forEach(function (c) { c.removeAttribute('data-sleep-emo'); });
+            if (activado && tocoPagina) reproducir('snore');
+        } else {
+            var item = EMOCIONES_SUENO[idxEmoSueno % EMOCIONES_SUENO.length];
+            idxEmoSueno++;
+            caras.forEach(function (c) {
+                if (c.getAttribute('data-expr') === 'sleeping') {
+                    c.setAttribute('data-sleep-emo', item.emo);
+                }
+            });
+            if (activado && tocoPagina) reproducir(item.snd);
+            setTimeout(function () {
+                caras.forEach(function (c) {
+                    if (c.getAttribute('data-sleep-emo') === item.emo) c.removeAttribute('data-sleep-emo');
+                });
+            }, item.ms);
+            ronqPausaHasta = ahora + item.ms + 600;
         }
-    }, 3200);
+    }, 3400);
 
     // Lo que la persona hace sobre la cara marca "esto lo provocó ella".
     function marcarUsuario() { ultimoUsuarioCara = Date.now(); }

@@ -834,7 +834,12 @@ html.low-end-device .osito-face .of-camera{animation-duration:9s}
 .osito-face .np-pg.r::after{display:block!important;content:"";position:absolute;left:-3%;right:8%;top:26%;bottom:8%;
   background:
     repeating-linear-gradient(180deg,#8c8997 0 .007em,transparent .007em .026em) 0 0/100% 100% no-repeat}
-.osito-face .np-flip{display:none!important} /* la hoja que pasaba se ve por dentro: no se muestra por atrás */
+.osito-face .np-flip{
+  display:block!important; z-index:-2!important;
+  left:50%; top:-.06em; width:.48em; height:.46em; transform-origin:0 50%;
+  transform:translateZ(-.045em); opacity:0; pointer-events:none;
+}
+.osito-face .np-flip.go{animation:ofPageFlipBehind 1.25s cubic-bezier(.42,.05,.28,1) 1 forwards!important}
 
 /* ---------- Peluche (abrazado: se ve su espalda) ---------- */
 .osito-face .pl-eye,.osito-face .pl-nose,.osito-face .pl-belly{display:none!important}
@@ -845,3 +850,398 @@ html.low-end-device .osito-face .of-camera{animation-duration:9s}
   content:"";position:absolute;left:50%;bottom:.01em;width:.07em;height:.07em;margin-left:-.035em;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#e7b58f,#8c5943);
 }
+
+/* ==========================================================================
+   V62 — SACAR OBJETOS DESDE ATRÁS (1 MANO -> 2 MANOS), GUARDAR HACIA ATRÁS,
+   ANIMACIÓN MEJORADA DE LIBROS Y COMER COMIDA (MITAD -> TERMINAR O GUARDAR)
+   ========================================================================== */
+
+/* 1. SACAR DESDE ATRÁS CON UNA MANO PRIMERO Y SOSTENER ADELANTE CON LAS DOS */
+.osito-face .of-boredom-prop{
+  transform-style:preserve-3d;
+  animation:ofSacarDetras 1.5s cubic-bezier(.22,1,.36,1) 1 both, ofActFloat 4.6s 1.5s ease-in-out infinite!important;
+}
+@keyframes ofSacarDetras{
+  0%{
+    opacity:0;
+    z-index:-2;
+    transform:translate3d(.62em,-.08em,-.85em) rotateY(-88deg) rotateX(22deg) rotateZ(28deg) scale(.32);
+  }
+  18%{
+    opacity:.92;
+    z-index:-1;
+    transform:translate3d(.74em,-.03em,-.46em) rotateY(-64deg) rotateX(14deg) rotateZ(22deg) scale(.60);
+  }
+  50%{
+    opacity:1;
+    z-index:50;
+    transform:translate3d(.44em,-.06em,.09em) rotateY(-26deg) rotateX(-6deg) rotateZ(12deg) scale(.92);
+  }
+  76%{
+    opacity:1;
+    z-index:50;
+    transform:translate3d(-.04em,-.03em,.12em) rotateY(7deg) rotateX(-3deg) rotateZ(-3deg) scale(1.04);
+  }
+  100%{
+    opacity:1;
+    z-index:50;
+    transform:translate3d(0,0,0) rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1);
+  }
+}
+
+/* Mano derecha (mr): va hacia atrás primero, agarra el objeto y lo trae hacia adelante */
+.osito-face .of-boredom-prop .of-mitt.mr{
+  animation:ofManoDerechaSaca 1.5s cubic-bezier(.22,1,.36,1) 1 both!important;
+}
+@keyframes ofManoDerechaSaca{
+  0%{translate:-.08em -.08em; scale:.86; rotate:-30deg}
+  25%{translate:-.03em -.03em; scale:1.12; rotate:-18deg}
+  55%{translate:-.02em -.02em; scale:1.08; rotate:-10deg}
+  82%{translate:.01em 0; scale:1.02; rotate:2deg}
+  100%{translate:0 0; scale:1; rotate:0deg}
+}
+
+/* Mano izquierda (ml): espera abajo mientras la derecha saca el objeto de atrás, y luego sube para agarrarlo con las dos manos */
+.osito-face .of-boredom-prop .of-mitt.ml{
+  animation:ofManoIzquierdaSeUne 1.5s cubic-bezier(.22,1,.36,1) 1 both!important;
+}
+@keyframes ofManoIzquierdaSeUne{
+  0%,48%{opacity:0; translate:-.48em .36em; scale:.42; rotate:36deg}
+  64%{opacity:.95; translate:-.18em .12em; scale:.88; rotate:18deg}
+  82%{opacity:1; translate:.03em -.02em; scale:1.06; rotate:-5deg}
+  100%{opacity:1; translate:0 0; scale:1; rotate:0deg}
+}
+
+/* 2. GUARDAR OBJETO MOVIENDO LA MANO HACIA ATRÁS */
+.osito-face .of-boredom-prop.of-out{
+  animation:ofGuardarDetras 1.18s cubic-bezier(.45,0,.75,.4) 1 forwards!important;
+}
+@keyframes ofGuardarDetras{
+  0%{
+    opacity:1;
+    z-index:50;
+    transform:translate3d(0,0,0) rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1);
+  }
+  26%{
+    opacity:1;
+    z-index:50;
+    transform:translate3d(.38em,-.05em,.07em) rotateY(-28deg) rotateX(6deg) rotateZ(12deg) scale(.94);
+  }
+  64%{
+    opacity:.92;
+    z-index:-1;
+    transform:translate3d(.70em,.02em,-.48em) rotateY(-66deg) rotateX(18deg) rotateZ(25deg) scale(.58);
+  }
+  100%{
+    opacity:0;
+    z-index:-2;
+    transform:translate3d(.52em,.12em,-.88em) rotateY(-90deg) rotateX(28deg) rotateZ(32deg) scale(.28);
+  }
+}
+
+/* Al guardar: la mano izquierda suelta primero y la mano derecha se lleva el objeto hacia atrás */
+.osito-face .of-boredom-prop.of-out .of-mitt.ml{
+  animation:ofManoIzquierdaSuelta 1.18s ease-out 1 forwards!important;
+}
+@keyframes ofManoIzquierdaSuelta{
+  0%{opacity:1; translate:0 0; scale:1; rotate:0deg}
+  28%,100%{opacity:0; translate:-.42em .32em; scale:.45; rotate:32deg}
+}
+.osito-face .of-boredom-prop.of-out .of-mitt.mr{
+  animation:ofManoDerechaGuarda 1.18s cubic-bezier(.45,0,.75,.4) 1 forwards!important;
+}
+@keyframes ofManoDerechaGuarda{
+  0%{translate:0 0; scale:1; rotate:0deg}
+  26%{translate:-.03em -.03em; scale:1.10; rotate:-14deg}
+  68%{translate:-.06em -.02em; scale:1.04; rotate:-24deg}
+  100%{translate:-.10em .04em; scale:.80; rotate:-32deg}
+}
+
+/* 3. LIBROS Y PERIÓDICOS CON ANIMACIÓN VIVA DE LECTURA Y PASAR PÁGINA (SIEMPRE POR DETRÁS DE LA TAPA) */
+.osito-face .of-book{
+  animation:ofBookLive 4.4s ease-in-out infinite!important;
+}
+@keyframes ofBookLive{
+  0%,100%{transform:rotateX(-5deg) rotateY(-8deg) translateY(0)}
+  25%{transform:rotateX(-8deg) rotateY(2deg) translateY(-.016em)}
+  50%{transform:rotateX(-4deg) rotateY(8deg) translateY(-.006em)}
+  75%{transform:rotateX(-9deg) rotateY(-3deg) translateY(-.018em)}
+}
+/* El libro se ve por su lomo/portada trasera; las líneas interiores no deben verse sobre la tapa */
+.osito-face .bk-page-lines{display:none!important}
+.osito-face .bk-cov{z-index:3}
+.osito-face .bk-spine{z-index:4}
+.osito-face .bk-ribbon{z-index:5}
+.osito-face .bk-pg{z-index:-1; transform:translateZ(-.038em)!important}
+.osito-face .bk-cov.l{animation:ofBookWingL 4.4s ease-in-out infinite}
+.osito-face .bk-cov.r{animation:ofBookWingR 4.4s ease-in-out infinite}
+@keyframes ofBookWingL{0%,100%{transform:rotateY(-12deg)}50%{transform:rotateY(-18deg)}}
+@keyframes ofBookWingR{0%,100%{transform:rotateY(12deg)}50%{transform:rotateY(18deg)}}
+
+/* La hoja que pasa (.bk-flip) va ESTRICTAMENTE DETRÁS del libro (z-index negativo y translateZ negativo),
+   arqueándose por detrás hacia el otro lado sin traspasar jamás la portada morada */
+.osito-face .bk-flip{
+  z-index:-2!important;
+  left:50%; top:-.075em; width:.48em; height:.46em;
+  transform-origin:0 50%;
+  transform:translateZ(-.048em);
+  opacity:0; pointer-events:none;
+}
+.osito-face[data-pg="1"] .of-boredom-prop .of-mitt.mr{
+  animation:ofManoPasaPagina 1.15s cubic-bezier(.34,1.3,.64,1) 1!important;
+}
+@keyframes ofManoPasaPagina{
+  0%,100%{translate:0 0; rotate:0deg}
+  35%{translate:-.08em -.14em; rotate:-18deg; scale:1.04}
+  65%{translate:-.18em -.10em; rotate:-24deg; scale:1.01}
+}
+.osito-face .bk-flip.go{
+  display:block!important;
+  animation:ofPageFlipBehind 1.25s cubic-bezier(.42,.05,.28,1) 1 forwards!important;
+}
+@keyframes ofPageFlipBehind{
+  0%{opacity:0; transform:translateZ(-.048em) rotateY(0deg) translateY(0) scaleY(.95)}
+  10%{opacity:1}
+  50%{opacity:1; transform:translateZ(-.078em) rotateY(90deg) translateY(-.065em) scaleY(1.06)}
+  90%{opacity:1}
+  100%{opacity:0; transform:translateZ(-.048em) rotateY(180deg) translateY(0) scaleY(.95)}
+}
+
+/* 4. COMER COMIDA: MORDER, MASTICAR, COMIDA A LA MITAD Y TERMINAR DE COMER */
+/* Expresión de abrir la boca para dar el mordisco (f-bite) */
+.osito-face[data-act="f-bite"]:not([data-expr]) .of-eye{scale:1.06 .86}
+.osito-face[data-act="f-bite"]:not([data-expr]) .of-smile{
+  opacity:1!important;
+  width:.22em!important; height:.18em!important;
+  border:.025em solid #fff!important;
+  background:radial-gradient(circle at 50% 78%,#ff7a9e 0 38%,#8a1c3b 42% 100%)!important;
+  border-radius:42% 42% 52% 52%!important;
+  animation:ofMouthBiteOpen .75s ease-in-out infinite!important;
+}
+@keyframes ofMouthBiteOpen{
+  0%,100%{transform:translateY(-.01em) scale(1,1.08)}
+  55%{transform:translateY(.01em) scale(.92,.35)}
+}
+
+/* Expresión de masticar feliz (f-chew) */
+.osito-face[data-act="f-chew"]:not([data-expr]) .of-eye{scale:1.04 .78}
+.osito-face[data-act="f-chew"]:not([data-expr]) .of-smile{
+  opacity:1!important;
+  animation:ofMouthChew .42s ease-in-out infinite!important;
+}
+@keyframes ofMouthChew{
+  0%,100%{transform:translateY(0) scale(1,.82)}
+  50%{transform:translateY(-.018em) scale(.78,1.18)}
+}
+
+/* Movimiento de llevar la comida a la boca al morder (eat-bite y eat-finish) */
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .of-pizza,
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .of-apple,
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .of-cup.chocolate{
+  animation:ofBringToMouth .95s cubic-bezier(.34,1.35,.64,1) 1 forwards!important;
+}
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .of-pizza,
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .of-apple,
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .of-cup.chocolate{
+  animation:ofFinishEating 1.15s cubic-bezier(.34,1.35,.64,1) 1 forwards!important;
+}
+@keyframes ofBringToMouth{
+  0%{transform:translate3d(0,0,0) rotateX(6deg) scale(1)}
+  45%{transform:translate3d(0,-.22em,.14em) rotateX(26deg) rotateZ(-4deg) scale(1.08)}
+  72%{transform:translate3d(0,-.19em,.12em) rotateX(20deg) rotateZ(4deg) scale(.96)}
+  100%{transform:translate3d(0,0,0) rotateX(6deg) scale(1)}
+}
+@keyframes ofFinishEating{
+  0%{transform:translate3d(0,0,0) rotateX(6deg) scale(1)}
+  38%{transform:translate3d(0,-.23em,.15em) rotateX(28deg) rotateZ(-5deg) scale(1.04)}
+  68%{transform:translate3d(0,-.21em,.14em) rotateX(24deg) rotateZ(5deg) scale(.62)}
+  100%{transform:translate3d(0,-.08em,0) rotateX(0deg) scale(0.01); opacity:0}
+}
+
+/* Migajas / pedacitos que saltan al morder */
+.osito-face .fd-crumb{
+  position:absolute; width:.042em; height:.042em; border-radius:50%;
+  background:#ffd66b; opacity:0; pointer-events:none; transform:translateZ(.15em);
+}
+.osito-face .of-apple .fd-crumb{background:#fff3d1}
+.osito-face .fd-crumb.c1{left:.24em; top:.14em}
+.osito-face .fd-crumb.c2{left:.44em; top:.12em}
+.osito-face .fd-crumb.c3{left:.34em; top:.08em}
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .fd-crumb.c1,
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .fd-crumb.c1{animation:ofCrumb1 .75s ease-out .25s 1}
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .fd-crumb.c2,
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .fd-crumb.c2{animation:ofCrumb2 .75s ease-out .30s 1}
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .fd-crumb.c3,
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .fd-crumb.c3{animation:ofCrumb3 .75s ease-out .28s 1}
+@keyframes ofCrumb1{0%{opacity:1; translate:0 0; scale:1}100%{opacity:0; translate:-.16em .18em; scale:.3}}
+@keyframes ofCrumb2{0%{opacity:1; translate:0 0; scale:1}100%{opacity:0; translate:.16em .16em; scale:.3}}
+@keyframes ofCrumb3{0%{opacity:1; translate:0 0; scale:1}100%{opacity:0; translate:.03em -.15em; scale:.3}}
+
+/* Marcas de mordisco y centro de manzana (ocultos cuando está entera) */
+.osito-face .fd-bite,
+.osito-face .ap-core,
+.osito-face .ap-seed{opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease}
+
+/* --- ESTADO A LA MITAD: data-food-stage="half" --- */
+/* Pizza a la mitad: se recorta la mitad inferior/punta con marcas de mordida curvas */
+.osito-face .of-boredom-prop[data-food-stage="half"] .pz-cheese{
+  clip-path:polygon(0 15%,100% 0,90% 54%,68% 46%,50% 56%,30% 45%,10% 54%)!important;
+}
+.osito-face .of-boredom-prop[data-food-stage="half"] .pz-pep.p3,
+.osito-face .of-boredom-prop[data-food-stage="half"] .pz-pep.p4,
+.osito-face .of-boredom-prop[data-food-stage="half"] .pz-melt{
+  opacity:0!important; transform:scale(0)!important;
+}
+.osito-face .of-boredom-prop[data-food-stage="half"] .of-pizza .fd-bite{
+  opacity:1; position:absolute; width:.14em; height:.08em; border-radius:50%;
+  border-top:.022em solid #fff1b8; transform:translateZ(.11em);
+}
+.osito-face .of-boredom-prop[data-food-stage="half"] .of-pizza .fd-bite.b1{left:.21em; top:.27em}
+.osito-face .of-boredom-prop[data-food-stage="half"] .of-pizza .fd-bite.b2{left:.37em; top:.26em}
+
+/* Manzana a la mitad: mordida por ambos lados mostrando la pulpa crema y las semillitas */
+.osito-face .of-boredom-prop[data-food-stage="half"] .ap-fruit{
+  clip-path:polygon(0 0,100% 0,100% 24%,74% 38%,74% 66%,100% 80%,100% 100%,0 100%,0 80%,26% 66%,26% 38%,0 24%)!important;
+}
+.osito-face .of-boredom-prop[data-food-stage="half"] .ap-core{
+  opacity:1; position:absolute; left:.21em; top:.19em; width:.20em; height:.24em;
+  border-radius:38%; background:radial-gradient(circle,#fffdf2 45%,#f3dfa8 100%);
+  box-shadow:inset 0 0 .02em rgba(160,110,40,.45); transform:translateZ(.095em);
+}
+.osito-face .of-boredom-prop[data-food-stage="half"] .ap-seed{
+  opacity:1; position:absolute; width:.028em; height:.046em; border-radius:50%;
+  background:#4a2511; transform:translateZ(.11em);
+}
+.osito-face .of-boredom-prop[data-food-stage="half"] .ap-seed.s1{left:.28em; top:.28em; rotate:-14deg}
+.osito-face .of-boredom-prop[data-food-stage="half"] .ap-seed.s2{left:.33em; top:.28em; rotate:14deg}
+.osito-face .of-boredom-prop[data-food-stage="half"] .ap-highlight{opacity:.25}
+
+/* Chocolate a la mitad: baja el nivel y desaparece un malvavisco */
+.osito-face .of-boredom-prop[data-food-stage="half"] .cf-marshmallow.m1{opacity:0; transform:scale(0)}
+.osito-face .of-boredom-prop[data-food-stage="half"] .cf-choco,
+.osito-face .of-boredom-prop[data-food-stage="half"] .cf-foam{transform:translateZ(.07em) scale(.82)}
+
+/* --- ESTADO TERMINADO DE COMER: data-food-stage="eaten" --- */
+.osito-face .of-boredom-prop[data-food-stage="eaten"] .of-pizza,
+.osito-face .of-boredom-prop[data-food-stage="eaten"] .of-apple,
+.osito-face .of-boredom-prop[data-food-stage="eaten"] .of-cup.chocolate{
+  opacity:0!important; transform:scale(.01)!important; transition:all .35s ease!important;
+}
+
+/* ==========================================================================
+   5. EXPRESIONES EMOCIONALES MIENTRAS DUERME (data-expr="sleeping" + data-sleep-emo)
+   ========================================================================== */
+/* 5.1 Sueño feliz / Sonrisa dormida (dream-smile) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-smile"] .of-mouth{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-smile"] .of-smile{
+  opacity:1!important;
+  transform:translateY(.01em) scale(1.06,.95)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-smile"] .of-cheek{
+  opacity:.92!important;
+  transform:scale(1.22)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-smile"] .of-card{
+  animation:ofDreamHappySway 2.4s ease-in-out infinite!important;
+}
+@keyframes ofDreamHappySway{
+  0%,100%{transform:rotateZ(-4deg) translateY(0)}
+  50%{transform:rotateZ(5deg) translateY(-.025em) scale(1.03)}
+}
+
+/* 5.2 Soñando enamorado / ternura (dream-love) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-love"] .of-mouth{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-love"] .of-smile{
+  opacity:1!important;
+  width:.16em!important; height:.11em!important;
+  border-bottom:.032em solid #ff9ec4!important;
+  transform:translateY(.015em) scale(1.1)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-love"] .of-cheek{
+  opacity:1!important;
+  background:radial-gradient(circle,rgba(255,105,165,.95) 0%,rgba(255,105,165,0) 72%)!important;
+  transform:scale(1.35)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-love"] .of-bub{opacity:0!important}
+
+/* 5.3 Hablando dormido / Murmullo en sueños (dream-mumble) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-mumble"] .of-bub{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-mumble"] .of-mouth{
+  opacity:1!important;
+  animation:ofSleepMumbleMouth .32s ease-in-out infinite!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-mumble"] .of-brow.l{
+  opacity:.85!important; transform:translateY(.01em) rotate(-10deg)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-mumble"] .of-brow.r{
+  opacity:.85!important; transform:translateY(-.015em) rotate(12deg)!important;
+}
+@keyframes ofSleepMumbleMouth{
+  0%,100%{transform:scale(.75,.55)}
+  50%{transform:scale(1.35,1.25)}
+}
+
+/* 5.4 Bostezo dormido (dream-yawn) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-yawn"] .of-bub{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-yawn"] .of-mouth{
+  opacity:1!important;
+  width:.20em!important; height:.18em!important; margin-left:-.10em!important;
+  background:radial-gradient(circle at 50% 75%,#ff85a2 0 38%,#6b1530 42% 100%)!important;
+  border:.02em solid #fff!important;
+  animation:ofSleepYawnMouth 2.6s ease-in-out 1 forwards!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-yawn"] .of-card{
+  animation:ofSleepYawnHead 2.6s ease-in-out 1!important;
+}
+@keyframes ofSleepYawnMouth{
+  0%,100%{transform:scale(.45,.4)}
+  35%,65%{transform:scale(1.15,1.25) translateY(-.015em)}
+}
+@keyframes ofSleepYawnHead{
+  0%,100%{transform:rotateX(0) scale(1)}
+  45%{transform:rotateX(14deg) translateY(-.03em) scale(1.04)}
+}
+
+/* 5.5 Escalofriito / Pesadilla corta en sueños (dream-shiver) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-shiver"] .of-bub{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-shiver"] .of-brow.l{
+  opacity:.95!important; transform:translateY(.02em) rotate(15deg)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-shiver"] .of-brow.r{
+  opacity:.95!important; transform:translateY(.02em) rotate(-15deg)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-shiver"] .of-card{
+  animation:ofSleepShiver .18s ease-in-out 8!important;
+}
+@keyframes ofSleepShiver{
+  0%,100%{transform:translateX(0) rotateZ(0)}
+  25%{transform:translateX(-.018em) rotateZ(-2.5deg)}
+  75%{transform:translateX(.018em) rotateZ(2.5deg)}
+}
+
+/* 5.6 Soñando con comida rica / Masticando dormido (dream-chew) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-chew"] .of-bub{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-chew"] .of-mouth{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-chew"] .of-smile{
+  opacity:1!important;
+  animation:ofMouthChew .38s ease-in-out infinite!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-chew"] .of-tongue{
+  opacity:1!important;
+  transform:translateY(.01em) rotate(10deg) scale(.92)!important;
+}
+
+/* 5.7 Suspiro profundo y acurrucarse (dream-sigh) */
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-sigh"] .of-mouth{opacity:0!important}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-sigh"] .of-smile{
+  opacity:.9!important;
+  transform:scale(.82,.72) translateY(.015em)!important;
+}
+.osito-face[data-expr="sleeping"][data-sleep-emo="dream-sigh"] .of-card{
+  animation:ofSleepCuddle 2.8s ease-in-out 1!important;
+}
+@keyframes ofSleepCuddle{
+  0%,100%{transform:rotateZ(0) translateY(0)}
+  45%{transform:rotateZ(-9deg) translateY(.025em) scale(1.03,.97)}
+}
+

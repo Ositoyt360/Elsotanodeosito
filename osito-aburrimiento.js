@@ -8,17 +8,26 @@
   'use strict';
   var F=window.OsitoFace, S=window.OsitoFaceSound;
   if(!F || !F.caras) return;
-  var ABURRIDO_MS=5000;  // 5 s sin actividad real para empezar actividades 3D
-  var PAGINA_MS=7000;    // pasa una página del libro cada 7 s
-  var OBJETO_MS=24000;   // 24 segundos por objeto para mayor variedad de animaciones 3D
-  var EXPRESION_MS=6500; // cada 6.5 segundos cambia de expresión/gesto con el objeto
-  var BEAT_MS=2400;         // los movimientos puntuales del objeto (brindar, ganar…) duran poco: no se alargan
+  var ABURRIDO_MS=4200;  // 4.2 s sin actividad real para empezar actividades 3D
+  var PAGINA_MS=4600;    // pasa una página del libro cada 4.6 s con animación de mano
+  var OBJETO_MS=21000;   // 21 segundos por objeto para ver el ciclo completo
+  var EXPRESION_MS=4200; // cada 4.2 segundos cambia de expresión/gesto con el objeto
+  var BEAT_MS=2200;         // los movimientos puntuales del objeto duran poco
   var CAMBIO_MS={};
   ['diario','juego','control','periodico','telefono','cafe','chocolate','audifonos','cubo','peluche','pizza','manzana','microfono','laptop','mochila','balon','varita','regalo','consola','vaso','camara','libre'].forEach(function(k){ CAMBIO_MS[k]=OBJETO_MS; });
   var primeraBolsa=true; // la primera vez salen primero el periódico y el teléfono
   var modos=[]; // bolsa de actividades: cada una sale una vez antes de repetir y nunca la misma dos veces seguidas
   var ultima=Date.now(), aburrido=false, modo='';
   var ultimoCambio=0, timerPag=null, timerCambio=null, timer=null, token=0, timerActo=null, bolsa=[], ultimoActo='';
+  var timerPropPhase=null, timerFoodStage=[], guardandoProp=false, alternarGuardarComida=false;
+  var COMIDAS=['chocolate','pizza','manzana'];
+
+  function limpiarTimersComida(){
+    while(timerFoodStage.length){ clearTimeout(timerFoodStage.pop()); }
+  }
+  function enCad3D(fn){
+    F.caras.forEach(function(h){ fn(h); });
+  }
 
   /* ---------- Guion de expresiones ----------
    * a  = expresión propia de la actividad (data-act, la dibuja osito-actividades-3d.css)
@@ -120,8 +129,8 @@
       {f:'cool',ms:2000}
     ],
     chocolate:[
-      {a:'ch-sip',ms:3200},{a:'ch-blow',ms:2500},{f:'smile',ms:2200},{a:'ch-sip',ms:3000,beat:'sip'},
-      {f:'love',ms:2000},{f:'joy',ms:1900},{f:'wow',ms:1700},{f:'shy',ms:2200}
+      {a:'ch-blow',ms:2400},{a:'f-bite',ms:2600,beat:'eat-bite'},{a:'f-chew',ms:3000},
+      {f:'love',ms:2000},{a:'ch-sip',ms:2800,beat:'sip'},{f:'joy',ms:1900},{f:'smile',ms:2200}
     ],
     control:[
       {a:'g-focus',ms:3300},{a:'g-press',ms:3000},{f:'excited',ms:1800},{a:'g-focus',ms:3200},
@@ -133,12 +142,12 @@
       {f:'joy',ms:1900},{f:'shy',ms:2300},{f:'smile',ms:2200},{f:'wink',ms:1400}
     ],
     pizza:[
-      {a:'pz-smell',ms:2800},{a:'pz-spin',ms:3200},{f:'wow',ms:1700},{a:'pz-take',ms:3000,beat:'lift'},
-      {f:'joy',ms:1900},{f:'love',ms:2000},{f:'laugh',ms:1900},{f:'smile',ms:2200}
+      {a:'pz-smell',ms:2400},{a:'f-bite',ms:2600,beat:'eat-bite'},{a:'f-chew',ms:3200},
+      {f:'love',ms:2000},{a:'f-chew',ms:2800,beat:'lift'},{f:'joy',ms:1900},{f:'smile',ms:2200}
     ],
     manzana:[
-      {a:'ap-polish',ms:2800},{a:'ap-smell',ms:2500},{f:'curious',ms:1900},{a:'ap-bite',ms:3000,beat:'bite'},
-      {f:'wow',ms:1700},{f:'joy',ms:1900},{f:'smile',ms:2200},{f:'wink',ms:1400}
+      {a:'ap-polish',ms:2400},{a:'f-bite',ms:2600,beat:'eat-bite'},{a:'f-chew',ms:3200},
+      {f:'wow',ms:1700},{a:'f-chew',ms:2800,beat:'bite'},{f:'joy',ms:1900},{f:'smile',ms:2200}
     ],
     microfono:[
       {a:'mc-check',ms:2800},{a:'mc-sing',ms:3600},{f:'joy',ms:1900},{a:'mc-sing',ms:3300,beat:'sing'},
@@ -245,11 +254,14 @@
 
   var HTML_PIZZA=
     '<span class="of-pizza"><i class="pz-crust"></i><i class="pz-cheese"></i><i class="pz-pep p1"></i><i class="pz-pep p2"></i><i class="pz-pep p3"></i><i class="pz-pep p4"></i><i class="pz-melt"></i>'+
+      '<i class="fd-bite b1"></i><i class="fd-bite b2"></i><i class="fd-crumb c1"></i><i class="fd-crumb c2"></i><i class="fd-crumb c3"></i>'+
       MITT_L+MITT_R+
     '</span><i class="of-poof"></i>';
 
   var HTML_MANZANA=
-    '<span class="of-apple"><i class="ap-fruit"></i><i class="ap-highlight"></i><i class="ap-stem"></i><i class="ap-leaf"></i>'+MITT_L+MITT_R+
+    '<span class="of-apple"><i class="ap-fruit"></i><i class="ap-core"></i><i class="ap-seed s1"></i><i class="ap-seed s2"></i><i class="ap-highlight"></i><i class="ap-stem"></i><i class="ap-leaf"></i>'+
+      '<i class="fd-bite b1"></i><i class="fd-bite b2"></i><i class="fd-crumb c1"></i><i class="fd-crumb c2"></i><i class="fd-crumb c3"></i>'+
+      MITT_L+MITT_R+
     '</span><i class="of-poof"></i>';
 
   var HTML_MICROFONO=
@@ -349,12 +361,27 @@
     clearTimeout(timerActo); timerActo=null; clearTimeout(timerCabeza); timerCabeza=null;
     clearInterval(timerPag); timerPag=null;
     clearTimeout(timerCambio); timerCambio=null;
+    clearTimeout(timerPropPhase); timerPropPhase=null;
+    limpiarTimersComida();
     caras().forEach(function(c){
       var estaba=c.hasAttribute('data-boredom');
-      c.removeAttribute('data-boredom'); c.removeAttribute('data-act'); c.removeAttribute('data-pg');
-      if(estaba){ c.style.setProperty('--cx','0deg'); c.style.setProperty('--cy','0deg'); }
+      var tieneProp=!!c.querySelector('.of-boredom-prop:not(.of-out)');
+      c.removeAttribute('data-act'); c.removeAttribute('data-pg');
       quitarProp(c,true);
-      if(estaba) restaurarPersonalidad(c);
+      if(estaba && tieneProp){
+        // Mira ligeramente hacia atrás mientras la mano guarda el objeto detrás
+        c.style.setProperty('--cx','-5deg'); c.style.setProperty('--cy','20deg');
+        setTimeout(function(){
+          if(!aburrido){
+            c.removeAttribute('data-boredom');
+            c.style.setProperty('--cx','0deg'); c.style.setProperty('--cy','0deg');
+            restaurarPersonalidad(c);
+          }
+        },1150);
+      } else {
+        c.removeAttribute('data-boredom');
+        if(estaba){ c.style.setProperty('--cx','0deg'); c.style.setProperty('--cy','0deg'); restaurarPersonalidad(c); }
+      }
     });
   }
   /* Mientras lee o juega, la coreografía de personalidad (que mueve toda la tarjeta) se pausa:
@@ -385,8 +412,10 @@
     var ps=c.querySelectorAll('.of-boredom-prop'); if(!ps.length) return;
     Array.prototype.forEach.call(ps,function(p){
       if(suave){
+        p.classList.remove('of-pulling');
         p.classList.add('of-out');
-        setTimeout(function(){ if(p.parentNode && p.classList.contains('of-out')) p.remove(); },950);
+        p.setAttribute('data-prop-phase','stowing');
+        setTimeout(function(){ if(p.parentNode && p.classList.contains('of-out')) p.remove(); },1220);
       } else p.remove();
     });
   }
@@ -395,14 +424,101 @@
     quitarProp(c,false);
     if(m!=='libre'){
       var p=document.createElement('span');
-      p.className='of-boredom-prop';
+      p.className='of-boredom-prop of-pulling';
       p.setAttribute('aria-hidden','true');
       p.setAttribute('data-mode',m);
+      p.setAttribute('data-prop-phase','pulling');
+      if(COMIDAS.indexOf(m)>=0) p.setAttribute('data-food-stage','whole');
       p.innerHTML = HTML_OBJETO[m] || HTML_DIARIO;
       c.appendChild(p);
+      setTimeout(function(){
+        if(p.parentNode && !p.classList.contains('of-out')){
+          p.classList.remove('of-pulling');
+          p.setAttribute('data-prop-phase','active');
+        }
+      },1500);
     }
     c.setAttribute('data-boredom',m);
     calmarCara(c);
+  }
+  function programarCicloComida(m,miToken){
+    limpiarTimersComida();
+    if(COMIDAS.indexOf(m)<0) return;
+    // 1) A los 4.8s acerca la comida a la boca y le da el primer gran mordisco
+    timerFoodStage.push(setTimeout(function(){
+      if(miToken!==token || !aburrido || modo!==m) return;
+      cabeza(-6,0);
+      caras().forEach(function(c){
+        c.setAttribute('data-act','f-bite');
+        var p=c.querySelector('.of-boredom-prop');
+        if(p){ p.setAttribute('data-beat','eat-bite'); }
+      });
+      if(S && S.acto) S.acto('ap-bite');
+    },4800));
+    // 2) A los 5.7s la comida queda A LA MITAD y la mascota mastica feliz sosteniendo la mitad
+    timerFoodStage.push(setTimeout(function(){
+      if(miToken!==token || !aburrido || modo!==m) return;
+      caras().forEach(function(c){
+        c.setAttribute('data-act','f-chew');
+        var p=c.querySelector('.of-boredom-prop');
+        if(p){
+          p.setAttribute('data-food-stage','half');
+          p.setAttribute('data-beat','chew-half');
+        }
+      });
+      if(S && S.acto) S.acto('ch-sip');
+    },5700));
+    // 3) A los 9.2s mira la mitad que le queda con gusto
+    timerFoodStage.push(setTimeout(function(){
+      if(miToken!==token || !aburrido || modo!==m) return;
+      caras().forEach(function(c){
+        var p=c.querySelector('.of-boredom-prop');
+        if(p) p.removeAttribute('data-beat');
+      });
+      if(F.paraTodas) F.paraTodas('love',2200);
+    },9200));
+    // 4) A los 13.0s: después de estar a la mitad, o SE TERMINA DE COMER la otra mitad, o LA GUARDA detrás con la mano
+    timerFoodStage.push(setTimeout(function(){
+      if(miToken!==token || !aburrido || modo!==m) return;
+      var guardarMitad=alternarGuardarComida;
+      alternarGuardarComida=!alternarGuardarComida;
+      if(!guardarMitad){
+        // Opción A: se come la segunda mitad hasta terminarla
+        cabeza(-5,0);
+        caras().forEach(function(c){
+          c.setAttribute('data-act','f-bite');
+          var p=c.querySelector('.of-boredom-prop');
+          if(p) p.setAttribute('data-beat','eat-finish');
+        });
+        if(S && S.acto) S.acto('ap-bite');
+        timerFoodStage.push(setTimeout(function(){
+          if(miToken!==token || !aburrido || modo!==m) return;
+          caras().forEach(function(c){
+            c.setAttribute('data-act','f-chew');
+            var p=c.querySelector('.of-boredom-prop');
+            if(p){
+              p.setAttribute('data-food-stage','eaten');
+              p.removeAttribute('data-beat');
+            }
+          });
+          if(F.paraTodas) F.paraTodas('joy',2400);
+        },1150));
+      } else {
+        // Opción B: decide guardar la mitad restante detrás de su espalda con la mano
+        cabeza(-5,20);
+        if(F.paraTodas) F.paraTodas('wink',1400);
+        caras().forEach(function(c){
+          c.setAttribute('data-act','g-out');
+          var p=c.querySelector('.of-boredom-prop');
+          if(p) p.setAttribute('data-food-stage','saved');
+          quitarProp(c,true);
+        });
+        timerFoodStage.push(setTimeout(function(){
+          if(miToken!==token || !aburrido) return;
+          cabeza(-10,0);
+        },1200));
+      }
+    },13000));
   }
   /* Giro 3D suave de la cabeza (rx = arriba/abajo, ry = izquierda/derecha, en grados) */
   function cabeza(rx,ry){
@@ -473,9 +589,9 @@
     if(!modos.length){
       modos=['diario','juego','control','periodico','telefono','cafe','chocolate','audifonos','cubo','peluche','pizza','manzana','microfono','laptop','mochila','balon','varita','regalo','consola','vaso','camara','libre'];
       var prio=[];
-      if(primeraBolsa){ // la primera vuelta empieza con el periódico y el teléfono (en cualquier orden)
-        modos=modos.filter(function(x){ return x!=='periodico' && x!=='telefono'; });
-        prio=Math.random()<.5?['periodico','telefono']:['telefono','periodico'];
+      if(primeraBolsa){ // la primera vuelta muestra primero libro, comida (pizza/manzana) y periódico/teléfono
+        modos=modos.filter(function(x){ return x!=='diario' && x!=='pizza' && x!=='manzana' && x!=='periodico'; });
+        prio=['diario','pizza','manzana','periodico'];
         primeraBolsa=false;
       }
       for(var i=modos.length-1;i>0;i--){ var k=Math.floor(Math.random()*(i+1)), t=modos[i]; modos[i]=modos[k]; modos[k]=t; }
@@ -491,54 +607,59 @@
   function comenzar(m){
     if(noche() || (window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme())) return;
     clearTimeout(timerActo);
+    limpiarTimersComida();
     aburrido=true; modo=m; ultimoCambio=Date.now(); bolsa=[]; ultimoActo=''; token++;
     var miToken=token;
     caras().forEach(function(c){mostrarProp(c,m);});
-    // Arranca siempre con su gesto base (leyendo / concentrada) y luego sigue el guion.
+    // Al sacar el objeto desde atrás con una mano, gira levemente hacia ese lado y luego mira al frente cuando lo sostiene con las dos
+    if(m!=='libre'){
+      cabeza(-5,20);
+      setTimeout(function(){ if(miToken===token && aburrido) cabeza(-12,0); },850);
+    }
     var inicio=INICIO[m]||INICIO.libre;
     if(S && S.objeto) S.objeto(m);
     clearInterval(timerPag); timerPag=null;
-    if(m==='diario' || m==='periodico'){ setTimeout(function(){ if(miToken===token) pasarPagina(); },2500); timerPag=setInterval(pasarPagina,PAGINA_MS); }
+    if(m==='diario' || m==='periodico'){ setTimeout(function(){ if(miToken===token) pasarPagina(); },1900); timerPag=setInterval(pasarPagina,PAGINA_MS); }
+    programarCicloComida(m,miToken);
     ejecutar(inicio,miToken);
   }
   function activar(m){
     if(noche() || (window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme())) return;
     clearTimeout(timerCambio); timerCambio=null;
+    limpiarTimersComida();
     var hay=aburrido && caras().some(function(c){ return c.querySelector('.of-boredom-prop:not(.of-out)'); });
     if(!hay){ comenzar(m); return; }
-    // Primero guarda el objeto que tenía (se ve cómo baja) y después saca el nuevo.
+    // Primero mueve la mano hacia atrás para guardar el objeto actual detrás de la espalda y después saca el nuevo
     clearTimeout(timerActo); timerActo=null; clearTimeout(timerCabeza); timerCabeza=null; clearInterval(timerPag); timerPag=null; token++;
     ultimoCambio=Date.now(); modo=m;
+    cabeza(-5,20);
     caras().forEach(function(c){
       if(c.hasAttribute('data-boredom')) c.setAttribute('data-act','g-out');
       quitarProp(c,true);
     });
     if(F.paraTodas) F.paraTodas('smile',900);
-    timerCambio=setTimeout(function(){ timerCambio=null; comenzar(m); },950);
+    timerCambio=setTimeout(function(){ timerCambio=null; comenzar(m); },1220);
   }
   function ciclo(){
-    if(document.hidden){ timer=setTimeout(ciclo,1000); return; }
-    if(noche()) { ocultar(); timer=setTimeout(ciclo,1000); return; }
-    if(window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme()){ ocultar(); timer=setTimeout(ciclo,1000); return; }
+    if(document.hidden || window.ositoEnLlamadaIA || document.documentElement.classList.contains('ia-speaking-mode')){
+      if(aburrido && (window.ositoEnLlamadaIA || document.documentElement.classList.contains('ia-speaking-mode'))) ocultar();
+      timer=setTimeout(ciclo,1600);
+      return;
+    }
+    if(noche()) { ocultar(); timer=setTimeout(ciclo,1500); return; }
+    if(window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme()){ ocultar(); timer=setTimeout(ciclo,1500); return; }
     var ahora=Date.now();
     if(!aburrido && ahora-ultima>=ABURRIDO_MS){ activar(siguienteModo()); }
     else if(aburrido && modo && ahora-ultimoCambio>=(CAMBIO_MS[modo]||OBJETO_MS)){
       // Cambia de actividad mientras sigue solo: lee, juega o hace otras expresiones.
       activar(siguienteModo());
     }
-    timer=setTimeout(ciclo,1000);
+    timer=setTimeout(ciclo,1400);
   }
   ['pointerdown','keydown','touchstart','wheel','click','input'].forEach(function(ev){document.addEventListener(ev,actividad,{passive:true,capture:true});});
   // Mover el mouse también cuenta como estar presente (reinicia los 10 s) pero no interrumpe la actividad.
   document.addEventListener('pointermove',function(){ if(!aburrido) ultima=Date.now(); },{passive:true,capture:true});
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) ultima=Date.now(); });
-  // Si se abre una cara nueva, la actividad se muestra también allí.
-  if(window.MutationObserver){
-    new MutationObserver(function(list){
-      if(!aburrido) return;
-      list.forEach(function(m){ if(m.addedNodes) m.addedNodes.forEach(function(n){ if(n.nodeType===1 && n.matches && n.matches('.osito-face')) mostrarProp(n,modo); }); });
-    }).observe(document.body,{childList:true,subtree:true});
-  }
   window.OsitoAburrimiento={activar:function(m){activar(VALIDOS.indexOf(m)>=0?m:'diario');},detener:function(){ ultima=Date.now(); ocultar(); },estado:function(){return {aburrido:aburrido,modo:modo};}};
   ciclo();
 }());

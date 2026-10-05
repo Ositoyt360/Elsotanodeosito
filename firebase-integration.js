@@ -1158,10 +1158,22 @@
     }
 
     window.abrirMiPerfil = function () {
-        if (!state.currentUser) return;
         const btn = document.getElementById('profile-open-button');
         if (btn) { btn.classList.remove('profile-open-cinematic'); void btn.offsetWidth; btn.classList.add('profile-open-cinematic'); }
-        window.open('perfil.html', '_blank', 'noopener,noreferrer');
+        const u = state.currentUser;
+        let url = 'perfil.html';
+        if (u) {
+            const params = new URLSearchParams();
+            if (u.uid) params.set('uid', u.uid);
+            if (u.email) params.set('email', u.email);
+            if (state.profile && state.profile.displayName) params.set('name', state.profile.displayName);
+            else if (u.displayName) params.set('name', u.displayName);
+            const q = params.toString();
+            if (q) url += '?' + q;
+        }
+        setTimeout(function () {
+            window.location.href = url;
+        }, 180);
     };
 
     function bindUi() {

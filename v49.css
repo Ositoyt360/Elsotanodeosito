@@ -559,3 +559,205 @@ html.low-end-device .modo-decor-item{animation-duration:19s!important}
 html.mobile-lite .osito-face:not([data-expr="sleeping"]) .of-spark {
   animation: ofSpark 1.5s ease-out 1 forwards !important;
 }
+
+/* ================= ANIMACIONES DEL CHAT DE IA, MICRÓFONO EN VIVO Y MASCOTA EXTRA ================= */
+.msg.ia-msg-enter {
+  animation: iaMsgPopIn 0.32s cubic-bezier(0.22, 1.28, 0.36, 1) both;
+  transform-origin: left bottom;
+}
+.msg.user.ia-msg-enter {
+  transform-origin: right bottom;
+}
+@keyframes iaMsgPopIn {
+  0% { opacity: 0; transform: translateY(10px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Cursor brillante mientras la IA escribe su respuesta en tiempo real */
+.msg.bot.ia-streaming {
+  border-color: rgba(0, 242, 254, 0.55) !important;
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.18);
+}
+.msg.bot.ia-streaming .ia-msg-body::after {
+  content: "▍";
+  display: inline-block;
+  margin-left: 3px;
+  color: #00f2fe;
+  font-weight: 700;
+  animation: iaCursorBlink 0.55s steps(2, start) infinite;
+}
+@keyframes iaCursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Ondas de voz / respuesta dentro de la burbuja del chat de la IA */
+.msg.bot .ia-msg-wave {
+  display: none;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 13px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.msg.bot.ia-streaming .ia-msg-wave,
+.msg.bot.ia-speaking-msg .ia-msg-wave {
+  display: inline-flex;
+}
+.msg.bot.ia-speaking-msg {
+  border-color: rgba(88, 255, 154, 0.5) !important;
+  box-shadow: 0 0 14px rgba(88, 255, 154, 0.16);
+}
+.msg.bot .ia-msg-wave i {
+  display: block;
+  width: 3px;
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #00f2fe, #58ff9a);
+  animation: iaWaveBar 0.65s ease-in-out infinite alternate;
+}
+.msg.bot .ia-msg-wave i:nth-child(2) { animation-delay: 0.14s; }
+.msg.bot .ia-msg-wave i:nth-child(3) { animation-delay: 0.28s; }
+.msg.bot .ia-msg-wave i:nth-child(4) { animation-delay: 0.42s; }
+@keyframes iaWaveBar {
+  0% { height: 3px; opacity: 0.55; }
+  100% { height: 13px; opacity: 1; }
+}
+
+/* Burbuja animada cuando la IA está pensando la respuesta */
+.msg.bot.typing.ia-thinking-bubble {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px !important;
+  background: linear-gradient(135deg, rgba(18, 25, 48, 0.94), rgba(32, 18, 58, 0.94)) !important;
+  border: 1px solid rgba(0, 242, 254, 0.38) !important;
+  box-shadow: 0 4px 18px rgba(0, 242, 254, 0.14);
+}
+.ia-thinking-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #dffbff;
+}
+.ia-thinking-orb {
+  display: inline-block;
+  animation: iaOrbPulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes iaOrbPulse {
+  0% { transform: scale(0.92) rotate(-6deg); }
+  100% { transform: scale(1.14) rotate(6deg); }
+}
+.ia-thinking-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 14px;
+}
+.ia-thinking-bars i {
+  display: block;
+  width: 3.5px;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #00f2fe, #a855f7);
+  animation: iaWaveBar 0.55s ease-in-out infinite alternate;
+}
+.ia-thinking-bars i:nth-child(2) { animation-delay: 0.1s; }
+.ia-thinking-bars i:nth-child(3) { animation-delay: 0.2s; }
+.ia-thinking-bars i:nth-child(4) { animation-delay: 0.3s; }
+.ia-thinking-bars i:nth-child(5) { animation-delay: 0.4s; }
+
+/* Banner y ondas en vivo del micrófono dentro del chat */
+.ia-mic-live-banner {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 12px;
+  margin-bottom: 6px;
+  border-radius: 11px;
+  background: linear-gradient(90deg, rgba(0, 242, 254, 0.16), rgba(88, 255, 154, 0.14));
+  border: 1px solid rgba(0, 242, 254, 0.45);
+  color: #eaffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: iaMsgPopIn 0.25s ease-out both;
+}
+#ai-form.mic-listening-active {
+  flex-wrap: wrap;
+}
+#ai-form.mic-listening-active .ia-mic-live-banner {
+  display: flex;
+}
+.ia-mic-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.ia-mic-wave i {
+  display: block;
+  width: 3px;
+  height: 4px;
+  border-radius: 3px;
+  background: #00f2fe;
+  animation: iaWaveBar 0.45s ease-in-out infinite alternate;
+}
+.ia-mic-wave i:nth-child(2) { animation-delay: 0.09s; background: #58ff9a; }
+.ia-mic-wave i:nth-child(3) { animation-delay: 0.18s; background: #00f2fe; }
+.ia-mic-wave i:nth-child(4) { animation-delay: 0.27s; background: #58ff9a; }
+.ia-mic-wave i:nth-child(5) { animation-delay: 0.36s; background: #00f2fe; }
+.ia-mic-live-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#ai-input.ia-input-dictating {
+  border-color: #00f2fe !important;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.28) !important;
+}
+#ai-mic-btn.listening {
+  animation: iaMicPulseRing 1.15s ease-in-out infinite !important;
+  box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.65);
+}
+@keyframes iaMicPulseRing {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.65); }
+  70% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
+}
+
+/* Animaciones nuevas para la mascota (giro alegre y meneo curioso) */
+.osito-face.of-spin-joy .of-card {
+  animation: ofSpinJoy 0.72s cubic-bezier(0.28, 1.35, 0.5, 1) 1 !important;
+}
+.osito-face.of-wiggle .of-card {
+  animation: ofWiggleHead 0.58s ease-in-out 1 !important;
+}
+@keyframes ofSpinJoy {
+  0% { transform: scale(1) rotateY(0deg); }
+  45% { transform: scale(1.12) translateY(-0.04em) rotateY(180deg); }
+  100% { transform: scale(1) rotateY(360deg); }
+}
+@keyframes ofWiggleHead {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-9deg) translateY(-0.02em); }
+  50% { transform: rotate(9deg) translateY(-0.02em); }
+  75% { transform: rotate(-5deg); }
+}
+
+/* Optimización inteligente de batería e inactividad (sin quitar jamás el video de fondo) */
+html.battery-eco-idle .modo-decor-item,
+html.battery-eco-idle .ambient-orb,
+html.battery-eco-idle .bg-particles {
+  animation-play-state: paused !important;
+}
+.video-card,
+.sidebar-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+

@@ -98,7 +98,7 @@
   }
 
   function puedeCambiar(){
-    if (document.hidden) return false;
+    if (document.hidden || window.ositoEnLlamadaIA || document.documentElement.classList.contains('ia-speaking-mode')) return false;
     if (document.body && (document.body.classList.contains('no-animations') || document.body.classList.contains('ultra-performance'))) return false;
     if (window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme()) return false;
     // V59: mientras Osito está con un objeto, no se cambia de personalidad (pisaría su expresión lenta).

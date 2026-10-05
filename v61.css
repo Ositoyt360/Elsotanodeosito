@@ -53,11 +53,16 @@ html body .osito-face .of-rig {
     transform-origin: 50% 50% -.5em;
     /* pose base de 3/4 + giro que le da el puntero o la actividad (--cx arriba/abajo, --cy izquierda/derecha) */
     transform: rotateX(calc(var(--px) + var(--cx))) rotateY(calc(var(--py) + var(--cy)));
-    transition: transform .7s cubic-bezier(.25,.8,.3,1);
-    scale: .8;
-    animation: v61CuboIdle 9s ease-in-out infinite alternate !important;
+    transition: transform .55s cubic-bezier(.25,.8,.3,1);
+    scale: .82;
+    animation: v61CuboIdle 4.8s ease-in-out infinite alternate !important;
 }
-@keyframes v61CuboIdle { from { rotate: 0 1 0 -6deg; } to { rotate: 0 1 0 8deg; } }
+@keyframes v61CuboIdle {
+    0%   { rotate: 1 2 0 -9deg; translate: 0 0 0; }
+    35%  { rotate: -1 2 1 7deg; translate: 0 -.035em .02em; }
+    70%  { rotate: 1 -2 -1 -8deg; translate: .015em -.02em 0; }
+    100% { rotate: -1 2 0 10deg; translate: -.015em -.04em .025em; }
+}
 /* Usando un objeto: el cubo mira AL FRENTE (sin ladeo) y solo mueve la cara */
 html body .osito-face[data-boredom] { --px: 0deg; --py: 0deg; }
 html body .osito-face[data-boredom] .of-rig { animation: none !important; rotate: none; }
@@ -243,21 +248,22 @@ html body #welcome-screen .landing-buttons .landing-btn {
     min-height: 50px !important;
     margin: 0 !important;
     padding: 12px 16px !important;
-    border: 1px solid transparent !important;
+    border: 1px solid rgba(0, 242, 254, .48) !important;
     border-radius: 12px !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: #eafcff !important;
+    background: linear-gradient(135deg, rgba(0, 242, 254, .18), rgba(88, 255, 154, .14)) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .35), 0 0 18px rgba(0, 242, 254, .18), inset 0 1px 0 rgba(255, 255, 255, .14) !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .65) !important;
     font-size: 12px !important;
     font-weight: 850 !important;
     letter-spacing: .8px !important;
     text-transform: uppercase !important;
 }
 html body #welcome-screen .landing-buttons .landing-btn:hover {
-    transform: translateY(-1px) !important;
-    border-color: rgba(0,242,254,.34) !important;
-    background: rgba(0,242,254,.10) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    border-color: rgba(88, 255, 154, .75) !important;
+    background: linear-gradient(135deg, rgba(0, 242, 254, .26), rgba(88, 255, 154, .22)) !important;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .42), 0 0 26px rgba(0, 242, 254, .32), inset 0 1px 0 rgba(255, 255, 255, .22) !important;
 }
 html body #welcome-screen .landing-buttons .landing-btn:active {
     transform: scale(.985) !important;

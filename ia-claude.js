@@ -557,24 +557,25 @@
             if (!cara.offsetParent) return;
             if (cara.getAttribute('data-expr')) return; // no interrumpir una emoción en curso
             var r = Math.random();
-            if (r < .36) {
-                parpadear(cara, Math.random() < .28);
-            } else if (r < .64) {
-                cara.style.setProperty('--gx', ((Math.random() * 2 - 1) * .6).toFixed(2));
-                cara.style.setProperty('--gy', ((Math.random() * 2 - 1) * .38).toFixed(2));
-                cara.style.setProperty('--tilt-i', ((Math.random() * 8) - 4).toFixed(1) + 'deg');
-            } else if (r < .78) {
-                poner(cara, Math.random() < .5 ? 'smile' : 'wink', 900);
+            if (r < .30) {
+                parpadear(cara, Math.random() < .35);
+            } else if (r < .58) {
+                cara.style.setProperty('--gx', ((Math.random() * 2 - 1) * .75).toFixed(2));
+                cara.style.setProperty('--gy', ((Math.random() * 2 - 1) * .48).toFixed(2));
+                cara.style.setProperty('--tilt-i', ((Math.random() * 12) - 6).toFixed(1) + 'deg');
+            } else if (r < .82) {
+                var gestos = ['smile', 'wink', 'happy', 'love', 'surprised', 'cool', 'dance', 'laugh', 'kiss', 'shy'];
+                poner(cara, gestos[Math.floor(Math.random() * gestos.length)], 1500);
             } else {
-                // Los nod/peek/breathe antiguos de Claude movían toda la cabeza
-                // cada pocos segundos y producían el efecto de temblor.
-                // Aquí dejamos únicamente microgestos de ojos/expresión.
-                parpadear(cara, Math.random() < .18);
+                var nod = Math.random() < 0.5 ? 'of-face-nod' : 'of-face-peek';
+                cara.classList.add(nod);
+                setTimeout(function () { cara.classList.remove(nod); }, 720);
+                parpadear(cara, Math.random() < .25);
             }
         });
     }
     (function programarMicrogesto() {
-        setTimeout(function () { microgesto(); programarMicrogesto(); }, 1800 + Math.random() * 2800);
+        setTimeout(function () { microgesto(); programarMicrogesto(); }, 950 + Math.random() * 1400);
     }());
     function activa() {
         ultimaActividad = Date.now();
@@ -605,11 +606,11 @@
                 var conExpr = caras.some(function (c) { return c.offsetParent && c.getAttribute('data-expr'); });
                 if (libre && !dormida && !conExpr) {
                     var ex = siguienteExpresion();
-                    if (ex === 'yawn') bostezar(); else paraTodas(ex, 1500);
+                    if (ex === 'yawn') bostezar(); else paraTodas(ex, 2100);
                 }
             }
             ciclo();
-        }, 4500 + Math.random() * 3500);
+        }, 2400 + Math.random() * 2000);
     }());
 
     // Bostezo: abre la boca grande ~2 s y luego sonríe unos segundos.

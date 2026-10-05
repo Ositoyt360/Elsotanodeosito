@@ -188,8 +188,15 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname), { maxAge: '7d', etag: true, setHeaders(res, file) {
-  // HTML y JS/CSS propios: revalidar siempre; videos, audio e imágenes: caché larga.
-  if (/\.(html|js|css)$/i.test(file)) res.setHeader('Cache-Control', 'no-cache');
+  // HTML, JS, CSS, manifest y Service Worker: sin caché bloqueante para que las actualizaciones de GitHub se reflejen al instante.
+  if (/\.(html|js|css|json|webmanifest)$/i.test(file)) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  if (/sw\.js$/i.test(file)) {
+    res.setHeader('Service-Worker-Allowed', '/');
+  }
 } }));
 
 app.get('/', (req, res) => {
@@ -1261,9 +1268,336 @@ app.post('/api/ia', async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`Servidor iniciado en http://localhost:${PORT}`);
+// ============================================================
+// SINCRONIZACIÓN AUTOMÁTICA CON GITHUB (Ositoyt360/Elsotanodeosito)
+// Cada vez que se actualiza el repositorio de GitHub, la aplicación
+// en teléfonos detecta el nuevo commit, sincroniza los archivos nuevos
+// y se actualiza sola en tiempo real.
+// ============================================================
+const GITHUB_REPO = process.env.GITHUB_REPO || 'Ositoyt360/Elsotanodeosito';
+const ARCHIVOS_PROTEGIDOS_SYNC = new Set([
+  'server.js', 'package.json', 'package-lock.json', '.env', '.env.example',
+  'metadata.json', 'manifest.json', 'sw.js', 'actualizaciones-helper.js',
+  'chat-data.json', 'admin-settings.json', 'site-settings.json'
+]);
+
+const githubSyncState = {
+  repo: GITHUB_REPO,
+  baselineSha: '',
+  baselineTimestamp: 0,
+  latestSha: '',
+  latestMessage: '',
+  latestDate: '',
+  lastCheckedAt: 0,
+  lastSyncedSha: '',
+  syncing: false
+};
+
+function calcularVersionLocal() {
+  const archivosClave = [
+    'index.html', 'styles.css', 'v49.css', 'v49.js', 'v61.css',
+    'script.js', 'firebase-integration.js', 'actualizaciones-helper.js',
+    'performance-lite.js', 'sw.js',
+    'perfil.html', 'profile.js', 'moderator.html', 'moderator.js'
+  ];
+  let firma = 0;
+  for (const nombre of archivosClave) {
+    try {
+      const ruta = path.join(__dirname, nombre);
+      if (fs.existsSync(ruta)) {
+        const stat = fs.statSync(ruta);
+        firma = (firma + Math.floor(stat.mtimeMs) + stat.size) % 9007199254740991;
+      }
+    } catch (e) {}
+  }
+  return `${githubSyncState.latestSha ? githubSyncState.latestSha.slice(0, 7) : 'local'}-${firma}`;
+}
+
+async function sincronizarArchivosCommitGitHub(sha) {
+  if (!sha || githubSyncState.syncing) return [];
+  githubSyncState.syncing = true;
+  const actualizados = [];
+  try {
+    const peticion = global.fetch || require('node-fetch');
+    const resCommit = await peticion(`https://api.github.com/repos/${GITHUB_REPO}/commits/${sha}`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'ElSotanoDeOsito-PWA-Updater/1.0'
+      }
+    });
+    if (!resCommit.ok) return [];
+    const dataCommit = await resCommit.json();
+    const files = Array.isArray(dataCommit.files) ? dataCommit.files : [];
+
+    for (const fileInfo of files) {
+      const filename = String(fileInfo?.filename || '').trim();
+      if (!filename || filename.includes('..') || filename.startsWith('.')) continue;
+      if (ARCHIVOS_PROTEGIDOS_SYNC.has(filename)) continue;
+      if (fileInfo.status === 'removed') continue;
+
+      const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${sha}/${encodeURI(filename)}`;
+      try {
+        const resRaw = await peticion(rawUrl, {
+          headers: { 'User-Agent': 'ElSotanoDeOsito-PWA-Updater/1.0', 'Cache-Control': 'no-cache' }
+        });
+        if (resRaw.ok) {
+          const buffer = Buffer.from(await resRaw.arrayBuffer());
+          const destino = path.join(__dirname, filename);
+          const dir = path.dirname(destino);
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          fs.writeFileSync(destino, buffer);
+          actualizados.push(filename);
+        }
+      } catch (errArchivo) {
+        console.warn('[GitHubSync] No se pudo descargar archivo:', filename, errArchivo.message);
+      }
+    }
+    if (actualizados.length > 0) {
+      githubSyncState.lastSyncedSha = sha;
+      console.log(`[GitHubSync] Commit ${sha.slice(0, 7)} sincronizado (${actualizados.length} archivos):`, actualizados.join(', '));
+    }
+  } catch (e) {
+    console.warn('[GitHubSync] Error al sincronizar commit:', e.message);
+  } finally {
+    githubSyncState.syncing = false;
+  }
+  return actualizados;
+}
+
+async function consultarGitHubUltimoCommit(forzar = false) {
+  const ahora = Date.now();
+  if (!forzar && githubSyncState.lastCheckedAt && ahora - githubSyncState.lastCheckedAt < 25000) {
+    return githubSyncState;
+  }
+  githubSyncState.lastCheckedAt = ahora;
+  try {
+    const peticion = global.fetch || require('node-fetch');
+    const res = await peticion(`https://api.github.com/repos/${GITHUB_REPO}/commits?per_page=1`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'ElSotanoDeOsito-PWA-Updater/1.0',
+        'Cache-Control': 'no-cache'
+      }
+    });
+    if (!res.ok) return githubSyncState;
+    const commits = await res.json();
+    const ultimo = Array.isArray(commits) && commits[0] ? commits[0] : null;
+    if (!ultimo || !ultimo.sha) return githubSyncState;
+
+    const sha = String(ultimo.sha);
+    const fechaIso = String(ultimo.commit?.committer?.date || ultimo.commit?.author?.date || '');
+    const fechaMs = Date.parse(fechaIso) || ahora;
+    const mensaje = String(ultimo.commit?.message || '').split('\n')[0].trim().slice(0, 140);
+
+    // Primera lectura al iniciar el servidor: registra la línea base actual
+    if (!githubSyncState.baselineSha) {
+      githubSyncState.baselineSha = sha;
+      githubSyncState.baselineTimestamp = fechaMs;
+      githubSyncState.latestSha = sha;
+      githubSyncState.latestDate = fechaIso;
+      githubSyncState.latestMessage = mensaje;
+      return githubSyncState;
+    }
+
+    const cambioDetectado = sha !== githubSyncState.latestSha;
+    githubSyncState.latestSha = sha;
+    githubSyncState.latestDate = fechaIso;
+    githubSyncState.latestMessage = mensaje;
+
+    if (cambioDetectado && sha !== githubSyncState.baselineSha && fechaMs >= githubSyncState.baselineTimestamp) {
+      const archivos = await sincronizarArchivosCommitGitHub(sha);
+      broadcastWS({
+        type: 'app_update',
+        sha,
+        shortSha: sha.slice(0, 7),
+        message: mensaje,
+        date: fechaIso,
+        filesUpdated: archivos,
+        version: calcularVersionLocal(),
+        timestamp: Date.now()
+      });
+    }
+  } catch (e) {
+    // Silencioso si GitHub limita temporalmente o no hay red
+  }
+  return githubSyncState;
+}
+
+// Revisa GitHub automáticamente cada 60 segundos en segundo plano
+setInterval(() => {
+  consultarGitHubUltimoCommit(false).catch(() => {});
+}, 60 * 1000).unref();
+
+app.get('/api/github-version', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  const forzar = req.query.force === '1' || req.query.force === 'true';
+  await consultarGitHubUltimoCommit(forzar);
+  res.json({
+    ok: true,
+    repo: GITHUB_REPO,
+    sha: githubSyncState.latestSha || '',
+    shortSha: githubSyncState.latestSha ? githubSyncState.latestSha.slice(0, 7) : '',
+    message: githubSyncState.latestMessage || '',
+    date: githubSyncState.latestDate || '',
+    lastCheckedAt: githubSyncState.lastCheckedAt || Date.now(),
+    version: calcularVersionLocal()
+  });
+});
+
+app.post('/api/github-sync', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  await consultarGitHubUltimoCommit(true);
+  let archivos = [];
+  if (
+    githubSyncState.latestSha &&
+    githubSyncState.latestSha !== githubSyncState.baselineSha &&
+    githubSyncState.latestSha !== githubSyncState.lastSyncedSha
+  ) {
+    archivos = await sincronizarArchivosCommitGitHub(githubSyncState.latestSha);
+  }
+  res.json({
+    ok: true,
+    repo: GITHUB_REPO,
+    sha: githubSyncState.latestSha || '',
+    shortSha: githubSyncState.latestSha ? githubSyncState.latestSha.slice(0, 7) : '',
+    message: githubSyncState.latestMessage || '',
+    date: githubSyncState.latestDate || '',
+    filesUpdated: archivos,
+    version: calcularVersionLocal()
+  });
+});
+
+app.get('/descargar-app', (req, res) => {
+  const appFile = path.join(__dirname, 'El-Sotano-de-Osito-App.html');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="El-Sotano-de-Osito-App.html"');
+  res.sendFile(appFile);
+});
+
+app.get('/El-Sotano-de-Osito.apk', async (req, res) => {
+  const localApk = path.join(__dirname, 'El-Sotano-de-Osito.apk');
+  if (fs.existsSync(localApk)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="El-Sotano-de-Osito.apk"');
+    return res.sendFile(localApk);
+  }
+  const peticion = global.fetch || require('node-fetch');
+  try {
+    const ghRes = await peticion('https://api.github.com/repos/Ositoyt360/Elsotanodeosito/releases/latest', {
+      headers: { 'User-Agent': 'ElSotanoDeOsito-App' }
+    });
+    if (ghRes && ghRes.ok) {
+      const release = await ghRes.json();
+      const apkAsset = (release.assets || []).find((a) => a.name && a.name.endsWith('.apk'));
+      if (apkAsset && apkAsset.browser_download_url) {
+        return res.redirect(302, apkAsset.browser_download_url);
+      }
+    }
+  } catch (_) {}
+  try {
+    const rawRes = await peticion('https://raw.githubusercontent.com/Ositoyt360/Elsotanodeosito/main/El-Sotano-de-Osito.apk', {
+      method: 'HEAD'
+    });
+    if (rawRes && rawRes.ok) {
+      return res.redirect(302, 'https://raw.githubusercontent.com/Ositoyt360/Elsotanodeosito/main/El-Sotano-de-Osito.apk');
+    }
+  } catch (_) {}
+  return res.redirect(302, '/descargar-app');
+});
+
+app.get('/descargar-apk', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Descargar APK — El Sótano de Osito</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 20%, #101935 0%, #050711 75%);
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+    }
+    .card {
+      max-width: 460px;
+      width: 100%;
+      background: rgba(15, 21, 40, 0.92);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      border-radius: 22px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+    }
+    img { width: 76px; height: 76px; border-radius: 18px; margin-bottom: 14px; border: 2px solid rgba(0, 242, 254, 0.5); }
+    h1 { font-size: 1.35rem; margin-bottom: 8px; color: #00f2fe; }
+    p { font-size: 0.92rem; color: #b8c7e0; line-height: 1.5; margin-bottom: 20px; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 0.98rem;
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: transform 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-apk {
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      color: #04101f;
+      box-shadow: 0 8px 24px rgba(0, 242, 254, 0.3);
+    }
+    .btn-universal {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e6f1ff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: #8fa6cb;
+    }
+    .badge {
+      background: rgba(0, 242, 254, 0.1);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/favicon.png" alt="El Sótano de Osito">
+    <h1>El Sótano de Osito — APK</h1>
+    <p>Aplicación oficial optimizada a 60Hz / 90Hz / 120Hz con fluidez al cargar la batería y auto-actualización automática desde GitHub.</p>
+    <a class="btn btn-apk" href="/El-Sotano-de-Osito.apk" download="El-Sotano-de-Osito.apk">⬇ Descargar El-Sotano-de-Osito.apk (Android)</a>
+    <a class="btn btn-universal" href="/descargar-app" download="El-Sotano-de-Osito-App.html">📱 Descargar App Universal (Cualquier Teléfono / Tableta)</a>
+    <div class="badges">
+      <span class="badge">⚡ 60Hz / 90Hz / 120Hz</span>
+      <span class="badge">🔋 Fluido al Cargar</span>
+      <span class="badge">🔄 Auto-Update GitHub</span>
+    </div>
+  </div>
+</body>
+</html>`);
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor iniciado en http://0.0.0.0:${PORT}`);
   console.log(ANTHROPIC_API_KEY
     ? `[IA] Claude activo (modelo ${ANTHROPIC_MODEL}).`
     : '[IA] Falta ANTHROPIC_API_KEY: la IA responderá solo con su base de conocimiento local.');
+  consultarGitHubUltimoCommit(true).catch(() => {});
 });

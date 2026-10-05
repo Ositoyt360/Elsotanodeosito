@@ -829,21 +829,23 @@ body.guest-mode .livechat-floating-container {
 }
 
 .btn-enter-hub { 
-    /* Botón de fondo blanco: el texto debe ser negro para que se lea bien */
-    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); 
-    color: #000000; text-shadow: none; border: none; padding: 16px 42px; 
+    background: linear-gradient(135deg, #07131c 0%, #0d2433 50%, #103245 100%); 
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+    padding: 16px 42px; 
     font-size: 13px; font-weight: 800; border-radius: var(--radius-md); cursor: pointer; 
     text-transform: uppercase; margin: 20px auto 0; transition: var(--transition-premium); 
-    display: inline-block; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
+    display: inline-block; letter-spacing: 1px;
+    border: 1px solid rgba(88, 255, 154, 0.55);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45), 0 0 22px rgba(88, 255, 154, 0.25), 0 0 12px rgba(0, 242, 254, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
     will-change: transform, box-shadow;
 }
 
 .btn-enter-hub:hover { 
-    /* Al pasar el mouse, el fondo se vuelve negro y el texto blanco */
-    background: #000000;
+    background: linear-gradient(135deg, #0a1b28 0%, #113044 50%, #154058 100%);
     color: #ffffff;
-    box-shadow: 0 0 35px var(--glow-color-1), 0 0 15px var(--primary-color); 
+    border-color: rgba(88, 255, 154, 0.85);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 35px var(--glow-color-1), 0 0 18px var(--primary-color), inset 0 1px 0 rgba(255, 255, 255, 0.22); 
     transform: translateY(-3px) scale(1.02); 
 }
 
@@ -1117,8 +1119,11 @@ body.no-animations .logo {
    se lea bien, y ese color NO cambia al pasar el mouse o tocar con el
    dedo (solo se levanta un poco y brilla más el borde). */
 .btn-action { 
-    background: var(--surface); color: var(--primary-color); 
-    border: 1px solid var(--glass-border); padding: 8px 16px; 
+    background: linear-gradient(135deg, rgba(10, 22, 18, 0.94), rgba(6, 12, 18, 0.96));
+    color: var(--primary-color); 
+    border: 1px solid rgba(88, 255, 154, 0.48);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 14px rgba(88, 255, 154, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: 8px 16px; 
     font-size: 11px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; 
     transition: var(--transition-premium); display: flex; align-items: center; gap: 8px;
     position: relative; overflow: hidden;
@@ -1682,11 +1687,12 @@ body.no-animations .cd-hoy-msg, body.ultra-performance .cd-hoy-msg { animation: 
 .ia-input-row input:focus { outline: none; border-color: var(--primary-color); background: rgba(0, 0, 0, 0.4); }
 
 .ia-input-row .btn-send {
-    background: var(--primary-color); border: none; color: #04060c;
-    padding: 0 24px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border: 1px solid rgba(88, 255, 154, 0.6); color: #04060c;
+    padding: 0 24px; font-weight: 800; border-radius: var(--radius-md); cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 14px rgba(88, 255, 154, 0.28);
     transition: var(--transition-smooth); font-size: 14px;
 }
-.ia-input-row .btn-send:hover { background: #ffffff; transform: translateY(-1px); }
+.ia-input-row .btn-send:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 20px rgba(88, 255, 154, 0.42); }
 
 /* --- REDES SOCIALES --- */
 .social-links { display: flex; gap: 14px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
@@ -1843,19 +1849,19 @@ body.ultra-performance #header-btn-ultra-performance {
     color: #04140c !important;
 }
 
-/* REGLAS MÓVILES */
-@media (max-width: 992px) {
+/* REGLAS MÓVILES (Solo teléfonos <640px; las tabletas conservan el diseño completo de 2 columnas) */
+@media (max-width: 639px) {
     .page-layout { grid-template-columns: 1fr; padding: 20px 4%; }
     .sidebar-subscribe { width: 100%; min-width: 100%; position: static; transform: none; opacity: 1; }
     .updates-strip { grid-template-columns: 1fr; gap: 15px; }
 }
 
 /* Panel lateral (Música, OsitoExpo, Rendimiento Ultra, Ajustes de Interfaz)
-   SOLO en celular: se ocultan las tarjetas de Rendimiento Ultra y Ajustes de
+   SOLO en celular (<640px): se ocultan las tarjetas de Rendimiento Ultra y Ajustes de
    Interfaz, el volumen de música queda arriba de todo, y la cuenta
    regresiva de OsitoExpo + el aniversario de YouTube pasan al final.
-   En escritorio (arriba de 768px) nada de esto se toca. */
-@media (max-width: 768px) {
+   En tabletas y escritorio (640px+) nada de esto se toca. */
+@media (max-width: 639px) {
     .sidebar-subscribe {
         display: flex;
         flex-direction: column;
@@ -2178,7 +2184,7 @@ body.no-animations .video-card {
     transform: none !important;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 639px) {
     .video-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -2548,9 +2554,10 @@ html.mobile-lite .ia-bubble-spinner { animation: none; }
     border-radius: 10px;
     font-size: 11px;
     font-weight: 700;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(234, 255, 240, 0.85);
+    background: linear-gradient(135deg, rgba(8, 18, 14, 0.95), rgba(4, 10, 14, 0.98));
+    border: 1px solid rgba(88, 255, 154, 0.42);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 0 12px rgba(88, 255, 154, 0.16);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2562,8 +2569,9 @@ html.mobile-lite .ia-bubble-spinner { animation: none; }
 
 .ai-profile-actions .btn-action:hover:not(:disabled) {
     transform: translateY(-2px);
-    background: #000000;
-    border-color: rgba(88, 255, 154, 0.35);
+    background: linear-gradient(135deg, rgba(12, 26, 20, 0.98), rgba(6, 14, 20, 1));
+    border-color: rgba(88, 255, 154, 0.72);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), 0 0 18px rgba(88, 255, 154, 0.28);
     color: #ffffff;
 }
 
@@ -6226,3 +6234,265 @@ html.mobile-lite .osito-face[data-expr="sleeping"] .of-zzz {
 .ia-floating-container, .ia-bubble-wrap, .ia-toggle-bubble, .ia-bubble-icon,
 .ia-bubble-icon .osito-face { overflow: visible !important; }
 .ia-bubble-wrap .osito-face { z-index: 6; }
+
+/* ================= INTERFAZ DE TABLETAS: HORIZONTAL (2 COLUMNAS) Y VERTICAL OPTIMIZADO ================= */
+/* Tableta en modo HORIZONTAL (o pantallas anchas 960px–1180px): mantiene las 2 columnas de escritorio */
+@media (min-width: 640px) and (max-width: 1180px) and (orientation: landscape),
+       (min-width: 960px) and (max-width: 1180px) {
+    :root {
+        --sidebar-width: clamp(235px, 27vw, 295px);
+    }
+    html body .page-layout {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) var(--sidebar-width) !important;
+        gap: clamp(14px, 2vw, 22px) !important;
+        padding: 20px 3% !important;
+        max-width: 1440px !important;
+        align-items: start !important;
+    }
+    html body .page-layout > .main-content {
+        order: 0 !important;
+        min-width: 0 !important;
+        gap: 18px !important;
+    }
+    html body .page-layout > .sidebar-subscribe {
+        display: flex !important;
+        flex-direction: column !important;
+        order: 0 !important;
+        position: sticky !important;
+        top: 92px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-height: calc(100dvh - 108px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 16px !important;
+        gap: 12px !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+    html body .sidebar-subscribe > * {
+        order: 0 !important;
+    }
+    html body .sidebar-subscribe > #music-card,
+    html body .sidebar-subscribe > .btn-directos-nav,
+    html body .sidebar-subscribe > .cuenta-personalizacion,
+    html body .sidebar-subscribe #ultra-performance-card,
+    html body .sidebar-subscribe #interface-settings-card {
+        display: block !important;
+    }
+    html body .sidebar-subscribe > .btn-directos-nav {
+        display: flex !important;
+    }
+    html body .sidebar-card,
+    html body .countdown-box {
+        padding: 14px !important;
+    }
+    html body .promo-container {
+        min-height: 210px !important;
+        padding: 24px 26px !important;
+    }
+    html body .promo-title-main {
+        font-size: clamp(1.55rem, 3.2vw, 2.3rem) !important;
+    }
+    html body .promo-desc {
+        font-size: 13px !important;
+        max-width: 520px !important;
+    }
+    html body .promo-updates {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+    html body .updates-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        padding: 16px !important;
+    }
+    html body .content-section {
+        padding: 16px !important;
+    }
+    html body .ia-floating-container {
+        top: 84px !important;
+        right: 14px !important;
+        bottom: auto !important;
+    }
+    html body .ia-section {
+        width: min(350px, 46vw) !important;
+        max-height: calc(100dvh - 105px) !important;
+    }
+}
+
+/* Tableta en modo VERTICAL (Portrait 600px–959px): proporción limpia, sin aplastar columnas ni agrandar tarjetas */
+@media (min-width: 600px) and (max-width: 959px) and (orientation: portrait) {
+    html body header {
+        padding: 12px 22px !important;
+    }
+    html body header .logo {
+        font-size: clamp(1.25rem, 3vw, 1.6rem) !important;
+    }
+    html body .page-layout {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 18px !important;
+        padding: 18px 22px 28px !important;
+        max-width: 900px !important;
+        margin: 0 auto !important;
+        align-items: start !important;
+    }
+    html body .page-layout > .main-content {
+        order: 1 !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        gap: 16px !important;
+    }
+    html body .page-layout > .sidebar-subscribe {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        order: 2 !important;
+        position: static !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 16px !important;
+        gap: 14px !important;
+        transform: none !important;
+        opacity: 1 !important;
+        box-sizing: border-box !important;
+    }
+    html body .sidebar-subscribe > * {
+        order: 0 !important;
+        margin: 0 !important;
+    }
+    html body .sidebar-subscribe > .btn-directos-nav {
+        display: flex !important;
+        grid-column: 1 / -1 !important;
+        justify-content: center !important;
+    }
+    html body .sidebar-subscribe > #countdowns-container:not([hidden]) {
+        display: grid !important;
+        grid-column: 1 / -1 !important;
+    }
+    html body .sidebar-subscribe > #music-card,
+    html body .sidebar-subscribe > .cuenta-personalizacion,
+    html body .sidebar-subscribe > #ultra-performance-card,
+    html body .sidebar-subscribe > #interface-settings-card {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    html body .sidebar-subscribe > .creator-countdown-editor:not([hidden]),
+    html body .sidebar-subscribe > .creator-updates-editor:not([hidden]) {
+        display: grid !important;
+        grid-column: 1 / -1 !important;
+    }
+    html body .promo-container {
+        min-height: 195px !important;
+        padding: 22px 26px !important;
+        border-radius: 18px !important;
+    }
+    html body .promo-title-main {
+        font-size: clamp(1.45rem, 3.4vw, 2rem) !important;
+        line-height: 1.15 !important;
+    }
+    html body .promo-intro {
+        font-size: 14px !important;
+    }
+    html body .promo-desc {
+        font-size: 13px !important;
+        max-width: 100% !important;
+    }
+    html body .promo-updates,
+    html body .updates-strip {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+    html body .promo-update-card {
+        padding: 10px 12px !important;
+    }
+    html body .promo-update-title {
+        font-size: 12.5px !important;
+    }
+    html body .content-section {
+        padding: 16px 18px !important;
+        border-radius: 18px !important;
+    }
+    html body .dashboard-section-header {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+    html body .section-heading {
+        font-size: clamp(1.15rem, 2.4vw, 1.4rem) !important;
+    }
+    html body .video-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+    }
+    html body .ia-floating-container {
+        top: 78px !important;
+        right: 16px !important;
+        bottom: auto !important;
+    }
+    html body .ia-section.active {
+        width: min(370px, calc(100vw - 32px)) !important;
+        height: min(620px, calc(100dvh - 100px)) !important;
+        max-height: calc(100dvh - 100px) !important;
+    }
+}
+@media (min-width: 760px) and (max-width: 959px) and (orientation: portrait) {
+    html body .video-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+    }
+}
+@media (min-width: 640px) and (max-width: 900px) and (orientation: landscape) {
+    html body .video-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+    }
+}
+@media (min-width: 901px) and (max-width: 1180px) {
+    html body .video-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+    }
+}
+
+/* ================= V64 — FLUIDEZ ADAPTATIVA (60Hz / 90Hz / 120Hz), MODO CARGA Y SEGUNDO PLANO ================= */
+html.high-refresh-hz body,
+html.hz-120 body,
+html.hz-90 body {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+html.charging-fluid-mode *,
+html.hz-fluid-boost * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+html.charging-fluid-mode .ambient-glow,
+html.charging-fluid-mode .promo-bg-fx,
+html.hz-fluid-boost .ambient-glow,
+html.hz-fluid-boost .promo-bg-fx {
+    display: none !important;
+}
+html.charging-fluid-mode .video-card,
+html.charging-fluid-mode .sidebar-card,
+html.charging-fluid-mode .content-section,
+html.hz-fluid-boost .video-card,
+html.hz-fluid-boost .sidebar-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32) !important;
+    transform: translateZ(0);
+}
+html.charging-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(even),
+html.hz-fluid-boost .modo-sitio-decoracion .modo-decor-item:nth-child(3n) {
+    display: none !important;
+}
+html.app-backgrounded *,
+html.app-backgrounded *::before,
+html.app-backgrounded *::after {
+    animation-play-state: paused !important;
+}
+
+

@@ -258,6 +258,13 @@
             rankColor: rank.color
         };
 
+        if (!isGuest) {
+            try {
+                localStorage.setItem('osito_user_profile', JSON.stringify(window.ositoCurrentUserProfile));
+                localStorage.removeItem('osito_guest_mode');
+            } catch (e) {}
+        }
+
         if (!isGuest && !localStorage.getItem('osito_ai_nombre')) {
             localStorage.setItem('osito_ai_nombre', displayName);
         }
@@ -282,6 +289,7 @@
     function showUnauthenticatedView() {
         const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
         setGuestMode(false);
+        try { localStorage.removeItem('osito_user_profile'); } catch (e) {}
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
         if (guest) guest.style.display = 'inline-flex';
@@ -309,7 +317,7 @@
         const accountWelcome = el('account-welcome');
         setGuestMode(false);
         if (form) form.style.display = 'none';
-        if (accountWelcome) accountWelcome.style.display = 'block';
+        if (accountWelcome) accountWelcome.style.display = 'none';
         if (logout) logout.style.display = 'inline-flex';
         if (guest) guest.style.display = 'none';
         if (mainLogout) mainLogout.style.display = 'inline-flex';
@@ -317,16 +325,16 @@
         const profileOpenButton = el('profile-open-button');
         if (profileOpenButton) profileOpenButton.style.display = 'inline-flex';
         if (previewPhotoButton) previewPhotoButton.style.display = 'inline-flex';
-        if (readyButton) readyButton.style.display = 'inline-flex';
+        if (readyButton) readyButton.style.display = 'none';
         if (accountTools) accountTools.style.display = 'block';
         setPreview(profile, user);
         setStatus(`Sesion activa: ${user?.email || 'usuario autenticado'}.`, 'success');
-        if (typeof window.mostrarNotificacion === 'function') {
-            window.mostrarNotificacion('Conectado: Tu cuenta se sincroniza en la nube.');
-        }
         window.actualizarVisibilidadSeccionesCuenta?.();
-        window.osMostrarCuentaLanding?.();
-        window.aiAnimarExitoAuth?.();
+        if (typeof window.entrarAlSitioInstantaneo === 'function') {
+            window.entrarAlSitioInstantaneo();
+        } else {
+            window.osMostrarCuentaLanding?.();
+        }
     }
 
     function enterAsGuest() {
@@ -692,6 +700,8 @@
             }
 
             renderAiMessages(messages);
+        }, (error) => {
+            console.warn('[FirebaseAI] No se pudo sincronizar el historial de IA.', error?.code || error);
         });
     }
 
@@ -860,11 +870,22 @@
     }
 
     async function handleSignOut() {
+        try {
+            localStorage.removeItem('osito_user_profile');
+            localStorage.removeItem('osito_guest_mode');
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i) || '';
+                if (k.indexOf('firebase:authUser:') === 0) localStorage.removeItem(k);
+            }
+        } catch (e) {}
         if (window.ositoGuestMode) {
             window.location.reload();
             return;
         }
-        if (!auth || !window.signOutFirebase) return;
+        if (!auth || !window.signOutFirebase) {
+            window.location.reload();
+            return;
+        }
         try {
             await window.signOutFirebase(auth);
             state.selectedPhotoFile = null;
@@ -1356,6 +1377,20 @@
     window.addEventListener('DOMContentLoaded', () => {
         bindUi();
         setMode('login');
+        try {
+            const cachedRaw = localStorage.getItem('osito_user_profile');
+            if (cachedRaw && localStorage.getItem('osito_guest_mode') !== 'true') {
+                const cachedProfile = JSON.parse(cachedRaw);
+                if (cachedProfile && (cachedProfile.uid || cachedProfile.email)) {
+                    showAuthenticatedView(cachedProfile, {
+                        uid: cachedProfile.uid || '',
+                        email: cachedProfile.email || '',
+                        displayName: cachedProfile.displayName || '',
+                        photoURL: cachedProfile.photoURL || ''
+                    });
+                }
+            }
+        } catch (e) {}
         initAuth().catch((error) => {
             console.error('[FirebaseAuth]', error);
             setStatus('No se pudo iniciar Firebase.', 'error');

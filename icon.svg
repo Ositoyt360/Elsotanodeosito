@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="ositoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#39ff6a" />
+      <stop offset="100%" stop-color="#9d00ff" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="#080a0f" />
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="none" stroke="url(#ositoGrad)" stroke-width="12" opacity="0.85" />
+  <circle cx="152" cy="148" r="54" fill="url(#ositoGrad)" />
+  <circle cx="360" cy="148" r="54" fill="url(#ositoGrad)" />
+  <circle cx="152" cy="148" r="28" fill="#080a0f" />
+  <circle cx="360" cy="148" r="28" fill="#080a0f" />
+  <circle cx="256" cy="276" r="144" fill="#121824" stroke="url(#ositoGrad)" stroke-width="14" />
+  <circle cx="204" cy="252" r="22" fill="#00f2fe" />
+  <circle cx="308" cy="252" r="22" fill="#00f2fe" />
+  <circle cx="210" cy="246" r="7" fill="#ffffff" />
+  <circle cx="314" cy="246" r="7" fill="#ffffff" />
+  <ellipse cx="256" cy="306" rx="28" ry="20" fill="#39ff6a" />
+  <path d="M 216 344 Q 256 376 296 344" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+</svg>

@@ -330,7 +330,7 @@
         var music = document.getElementById('music-card');
         if (!menu || !sidebar || !music) return;
 
-        var movil = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        var movil = window.matchMedia && window.matchMedia('(max-width: 639px)').matches;
         var marcador = menu.querySelector('.theme-selector');
         if (movil) {
             if (music.parentNode !== menu) {
@@ -348,7 +348,7 @@
         sincronizarControlesMoviles();
         window.addEventListener('resize', sincronizarControlesMoviles, { passive: true });
         if (window.matchMedia) {
-            var mq = window.matchMedia('(max-width: 768px)');
+            var mq = window.matchMedia('(max-width: 639px)');
             var cambio = function () { sincronizarControlesMoviles(); };
             if (mq.addEventListener) mq.addEventListener('change', cambio);
             else if (mq.addListener) mq.addListener(cambio);

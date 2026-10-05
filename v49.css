@@ -457,8 +457,8 @@ body.no-animations .osito-face[data-expr="kiss"] *,body.no-animations .osito-fac
 body.ultra-performance .osito-face[data-expr="laugh"] *,body.ultra-performance .osito-face[data-expr="dance"] *{animation:none!important}
 @media (prefers-reduced-motion:reduce){.osito-face[data-expr="sleeping"] .of-zzz,.osito-face[data-expr="sleeping"] .of-bub,.osito-face[data-expr="laugh"] *,.osito-face[data-expr="dance"] *{animation:none!important}}
 
-/* ================= V49.7 — CELULAR: música y conteos regresivos ARRIBA ================= */
-@media (max-width: 992px) {
+/* ================= V49.7 — CELULAR: música y conteos regresivos ARRIBA (solo teléfonos <640px; tabletas conservan el diseño completo de 2 columnas) ================= */
+@media (max-width: 639px) {
     /* El panel lateral se "deshace": sus tarjetas se acomodan como hijas del layout para poder subirlas. */
     .page-layout { display: flex !important; flex-direction: column; }
     .page-layout > .main-content { order: 5; }

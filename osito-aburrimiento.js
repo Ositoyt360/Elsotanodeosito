@@ -8,16 +8,11 @@
   'use strict';
   var F=window.OsitoFace, S=window.OsitoFaceSound;
   if(!F || !F.caras) return;
-  var ABURRIDO_MS=10000; // 10 s sin actividad real
-  var PAGINA_MS=20000;   // V59: pasa una página del libro cada 20 s (antes 8 s)
-  /* ===== V59 — RITMO LENTO (edita estos dos números a tu gusto) =====
-   * OBJETO_MS    = cuánto tiempo tiene Osito cada objeto antes de guardarlo y sacar otro.
-   * EXPRESION_MS = cuánto dura cada expresión/gesto antes de pasar a la siguiente.
-   * 1 minuto = 60000   ·   3 minutos = 180000
-   * Con 180000 y 60000: cada objeto dura 3 min y cambia de expresión cada 1 min. */
-  var OBJETO_MS=180000;     // 3 minutos por objeto  (usa 60000 para 1 minuto)
-  var EXPRESION_MS=60000;   // 1 minuto por expresión (usa 180000 para 3 minutos)
-  var BEAT_MS=2600;         // los movimientos puntuales del objeto (brindar, ganar…) duran poco: no se alargan
+  var ABURRIDO_MS=5000;  // 5 s sin actividad real para empezar actividades 3D
+  var PAGINA_MS=7000;    // pasa una página del libro cada 7 s
+  var OBJETO_MS=24000;   // 24 segundos por objeto para mayor variedad de animaciones 3D
+  var EXPRESION_MS=6500; // cada 6.5 segundos cambia de expresión/gesto con el objeto
+  var BEAT_MS=2400;         // los movimientos puntuales del objeto (brindar, ganar…) duran poco: no se alargan
   var CAMBIO_MS={};
   ['diario','juego','control','periodico','telefono','cafe','chocolate','audifonos','cubo','peluche','pizza','manzana','microfono','laptop','mochila','balon','varita','regalo','consola','vaso','camara','libre'].forEach(function(k){ CAMBIO_MS[k]=OBJETO_MS; });
   var primeraBolsa=true; // la primera vez salen primero el periódico y el teléfono

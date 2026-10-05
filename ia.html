@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>La Mascotita del Sótano — IA & Llamada</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="v49.css">
+    <link rel="stylesheet" href="call-mode.css">
+    <link rel="stylesheet" href="v61.css">
+    <link rel="stylesheet" href="osito-cara3d.css">
+    <link rel="stylesheet" href="osito-actividades-3d.css">
+    <link rel="stylesheet" href="personalidades-animaciones-1000.css">
+    <style>
+        body {
+            background: #080a0f;
+            color: #e2f7ff;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .ia-standalone-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: rgba(12, 16, 28, 0.95);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+            z-index: 100;
+        }
+        .ia-standalone-back {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #080a0f;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.35);
+            transition: transform 0.2s ease;
+        }
+        .ia-standalone-back:active {
+            transform: scale(0.96);
+        }
+        .ia-standalone-content {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #121931 0%, #080a0f 100%);
+        }
+        #ai-section {
+            position: relative !important;
+            inset: auto !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #ai-section .ia-header {
+            display: none !important; /* Usamos ia-standalone-header */
+        }
+        #ai-section .ia-setup {
+            display: flex !important;
+            flex: 1 1 auto !important;
+            flex-direction: column !important;
+            height: 100% !important;
+        }
+        #ia-call-view {
+            display: flex !important;
+            flex: 1 1 auto !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body class="ia-call-mode-active">
+    <header class="ia-standalone-header">
+        <button class="ia-standalone-back" type="button" onclick="window.location.href='index.html'">
+            ← Regresar al Sótano
+        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ia-status-dot"></span>
+            <span style="font-weight: 700; font-size: 0.95rem;">La Mascotita del Sótano (IA en Vivo)</span>
+        </div>
+    </header>
+
+    <div class="ia-standalone-content">
+        <section class="ia-section active" id="ai-section">
+            <div class="ia-setup">
+                <div class="ia-call-view" id="ia-call-view" aria-live="polite">
+                    <div class="ia-call-top">
+                        <span class="ia-call-live-pill"><span class="ia-call-dot"></span> VOZ EN VIVO</span>
+                        <span class="ia-call-timer" id="ia-call-timer">00:00</span>
+                    </div>
+                    <div class="ia-call-state-badge" id="ia-call-state-badge">✨ Conectado con La Mascotita del Sótano...</div>
+
+                    <!-- Previsualización de Cámara Real HD (Frontal) -->
+                    <div class="call-camera-preview-box" id="call-camera-preview-box" hidden>
+                        <video id="call-camera-video" playsinline muted autoplay></video>
+                        <div class="call-camera-badge">
+                            <span class="call-camera-dot"></span> Cámara Frontal HD
+                        </div>
+                        <button type="button" class="call-camera-close-btn" id="call-camera-close-btn" aria-label="Apagar cámara" title="Apagar cámara">✕</button>
+                    </div>
+
+                    <!-- Escenario del AVATAR CIRCULAR 2D (Cubo de la mascota en modo circular 2D) -->
+                    <div class="call-avatar-stage" id="call-avatar-stage">
+                        <div class="call-avatar" id="call-avatar" data-state="IDLE" role="button" tabindex="0" aria-label="Avatar interactivo en llamada">
+                            <div class="call-avatar-glow"></div>
+                            <div class="call-avatar-body" style="border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, #5833b5 0%, #301777 50%, #170d3d 100%);">
+                                <span class="osito-face" data-estado="idle" id="call-mascot-cube-face" aria-hidden="true" style="transform: scale(1.35);">
+                                    <span class="of-card">
+                                        <span class="of-blob"></span>
+                                        <span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span>
+                                        <span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span>
+                                        <span class="of-mouth" id="call-avatar-mouth"></span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Transcripción y Respuestas -->
+                    <div class="call-transcript-panel" id="call-transcript-panel">
+                        <div class="call-user-transcript" id="call-user-transcript" hidden>
+                            <span class="call-speaker-tag">TÚ:</span>
+                            <span id="call-user-transcript-text"></span>
+                        </div>
+                        <div class="call-response" id="call-response">
+                            <span class="call-speaker-tag">OSITO:</span>
+                            <span id="call-response-text">¡Hola! Ya estamos en modo llamada en esta pestaña. Háblame o activa tu cámara frontal 📷.</span>
+                        </div>
+                    </div>
+
+                    <div class="ia-call-voice-hint">💡 Puedes decir <strong>«cuelga la llamada»</strong> o tocar Regresar para volver al Sótano</div>
+
+                    <div class="ia-call-actions">
+                        <button class="call-mic-button ia-call-mic-toggle" id="ia-call-mic-btn" type="button" title="Silenciar / Activar micrófono" aria-label="Alternar micrófono">
+                            <span class="ia-call-mic-emoji" aria-hidden="true">🎙️</span>
+                            <span class="ia-call-mic-waves" id="call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
+                            <span id="ia-call-mic-label">Micrófono</span>
+                        </button>
+                        <button class="call-camera-button" id="ia-call-cam-btn" type="button" title="Activar / Apagar cámara frontal HD" aria-label="Alternar cámara">
+                            <span aria-hidden="true" style="font-size: 1.15em;">📷</span>
+                            <span id="ia-call-cam-label">Cámara</span>
+                        </button>
+                        <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" onclick="window.location.href='index.html'" title="Regresar al Sótano" aria-label="Regresar al Sótano">
+                            <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts de la IA y Llamada -->
+    <script src="performance-lite.js"></script>
+    <script src="base-conocimiento.js"></script>
+    <script src="v49.js"></script>
+    <script src="face-sound.js" defer></script>
+    <script src="ia-claude.js" defer></script>
+    <script src="personalidades-animaciones-1000.js" defer></script>
+    <script src="personalidades-1000.js" defer></script>
+    <script src="face-extra.js" defer></script>
+    <script src="osito-aburrimiento.js" defer></script>
+    <script src="osito-cara3d.js" defer></script>
+    <script src="osito-vision-entrenamiento.js" defer></script>
+    <script src="firebase-integration.js"></script>
+    <script src="asistente-voz.js"></script>
+    <script src="face-100.js" defer></script>
+    <script src="call-mode-engine.js"></script>
+    <script>
+        window.ositoEnLlamadaIA = true;
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.CallModeEngine && typeof window.CallModeEngine.iniciarLlamada === 'function') {
+                window.CallModeEngine.iniciarLlamada();
+            }
+        });
+    </script>
+</body>
+</html>

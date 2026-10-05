@@ -312,12 +312,7 @@
         var meta = document.querySelector('meta[name="osito-ia-url"]');
         var custom = meta && meta.content ? String(meta.content).trim().replace(/\/+$/, '') : '';
         if (custom) urls.push(custom + '/api/ia');
-        var proto = window.location && window.location.protocol;
-        if (proto === 'http:' || proto === 'https:') {
-            urls.push('/api/ia');
-        }
-        var remoto = 'https://ais-pre-3tuqw52dr436btgaqjk2om-121219840903.us-east5.run.app/api/ia';
-        if (urls.indexOf(remoto) === -1) urls.push(remoto);
+        urls.push('/api/ia');
         return urls;
     }
 
@@ -355,7 +350,7 @@
             for (var i = 0; i < endpoints.length; i++) {
                 var url = endpoints[i];
                 var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 15000 : 8500) : 0;
+                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 35000 : 25000) : 0;
                 try {
                     var payload = {
                         pregunta: textoPregunta,
@@ -566,6 +561,9 @@
         if (/\b(crea|crear|genera|generar|haz|hacer|dibuja|dibujar)\s+(una\s+|la\s+|algunas\s+)?(imagen|imagenes|foto|fotos|dibujo|ilustracion)\b/.test(t)) {
             return 'No genero imágenes, pero puedo responderte cualquier pregunta, ayudarte con tus tareas, contarte sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube) o platicar contigo. 😊';
         }
+        if (/(como se llama (el|este|tu)?\s*(sitio|pagina|web|app|aplicacion|lugar)|cual es el nombre (del|de este|de la)?\s*(sitio|pagina|web|app|aplicacion)|de que es (el|este)?\s*(sitio|pagina|web|app))/.test(t)) {
+            return 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoGamer360YT / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊';
+        }
         if (/(como se llama (tu|el) creador|quien (es (tu|el) creador|te creo|te hizo|te programo|creo (esta ia|el sitio|la pagina|el sotano))|cual es el nombre de (tu|el) creador|nombre de tu creador)/.test(t)) {
             return 'Mi creador se llama Osito.';
         }
@@ -586,11 +584,10 @@
         if (/estoy aburrido|me aburro|que hago/.test(t)) return '¡Para quitar el aburrimiento podemos jugar a preguntas y respuestas, te puedo contar datos curiosos o chistes, o puedes ver un video de OsitoGamer360YT! ¿Qué prefieres hacer primero? 😄';
         if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return '¡Claro! Dime exactamente qué pregunta de tu tarea o qué cuenta matemática tienes y te la explico paso a paso. 📚';
         var RESPUESTAS_GENERALES = [
-            '¡Entiendo perfectamente! Sobre eso que mencionas, te cuento que es un tema fascinante porque abarca tanto aspectos prácticos como teóricos. ¿Te gustaría que profundicemos en algún detalle en específico? 🤔',
-            '¡Qué gran punto! Analizándolo bien, eso tiene mucha relación con cómo funcionan las cosas en el día a día, ya sea en tecnología, juegos o conocimiento general. ¿Qué más te gustaría saber al respecto? 💡',
-            '¡Interesantísimo! Eso que comentas es clave. Por ejemplo, en el mundo digital y en los videojuegos siempre surgen dudas similares. ¿Quieres que te explique cómo aplicarlo o prefieres que veamos otro ejemplo? ✨',
-            '¡Claro que sí! Tomando eso en cuenta, la mejor forma de abordarlo es paso a paso: primero analizando el contexto y luego buscando la solución más práctica. ¿En qué parte exacta te gustaría que te apoye? 🚀',
-            '¡Me encanta esa pregunta! Es de esos temas de los que vale la pena hablar largo y tendido. ¿Hay algún aspecto en particular que te cause curiosidad o lo exploramos desde cero? 🌟'
+            '¡Excelente punto! Tratándose de eso, lo más importante es tener en cuenta los detalles prácticos y aplicarlo de forma sencilla y directa. ¿Qué otra duda tienes sobre esto? 💡',
+            '¡Totalmente de acuerdo! Es un tema muy interesante y útil para el día a día o para tus proyectos. Cuéntame con confianza si quieres que veamos otro ejemplo o algún detalle puntual. ✨',
+            '¡Buenísima observación! Analizándolo a fondo, eso tiene varias ventajas y posibilidades geniales. Aquí sigo lista para responderte cualquier otra pregunta. 🚀',
+            '¡Exacto! Esa es una forma muy inteligente de verlo. Si necesitas más información o quieres hablar de otro tema, dime y te explico paso a paso con gusto. 😊'
         ];
         var gen = RESPUESTAS_GENERALES[Math.floor(Math.random() * RESPUESTAS_GENERALES.length)];
         return gen;

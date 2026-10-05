@@ -1078,8 +1078,8 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL_PRINCIPAL = 'gemini-3-flash-preview';
 const MODELOS_GEMINI_ORDEN = [
   'gemini-3-flash-preview',
-  'gemini-2.5-flash',
-  'gemini-3.1-flash-lite-preview',
+  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
   'gemini-flash-latest'
 ];
 
@@ -1309,6 +1309,17 @@ async function manejarConsultaIA(req, res) {
   const tituloChat = textoSeguroIA(String(req.body?.tituloChat || '').replace(/\s+/g, ' ').trim().slice(0, 80));
 
   // 0) Respuesta instantánea (<1ms) si NO hay imagen adjunta y es una pregunta directa de la base oficial o límite de privacidad
+  if (!imagenInfo) {
+    const pNorm = String(pregunta).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    if (/\b(como se llama (el|este|tu)?\s*(sitio|pagina|web|app|aplicacion|lugar)|cual es el nombre (del|de este|de la)?\s*(sitio|pagina|web|app|aplicacion)|de que es (el|este)?\s*(sitio|pagina|web|app))\b/.test(pNorm)) {
+      return res.json({
+        ok: true,
+        texto: 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoGamer360YT / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊',
+        proveedor: 'base-oficial'
+      });
+    }
+  }
+
   if (!imagenInfo && conocimientoOsito && typeof conocimientoOsito.buscarEnBaseConocimiento === 'function') {
     const exacta = conocimientoOsito.buscarEnBaseConocimiento(pregunta);
     if (exacta) {
@@ -1360,7 +1371,7 @@ async function manejarConsultaIA(req, res) {
   if (ai && GEMINI_API_KEY) {
     const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
     const ordenModelos = imagenInfo
-      ? ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-flash-latest']
+      ? ['gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
       : MODELOS_GEMINI_ORDEN;
     let ultimoErrGemini = null;
 
@@ -1372,7 +1383,7 @@ async function manejarConsultaIA(req, res) {
           config: {
             systemInstruction: sistemaSeguro,
             temperature: 0.72,
-            maxOutputTokens: imagenInfo ? 460 : 340
+            maxOutputTokens: imagenInfo ? 800 : 700
           }
         });
         const rawText = response.text;

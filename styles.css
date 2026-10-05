@@ -6968,11 +6968,12 @@ body.ia-call-mode-active .ia-setup,
   justify-content: space-between;
   flex: 1 1 auto;
   width: 100%;
-  min-height: 470px;
+  min-height: 0;
   height: 100%;
+  max-height: 100%;
   box-sizing: border-box;
-  gap: 14px;
-  padding: 18px 16px 18px;
+  gap: 12px;
+  padding: 14px 14px 14px;
   margin: 0;
   border-radius: 18px;
   background:
@@ -7172,16 +7173,24 @@ button.ia-call-header-btn {
 .ia-call-subtitle {
   font-size: 13.5px;
   line-height: 1.45;
-  color: #eef7ff;
-  max-height: 76px;
-  overflow-y: auto;
+  color: #ffffff;
+  max-height: 84px;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 4 !important;
+  -webkit-box-orient: vertical !important;
   padding: 8px 12px;
   border-radius: 12px;
-  background: rgba(8, 14, 26, 0.68);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 14, 26, 0.78);
+  border: 1px solid rgba(0, 255, 204, 0.25);
   width: 100%;
   box-sizing: border-box;
   z-index: 2;
+  scrollbar-width: none !important;
+}
+.ia-call-subtitle::-webkit-scrollbar {
+  display: none !important;
 }
 .ia-call-actions {
   display: flex;
@@ -7897,40 +7906,95 @@ body.ia-call-mode-active #ia-bubble {
     height: 125px;
     margin: 0 auto;
     display: block;
+/* Quitar la mascota de la esquina en modo llamada */
+body.ia-call-mode-active .ia-bubble-wrap,
+body.ia-call-mode-active .ia-toggle-bubble,
+body.ia-call-mode-active #ia-bubble,
+body.ia-call-mode-active .corner-mascot,
+body.ia-call-mode-active .mascot-corner {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Mascota en Modo Llamada: Círculo 2D animado */
+.ia-call-mascot-face {
+    width: 104px;
+    height: 104px;
+    border-radius: 50% !important;
     position: relative;
-    transform: scale(1.1);
     pointer-events: auto;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .ia-call-mascot-face .of-card {
-    background: linear-gradient(145deg, #101728, #181135) !important;
-    border: 2px solid rgba(0, 255, 204, 0.7) !important;
-    box-shadow: 0 0 35px rgba(0, 255, 204, 0.45), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+    background: radial-gradient(circle at 35% 35%, #18223c, #0a0e1c 75%) !important;
+    border: 2.5px solid rgba(0, 255, 204, 0.75) !important;
+    box-shadow: 0 0 32px rgba(0, 255, 204, 0.38), inset 0 2px 6px rgba(255,255,255,0.2) !important;
     border-radius: 50% !important;
 }
-body.ia-call-mode-active .ia-call-mascot-face[data-estado="speaking"] .of-brow {
+
+/* Animación sincronizada al hablar (sin expresiones aleatorias) */
+.ia-call-mascot-face.is-speaking,
+.ia-call-mascot-face[data-estado="speaking"] {
+    animation: iaCallMascotSpeakPulse 0.46s ease-in-out infinite alternate !important;
+}
+.ia-call-mascot-face.is-speaking .of-card,
+.ia-call-mascot-face[data-estado="speaking"] .of-card {
+    border-color: #00ffff !important;
+    box-shadow: 0 0 42px rgba(0, 255, 255, 0.65), inset 0 0 16px rgba(0, 255, 204, 0.35) !important;
+}
+.ia-call-mascot-face.is-speaking .of-mouth,
+.ia-call-mascot-face[data-estado="speaking"] .of-mouth {
+    animation: iaCallMascotMouthTalk 0.26s ease-in-out infinite alternate !important;
+    opacity: 1 !important;
+}
+@keyframes iaCallMascotSpeakPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
+}
+@keyframes iaCallMascotMouthTalk {
+    0% { transform: scaleY(0.4) scaleX(0.85); }
+    100% { transform: scaleY(1.35) scaleX(1.15); }
+}
+body.ia-call-mode-active .ia-call-mascot-face[data-estado="speaking"] .of-brow,
+body.ia-call-mode-active .ia-call-mascot-face.is-speaking .of-brow {
     animation: none !important;
+    transform: none !important;
 }
 
 /* Modo llamada para móviles y recorte de texto largo sin scrollbar vertical */
 @media (max-width: 640px) {
     .ia-call-view {
-        padding: 10px 12px !important;
-        max-height: 80vh !important;
-        overflow: hidden !important;
+        padding: 8px 10px !important;
+        min-height: 0 !important;
+        height: 100% !important;
+        max-height: calc(100vh - 110px) !important;
+        gap: 8px !important;
+    }
+    .ia-call-orb-stage {
+        padding: 6px 0 !important;
     }
     .ia-call-mascot-face {
-        width: 90px !important;
-        height: 90px !important;
+        width: 86px !important;
+        height: 86px !important;
     }
     .ia-call-subtitle {
+        font-size: 13px !important;
+        max-height: 80px !important;
+        line-height: 1.38 !important;
+        padding: 7px 10px !important;
         display: -webkit-box !important;
-        -webkit-line-clamp: 3 !important;
+        -webkit-line-clamp: 4 !important;
         -webkit-box-orient: vertical !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        max-height: 4.5em !important;
-        font-size: 13px !important;
-        line-height: 1.4 !important;
+    }
+    .ia-call-actions {
+        gap: 8px !important;
+    }
+    .ia-call-ctrl-btn {
+        padding: 9px 12px !important;
+        font-size: 12px !important;
     }
 }
 

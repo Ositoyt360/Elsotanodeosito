@@ -524,6 +524,16 @@
             return 'Mi creador se llama Osito.';
         }
 
+        // 0.0a Nombre del SITIO / aplicación / página web ("El Sótano de Osito")
+        if (/(como se llama (el sitio|la pagina|esta pagina|este sitio|la aplicacion|la app|esta app|el programa|este espacio|el sotano|la web|esta web)|cual es el nombre (del sitio|de la pagina|de esta pagina|de este sitio|de la app|de la aplicacion|de la web)|nombre (del sitio|de la pagina|de la app|de la web)|que es este sitio|de que es este sitio|como se llama este lugar|que lugar es este)/.test(normUsuario)) {
+            return 'El sitio se llama «El Sótano de Osito». Es la aplicación y plataforma oficial del creador Osito (OsitoGamer360YT) con videos, directos, música y chat.';
+        }
+
+        // 0.0a2 Nombre de la IA / Quién eres
+        if (/(quien eres|como te llamas|cual es tu nombre|que eres|como te pusieron|tu nombre)/.test(normUsuario) && !/(canal|creador|editor|colaborador|sitio|pagina|app)/.test(normUsuario)) {
+            return 'Soy «La mascotita del Sótano», la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoGamer360YT.';
+        }
+
         // 0.0b Nombre actual del CANAL en YouTube (sin confundir con "primer canal" ni con "primer video")
         if (/(como se llama (el|tu|su) canal|cual es (el nombre de(l| tu| su) canal|(tu|su|el) canal( de youtube)?|el canal de osito)|nombre (actual |oficial )?de(l| tu| su) canal|como te llamas en youtube|como se llama osito en youtube|como aparece (el canal|en youtube)|como busco (el|tu) canal|canal de youtube de osito)/.test(normUsuario) &&
             !/(primer|primero|anterior|original|antes|llamaba|video|serie|editor)/.test(normUsuario)) {
@@ -587,6 +597,11 @@
         // 0.8 Reglas en los directos
         if (/(reglas (de los directos|del directo|en los directos|del canal))/.test(normUsuario)) {
             return 'Las reglas en los directos son: no insultos, no humillar a la gente y mantener todo humildemente.';
+        }
+
+        // 0.9 Nombre del sitio y de la aplicación oficial
+        if (/(como se llama (el|este|tu)?\s*(sitio|pagina|web|app|aplicacion|lugar)|cual es el nombre (del|de este|de la)?\s*(sitio|pagina|web|app|aplicacion)|de que es (el|este)?\s*(sitio|pagina|web|app))/.test(normUsuario)) {
+            return 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoGamer360YT / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊';
         }
 
         // 1. REVISIÓN EXACTA DE LAS 19 PREGUNTAS OFICIALES

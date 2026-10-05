@@ -864,9 +864,6 @@
                 this.setState(State.LISTENING, { label: 'Escuchando... habla ahora' });
                 if (!this.hasHeardSpeech) {
                     escribirEnCajaChatEnVivo('', true);
-                    if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
-                        window.OsitoFaceSound.reproducir('mic_on');
-                    }
                 }
                 this.scheduleDeadlineCheck();
             };
@@ -975,9 +972,6 @@
                 if (inputEl) inputEl.classList.remove('ia-input-dictating');
                 if (transcript) {
                     escribirEnCajaChatEnVivo(transcript, false);
-                    if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
-                        window.OsitoFaceSound.reproducir('mic_off');
-                    }
                     const callBadge = getEl('ia-call-state-badge');
                     if (callBadge && window.ositoEnLlamadaIA) {
                         callBadge.textContent = '⚡ Micrófono apagado · Pensando respuesta...';
@@ -1470,6 +1464,22 @@
         let mejorVozCache = null;
         let tokenHablaActual = 0;
 
+        function esVozFemenina(v) {
+            if (!v) return false;
+            const name = String(v.name || '').toLowerCase();
+            if (/sabina|dalia|elena|ximena|paulina|monica|mónica|marisol|angelica|angélica|francisca|catalina|elvira|paloma|lucia|lucía|carmen|raquel|laura|sofia|sofía|rosa|conchita|victoria|camila|mia|lola|female|mujer|femenin|chica|es-es-x-eed|es-us-x-sfb/i.test(name)) return true;
+            if (/female/i.test(v.gender || '')) return true;
+            return false;
+        }
+
+        function esVozMasculina(v) {
+            if (!v) return false;
+            const name = String(v.name || '').toLowerCase();
+            if (/jorge|alonso|alvaro|álvaro|carlos|diego|enrique|pablo|raul|raúl|male|hombre|masculin|chico|es-es-x-eea/i.test(name)) return true;
+            if (/male/i.test(v.gender || '')) return true;
+            return false;
+        }
+
         function puntuarVozEspanol(v) {
             if (!v) return -999;
             const lang = String(v.lang || '').toLowerCase();
@@ -1477,18 +1487,21 @@
             if (!lang.startsWith('es')) return -999;
 
             let pts = 0;
-            // Priorizar voces Neurales / Naturales / Online de alta calidad (suenan como persona real)
-            if (/natural|neural|online|wavenet|studio|premium|enhanced|siri/i.test(name)) pts += 120;
-            if (/sabina|dalia|jorge|paloma|elena|alonso|ximena|paulina|monica|mónica|marisol|angelica|angélica|francisca|catalina|elvira|alvaro|álvaro/i.test(name)) pts += 65;
-            if (/google\s*español|google\s*espanol|microsoft/i.test(name)) pts += 50;
-            if (v.localService === false) pts += 28; // Voces en la nube suelen ser neurales
+            // Prioridad máxima a voces femeninas (petición expresa del usuario)
+            if (esVozFemenina(v)) pts += 350;
+            else if (esVozMasculina(v)) pts -= 250;
 
-            // Preferir acento neutro / latinoamericano cálido o español claro
-            if (/es[-_](mx|us|419|sv|co|cr|pa|pe|cl|ar)/i.test(lang)) pts += 30;
-            else if (/es[-_](es)/i.test(lang)) pts += 18;
+            // Priorizar voces Neurales / Naturales / Online de alta calidad
+            if (/natural|neural|online|wavenet|studio|premium|enhanced|siri/i.test(name)) pts += 140;
+            if (/google\s*español|google\s*espanol|microsoft/i.test(name)) pts += 50;
+            if (v.localService === false) pts += 30;
+
+            // Preferir acento latinoamericano cálido o español claro
+            if (/es[-_](mx|us|419|sv|co|cr|pa|pe|cl|ar)/i.test(lang)) pts += 40;
+            else if (/es[-_](es)/i.test(lang)) pts += 25;
 
             // Penalizar sintetizadores robóticos antiguos
-            if (/espeak|compact| robotic|android\s+tts\s+legacy/i.test(name)) pts -= 90;
+            if (/espeak|compact| robotic|android\s+tts\s+legacy/i.test(name)) pts -= 120;
             return pts;
         }
 
@@ -1496,6 +1509,16 @@
             if (!('speechSynthesis' in window)) return null;
             const voces = window.speechSynthesis.getVoices() || [];
             if (!voces.length) return mejorVozCache;
+
+            const voiceNameGuardada = localStorage.getItem('osito_ai_selected_voice_name') || '';
+            if (voiceNameGuardada) {
+                const encontrada = voces.find(v => v.name === voiceNameGuardada);
+                if (encontrada) {
+                    mejorVozCache = encontrada;
+                    return mejorVozCache;
+                }
+            }
+
             let mejor = null;
             let maxPts = -999;
             for (let i = 0; i < voces.length; i++) {
@@ -1662,11 +1685,46 @@
             document.dispatchEvent(new CustomEvent('osito:tts-end'));
         }
 
+        function poblarVocesDisponibles(selectEl) {
+            if (!selectEl || !('speechSynthesis' in window)) return;
+            const voces = window.speechSynthesis.getVoices() || [];
+            if (!voces.length) return;
+            const espanolVoces = voces.filter(v => String(v.lang || '').toLowerCase().startsWith('es'));
+            const lista = espanolVoces.length ? espanolVoces : voces;
+
+            // Ordenar: voces de mayor puntuación (femeninas de calidad) primero
+            lista.sort((a, b) => puntuarVozEspanol(b) - puntuarVozEspanol(a));
+
+            const guardada = localStorage.getItem('osito_ai_selected_voice_name') || '';
+            const mejorVoz = obtenerMejorVoz();
+            const nombreMejor = mejorVoz ? mejorVoz.name : '';
+
+            selectEl.innerHTML = '';
+            const optDefecto = document.createElement('option');
+            optDefecto.value = '';
+            optDefecto.textContent = `⭐ Predeterminada (Femenina: ${nombreMejor || 'Automática'})`;
+            if (!guardada) optDefecto.selected = true;
+            selectEl.appendChild(optDefecto);
+
+            lista.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.name;
+                const fem = esVozFemenina(v);
+                const masc = esVozMasculina(v);
+                const icono = fem ? '👩 ' : (masc ? '👨 ' : '🗣️ ');
+                const tag = fem ? ' · Femenina' : (masc ? ' · Masculina' : '');
+                opt.textContent = `${icono}${v.name} (${v.lang})${tag}`;
+                if (v.name === guardada) opt.selected = true;
+                selectEl.appendChild(opt);
+            });
+        }
+
         return {
             hablar,
             cancelar,
             obtenerMejorVoz,
-            limpiarTextoParaAsistente
+            limpiarTextoParaAsistente,
+            poblarVocesDisponibles
         };
     }());
 

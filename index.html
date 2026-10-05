@@ -1415,6 +1415,7 @@ accent-color:#00ff88;
                         <span class="call-wave-bars" aria-hidden="true"><i></i><i></i><i></i></span>
                         <span class="call-btn-mic-glyph" aria-hidden="true">🎙️</span>
                     </button>
+                    <button class="ia-sound-btn ia-cfg-header-btn" id="ia-cfg-header-btn" type="button" aria-label="Configuración de voz e IA" title="Configuración de voz e IA">⚙️</button>
                     <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar La mascotita del Sotano">✕</button>
                 </div>
@@ -1471,6 +1472,12 @@ accent-color:#00ff88;
                                 <button type="button" class="ai-mic-config-close" id="ai-mic-config-close" aria-label="Cerrar ajustes de voz">✕</button>
                             </div>
                             <div class="ai-mic-config-grid">
+                                <label class="ai-mic-cfg-row" style="grid-column: 1 / -1; flex-direction: column; align-items: stretch; gap: 6px;">
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: #00f2fe;">🎙️ Selección de Voz de la IA (cambio disponible 1 vez por hora):</span>
+                                    <select id="ai-cfg-voice-select" style="width: 100%; font-size: 0.82rem; padding: 7px 10px;">
+                                        <option value="">(Cargando voces disponibles...)</option>
+                                    </select>
+                                </label>
                                 <label class="ai-mic-cfg-row">
                                     <span>Evitar palabras repetidas («cómo cómo»)</span>
                                     <input type="checkbox" id="ai-cfg-antirepeat" checked />
@@ -4677,13 +4684,27 @@ accent-color:#00ff88;
             }
             sincronizarControlesVoz();
 
-            if (micConfigToggle && micConfigPanel) {
-                micConfigToggle.addEventListener('click', () => {
-                    const abrir = micConfigPanel.hidden;
-                    micConfigPanel.hidden = !abrir;
+            const iaCfgHeaderBtn = document.getElementById('ia-cfg-header-btn');
+            function togglePanelConfiguracionVoz() {
+                if (!micConfigPanel) return;
+                const abrir = micConfigPanel.hidden;
+                micConfigPanel.hidden = !abrir;
+                if (micConfigToggle) {
                     micConfigToggle.classList.toggle('active', abrir);
                     micConfigToggle.setAttribute('aria-expanded', abrir ? 'true' : 'false');
-                });
+                }
+                if (iaCfgHeaderBtn) {
+                    iaCfgHeaderBtn.classList.toggle('active', abrir);
+                }
+                if (abrir) {
+                    sincronizarVocesSistema();
+                }
+            }
+            if (micConfigToggle) {
+                micConfigToggle.addEventListener('click', togglePanelConfiguracionVoz);
+            }
+            if (iaCfgHeaderBtn) {
+                iaCfgHeaderBtn.addEventListener('click', togglePanelConfiguracionVoz);
             }
             if (micConfigClose && micConfigPanel) {
                 micConfigClose.addEventListener('click', () => {
@@ -4691,6 +4712,9 @@ accent-color:#00ff88;
                     if (micConfigToggle) {
                         micConfigToggle.classList.remove('active');
                         micConfigToggle.setAttribute('aria-expanded', 'false');
+                    }
+                    if (iaCfgHeaderBtn) {
+                        iaCfgHeaderBtn.classList.remove('active');
                     }
                 });
             }
@@ -4717,13 +4741,45 @@ accent-color:#00ff88;
                     const ahora = Date.now();
                     if (ahora - ultimoCambioVoz < 3600000) {
                         const minutosRestantes = Math.ceil((3600000 - (ahora - ultimoCambioVoz)) / 60000);
-                        if (typeof showToast === 'function') showToast(`Puedes cambiar la voz de la IA una vez cada hora. Espera ${minutosRestantes} min ⏳`);
+                        if (typeof showToast === 'function') showToast(`Puedes cambiar la velocidad de la voz una vez cada hora. Espera ${minutosRestantes} min ⏳`);
                         cfgVoiceRate.value = localStorage.getItem('osito_ai_voice_rate') || '1.0';
                         return;
                     }
                     localStorage.setItem('osito_voice_last_change_time', String(ahora));
                     localStorage.setItem('osito_ai_voice_rate', cfgVoiceRate.value);
-                    if (typeof showToast === 'function') showToast('¡Voz de la IA actualizada con éxito! 🔊✨');
+                    if (typeof showToast === 'function') showToast('¡Velocidad de voz actualizada con éxito! 🔊✨');
+                });
+            }
+
+            const cfgVoiceSelect = document.getElementById('ai-cfg-voice-select');
+            function sincronizarVocesSistema() {
+                if (window.OsitoVozHumana && typeof window.OsitoVozHumana.poblarVocesDisponibles === 'function' && cfgVoiceSelect) {
+                    window.OsitoVozHumana.poblarVocesDisponibles(cfgVoiceSelect);
+                }
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = sincronizarVocesSistema;
+                setTimeout(sincronizarVocesSistema, 500);
+            }
+            if (cfgVoiceSelect) {
+                cfgVoiceSelect.addEventListener('change', () => {
+                    const ultimoCambioVozSelect = parseInt(localStorage.getItem('osito_voice_select_last_change_time') || '0', 10);
+                    const ahora = Date.now();
+                    if (ahora - ultimoCambioVozSelect < 3600000) {
+                        const minutosRestantes = Math.ceil((3600000 - (ahora - ultimoCambioVozSelect)) / 60000);
+                        if (typeof showToast === 'function') showToast(`Puedes elegir otra voz una vez cada hora. Espera ${minutosRestantes} min ⏳`);
+                        cfgVoiceSelect.value = localStorage.getItem('osito_ai_selected_voice_name') || '';
+                        return;
+                    }
+                    localStorage.setItem('osito_voice_select_last_change_time', String(ahora));
+                    localStorage.setItem('osito_ai_selected_voice_name', cfgVoiceSelect.value);
+                    if (window.OsitoVozHumana && typeof window.OsitoVozHumana.obtenerMejorVoz === 'function') {
+                        window.OsitoVozHumana.obtenerMejorVoz();
+                    }
+                    if (typeof showToast === 'function') showToast('¡Voz femenina de la IA guardada con éxito! 👩🔊✨');
+                    if (window.OsitoVozHumana && typeof window.OsitoVozHumana.hablar === 'function') {
+                        window.OsitoVozHumana.hablar('¡Hola! Esta es mi nueva voz para platicar contigo en El Sótano de Osito.');
+                    }
                 });
             }
 
@@ -5420,12 +5476,35 @@ accent-color:#00ff88;
                 return `${m}:${s}`;
             }
 
+            let callIdleExprTimer = null;
             function actualizarUIEstadoLlamada(estado) {
                 if (!window.ositoEnLlamadaIA) return;
                 if (callOrbEl) {
+                    callOrbEl.setAttribute('data-estado', estado);
                     callOrbEl.classList.toggle('is-speaking', estado === 'speaking');
                     callOrbEl.classList.toggle('is-listening', estado === 'listening');
                     callOrbEl.classList.toggle('is-thinking', estado === 'processing');
+                    if (estado === 'speaking') {
+                        // Mientras habla, la mascota no hace expresiones desfigurantes
+                        callOrbEl.removeAttribute('data-expr');
+                        if (callIdleExprTimer) {
+                            clearInterval(callIdleExprTimer);
+                            callIdleExprTimer = null;
+                        }
+                    } else {
+                        // Cuando no está hablando (en silencio o escuchando), hace expresiones amigables
+                        if (!callIdleExprTimer) {
+                            const exprLista = ['smile', 'curious', 'wink', 'cool', 'smile'];
+                            let eIdx = 0;
+                            callOrbEl.setAttribute('data-expr', 'smile');
+                            callIdleExprTimer = setInterval(() => {
+                                if (window.ositoEnLlamadaIA && !callOrbEl.classList.contains('is-speaking')) {
+                                    callOrbEl.setAttribute('data-expr', exprLista[eIdx % exprLista.length]);
+                                    eIdx += 1;
+                                }
+                            }, 3800);
+                        }
+                    }
                 }
                 if (callMicBtn) {
                     callMicBtn.classList.toggle('active-mic', estado === 'listening');
@@ -5561,8 +5640,14 @@ accent-color:#00ff88;
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                 }
+                if (callIdleExprTimer) {
+                    clearInterval(callIdleExprTimer);
+                    callIdleExprTimer = null;
+                }
                 if (callOrbEl) {
                     callOrbEl.classList.remove('is-speaking', 'is-listening', 'is-thinking');
+                    callOrbEl.removeAttribute('data-expr');
+                    callOrbEl.setAttribute('data-estado', 'idle');
                 }
                 if (callViewEl) {
                     callViewEl.hidden = true;

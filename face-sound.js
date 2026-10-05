@@ -204,8 +204,8 @@
         },
         // pensando: "bu-bup" suave
         thinking: function () { tono(300, 380, 0, 0.12, 'sine', 0.1); tono(380, 300, 0.14, 0.14, 'sine', 0.08); },
-        // escuchando: aviso de micrófono (dos notas rápidas hacia arriba)
-        listening: function () { tono(660, 990, 0, 0.1, 'sine', 0.16); tono(990, 1320, 0.1, 0.13, 'sine', 0.13); },
+        // escuchando: silencioso estilo ChatGPT/Gemini (sin pitidos molestos)
+        listening: function () {},
         // ---- V49.6 ----
         // ronquido: inhala (aire que sube) y exhala rasposo
         snore: function () {
@@ -317,16 +317,9 @@
         rebuscar: function () { [0, 0.18, 0.36].forEach(function (t) { ruido(t, 0.14, 0.09, 'bandpass', 1000 + Math.random() * 800, 2800, 1.2, 0.03); }); },
         cremallera: function () { ruido(0, 0.42, 0.09, 'bandpass', 1500, 4000, 3, 0.06); },
         varita: function () { tono(800, 1700, 0, 0.3, 'sine', 0.08, { vib: 9, vibd: 26 }); campana(1760, 0.28, 0.08, 0.6); },
-        // Sonidos del chat de IA y micrófono en vivo
-        mic_on: function () {
-            tono(523, 784, 0, 0.09, 'sine', 0.18);
-            tono(784, 1175, 0.08, 0.14, 'triangle', 0.15);
-            campana(1568, 0.15, 0.09, 0.45);
-        },
-        mic_off: function () {
-            tono(988, 659, 0, 0.09, 'sine', 0.15);
-            tono(784, 1047, 0.09, 0.12, 'triangle', 0.14);
-        },
+        // Sonidos del chat de IA y micrófono en vivo (silenciados para llamadas estilo ChatGPT/Gemini sin pitidos)
+        mic_on: function () {},
+        mic_off: function () {},
         msg_send: function () {
             tono(440, 880, 0, 0.075, 'sine', 0.15, { a: 0.005 });
             tono(880, 1320, 0.055, 0.08, 'triangle', 0.09, { a: 0.005 });
@@ -496,7 +489,7 @@
             if (SILENCIOSAS[ahora]) return;
             reproducir(ahora);
         } else if (atributo === 'data-estado') {
-            if (ahora === 'thinking' || ahora === 'listening') reproducir(ahora);
+            if (ahora === 'thinking') reproducir(ahora);
         }
     }
     if ('MutationObserver' in window) {

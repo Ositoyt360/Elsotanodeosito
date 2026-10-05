@@ -207,11 +207,12 @@
                 state.batteryLevel = typeof battery.level === 'number' ? battery.level : 1;
                 state.lowBattery = !state.charging && state.batteryLevel <= 0.20;
 
-                // Cuando está cargando: el procesador reduce frecuencia por temperatura.
-                // Activamos charging-fluid-mode + redmi-fluid-mode para quitar toda carga extra de la GPU
-                // manteniendo el video de fondo en su plano de hardware directo sin lag.
                 var needChargingBoost = state.charging || state.lowBattery;
                 root.classList.toggle('charging-fluid-mode', needChargingBoost);
+                root.classList.toggle('battery-saver-mode', state.lowBattery);
+                if (state.lowBattery) {
+                    root.classList.add('low-end-device');
+                }
                 if (needChargingBoost) {
                     root.classList.add('hz-fluid-boost', 'redmi-fluid-mode');
                     state.fluidBoostActive = true;

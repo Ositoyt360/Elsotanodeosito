@@ -852,9 +852,7 @@
 
             this.recognition = new SpeechRecognition();
             this.recognition.lang = 'es-MX';
-            // En Android Chrome, continuous = true duplica cada sílaba parcial en event.results (ej. "Bienbi enbie nBien").
-            // Desactivarlo en móviles hace que el reconocedor nativo escuche la frase limpia de principio a fin sin duplicar.
-            this.recognition.continuous = !ES_MOVIL_O_ANDROID;
+            this.recognition.continuous = true;
             this.recognition.interimResults = true;
             this.recognition.maxAlternatives = 1;
 
@@ -943,17 +941,7 @@
                 this.intentionalStop = false;
 
                 if (!fueUnCorteIntencional) {
-                    const ahora = Date.now();
-                    const esperaSilencio = window.ositoEnLlamadaIA ? 920 : obtenerEsperaSilencioMs();
-                    const siguePendienteDeHablar = !this.hasHeardSpeech
-                        && (ahora - this.sessionStartTime) < ESPERA_SIN_HABLAR_MS;
-                    // En móvil/Android, cuando el reconocedor termina tras haber escuchado voz, ya cerró la frase completa:
-                    // no reiniciamos encima para evitar eco de buffer ("Bienbi enbie nBien").
-                    const siguePendienteDeSilencioFinal = !ES_MOVIL_O_ANDROID
-                        && this.hasHeardSpeech
-                        && (ahora - this.lastSpeechTime) < esperaSilencio;
-
-                    if (siguePendienteDeHablar || siguePendienteDeSilencioFinal) {
+                    if (window.ositoEnLlamadaIA || !this.manualStop) {
                         this.baseBeforeRestart = limpiarRepeticionesVoz(this.accumulatedTranscript || '');
                         try {
                             this.recognition.start();

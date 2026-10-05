@@ -713,3 +713,37 @@
 .ia-call-actions .ia-call-hangup:active {
     transform: translateY(0);
 }
+
+/* ==========================================================================
+ * MODO MÓVIL / TABLET (Optimizado con chat oculto en llamada)
+ * ========================================================================== */
+@media (max-width: 1024px) {
+    body.ia-call-mode-active #ai-section {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        z-index: 999999 !important;
+        background: #080a0f !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
+    }
+    body.ia-call-mode-active #ai-chat-shell,
+    body.ia-call-mode-active .ai-sessions-bar,
+    body.ia-call-mode-active .ai-chat-input-area,
+    body.ia-call-mode-active #ai-messages {
+        display: none !important;
+    }
+    body.ia-call-mode-active #ia-call-view {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+    }
+}

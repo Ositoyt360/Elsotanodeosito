@@ -7884,6 +7884,56 @@ body.ultra-performance .ia-messages .msg {
   color: #00ffcc;
 }
 
+/* Modo llamada: ocultar mascotita de esquinas/header */
+body.ia-call-mode-active .ia-header .osito-face,
+body.ia-call-mode-active .ia-bubble,
+body.ia-call-mode-active #ia-bubble {
+    display: none !important;
+}
+
+/* Mascota en llamada (orbe sustituido por cara 2D circular) */
+.ia-call-mascot-face {
+    width: 125px;
+    height: 125px;
+    margin: 0 auto;
+    display: block;
+    position: relative;
+    transform: scale(1.1);
+    pointer-events: auto;
+}
+.ia-call-mascot-face .of-card {
+    background: linear-gradient(145deg, #101728, #181135) !important;
+    border: 2px solid rgba(0, 255, 204, 0.7) !important;
+    box-shadow: 0 0 35px rgba(0, 255, 204, 0.45), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+    border-radius: 50% !important;
+}
+body.ia-call-mode-active .ia-call-mascot-face[data-estado="speaking"] .of-brow {
+    animation: none !important;
+}
+
+/* Modo llamada para móviles y recorte de texto largo sin scrollbar vertical */
+@media (max-width: 640px) {
+    .ia-call-view {
+        padding: 10px 12px !important;
+        max-height: 80vh !important;
+        overflow: hidden !important;
+    }
+    .ia-call-mascot-face {
+        width: 90px !important;
+        height: 90px !important;
+    }
+    .ia-call-subtitle {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 3 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-height: 4.5em !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+    }
+}
+
 /* ==========================================================================
    MEJORA DEL DISEÑO Y ANIMACIÓN DEL CHAT EN VIVO (OPTIMIZADO PARA GAMA BAJA)
    ========================================================================== */

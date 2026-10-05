@@ -1426,14 +1426,13 @@ accent-color:#00ff88;
                         </div>
                         <div class="ia-call-state-badge" id="ia-call-state-badge">✨ Conectando con La mascotita del Sótano...</div>
                         <div class="ia-call-orb-stage">
-                            <div class="orb" id="ia-call-orb" role="button" tabindex="0" aria-label="Orbe de voz de la inteligencia artificial">
-                              <div class="aura"></div>
-                              <div class="core"></div>
-                              <div class="ring"></div>
-                              <div class="particles">
-                                <span></span><span></span><span></span> <span></span><span></span
-                                ><span></span>
-                              </div>
+                            <div class="osito-face ia-call-mascot-face" id="ia-call-orb" data-estado="idle" role="button" tabindex="0" aria-label="Mascota en llamada de voz">
+                              <span class="of-card">
+                                <span class="of-blob"></span>
+                                <span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span>
+                                <span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span>
+                                <span class="of-mouth"></span>
+                              </span>
                             </div>
                         </div>
                         <div class="ia-call-subtitle" id="ia-call-subtitle">Iniciando modo voz...</div>
@@ -4711,7 +4710,17 @@ accent-color:#00ff88;
             }
             if (cfgVoiceRate) {
                 cfgVoiceRate.addEventListener('change', () => {
+                    const ultimoCambioVoz = parseInt(localStorage.getItem('osito_voice_last_change_time') || '0', 10);
+                    const ahora = Date.now();
+                    if (ahora - ultimoCambioVoz < 3600000) {
+                        const minutosRestantes = Math.ceil((3600000 - (ahora - ultimoCambioVoz)) / 60000);
+                        if (typeof showToast === 'function') showToast(`Puedes cambiar la voz de la IA una vez cada hora. Espera ${minutosRestantes} min ⏳`);
+                        cfgVoiceRate.value = localStorage.getItem('osito_ai_voice_rate') || '1.0';
+                        return;
+                    }
+                    localStorage.setItem('osito_voice_last_change_time', String(ahora));
                     localStorage.setItem('osito_ai_voice_rate', cfgVoiceRate.value);
+                    if (typeof showToast === 'function') showToast('¡Voz de la IA actualizada con éxito! 🔊✨');
                 });
             }
 
@@ -5193,6 +5202,12 @@ accent-color:#00ff88;
 
             async function seleccionarArchivoImagenIA(file) {
                 if (!file) return;
+                const imgsLeidas = parseInt(localStorage.getItem('osito_images_read_count') || '0', 10);
+                if (imgsLeidas >= 15) {
+                    if (typeof showToast === 'function') showToast('Has alcanzado el límite máximo de 15 imágenes leídas permitidas 📷✨');
+                    agregarMensajeIA('Has alcanzado el límite máximo de 15 imágenes leídas en esta sesión. Puedes seguir charlando mediante texto o voz. 😊', 'bot');
+                    return;
+                }
                 if (!file.type || !file.type.startsWith('image/')) {
                     agregarMensajeIA('Por favor selecciona un archivo de imagen válido (JPG, PNG o WebP).', 'bot');
                     return;
@@ -5202,6 +5217,8 @@ accent-color:#00ff88;
                     agregarMensajeIA('No pude leer esa imagen. Intenta con otra foto.', 'bot');
                     return;
                 }
+                const countActual = imgsLeidas + 1;
+                localStorage.setItem('osito_images_read_count', String(countActual));
                 imagenPendienteIA = dataUrl;
                 if (aiImagePreviewThumb) aiImagePreviewThumb.src = dataUrl;
                 if (aiImagePreviewBar) aiImagePreviewBar.hidden = false;
@@ -5432,7 +5449,15 @@ accent-color:#00ff88;
                 }
             }
 
+            function esModoInvitadoLocal() {
+                return typeof window.osEsInvitado === 'function' ? window.osEsInvitado() : document.body.classList.contains('solo-invitado') || window.ositoGuestMode;
+            }
+
             function iniciarLlamadaIA() {
+                if (esModoInvitadoLocal()) {
+                    if (typeof showToast === 'function') showToast('¡Inicia sesión o crea una cuenta para usar el modo llamada y el micrófono! 🎙️✨');
+                    return;
+                }
                 const panel = document.getElementById('ai-section');
                 if (panel && !panel.classList.contains('active')) {
                     toggleIAPanel();

@@ -1058,6 +1058,10 @@
         }
 
         startListening(silencioso = false) {
+            if (esModoInvitado()) {
+                if (!silencioso) showToast('¡Inicia sesión o crea una cuenta para usar el micrófono! 🎙️✨');
+                return false;
+            }
             if (!this.recognition) {
                 if (!silencioso) showToast('Este navegador no admite reconocimiento de voz.');
                 return false;
@@ -1676,7 +1680,13 @@
         const voiceToggle = getEl('ai-voice-toggle');
 
         if (mic) {
-            mic.addEventListener('click', () => assistant.toggle());
+            mic.addEventListener('click', () => {
+                if (esModoInvitado()) {
+                    showToast('¡Inicia sesión o crea una cuenta para usar el micrófono! 🎙️✨');
+                    return;
+                }
+                assistant.toggle();
+            });
         }
 
         if (voiceToggle) {

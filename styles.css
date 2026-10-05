@@ -8055,25 +8055,36 @@ body.ultra-performance .livechat-msg {
   animation-duration: 0.2s !important;
 }
 
-/* ===== FIX HISTORIAL EN MÓVILES (.ai-sessions-drawer) ===== */
-@media (max-width: 768px) {
-    .ai-sessions-drawer {
-        position: absolute !important;
-        inset: 0 !important;
-        z-index: 200 !important;
-        background: rgba(8, 12, 22, 0.99) !important;
-        border-radius: 18px !important;
-        padding: 14px !important;
-        width: 100% !important;
-        height: 100% !important;
-        max-height: 100% !important;
-        box-sizing: border-box !important;
-        overflow-y: auto !important;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.85) !important;
-    }
-    .ai-sessions-list {
-        max-height: calc(100vh - 180px) !important;
-    }
+/* ===== FIX DEFINITIVO TAMAÑO Y VISIBILIDAD HISTORIAL DE IA (.ai-sessions-drawer) ===== */
+.ai-chat-shell {
+    position: relative !important;
+}
+
+.ai-sessions-drawer {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 300 !important;
+    background: rgba(10, 14, 26, 0.99) !important;
+    border-radius: 16px !important;
+    padding: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.85) !important;
+}
+
+.ai-sessions-drawer[hidden] {
+    display: none !important;
+}
+
+.ai-sessions-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
 }
 
 /* ===== OPTIMIZACIÓN EXTREMA MODO BATERÍA BAJA / REDMI 15C (.battery-saver-mode) ===== */

@@ -831,15 +831,23 @@ html body #welcome-screen #btn-ready:not([style*="display:none"]):not([style*="d
 
 /* =====================================================================
  * V68 — REDISEÑO INTEGRAL PARA TELÉFONOS Y TABLETAS
+ *  - Asegura que la IA esté cerrada por defecto al entrar y cierre bien
  *  - Corrige textos gigantes cuando el teléfono o ajuste tiene letra grande
  *  - Separa bien cada bloque (nunca pegados ni amontonados)
- *  - Ajusta el ancho exacto de cada parte (encabezado, banner, videos,
- *    barra lateral, panel de IA y chat en vivo) en móviles y tabletas
+ *  - Ajusta el ancho exacto de cada parte en móviles y tabletas
  * ===================================================================== */
 
 html {
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
+}
+
+/* Cerrado por defecto y apertura controlada */
+html body .ia-section {
+    display: none !important;
+}
+html body .ia-section.active {
+    display: flex !important;
 }
 
 /* ---------------- TELÉFONOS (hasta 640px) ---------------- */

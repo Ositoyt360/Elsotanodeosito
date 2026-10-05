@@ -24,8 +24,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=v65">
-    <link rel="stylesheet" href="v49.css?v=v65">
+    <link rel="stylesheet" href="styles.css?v=v68">
+    <link rel="stylesheet" href="v49.css?v=v68">
     <script id="v62-inline">
 /* =====================================================================
  * V62 — UN SOLO ARCHIVO con todo lo nuevo (no toca el resto de la página).
@@ -2009,9 +2009,12 @@ accent-color:#00ff88;
 
             const savedFont = localStorage.getItem('osito_font_size');
             if (savedFont) {
-                document.documentElement.style.fontSize = savedFont + 'px';
+                const numFont = parseInt(savedFont, 10) || 14;
+                const maxPermitido = window.innerWidth <= 640 ? 14 : (window.innerWidth <= 1180 ? 15 : 20);
+                const fontAplicada = Math.min(maxPermitido, Math.max(12, numFont));
+                document.documentElement.style.fontSize = fontAplicada + 'px';
                 const fontRange = document.getElementById('font-size-range');
-                if (fontRange) fontRange.value = savedFont;
+                if (fontRange) fontRange.value = String(fontAplicada);
             }
 
             if (localStorage.getItem('osito_layout_compact') === 'true') {
@@ -3885,15 +3888,15 @@ accent-color:#00ff88;
         }); 
     </script> 
 
-    <script src="performance-lite.js?v=v66"></script>
-    <script src="base-conocimiento.js?v=v66"></script>
-    <script src="v49.js?v=v66"></script>
-    <script src="face-sound.js?v=v66" defer></script>
-    <script src="ia-claude.js?v=v66" defer></script>
-    <link rel="stylesheet" href="personalidades-animaciones-1000.css?v=v66">
-    <link rel="stylesheet" href="osito-cara3d.css?v=v66">
-    <link rel="stylesheet" href="osito-actividades-3d.css?v=v66">
-    <link rel="stylesheet" href="v61.css?v=v66">
+    <script src="performance-lite.js?v=v68"></script>
+    <script src="base-conocimiento.js?v=v68"></script>
+    <script src="v49.js?v=v68"></script>
+    <script src="face-sound.js?v=v68" defer></script>
+    <script src="ia-claude.js?v=v68" defer></script>
+    <link rel="stylesheet" href="personalidades-animaciones-1000.css?v=v68">
+    <link rel="stylesheet" href="osito-cara3d.css?v=v68">
+    <link rel="stylesheet" href="osito-actividades-3d.css?v=v68">
+    <link rel="stylesheet" href="v61.css?v=v68">
     <style id="v66-chat-buttons-style">
         .ai-sessions-bar {
             display: flex !important;
@@ -4896,14 +4899,18 @@ accent-color:#00ff88;
                 if (window.voiceAssistant && typeof window.voiceAssistant.stopListening === 'function') {
                     window.voiceAssistant.stopListening();
                 }
+                const velConfig = typeof obtenerVelocidadVozIA === 'function' ? obtenerVelocidadVozIA() : 1.0;
+                if (window.OsitoVozHumana && typeof window.OsitoVozHumana.hablar === 'function') {
+                    window.OsitoVozHumana.hablar(texto, { rate: velConfig });
+                    return;
+                }
                 window.speechSynthesis.cancel();
                 const limpio = String(texto || '').replace(/[^\p{L}\p{N}\s.,;:!?¡¿"'-]/gu, ' ').replace(/\s+/g, ' ').trim();
                 if (!limpio) return;
                 const utterance = new SpeechSynthesisUtterance(limpio);
-                utterance.lang = 'es-419';
-                const velConfig = typeof obtenerVelocidadVozIA === 'function' ? obtenerVelocidadVozIA() : 1.0;
-                utterance.rate = velConfig || (esEquipoGamaBajaIA() ? 1.03 : 1.0);
-                utterance.pitch = 1;
+                utterance.lang = 'es-MX';
+                utterance.rate = velConfig || (esEquipoGamaBajaIA() ? 1.03 : 1.02);
+                utterance.pitch = 1.05;
                 window.speechSynthesis.speak(utterance);
             }
 
@@ -5222,7 +5229,10 @@ accent-color:#00ff88;
             }
 
             async function enviarPreguntaIA(pregunta) {
-                const limpia = (pregunta || '').trim();
+                const preguntaBase = (pregunta || '').trim();
+                const limpia = typeof window.limpiarRepeticionesVozOsito === 'function'
+                    ? window.limpiarRepeticionesVozOsito(preguntaBase)
+                    : preguntaBase;
                 const imagenEnviada = imagenPendienteIA;
                 if (!limpia && !imagenEnviada) return;
                 limpiarImagenPendienteIA();
@@ -5607,8 +5617,11 @@ accent-color:#00ff88;
             const fontRange = document.getElementById('font-size-range');
             if (fontRange) {
                 fontRange.addEventListener('input', () => {
-                    document.documentElement.style.fontSize = fontRange.value + 'px';
-                    localStorage.setItem('osito_font_size', fontRange.value); 
+                    const num = parseInt(fontRange.value, 10) || 14;
+                    const maxPermitido = window.innerWidth <= 640 ? 14.5 : (window.innerWidth <= 1180 ? 15.5 : 20);
+                    const finalFont = Math.min(maxPermitido, Math.max(12, num));
+                    document.documentElement.style.fontSize = finalFont + 'px';
+                    localStorage.setItem('osito_font_size', String(finalFont)); 
                 });
             }
 
@@ -6812,6 +6825,6 @@ accent-color:#00ff88;
         })();
     </script>
     <script src="firebase-integration.js?v=mod-v32-20260924"></script>
-    <script src='asistente-voz.js'></script>
-    <script src='face-100.js?v=v51-7' defer></script></body>
+    <script src='asistente-voz.js?v=v68'></script>
+    <script src='face-100.js?v=v68' defer></script></body>
 </html>

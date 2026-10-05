@@ -1433,13 +1433,20 @@
 
             this.setState(State.SPEAKING, { label: message, text: message });
             setStatusLabel(message);
-            window.speechSynthesis.cancel();
 
+            if (window.OsitoVozHumana && typeof window.OsitoVozHumana.hablar === 'function') {
+                await window.OsitoVozHumana.hablar(message);
+                this.setState(State.IDLE, { label: DEFAULT_HINT, text: message });
+                setStatusLabel(DEFAULT_HINT);
+                return;
+            }
+
+            window.speechSynthesis.cancel();
             await new Promise((resolve) => {
                 const utterance = new SpeechSynthesisUtterance(message);
-                utterance.lang = 'es-419';
-                utterance.rate = 1;
-                utterance.pitch = 1;
+                utterance.lang = 'es-MX';
+                utterance.rate = 1.03;
+                utterance.pitch = 1.05;
                 const finish = () => {
                     this.setState(State.IDLE, { label: DEFAULT_HINT, text: message });
                     setStatusLabel(DEFAULT_HINT);
@@ -1451,6 +1458,215 @@
             });
         }
     }
+
+    // =========================================================================
+    // MOTOR DE VOZ NATURAL HUMANA (Asistente cálido, expresivo y no robótico)
+    // =========================================================================
+    const OsitoVozHumana = (function () {
+        let mejorVozCache = null;
+        let tokenHablaActual = 0;
+
+        function puntuarVozEspanol(v) {
+            if (!v) return -999;
+            const lang = String(v.lang || '').toLowerCase();
+            const name = String(v.name || '').toLowerCase();
+            if (!lang.startsWith('es')) return -999;
+
+            let pts = 0;
+            // Priorizar voces Neurales / Naturales / Online de alta calidad (suenan como persona real)
+            if (/natural|neural|online|wavenet|studio|premium|enhanced|siri/i.test(name)) pts += 120;
+            if (/sabina|dalia|jorge|paloma|elena|alonso|ximena|paulina|monica|mónica|marisol|angelica|angélica|francisca|catalina|elvira|alvaro|álvaro/i.test(name)) pts += 65;
+            if (/google\s*español|google\s*espanol|microsoft/i.test(name)) pts += 50;
+            if (v.localService === false) pts += 28; // Voces en la nube suelen ser neurales
+
+            // Preferir acento neutro / latinoamericano cálido o español claro
+            if (/es[-_](mx|us|419|sv|co|cr|pa|pe|cl|ar)/i.test(lang)) pts += 30;
+            else if (/es[-_](es)/i.test(lang)) pts += 18;
+
+            // Penalizar sintetizadores robóticos antiguos
+            if (/espeak|compact| robotic|android\s+tts\s+legacy/i.test(name)) pts -= 90;
+            return pts;
+        }
+
+        function obtenerMejorVoz() {
+            if (!('speechSynthesis' in window)) return null;
+            const voces = window.speechSynthesis.getVoices() || [];
+            if (!voces.length) return mejorVozCache;
+            let mejor = null;
+            let maxPts = -999;
+            for (let i = 0; i < voces.length; i++) {
+                const p = puntuarVozEspanol(voces[i]);
+                if (p > maxPts) {
+                    maxPts = p;
+                    mejor = voces[i];
+                }
+            }
+            if (mejor && maxPts > -100) {
+                mejorVozCache = mejor;
+            }
+            return mejorVozCache;
+        }
+
+        if ('speechSynthesis' in window) {
+            obtenerMejorVoz();
+            if (typeof window.speechSynthesis.addEventListener === 'function') {
+                window.speechSynthesis.addEventListener('voiceschanged', obtenerMejorVoz);
+            } else {
+                window.speechSynthesis.onvoiceschanged = obtenerMejorVoz;
+            }
+        }
+
+        function limpiarTextoParaAsistente(raw) {
+            return String(raw || '')
+                .replace(/https?:\/\/\S+/gi, '')
+                .replace(/[*_~`#>|]/g, ' ')
+                // Quitar emojis para que el motor de voz nunca lea sus nombres técnicos
+                .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, ' ')
+                .replace(/[^\p{L}\p{N}\s.,;:!?¡¿"'-]/gu, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function dividirEnFrasesNaturales(texto) {
+            const limpio = limpiarTextoParaAsistente(texto);
+            if (!limpio) return [];
+            // Separar por signos de puntuación manteniendo la entonación (?, !, .)
+            const partes = limpio.match(/[^.!?¡¿]+[.!?]+|[^.!?¡¿]+$/g) || [limpio];
+            const frases = [];
+            for (let p of partes) {
+                const f = p.trim();
+                if (!f) continue;
+                // Si una oración es demasiado larga, dividir suavemente en comas o punto y coma para que respire natural
+                if (f.length > 165 && /[,;:]/.test(f)) {
+                    const sub = f.split(/(?<=[,;:])\s+/);
+                    for (const s of sub) {
+                        if (s.trim()) frases.push(s.trim());
+                    }
+                } else {
+                    frases.push(f);
+                }
+            }
+            return frases.length ? frases : [limpio];
+        }
+
+        function obtenerVelocidadBase() {
+            const guardado = parseFloat(localStorage.getItem('osito_ai_voice_rate') || '1.0');
+            return Number.isFinite(guardado) ? Math.min(1.3, Math.max(0.85, guardado)) : 1.0;
+        }
+
+        function hablar(texto, opciones = {}) {
+            return new Promise((resolve) => {
+                if (!('speechSynthesis' in window)) {
+                    resolve();
+                    return;
+                }
+                const frases = dividirEnFrasesNaturales(texto);
+                if (!frases.length) {
+                    resolve();
+                    return;
+                }
+
+                const miToken = ++tokenHablaActual;
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+
+                const voz = obtenerMejorVoz();
+                const velBase = Number(opciones.rate) || obtenerVelocidadBase();
+                let idx = 0;
+
+                document.dispatchEvent(new CustomEvent('osito:tts-start'));
+
+                const finalizarTodo = () => {
+                    if (miToken === tokenHablaActual) {
+                        document.dispatchEvent(new CustomEvent('osito:tts-end'));
+                    }
+                    resolve();
+                };
+
+                const hablarSiguiente = () => {
+                    if (miToken !== tokenHablaActual) {
+                        resolve();
+                        return;
+                    }
+                    if (idx >= frases.length) {
+                        finalizarTodo();
+                        return;
+                    }
+                    const frase = frases[idx++];
+                    const u = new SpeechSynthesisUtterance(frase);
+                    if (voz) {
+                        u.voice = voz;
+                        u.lang = voz.lang || 'es-MX';
+                    } else {
+                        u.lang = 'es-MX';
+                    }
+
+                    // Entonación conversacional dinámica según el sentido de cada frase
+                    const esPregunta = /[?¿]/.test(frase);
+                    const esExclamacion = /[!¡]/.test(frase) || /^(hola|que onda|qué onda|buenas|claro|perfecto|genial|listo)/i.test(frase);
+
+                    if (esPregunta) {
+                        u.pitch = 1.09;
+                        u.rate = Math.min(1.22, velBase * 1.03);
+                    } else if (esExclamacion) {
+                        u.pitch = 1.07;
+                        u.rate = Math.min(1.22, velBase * 1.04);
+                    } else {
+                        u.pitch = 1.04;
+                        u.rate = Math.min(1.2, velBase * 1.02);
+                    }
+                    u.volume = 1;
+
+                    u.onend = () => {
+                        if (miToken !== tokenHablaActual) {
+                            resolve();
+                            return;
+                        }
+                        if (idx < frases.length) {
+                            setTimeout(hablarSiguiente, 55);
+                        } else {
+                            finalizarTodo();
+                        }
+                    };
+                    u.onerror = () => {
+                        if (miToken !== tokenHablaActual) {
+                            resolve();
+                            return;
+                        }
+                        if (idx < frases.length) {
+                            setTimeout(hablarSiguiente, 40);
+                        } else {
+                            finalizarTodo();
+                        }
+                    };
+
+                    try {
+                        window.speechSynthesis.speak(u);
+                    } catch (e) {
+                        finalizarTodo();
+                    }
+                };
+
+                hablarSiguiente();
+            });
+        }
+
+        function cancelar() {
+            tokenHablaActual += 1;
+            if ('speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+            }
+            document.dispatchEvent(new CustomEvent('osito:tts-end'));
+        }
+
+        return {
+            hablar,
+            cancelar,
+            obtenerMejorVoz,
+            limpiarTextoParaAsistente
+        };
+    }());
+
+    window.OsitoVozHumana = OsitoVozHumana;
 
     function setupUI(assistant) {
         const mic = getEl('ai-mic-btn');

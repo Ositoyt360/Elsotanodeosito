@@ -2,7 +2,8 @@
   "name": "El Sótano de Osito",
   "description": "Aplicación oficial de El Sótano de Osito (OsitoYT360) para cualquier teléfono con videos, directos, chat en vivo, mascota interactiva y actualizaciones automáticas desde GitHub.",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "camera"
   ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

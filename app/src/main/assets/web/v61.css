@@ -1462,4 +1462,294 @@ html body .ia-section.active {
     }
 }
 
+/* ==========================================================================
+ * V63 — CUBO AUTÓNOMO: AUTO-ENTRENAMIENTO, JUEGOS Y VISIÓN DIRECTA POR CÁMARA
+ * ========================================================================== */
+
+/* Indicador de Visión de la IA (Pastilla óptica) */
+.ia-vision-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(0, 242, 254, 0.12);
+    border: 1px solid rgba(0, 242, 254, 0.35);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #e2f7ff;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+}
+.ia-vision-status-pill:hover {
+    background: rgba(0, 242, 254, 0.22);
+    border-color: rgba(0, 242, 254, 0.6);
+    transform: scale(1.03);
+}
+.ia-vision-status-pill.vision-on {
+    background: rgba(0, 242, 254, 0.24);
+    border-color: #00f2fe;
+    box-shadow: 0 0 12px rgba(0, 242, 254, 0.4);
+    color: #00f2fe;
+}
+.ia-vision-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #00f2fe;
+    box-shadow: 0 0 8px #00f2fe;
+    animation: visionPillPulse 1.2s ease-in-out infinite;
+}
+.ia-vision-off-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+}
+@keyframes visionPillPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+/* Efectos en el Cubo 3D cuando la visión o el entrenamiento están activos */
+.osito-face[data-vision="active"] .of-card {
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.4), inset 0 0 10px rgba(0, 242, 254, 0.3) !important;
+}
+.osito-face[data-vision="active"] .of-eye {
+    box-shadow: 0 0 8px rgba(0, 242, 254, 0.8), inset 0 0 4px rgba(0, 242, 254, 0.4) !important;
+}
+
+.osito-face[data-training="active"] .of-rig {
+    animation: cubeTrainingSpin 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) 1 !important;
+}
+@keyframes cubeTrainingSpin {
+    0% { transform: rotateY(0deg) rotateX(0deg); }
+    50% { transform: rotateY(180deg) rotateX(20deg) scale3d(1.08, 1.08, 1.08); }
+    100% { transform: rotateY(360deg) rotateX(0deg) scale3d(1, 1, 1); }
+}
+
+/* Botones en la llamada y cabecera */
+.ia-call-ctrl-btn.ia-call-vision-btn,
+.ia-call-ctrl-btn.ia-call-games-btn {
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 8px 14px;
+    background: rgba(0, 242, 254, 0.12);
+    border: 1px solid rgba(0, 242, 254, 0.35);
+    border-radius: 14px;
+    color: #00f2fe;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+.ia-call-ctrl-btn.ia-call-vision-btn:hover,
+.ia-call-ctrl-btn.ia-call-games-btn:hover {
+    background: rgba(0, 242, 254, 0.24);
+    border-color: #00f2fe;
+    transform: translateY(-2px);
+}
+.ia-call-ctrl-btn.ia-call-vision-btn.active-vision {
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.3), rgba(157, 78, 221, 0.35));
+    border-color: #00f2fe;
+    box-shadow: 0 0 14px rgba(0, 242, 254, 0.45);
+    color: #ffffff;
+}
+
+/* Modal de Entrenamiento & Juegos del Cubo */
+.cube-games-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100050;
+    background: rgba(4, 7, 16, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    animation: cgcFadeIn 0.25s ease-out;
+}
+@keyframes cgcFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.cube-games-card {
+    width: 100%;
+    max-width: 460px;
+    max-height: min(90dvh, 700px);
+    background: linear-gradient(165deg, #0e1322 0%, #090c17 100%);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 24px rgba(0, 242, 254, 0.15);
+    border-radius: 24px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    animation: cgcCardPop 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+@keyframes cgcCardPop {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.cgc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.cgc-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cgc-icon {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 0 8px #00f2fe);
+}
+.cgc-title h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+}
+.cgc-title p {
+    margin: 3px 0 0;
+    font-size: 0.76rem;
+    color: rgba(226, 247, 255, 0.68);
+}
+.cgc-close {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    min-height: 36px;
+}
+.cgc-close:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: #ef4444;
+}
+
+/* Badge de Entrenamiento Neuronal */
+.cgc-training-badge {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(157, 78, 221, 0.35);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.cgc-level-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #e2f7ff;
+}
+.cgc-level-row strong {
+    color: #00f2fe;
+}
+.cgc-bar-track {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+}
+.cgc-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00f2fe 0%, #9d4edd 100%);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+.cgc-xp-caption {
+    font-size: 0.72rem;
+    color: rgba(226, 247, 255, 0.65);
+    text-align: right;
+}
+.cgc-skills-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+.cgc-skill-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    background: rgba(157, 78, 221, 0.2);
+    border: 1px solid rgba(157, 78, 221, 0.4);
+    border-radius: 8px;
+    color: #d8b4fe;
+}
+
+/* Grid de Juegos del Cubo */
+.cgc-games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+@media (max-width: 420px) {
+    .cgc-games-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.cgc-game-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+    cursor: pointer;
+    color: #e2f7ff;
+    transition: all 0.2s ease;
+    min-height: 48px;
+}
+.cgc-game-btn:hover {
+    background: rgba(0, 242, 254, 0.1);
+    border-color: rgba(0, 242, 254, 0.4);
+    transform: translateY(-2px);
+}
+.cgc-game-btn:active {
+    transform: translateY(0);
+}
+.cgc-g-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.cgc-game-btn strong {
+    display: block;
+    font-size: 0.82rem;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+.cgc-game-btn p {
+    margin: 0;
+    font-size: 0.7rem;
+    color: rgba(226, 247, 255, 0.6);
+    line-height: 1.25;
+}
+
+
 

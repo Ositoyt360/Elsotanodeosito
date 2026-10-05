@@ -105,16 +105,21 @@ fun OsitoAppScreen(
     onWebViewCreated: (WebView) -> Unit
 ) {
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
-    var hasMicPermission by remember { mutableStateOf(false) }
+    var hasPermissions by remember { mutableStateOf(false) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        hasMicPermission = granted
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        hasPermissions = grants.values.any { it }
     }
 
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        permissionsLauncher.launch(
+            arrayOf(
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.CAMERA
+            )
+        )
     }
 
     BackHandler(enabled = webViewRef?.canGoBack() == true) {
@@ -187,21 +192,36 @@ fun OsitoAppScreen(
 
                         webChromeClient = object : WebChromeClient() {
                             override fun onPermissionRequest(request: PermissionRequest?) {
-                                request?.let {
-                                    val requestedResources = it.resources
-                                    for (resource in requestedResources) {
-                                        if (resource == PermissionRequest.RESOURCE_AUDIO_CAPTURE) {
-                                            if (ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.RECORD_AUDIO
-                                                ) == PackageManager.PERMISSION_GRANTED
-                                            ) {
-                                                it.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE))
-                                                return
+                                request?.let { req ->
+                                    val granted = mutableListOf<String>()
+                                    for (resource in req.resources) {
+                                        when (resource) {
+                                            PermissionRequest.RESOURCE_AUDIO_CAPTURE -> {
+                                                if (ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.RECORD_AUDIO
+                                                    ) == PackageManager.PERMISSION_GRANTED
+                                                ) {
+                                                    granted.add(resource)
+                                                }
                                             }
+                                            PermissionRequest.RESOURCE_VIDEO_CAPTURE -> {
+                                                if (ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.CAMERA
+                                                    ) == PackageManager.PERMISSION_GRANTED
+                                                ) {
+                                                    granted.add(resource)
+                                                }
+                                            }
+                                            else -> granted.add(resource)
                                         }
                                     }
-                                    it.grant(it.resources)
+                                    if (granted.isNotEmpty()) {
+                                        req.grant(granted.toTypedArray())
+                                    } else {
+                                        req.grant(req.resources)
+                                    }
                                 }
                             }
                         }

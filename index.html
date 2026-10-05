@@ -1424,6 +1424,7 @@ accent-color:#00ff88;
                         <span class="call-wave-bars" aria-hidden="true"><i></i><i></i><i></i></span>
                         <span class="call-btn-mic-glyph" aria-hidden="true">🎙️</span>
                     </button>
+                    <button class="ia-sound-btn ia-cube-hub-btn" id="ia-cube-hub-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" aria-label="Auto-entrenamiento y juegos del cubo" title="🧠 Auto-Entrenamiento y Juegos del Cubo">🧠</button>
                     <button class="ia-sound-btn ia-cfg-header-btn" id="ia-cfg-header-btn" type="button" aria-label="Configuración de voz e IA" title="Configuración de voz e IA">⚙️</button>
                     <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar La mascotita del Sotano">✕</button>
@@ -1432,6 +1433,9 @@ accent-color:#00ff88;
                     <div class="ia-call-view" id="ia-call-view" hidden aria-live="polite">
                         <div class="ia-call-top">
                             <span class="ia-call-live-pill"><span class="ia-call-dot"></span> VOZ EN VIVO</span>
+                            <span class="ia-vision-status-pill" id="ia-call-vision-badge" onclick="window.OsitoVision && window.OsitoVision.toggle && window.OsitoVision.toggle()" title="Conectar o desconectar la visión del cubo">
+                                <span class="ia-vision-off-dot"></span> 👁️ Activar Ojos del Cubo
+                            </span>
                             <span class="ia-call-timer" id="ia-call-timer">00:00</span>
                         </div>
                         <div class="ia-call-state-badge" id="ia-call-state-badge">✨ Conectando con La mascotita del Sótano...</div>
@@ -1452,6 +1456,14 @@ accent-color:#00ff88;
                                 <span class="ia-call-mic-emoji" aria-hidden="true">🎙️</span>
                                 <span class="ia-call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
                                 <span id="ia-call-mic-label">Micrófono</span>
+                            </button>
+                            <button class="ia-call-ctrl-btn ia-call-vision-btn" id="ia-call-vision-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.toggle && window.OsitoVision.toggle()" title="Conectar ojos del cubo (Visión directa de la IA)">
+                                <span class="ia-vision-btn-emoji" aria-hidden="true">👁️</span>
+                                <span class="ia-vision-btn-label">Ojos IA</span>
+                            </button>
+                            <button class="ia-call-ctrl-btn ia-call-games-btn" id="ia-call-games-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" title="Juegos y Retos con el Cubo">
+                                <span aria-hidden="true">🎲</span>
+                                <span>Jugar</span>
                             </button>
                             <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" title="Colgar llamada y volver al chat" aria-label="Colgar llamada">
                                 <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Colgar llamada
@@ -4178,6 +4190,7 @@ accent-color:#00ff88;
     <script src="face-extra.js?v=v53-1" defer></script>
     <script src="osito-aburrimiento.js?v=v61-2" defer></script>
     <script src="osito-cara3d.js?v=v61" defer></script>
+    <script src="osito-vision-entrenamiento.js?v=v63" defer></script>
     <script>
         (function(){
             const aiMessages = document.getElementById('ai-messages');

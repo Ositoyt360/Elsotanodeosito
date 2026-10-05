@@ -583,7 +583,9 @@
     }
 
     // Tiempos de espera y configuración inteligente del micrófono (ajustables en Configuración).
-    const ESPERA_SIN_HABLAR_MS = 12000; // Si nadie dice nada, se apaga a los 12s.
+    const ESPERA_SIN_HABLAR_MS = 10000; // Si nadie dice nada, se apaga a los 10s.
+    const ES_MOVIL_O_ANDROID = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent || '');
+
     function obtenerEsperaSilencioMs() {
         const guardado = parseInt(localStorage.getItem('osito_mic_silence_ms') || '1050', 10);
         return Number.isFinite(guardado) ? Math.min(2500, Math.max(650, guardado)) : 1050;
@@ -592,46 +594,135 @@
         return localStorage.getItem('osito_mic_anti_repeat') !== 'false';
     }
 
-    // Limpia repeticiones consecutivas del micrófono (ej. "cómo cómo cómo" -> "cómo", "hola hola" -> "hola")
+    function soloAlfanumerico(texto) {
+        return normalize(texto).replace(/\s+/g, '');
+    }
+
+    // Limpia repeticiones consecutivas y sílabas partidas del micrófono en Android/Chrome
+    // (ej. "Bienbi enbie nBien" -> "Bien", "cómo cómo cómo" -> "cómo", "hola hola" -> "hola")
     function limpiarRepeticionesVoz(texto) {
         let limpio = String(texto || '').replace(/\s+/g, ' ').trim();
-        if (!limpio || !antiRepeticionActiva()) return limpio;
+        if (!limpio) return '';
 
-        const tokens = limpio.split(' ');
-        const sinDupSimple = [];
-        for (let i = 0; i < tokens.length; i++) {
-            const actualNorm = normalize(tokens[i]);
-            const prevNorm = sinDupSimple.length > 0 ? normalize(sinDupSimple[sinDupSimple.length - 1]) : '';
-            if (actualNorm && actualNorm === prevNorm) {
-                continue;
+        // 1. Detector de repetición sin espacios (arregla el bug de Android Chrome: "Bienbi enbie nBien" -> "bienbienbienbien" -> "Bien")
+        const compacto = soloAlfanumerico(limpio);
+        if (compacto.length >= 4) {
+            const matchRep3 = compacto.match(/^([a-z0-9ñ]{3,28}?)\1+$/i);
+            const matchRep2 = !matchRep3 ? compacto.match(/^([a-z0-9ñ]{2})\1{2,}$/i) : null;
+            const unidadRepetida = (matchRep3 && matchRep3[1]) || (matchRep2 && matchRep2[1]) || '';
+            if (unidadRepetida) {
+                const palabrasOrig = limpio.split(' ').filter(Boolean);
+                // Si la primera o última palabra ya es exactamente la unidad limpia (ej. "Bien" en "Bienbi enbie nBien"), devolverla con su mayúscula original
+                for (let idx = palabrasOrig.length - 1; idx >= 0; idx--) {
+                    if (soloAlfanumerico(palabrasOrig[idx]) === unidadRepetida) {
+                        return palabrasOrig[idx];
+                    }
+                }
+                // Si era una frase corta repetida o una palabra pegada, reconstruir una sola vez la unidad
+                let acumulado = '';
+                const reconstruido = [];
+                for (let idx = 0; idx < palabrasOrig.length; idx++) {
+                    const trozo = soloAlfanumerico(palabrasOrig[idx]);
+                    if (!trozo) continue;
+                    if ((acumulado + trozo).length <= unidadRepetida.length && unidadRepetida.startsWith(acumulado + trozo)) {
+                        reconstruido.push(palabrasOrig[idx]);
+                        acumulado += trozo;
+                        if (acumulado === unidadRepetida) break;
+                    } else if (!acumulado && palabrasOrig[idx].length >= unidadRepetida.length) {
+                        const recorte = palabrasOrig[idx].slice(0, unidadRepetida.length);
+                        if (soloAlfanumerico(recorte) === unidadRepetida) return recorte;
+                    }
+                }
+                if (acumulado === unidadRepetida && reconstruido.length > 0) {
+                    return reconstruido.join(' ');
+                }
+                return unidadRepetida.charAt(0).toUpperCase() + unidadRepetida.slice(1);
             }
-            sinDupSimple.push(tokens[i]);
         }
 
-        // También colapsa pares de 2 palabras repetidas seguidas (ej. "como estas como estas" -> "como estas")
+        if (!antiRepeticionActiva()) return limpio;
+
+        // 2. Despegar palabras duplicadas dentro de un mismo token (ej. "cómocómo" -> "cómo", "bienbien" -> "bien")
+        const tokensLimpios = limpio.split(' ').map((tok) => {
+            const tokNorm = soloAlfanumerico(tok);
+            if (tokNorm.length >= 6) {
+                const m = tokNorm.match(/^([a-z0-9ñ]{3,16}?)\1+$/i);
+                if (m && m[1]) {
+                    const ratio = m[1].length / tokNorm.length;
+                    const lenOriginal = Math.max(1, Math.round(tok.length * ratio));
+                    return tok.slice(0, lenOriginal);
+                }
+            }
+            return tok;
+        });
+
+        // 3. Si una palabra es seguida por fragmentos partidos de sí misma (ej. "Bien bi en" o "bie n"), saltar los fragmentos
+        const sinEcoSilabas = [];
+        for (let i = 0; i < tokensLimpios.length; i++) {
+            const actual = tokensLimpios[i];
+            const actualCompacto = soloAlfanumerico(actual);
+            if (sinEcoSilabas.length > 0) {
+                const prevCompacto = soloAlfanumerico(sinEcoSilabas[sinEcoSilabas.length - 1]);
+                if (prevCompacto.length >= 3) {
+                    const sig1 = soloAlfanumerico(tokensLimpios[i] || '');
+                    const sig2 = soloAlfanumerico(tokensLimpios[i + 1] || '');
+                    const sig3 = soloAlfanumerico(tokensLimpios[i + 2] || '');
+                    if (sig1 && sig2 && (sig1 + sig2) === prevCompacto) {
+                        i += 1;
+                        continue;
+                    }
+                    if (sig1 && sig2 && sig3 && (sig1 + sig2 + sig3) === prevCompacto) {
+                        i += 2;
+                        continue;
+                    }
+                    // Caso "Bienbi" (palabra previa + inicio de la misma palabra)
+                    if (actualCompacto.length > prevCompacto.length && actualCompacto.startsWith(prevCompacto) && prevCompacto.startsWith(actualCompacto.slice(prevCompacto.length))) {
+                        continue;
+                    }
+                }
+            }
+            if (actualCompacto && sinEcoSilabas.length > 0 && actualCompacto === soloAlfanumerico(sinEcoSilabas[sinEcoSilabas.length - 1])) {
+                continue;
+            }
+            sinEcoSilabas.push(actual);
+        }
+
+        // 4. Colapsar pares y tríos de palabras repetidas seguidas (ej. "como estas como estas" -> "como estas")
         const resultado = [];
         let i = 0;
-        while (i < sinDupSimple.length) {
-            if (i + 3 < sinDupSimple.length) {
-                const par1 = normalize(sinDupSimple[i] + ' ' + sinDupSimple[i + 1]);
-                const par2 = normalize(sinDupSimple[i + 2] + ' ' + sinDupSimple[i + 3]);
+        while (i < sinEcoSilabas.length) {
+            if (i + 5 < sinEcoSilabas.length) {
+                const trio1 = normalize(sinEcoSilabas[i] + ' ' + sinEcoSilabas[i + 1] + ' ' + sinEcoSilabas[i + 2]);
+                const trio2 = normalize(sinEcoSilabas[i + 3] + ' ' + sinEcoSilabas[i + 4] + ' ' + sinEcoSilabas[i + 5]);
+                if (trio1 && trio1 === trio2) {
+                    resultado.push(sinEcoSilabas[i], sinEcoSilabas[i + 1], sinEcoSilabas[i + 2]);
+                    i += 6;
+                    while (i + 2 < sinEcoSilabas.length && normalize(sinEcoSilabas[i] + ' ' + sinEcoSilabas[i + 1] + ' ' + sinEcoSilabas[i + 2]) === trio1) {
+                        i += 3;
+                    }
+                    continue;
+                }
+            }
+            if (i + 3 < sinEcoSilabas.length) {
+                const par1 = normalize(sinEcoSilabas[i] + ' ' + sinEcoSilabas[i + 1]);
+                const par2 = normalize(sinEcoSilabas[i + 2] + ' ' + sinEcoSilabas[i + 3]);
                 if (par1 && par1 === par2) {
-                    resultado.push(sinDupSimple[i], sinDupSimple[i + 1]);
+                    resultado.push(sinEcoSilabas[i], sinEcoSilabas[i + 1]);
                     i += 4;
-                    while (i + 1 < sinDupSimple.length && normalize(sinDupSimple[i] + ' ' + sinDupSimple[i + 1]) === par1) {
+                    while (i + 1 < sinEcoSilabas.length && normalize(sinEcoSilabas[i] + ' ' + sinEcoSilabas[i + 1]) === par1) {
                         i += 2;
                     }
                     continue;
                 }
             }
-            resultado.push(sinDupSimple[i]);
+            resultado.push(sinEcoSilabas[i]);
             i += 1;
         }
 
         return resultado.join(' ').replace(/\s+/g, ' ').trim();
     }
 
-    // Une dos fragmentos de voz evitando el bug acumulativo de Chrome/Android donde results[1] repite results[0]
+    // Une dos fragmentos de voz evitando el bug acumulativo de Chrome/Android donde results[1] repite o parte en sílabas results[0]
     function unirSegmentosVozSinSolapar(base, nuevo) {
         const a = String(base || '').replace(/\s+/g, ' ').trim();
         const b = String(nuevo || '').replace(/\s+/g, ' ').trim();
@@ -646,20 +737,35 @@
         if (aNorm === bNorm) return limpiarRepeticionesVoz(b);
         if (bNorm.startsWith(aNorm)) return limpiarRepeticionesVoz(b);
         if (aNorm.startsWith(bNorm)) return limpiarRepeticionesVoz(a);
-        if (aNorm.endsWith(' ' + bNorm) || aNorm === bNorm) return limpiarRepeticionesVoz(a);
+        if (aNorm.endsWith(' ' + bNorm)) return limpiarRepeticionesVoz(a);
+
+        // Comparación sin espacios: detecta cuando Android parte la misma palabra en sílabas ("Bien" vs "bi en" vs "bie n")
+        const aCompact = aNorm.replace(/\s+/g, '');
+        const bCompact = bNorm.replace(/\s+/g, '');
+        if (aCompact && bCompact) {
+            if (aCompact === bCompact) {
+                // Conservar el que tenga menos fragmentos sueltos de 1-2 letras
+                return limpiarRepeticionesVoz(a.split(' ').length <= b.split(' ').length ? a : b);
+            }
+            if (bCompact.startsWith(aCompact)) return limpiarRepeticionesVoz(b);
+            if (aCompact.startsWith(bCompact)) return limpiarRepeticionesVoz(a);
+            if (aCompact.endsWith(bCompact)) return limpiarRepeticionesVoz(a);
+        }
 
         const aWords = a.split(' ');
         const bWords = b.split(' ');
         const maxOverlap = Math.min(aWords.length, bWords.length, 8);
         for (let k = maxOverlap; k >= 1; k--) {
-            const sufijoA = normalize(aWords.slice(aWords.length - k).join(' '));
-            const prefijoB = normalize(bWords.slice(0, k).join(' '));
+            const sufijoA = soloAlfanumerico(aWords.slice(aWords.length - k).join(' '));
+            const prefijoB = soloAlfanumerico(bWords.slice(0, k).join(' '));
             if (sufijoA && sufijoA === prefijoB) {
                 return limpiarRepeticionesVoz(aWords.concat(bWords.slice(k)).join(' '));
             }
         }
         return limpiarRepeticionesVoz(a + ' ' + b);
     }
+
+    window.limpiarRepeticionesVozOsito = limpiarRepeticionesVoz;
 
     function escribirEnCajaChatEnVivo(texto, esParcial) {
         const input = getEl('ai-input');
@@ -745,13 +851,10 @@
             if (!SpeechRecognition) return;
 
             this.recognition = new SpeechRecognition();
-            this.recognition.lang = 'es-SV';
-            // continuous + interimResults nos deja controlar nosotros mismos cuándo
-            // cortar el micrófono, en vez de depender del corte automático del
-            // navegador (que suele cerrar el audio a los pocos segundos aunque
-            // digamos "continuous"). Además, si el navegador lo corta antes de
-            // tiempo, lo reiniciamos nosotros mismos de forma transparente.
-            this.recognition.continuous = true;
+            this.recognition.lang = 'es-MX';
+            // En Android Chrome, continuous = true duplica cada sílaba parcial en event.results (ej. "Bienbi enbie nBien").
+            // Desactivarlo en móviles hace que el reconocedor nativo escuche la frase limpia de principio a fin sin duplicar.
+            this.recognition.continuous = !ES_MOVIL_O_ANDROID;
             this.recognition.interimResults = true;
             this.recognition.maxAlternatives = 1;
 
@@ -771,18 +874,28 @@
             this.recognition.onresult = (event) => {
                 let sessionCombined = '';
                 let hasAny = false;
-                for (let i = 0; i < event.results.length; i++) {
-                    const result = event.results[i];
-                    const spoken = String(result?.[0]?.transcript || '').trim();
-                    if (!spoken) continue;
-                    hasAny = true;
-                    sessionCombined = unirSegmentosVozSinSolapar(sessionCombined, spoken);
+                if (ES_MOVIL_O_ANDROID && event.results && event.results.length > 0) {
+                    // En móvil tomamos el resultado más reciente y completo para evitar que resultados intermedios viejos se concatenen
+                    const lastIdx = event.results.length - 1;
+                    const ultimo = String(event.results[lastIdx]?.[0]?.transcript || '').trim();
+                    const primero = String(event.results[0]?.[0]?.transcript || '').trim();
+                    sessionCombined = unirSegmentosVozSinSolapar(primero, ultimo);
+                    hasAny = Boolean(sessionCombined);
+                } else {
+                    for (let i = 0; i < event.results.length; i++) {
+                        const result = event.results[i];
+                        const spoken = String(result?.[0]?.transcript || '').trim();
+                        if (!spoken) continue;
+                        hasAny = true;
+                        sessionCombined = unirSegmentosVozSinSolapar(sessionCombined, spoken);
+                    }
                 }
+                sessionCombined = limpiarRepeticionesVoz(sessionCombined);
 
                 if (hasAny && sessionCombined) {
                     this.hasHeardSpeech = true;
                     this.lastSpeechTime = Date.now();
-                    const textoEnVivo = unirSegmentosVozSinSolapar(this.baseBeforeRestart || '', sessionCombined);
+                    const textoEnVivo = limpiarRepeticionesVoz(unirSegmentosVozSinSolapar(this.baseBeforeRestart || '', sessionCombined));
                     this.accumulatedTranscript = textoEnVivo;
                     this.pendingSpeech = null;
 
@@ -837,7 +950,10 @@
                     const esperaSilencio = window.ositoEnLlamadaIA ? 920 : obtenerEsperaSilencioMs();
                     const siguePendienteDeHablar = !this.hasHeardSpeech
                         && (ahora - this.sessionStartTime) < ESPERA_SIN_HABLAR_MS;
-                    const siguePendienteDeSilencioFinal = this.hasHeardSpeech
+                    // En móvil/Android, cuando el reconocedor termina tras haber escuchado voz, ya cerró la frase completa:
+                    // no reiniciamos encima para evitar eco de buffer ("Bienbi enbie nBien").
+                    const siguePendienteDeSilencioFinal = !ES_MOVIL_O_ANDROID
+                        && this.hasHeardSpeech
                         && (ahora - this.lastSpeechTime) < esperaSilencio;
 
                     if (siguePendienteDeHablar || siguePendienteDeSilencioFinal) {

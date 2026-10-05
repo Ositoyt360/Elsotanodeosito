@@ -295,66 +295,73 @@ html body #welcome-screen #btn-ready:not([style*="display:none"]):not([style*="d
 
 /* Barra superior de sesiones */
 .ai-sessions-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    margin-bottom: 10px;
-    background: linear-gradient(135deg, rgba(8, 15, 26, 0.92), rgba(12, 22, 36, 0.92));
-    border: 1px solid rgba(0, 242, 254, 0.28);
-    border-radius: 14px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    flex-wrap: nowrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 8px !important;
+    margin-bottom: 8px !important;
+    background: linear-gradient(135deg, rgba(8, 15, 26, 0.94), rgba(13, 24, 39, 0.94)) !important;
+    border: 1px solid rgba(0, 242, 254, 0.32) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+    flex-wrap: nowrap !important;
 }
 
 .ai-session-btn {
-    appearance: none;
-    -webkit-appearance: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 36px;
-    padding: 6px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 242, 254, 0.38);
-    background: linear-gradient(135deg, rgba(0, 242, 254, 0.14), rgba(0, 180, 216, 0.08));
-    color: #f0faff;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    cursor: pointer;
-    transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    min-height: 34px !important;
+    padding: 5px 9px !important;
+    border-radius: 9px !important;
+    border: 1px solid rgba(0, 242, 254, 0.42) !important;
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.16), rgba(0, 165, 205, 0.1)) !important;
+    color: #f2fbff !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28) !important;
+    transition: transform 0.14s ease, background 0.16s ease, border-color 0.16s ease !important;
 }
 
 .ai-session-btn:hover,
 .ai-session-btn.active {
-    background: linear-gradient(135deg, rgba(0, 242, 254, 0.26), rgba(57, 255, 106, 0.18));
-    border-color: rgba(0, 242, 254, 0.75);
-    box-shadow: 0 5px 14px rgba(0, 242, 254, 0.22);
-    transform: translateY(-1px);
-}
-
-.ai-session-btn:active {
-    transform: scale(0.97);
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.28), rgba(57, 255, 106, 0.2)) !important;
+    border-color: rgba(0, 242, 254, 0.85) !important;
+    transform: translateY(-1px) !important;
 }
 
 .ai-new-chat-btn {
-    background: linear-gradient(135deg, rgba(57, 255, 106, 0.18), rgba(0, 242, 254, 0.15));
-    border-color: rgba(57, 255, 106, 0.48);
-}
-
-.ai-new-chat-btn:hover {
-    background: linear-gradient(135deg, rgba(57, 255, 106, 0.28), rgba(0, 242, 254, 0.24));
-    border-color: rgba(57, 255, 106, 0.85);
+    background: linear-gradient(135deg, rgba(57, 255, 106, 0.2), rgba(0, 242, 254, 0.16)) !important;
+    border-color: rgba(57, 255, 106, 0.52) !important;
+    flex-shrink: 0 !important;
 }
 
 .ai-mic-cfg-btn {
-    padding: 6px 10px;
-    min-width: 36px;
+    padding: 5px 8px !important;
+    min-width: 32px !important;
+    flex-shrink: 0 !important;
+}
+
+.ai-current-chat-pill {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    display: block !important;
+    padding: 6px 9px !important;
+    border-radius: 9px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+    color: #e2f3ff !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 .ai-history-count-badge,
@@ -1106,11 +1113,13 @@ html {
     html body .ia-floating-container {
         right: 10px !important;
         bottom: 10px !important;
+        z-index: 99998 !important;
     }
 
     html body .livechat-floating-container {
         left: 10px !important;
         bottom: 10px !important;
+        z-index: 99998 !important;
     }
 
     html body .ia-bubble-wrap,
@@ -1125,19 +1134,24 @@ html {
     }
 
     html body #ai-section.ia-section {
+        display: none !important;
         position: fixed !important;
-        left: 8px !important;
-        right: 8px !important;
-        bottom: 68px !important;
-        width: calc(100vw - 16px) !important;
-        max-width: 440px !important;
-        height: min(74dvh, 540px) !important;
-        max-height: calc(100dvh - 80px) !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: 72px !important;
+        width: calc(100vw - 20px) !important;
+        max-width: 410px !important;
+        height: min(72dvh, 485px) !important;
+        max-height: calc(100dvh - 88px) !important;
         margin: 0 auto !important;
         border-radius: 18px !important;
         box-sizing: border-box !important;
-        display: flex !important;
+        z-index: 999999 !important;
         flex-direction: column !important;
+    }
+
+    html body #ai-section.ia-section.active {
+        display: flex !important;
     }
 
     html body #ai-section .ia-header {

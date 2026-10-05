@@ -151,3 +151,71 @@ html body .osito-face .of-boredom-prop :is(.ba-sphere, .ap-fruit, .cb-cube) {
 html.mobile-lite .osito-face .of-boredom-prop :is(.tl-body, .lp-screen, .lp-base, .ct-body, .hc-body, .cm-body, .gd-box, .bp-body, .np-pg, .bk-pg, .vs-body, .cf-body, .pl-body, .pl-head, .mc-body, .hp-cup) {
     box-shadow: .012em .018em 0 rgba(0,0,0,.4), .024em .036em 0 rgba(0,0,0,.34), .03em .05em .02em rgba(0,0,0,.3) !important;
 }
+
+/* ------------------------- 4) Botón de entrada corregido ------------------------- */
+/* El botón "Entrar a la página" no debe heredar el fondo blanco de versiones anteriores. */
+html body #welcome-screen #btn-ready {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: min(260px, 82vw) !important;
+    min-height: 52px !important;
+    box-sizing: border-box !important;
+    margin: 20px auto 0 !important;
+    padding: 14px 28px !important;
+    border: 1px solid rgba(57,255,106,.78) !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #12351f 0%, #176b32 48%, #22c957 100%) !important;
+    background-color: #176b32 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,.65) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.34), 0 0 18px rgba(57,255,106,.18), inset 0 1px 0 rgba(255,255,255,.18) !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    overflow: hidden !important;
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease !important;
+}
+
+html body #welcome-screen #btn-ready::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(110deg, transparent 28%, rgba(255,255,255,.22) 50%, transparent 72%) !important;
+    transform: translateX(-130%) !important;
+    transition: transform .55s ease !important;
+    pointer-events: none !important;
+}
+
+html body #welcome-screen #btn-ready:hover {
+    background: linear-gradient(135deg, #176b32 0%, #20d957 52%, #39ff6a 100%) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,.38), 0 0 28px rgba(57,255,106,.34), inset 0 1px 0 rgba(255,255,255,.22) !important;
+    filter: none !important;
+}
+
+html body #welcome-screen #btn-ready:hover::before {
+    transform: translateX(130%) !important;
+}
+
+html body #welcome-screen #btn-ready:active {
+    transform: translateY(0) scale(.98) !important;
+}
+
+html body #welcome-screen #btn-ready:focus-visible {
+    outline: 2px solid #baffc8 !important;
+    outline-offset: 3px !important;
+}
+
+@media (max-width: 480px) {
+    html body #welcome-screen #btn-ready {
+        width: min(240px, 84vw) !important;
+        min-height: 50px !important;
+        padding: 13px 22px !important;
+    }
+}

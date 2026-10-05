@@ -5751,11 +5751,7 @@ accent-color:#00ff88;
             }
 
             function toggleLlamadaIA() {
-                if (window.ositoEnLlamadaIA) {
-                    finalizarLlamadaIA();
-                } else {
-                    iniciarLlamadaIA();
-                }
+                window.location.href = 'ia.html';
             }
 
             window.iniciarLlamadaIA = iniciarLlamadaIA;
@@ -5843,24 +5839,7 @@ accent-color:#00ff88;
         })();
 
         function toggleIAPanel() {
-            const panel = document.getElementById('ai-section');
-            const bubble = document.getElementById('ia-bubble');
-            if (!panel) return;
-            if (window.ositoEnLlamadaIA) {
-                if (typeof window.finalizarLlamadaIA === 'function') {
-                    window.finalizarLlamadaIA();
-                }
-            }
-            const isNowActive = panel.classList.toggle('active');
-            if (isNowActive && window.innerWidth <= 1024) {
-                document.body.classList.add('ai-panel-open');
-            } else {
-                document.body.classList.remove('ai-panel-open');
-            }
-            if (bubble) {
-                bubble.classList.toggle('open', isNowActive);
-                bubble.setAttribute('aria-expanded', isNowActive ? 'true' : 'false');
-            }
+            window.location.href = 'ia.html';
         }
     </script>
 

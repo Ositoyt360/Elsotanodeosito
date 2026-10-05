@@ -1,0 +1,443 @@
+/* =====================================================================
+ * V56 — CARA 3D + TRANSICIONES DE EXPRESIÓN + EMOJIS 3D + OBJETOS NUEVOS
+ *  1) La cara de la IA es un objeto 3D de verdad: grosor (capas), ojos con volumen,
+ *     cristal con brillo que se desplaza al girar la cabeza y balanceo 3D suave.
+ *  2) Cada expresión ENTRA y SALE con su animación (data-fase = in / out / back).
+ *  3) Los emojis de la cara (✨ ❤ 💢 …) son 3D: capas con grosor y giro en Y.
+ *  4) Objetos nuevos al aburrirse: periódico, teléfono, café, audífonos, cubo.
+ * Todo se mide en "em" de la cara. Se carga al final para ganar a los estilos viejos.
+ * ===================================================================== */
+
+/* ============================== 1) CARA 3D ============================== */
+.osito-face{perspective:6.5em; perspective-origin:50% 38%; --hx:calc(var(--rx) + var(--gy) * -3deg); --hy:calc(var(--ry) + var(--gx) * 4deg)}
+.osito-face .of-rig{
+  position:absolute; inset:0; transform-style:preserve-3d;
+  rotate:0 1 0 0deg;
+  animation:none!important;
+}
+@keyframes of3dIdle{
+  0%,100%{rotate:0 1 0 0deg}
+  50%{rotate:0 1 0 0deg}
+}
+.osito-face .of-card{
+  overflow:visible!important; transform-style:preserve-3d!important;
+  box-shadow:inset 0 0 .05em rgba(255,255,255,.55),inset 0 -.05em .09em rgba(0,0,0,.35)!important;
+}
+/* Pantalla redondeada: la mancha de colores se recorta sola (ya no hace falta overflow en la tarjeta) */
+.osito-face .of-blob{inset:0!important; border-radius:.3em; overflow:hidden; background:none!important; animation:none!important}
+.osito-face .of-blob::before{
+  content:""; position:absolute; inset:-30%;
+  background:
+    radial-gradient(circle at 50% 14%,#9147ff 0 24%,transparent 54%),
+    radial-gradient(circle at 50% 86%,#34d399 0 24%,transparent 54%),
+    radial-gradient(circle at 14% 50%,#ec4899 0 24%,transparent 54%),
+    radial-gradient(circle at 86% 50%,#05e0f5 0 24%,transparent 54%);
+  animation:ofSpin 10s linear infinite;
+}
+.osito-face.of-breathe .of-blob::before{animation-duration:4.5s}
+.osito-face[data-estado="thinking"] .of-blob::before{animation-duration:3.4s}
+.osito-face[data-estado="speaking"] .of-blob::before{animation-duration:6s}
+html.low-end-device body:not(.no-animations):not(.ultra-performance) .osito-face .of-blob::before{animation:ofSpin 18s linear infinite}
+body.no-animations .osito-face .of-blob::before,body.ultra-performance .osito-face .of-blob::before{animation:none}
+
+/* Grosor: capas que se hunden hacia atrás (las inserta osito-cara3d.js) */
+.osito-face .of-d{
+  position:absolute; inset:0; border-radius:.3em; pointer-events:none;
+  background:linear-gradient(160deg,hsl(262 56% calc(36% - var(--i)*4%)),hsl(252 54% calc(20% - var(--i)*2.4%)));
+  translate:0 0 calc(var(--i) * -.04em);
+}
+.osito-face .of-d[style*="--i:1"]{box-shadow:inset 0 0 .025em rgba(255,255,255,.4)}
+.osito-face .of-d.end{box-shadow:0 .07em .16em rgba(0,0,0,.55)}
+html.low-end-device .osito-face .of-d[style*="--i:2"],
+html.low-end-device .osito-face .of-d[style*="--i:4"],
+html.low-end-device .osito-face .of-d[style*="--i:6"]{display:none}
+
+/* Cristal: el brillo está por delante y se desplaza con el giro de la cabeza */
+.osito-face .of-card::before{translate:0 0 .004em}
+.osito-face .of-card::after{translate:0 0 .15em}
+
+/* Profundidad de cada parte (los ojos y las cejas "flotan" delante de la pantalla) */
+.osito-face .of-eyes{translate:0 0 .08em; transition:transform .26s cubic-bezier(.3,1.3,.6,1),opacity .24s ease}
+.osito-face .of-happy{translate:0 0 .08em}
+.osito-face .of-brow{translate:0 0 .1em}
+.osito-face .of-mouth{translate:0 0 .06em}
+.osito-face .of-smile{translate:0 0 .06em}
+.osito-face .of-cheek{translate:0 0 .02em}
+.osito-face .of-tear{translate:0 0 .09em}
+.osito-face .of-tongue{translate:0 0 .05em}
+.osito-face .of-sweat{transform:translateZ(.11em)}
+
+/* Ojos con volumen: esfera brillante con luz arriba a la izquierda */
+.osito-face .of-eye{
+  position:relative;
+  background:radial-gradient(ellipse at 34% 26%,#fff 0,#f5f2ff 44%,#cdc3ee 100%);
+  box-shadow:0 .014em .03em rgba(20,10,60,.6),inset -.014em -.022em .03em rgba(110,90,190,.38),0 0 .06em rgba(255,255,255,.3);
+  transition:transform .3s cubic-bezier(.3,1.3,.5,1),scale .35s ease,width .3s ease,height .3s ease,border-radius .3s ease,background .3s ease;
+}
+.osito-face .of-eye::after{
+  content:""; position:absolute; left:20%; top:12%; width:36%; height:24%; border-radius:50%;
+  background:rgba(255,255,255,.95);
+}
+.osito-face[data-expr="love"] .of-eye::after,.osito-face[data-expr="excited"] .of-eye::after{display:none}
+.osito-face .of-happy{filter:drop-shadow(0 .012em .018em rgba(20,10,60,.55))}
+.osito-face .of-mouth{
+  background:linear-gradient(#fff,#e8e2ff);
+  transition:opacity .22s ease,transform .26s cubic-bezier(.3,1.4,.5,1),width .26s ease,height .26s ease,margin-left .26s ease,border-radius .26s ease;
+}
+.osito-face.of-lipsync .of-mouth{transition:opacity .15s ease,transform .09s ease-out,border-radius .09s ease-out}
+.osito-face .of-brow{box-shadow:0 .01em .02em rgba(20,10,60,.5); transition:opacity .25s ease,transform .38s cubic-bezier(.3,1.3,.6,1),background .3s ease}
+.osito-face .of-cheek{transition:opacity .4s ease}
+.osito-face .of-smile{transition:opacity .3s ease,transform .38s cubic-bezier(.3,1.3,.6,1),width .3s ease,border-radius .3s ease,margin-left .3s ease}
+
+/* Ojos <-> ojos felices: se funden entre sí (antes cambiaban de golpe con display) */
+.osito-face .of-eyes{display:block!important}
+.osito-face .of-happy{display:flex!important; opacity:0; transition:opacity .24s ease}
+.osito-face[data-expr="smile"] .of-eyes,.osito-face[data-expr="joy"] .of-eyes,.osito-face[data-expr="hover"] .of-eyes,
+.osito-face[data-expr="laugh"] .of-eyes,.osito-face[data-expr="kiss"] .of-eyes,.osito-face[data-expr="dance"] .of-eyes{opacity:0}
+.osito-face[data-expr="smile"] .of-happy,.osito-face[data-expr="joy"] .of-happy,.osito-face[data-expr="hover"] .of-happy,
+.osito-face[data-expr="laugh"] .of-happy,.osito-face[data-expr="kiss"] .of-happy,.osito-face[data-expr="dance"] .of-happy{opacity:1}
+@media (hover:hover){
+  .osito-face[data-estado="idle"]:hover .of-eyes{opacity:0}
+  .osito-face[data-estado="idle"]:hover .of-happy{opacity:1}
+}
+
+/* Rendimiento / accesibilidad: sin balanceo, la cara queda en pose 3D fija */
+body.no-animations .osito-face .of-rig,body.ultra-performance .osito-face .of-rig,html.low-end-device .osito-face .of-rig{animation:none}
+html.mobile-lite .osito-face .of-rig{animation-duration:16s}
+@media (prefers-reduced-motion:reduce){.osito-face .of-rig{animation:none}}
+
+/* ======================= 2) TRANSICIONES ENTRE EXPRESIONES ======================= */
+/* SALE la expresión vieja (cuando viene otra): parpadeo + giro corto hacia atrás */
+.osito-face[data-fase="out"] .of-card{animation:of3dOut .2s ease-in 1 forwards!important}
+.osito-face[data-fase="out"] .of-eye{animation:none!important; scale:1 .08; transition:scale .16s ease-in!important}
+.osito-face[data-fase="out"] .of-spark{opacity:0!important; transition:opacity .16s ease}
+@keyframes of3dOut{
+  0%{transform:rotateX(var(--hx)) rotateY(var(--hy)) scale(1)}
+  100%{transform:rotateX(var(--hx)) rotateY(calc(var(--hy) - 12deg)) scale(.93)}
+}
+/* ENTRA la expresión nueva: pop 3D propio de cada una + ojos que se abren */
+.osito-face[data-fase="in"] .of-card{animation:of3dIn var(--in-d,.46s) cubic-bezier(.3,1.35,.5,1) 1!important}
+.osito-face[data-fase="in"] .of-eye{animation:of3dEyeOpen .4s cubic-bezier(.3,1.5,.5,1) 1}
+@keyframes of3dIn{
+  0%{transform:rotateX(calc(var(--hx) + var(--in-rx,0deg))) rotateY(calc(var(--hy) + var(--in-ry,18deg))) scale(var(--in-s,.9)); translate:0 var(--in-y,.02em)}
+  55%{transform:rotateX(calc(var(--hx) - var(--in-rx,0deg) * .35)) rotateY(calc(var(--hy) - var(--in-ry,18deg) * .35)) scale(1.05); translate:0 calc(var(--in-y,.02em) * -1.3)}
+  100%{transform:rotateX(var(--hx)) rotateY(var(--hy)) scale(1); translate:0 0}
+}
+@keyframes of3dEyeOpen{0%{scale:1 .08}60%{scale:1.06 1.14}}
+/* Sabor de entrada de cada expresión */
+.osito-face[data-fase="in"][data-expr="angry"]{--in-rx:-20deg;--in-ry:0deg;--in-s:1.06;--in-y:.03em;--in-d:.42s}
+.osito-face[data-fase="in"][data-expr="sad"]{--in-rx:18deg;--in-ry:0deg;--in-s:.96;--in-y:-.02em;--in-d:.6s}
+.osito-face[data-fase="in"][data-expr="wow"],
+.osito-face[data-fase="in"][data-expr="excited"],
+.osito-face[data-fase="in"][data-expr="joy"]{--in-rx:-12deg;--in-ry:0deg;--in-s:.82;--in-y:.05em}
+.osito-face[data-fase="in"][data-expr="laugh"],
+.osito-face[data-fase="in"][data-expr="dance"]{--in-rx:8deg;--in-ry:10deg;--in-s:.88;--in-y:.04em}
+.osito-face[data-fase="in"][data-expr="shy"]{--in-ry:-28deg;--in-rx:6deg;--in-d:.6s}
+.osito-face[data-fase="in"][data-expr="love"]{--in-ry:0deg;--in-s:.9;--in-y:.02em;--in-d:.55s}
+.osito-face[data-fase="in"][data-expr="kiss"]{--in-ry:-16deg;--in-rx:-6deg}
+.osito-face[data-fase="in"][data-expr="cool"]{--in-rx:12deg;--in-ry:14deg;--in-d:.55s}
+.osito-face[data-fase="in"][data-expr="curious"],
+.osito-face[data-fase="in"][data-expr="confused"]{--in-ry:-16deg;--in-rx:-4deg}
+.osito-face[data-fase="in"][data-expr="yawn"],
+.osito-face[data-fase="in"][data-expr="sleepy"],
+.osito-face[data-fase="in"][data-expr="sleeping"]{--in-rx:16deg;--in-ry:0deg;--in-s:.97;--in-y:-.02em;--in-d:.9s}
+.osito-face[data-fase="in"][data-expr="dizzy"]{--in-ry:24deg;--in-rx:-6deg;--in-d:.55s}
+
+/* VUELVE a la cara normal: ojos, cejas y boca se deslizan solos (transiciones) y la cabeza se asienta */
+.osito-face[data-fase="back"] .of-card{animation:of3dBack .62s cubic-bezier(.3,1.25,.5,1) 1!important}
+.osito-face[data-fase="back"] .of-eye{animation:of3dEyeOpen .42s cubic-bezier(.3,1.5,.5,1) 1}
+@keyframes of3dBack{
+  0%{transform:rotateX(calc(var(--hx) + var(--bk-rx,0deg))) rotateY(calc(var(--hy) + var(--bk-ry,0deg))) scale(var(--bk-s,1.04)); translate:0 var(--bk-y,0)}
+  100%{transform:rotateX(var(--hx)) rotateY(var(--hy)) scale(1); translate:0 0}
+}
+.osito-face[data-fase="back"][data-leave="angry"]{--bk-rx:12deg;--bk-s:.96}       /* suelta el aire y se echa atrás */
+.osito-face[data-fase="back"][data-leave="sad"]{--bk-rx:-8deg;--bk-s:1.03;--bk-y:.02em}
+.osito-face[data-fase="back"][data-leave="laugh"]{--bk-s:1.06;--bk-y:-.02em}      /* último rebote de la risa */
+.osito-face[data-fase="back"][data-leave="shy"]{--bk-ry:20deg}
+.osito-face[data-fase="back"][data-leave="love"]{--bk-s:1.07}
+.osito-face[data-fase="back"][data-leave="wow"],
+.osito-face[data-fase="back"][data-leave="excited"],
+.osito-face[data-fase="back"][data-leave="joy"]{--bk-rx:-8deg;--bk-s:.97;--bk-y:.015em}
+.osito-face[data-fase="back"][data-leave="dizzy"]{--bk-ry:-16deg;--bk-s:.98}
+.osito-face[data-fase="back"][data-leave="yawn"],
+.osito-face[data-fase="back"][data-leave="sleeping"]{--bk-rx:10deg;--bk-s:1.02}
+.osito-face[data-fase="back"][data-leave="kiss"]{--bk-ry:14deg;--bk-s:1.03}
+.osito-face[data-fase="back"][data-leave="cool"]{--bk-rx:-8deg;--bk-ry:-10deg}
+
+/* ============================ 3) EMOJIS 3D ============================ */
+/* El emoji ya no es un ::before plano: son capas con grosor (las pone osito-cara3d.js) */
+.osito-face .of-spark{
+  right:-.2em!important; top:-.24em!important; font-size:.36em!important;
+  transform-style:preserve-3d; translate:0 0 .3em; will-change:transform,opacity;
+}
+.osito-face .of-spark::before{content:none!important}
+.osito-face .of-spark:empty{display:none}
+.osito-face .of-spark .e3{display:block; font-weight:400; line-height:1; font-style:normal}
+.osito-face .of-spark .e3.f{position:relative; text-shadow:0 .05em .1em rgba(0,0,0,.4)}
+.osito-face .of-spark .e3.b{position:absolute; left:0; top:0; filter:brightness(.5) saturate(1.15); translate:0 0 calc(var(--k) * -.07em)}
+.osito-face[data-expr]:not([data-expr="sleeping"]) .of-spark,
+.osito-face[data-estado="thinking"] .of-spark,
+.osito-face[data-fase="back"][data-leave] .of-spark{opacity:1; animation:of3dEmoji 2.2s cubic-bezier(.3,.8,.4,1) infinite!important}
+.osito-face[data-expr="sleeping"] .of-spark{opacity:0!important; animation:none!important}
+@keyframes of3dEmoji{
+  0%{opacity:0; transform:translateY(.1em) rotateY(-110deg) scale(.3)}
+  16%{opacity:1; transform:translateY(-.03em) rotateY(24deg) scale(1.28)}
+  30%{transform:translateY(0) rotateY(-14deg) scale(1)}
+  54%{transform:translateY(-.04em) rotateY(18deg) scale(1.06)}
+  76%{opacity:1; transform:translateY(-.08em) rotateY(-12deg) scale(1.02)}
+  100%{opacity:0; transform:translateY(-.18em) rotateY(0deg) scale(.88)}
+}
+body.no-animations .osito-face .of-spark .e3.b,body.ultra-performance .osito-face .of-spark .e3.b{display:none}
+
+/* ======================= 4) OBJETOS NUEVOS AL ABURRIRSE ======================= */
+.osito-face .of-boredom-prop[data-mode="periodico"]{top:.52em; width:1.12em; height:.62em; margin-left:-.56em}
+.osito-face .of-boredom-prop[data-mode="telefono"]{top:.5em; width:.38em; height:.62em; margin-left:-.19em}
+.osito-face .of-boredom-prop[data-mode="cafe"]{top:.6em; width:.56em; height:.5em; margin-left:-.28em}
+.osito-face .of-boredom-prop[data-mode="audifonos"]{top:-.14em; width:1.36em; height:.92em; margin-left:-.68em}
+.osito-face .of-boredom-prop[data-mode="cubo"]{top:.58em; width:.42em; height:.42em; margin-left:-.21em}
+.osito-face .of-news,.osito-face .of-tel,.osito-face .of-cup,.osito-face .of-hp,.osito-face .of-cubewrap{position:absolute; inset:0; transform-style:preserve-3d}
+.osito-face .of-news > *,.osito-face .of-tel > *,.osito-face .of-cup > *,.osito-face .of-hp > *,.osito-face .of-cubewrap > *{position:absolute}
+
+/* ---------------- PERIÓDICO ---------------- */
+.osito-face .of-news{transform:rotateX(-3deg) rotateY(-4deg); animation:ofNewsSway 8s ease-in-out infinite}
+@keyframes ofNewsSway{0%,100%{transform:rotateX(-3deg) rotateY(-6deg)}50%{transform:rotateX(-5deg) rotateY(6deg)}}
+.osito-face .np-pg{
+  top:0; width:.55em; height:.6em; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  background:linear-gradient(180deg,#fbf7ea,#ece5d0);
+  box-shadow:inset 0 0 .05em rgba(130,110,60,.35),0 .02em .05em rgba(0,0,0,.4);
+}
+.osito-face .np-pg.l{left:.003em; border-radius:.025em 0 0 .02em; transform-origin:100% 50%; transform:rotateY(-9deg)}
+.osito-face .np-pg.r{right:.003em; border-radius:0 .025em .02em 0; transform-origin:0 50%; transform:rotateY(9deg)}
+.osito-face .np-pg::before{ /* cabecera del diario */
+  content:""; position:absolute; left:8%; right:8%; top:6%; height:10%; border-radius:.006em;
+  background:linear-gradient(90deg,#2a2833,#3b3846 50%,#2a2833);
+}
+.osito-face .np-pg.r::before{height:6%; background:#6c3df0; right:34%}
+.osito-face .np-pg::after{ /* foto + columnas de texto */
+  content:""; position:absolute; left:8%; right:8%; top:21%; bottom:7%;
+  background:
+    linear-gradient(135deg,#8fbbe0,#4e7fb0) 0 0/46% 30% no-repeat,
+    linear-gradient(135deg,#f0c27a,#d8793c) 100% 0/46% 30% no-repeat,
+    repeating-linear-gradient(180deg,#8c8997 0 .007em,transparent .007em .026em);
+}
+.osito-face .np-pg.r::after{
+  background:
+    linear-gradient(135deg,#9fd6a8,#4f9a62) 0 0/46% 30% no-repeat,
+    repeating-linear-gradient(180deg,#8c8997 0 .007em,transparent .007em .026em);
+}
+.osito-face .np-fold{left:calc(50% - .007em); top:0; width:.014em; height:.6em; background:linear-gradient(90deg,rgba(0,0,0,.25),rgba(255,255,255,.5),rgba(0,0,0,.22)); translate:0 0 .004em}
+.osito-face .np-flip{ /* hoja que pasa cada 8 s (la mueve osito-aburrimiento.js) */
+  left:50%; top:.003em; width:.55em; height:.6em; transform-origin:0 50%; opacity:0;
+  background:linear-gradient(90deg,#e4dcc4,#f8f3e4 35%,#fffaf0);
+  border-radius:0 .025em .02em 0; box-shadow:0 0 .04em rgba(0,0,0,.3); translate:0 0 .012em;
+}
+.osito-face .np-flip.go{animation:ofNewsFlip 1.5s cubic-bezier(.45,.05,.3,1) 1 forwards}
+@keyframes ofNewsFlip{
+  0%{opacity:0; transform:rotateY(0)}
+  8%{opacity:1}
+  50%{transform:rotateY(-95deg) translateY(-.04em)}
+  92%{opacity:1}
+  100%{opacity:0; transform:rotateY(-180deg)}
+}
+.osito-face .of-news .of-mitt.ml{left:-.14em; top:.3em}
+.osito-face .of-news .of-mitt.mr{right:-.14em; top:.3em}
+.osito-face .of-boredom-prop[data-beat="aha"] .of-news{animation:ofNewsAha .9s ease-in-out 1}
+@keyframes ofNewsAha{
+  0%,100%{transform:translateY(0) rotateX(-3deg) rotateY(-5deg)}
+  40%{transform:translateY(-.05em) rotateX(-1deg) rotateY(0deg) scale(1.03)}
+}
+
+/* ---------------- TELÉFONO ---------------- */
+.osito-face .of-tel{transform:rotateX(-6deg) rotateY(-4deg); animation:ofTelSway 7s ease-in-out infinite}
+@keyframes ofTelSway{0%,100%{transform:rotateX(-6deg) rotateY(-6deg)}50%{transform:rotateX(-8deg) rotateY(6deg)}}
+.osito-face .of-tel .of-slab{inset:0; border-radius:.06em; background:hsl(228 22% calc(17% - var(--i)*3%)); translate:0 0 calc(var(--i) * -.014em)}
+.osito-face .tl-body{
+  inset:0; border-radius:.06em; translate:0 0 .014em;
+  background:linear-gradient(150deg,#3b4259,#1d2130 60%,#10131d);
+  box-shadow:inset 0 0 0 .008em rgba(255,255,255,.2),0 .03em .06em rgba(0,0,0,.5);
+}
+.osito-face .tl-screen{
+  left:.02em; right:.02em; top:.02em; bottom:.02em; border-radius:.045em; overflow:hidden; translate:0 0 .024em;
+  background:linear-gradient(180deg,#223566,#0e1730);
+  box-shadow:0 0 .14em rgba(110,170,255,.65),inset 0 0 .03em rgba(255,255,255,.2);
+}
+.osito-face .tl-feed{
+  left:.014em; right:.014em; top:.05em; height:200%;
+  background:repeating-linear-gradient(180deg,#f3f6ff 0 .05em,transparent .05em .062em,#cfe0ff .062em .108em,transparent .108em .12em,#ffd6e6 .12em .17em,transparent .17em .182em);
+  border-radius:.01em; opacity:.92; animation:ofFeed 4.2s linear infinite;
+}
+@keyframes ofFeed{from{transform:translateY(0)}to{transform:translateY(-.364em)}}
+.osito-face .tl-bar{left:0; right:0; top:0; height:.04em; background:linear-gradient(180deg,#0b1226,rgba(11,18,38,.85))}
+.osito-face .tl-bar::after{content:""; position:absolute; right:.03em; top:.014em; width:.05em; height:.012em; border-radius:.01em; background:#9fe8b8}
+.osito-face .tl-notif{
+  left:.02em; right:.02em; top:.05em; height:.075em; border-radius:.03em; opacity:0;
+  background:linear-gradient(180deg,#fff,#e8edff); box-shadow:0 .01em .03em rgba(0,0,0,.4);
+  animation:ofNotif 6s ease-in-out infinite;
+}
+.osito-face .tl-notif::before{content:""; position:absolute; left:.012em; top:.017em; width:.04em; height:.04em; border-radius:50%; background:#34d27a}
+.osito-face .tl-notif::after{content:""; position:absolute; left:.065em; top:.022em; right:.015em; height:.012em; border-radius:.01em; background:#9aa3bf; box-shadow:0 .02em 0 #c3c9dc}
+@keyframes ofNotif{0%,60%,100%{opacity:0; transform:translateY(-.08em)}66%,80%{opacity:1; transform:translateY(0)}86%{opacity:0; transform:translateY(-.04em)}}
+.osito-face .tl-dot{left:calc(50% - .012em); top:.026em; width:.024em; height:.024em; border-radius:50%; background:#05070d; translate:0 0 .03em}
+.osito-face .of-tel .of-mitt.ml{left:-.15em; top:.22em}
+.osito-face .of-tel .of-mitt.mr{right:-.15em; top:.32em}
+.osito-face .of-tel .of-mitt::after{animation:ofThumbTap 2.2s ease-in-out infinite}
+.osito-face .of-tel .of-mitt.mr::after{animation-delay:.9s}
+.osito-face .of-boredom-prop[data-beat="buzz"] .of-tel{animation:ofTelBuzz .9s ease-in-out 1}
+@keyframes ofTelBuzz{
+  0%,100%{transform:translateX(0) rotateX(-6deg) rotateY(-6deg)}
+  15%{transform:translateX(-.012em) rotateX(-6deg) rotateY(-6deg) rotate(-2deg)}
+  30%{transform:translateX(.012em) rotateX(-6deg) rotateY(-6deg) rotate(2deg)}
+  45%{transform:translateX(-.01em) rotateX(-6deg) rotateY(-6deg) rotate(-1.5deg)}
+  60%{transform:translateX(.008em) rotateX(-6deg) rotateY(-6deg) rotate(1deg)}
+  80%{transform:translateY(-.04em) rotateX(-4deg) rotateY(0deg) scale(1.04)}
+}
+
+/* ---------------- TAZA DE CAFÉ ---------------- */
+.osito-face .of-cup{transform:rotateX(-8deg); animation:ofCupSway 7s ease-in-out infinite}
+@keyframes ofCupSway{0%,100%{transform:rotateX(-8deg) rotateY(-5deg)}50%{transform:rotateX(-10deg) rotateY(5deg)}}
+.osito-face .cf-saucer{
+  left:.02em; bottom:0; width:.52em; height:.1em; border-radius:50%;
+  background:radial-gradient(ellipse at 50% 30%,#fff 0,#ece8fb 55%,#b9b0dd 100%); box-shadow:0 .02em .04em rgba(0,0,0,.4);
+}
+.osito-face .cf-handle{left:.4em; top:.2em; width:.15em; height:.17em; border:.032em solid #efeafd; border-left:0; border-radius:0 .11em .11em 0; translate:0 0 -.02em; box-shadow:0 .01em .02em rgba(0,0,0,.3)}
+.osito-face .cf-body{
+  left:.1em; top:.14em; width:.36em; height:.3em; border-radius:.02em .02em .17em .17em/.02em .02em .13em .13em; translate:0 0 .01em;
+  background:linear-gradient(180deg,transparent 52%,#7c3df5 52% 68%,transparent 68%),linear-gradient(90deg,#cfc6f0 0%,#fff 26%,#f4f1ff 54%,#b6abe2 100%);
+  box-shadow:inset 0 -.03em .05em rgba(90,70,170,.3),0 .02em .04em rgba(0,0,0,.35);
+}
+.osito-face .cf-rim{left:.1em; top:.1em; width:.36em; height:.09em; border-radius:50%; background:linear-gradient(90deg,#d9d2f5,#fff 40%,#c2b8e8); translate:0 0 .02em}
+.osito-face .cf-coffee{left:.116em; top:.113em; width:.328em; height:.064em; border-radius:50%; background:radial-gradient(ellipse at 40% 35%,#8b5a35,#4a2a14 70%); translate:0 0 .022em}
+.osito-face .cf-foam{left:.2em; top:.122em; width:.1em; height:.03em; border-radius:50%; background:rgba(255,236,205,.55); translate:0 0 .024em}
+.osito-face .cf-steam{
+  top:-.02em; width:.06em; height:.24em; border-radius:50%; opacity:0; translate:0 0 .05em;
+  background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.75) 40%,rgba(255,255,255,0));
+  animation:ofSteam 2.8s ease-out infinite;
+}
+.osito-face .cf-steam.s1{left:.2em}
+.osito-face .cf-steam.s2{left:.29em; animation-delay:.9s}
+.osito-face .cf-steam.s3{left:.37em; animation-delay:1.7s}
+@keyframes ofSteam{
+  0%{opacity:0; transform:translate(0,.1em) scaleX(.8)}
+  25%{opacity:.85}
+  60%{transform:translate(.025em,-.05em) scaleX(1.2); opacity:.6}
+  100%{opacity:0; transform:translate(-.02em,-.17em) scaleX(.7)}
+}
+.osito-face .of-cup .of-mitt.ml{left:-.06em; top:.2em}
+.osito-face .of-cup .of-mitt.mr{right:-.05em; top:.22em}
+.osito-face .of-boredom-prop[data-beat="sip"] .of-cup{animation:ofCupSip 3s ease-in-out 1}
+@keyframes ofCupSip{
+  0%,100%{transform:translateY(0) rotateX(-8deg) rotateY(-5deg)}
+  35%,65%{transform:translateY(-.16em) rotateX(20deg) rotateY(0deg) scale(.96)}
+}
+.osito-face .of-boredom-prop[data-beat="blow"] .cf-steam{animation-duration:1.2s}
+.osito-face .of-boredom-prop[data-beat="blow"] .of-cup{animation:ofCupBlow 2.4s ease-in-out 1}
+@keyframes ofCupBlow{0%,100%{transform:translateY(0) rotateX(-8deg)}40%,60%{transform:translateY(-.07em) rotateX(8deg)}}
+
+/* ---------------- AUDÍFONOS + MÚSICA ---------------- */
+.osito-face .of-boredom-prop[data-mode="audifonos"]{animation:ofCaer 1.2s cubic-bezier(.3,1.2,.5,1) 1 backwards,ofActFloat 5s 1.2s ease-in-out infinite}
+.osito-face .of-boredom-prop[data-mode="audifonos"].of-out{animation:ofSubir .8s cubic-bezier(.5,0,.8,.45) 1 forwards!important}
+@keyframes ofCaer{0%{opacity:0; transform:translateY(-.7em) rotate(-8deg) scale(.9)}35%{opacity:1}65%{transform:translateY(.05em) rotate(2deg)}100%{opacity:1; transform:none}}
+@keyframes ofSubir{0%{opacity:1; transform:none}100%{opacity:0; transform:translateY(-.6em) rotate(6deg) scale(.9)}}
+.osito-face .of-hp{animation:ofHpBop 1.2s ease-in-out infinite alternate}
+@keyframes ofHpBop{from{rotate:-1.6deg}to{rotate:1.6deg}}
+.osito-face .hp-band{
+  left:.15em; top:0; width:1.06em; height:.72em; box-sizing:border-box;
+  border:.07em solid #2d3249; border-bottom:0; border-radius:.55em .55em 0 0/.66em .66em 0 0;
+  background:none; box-shadow:0 -.012em .02em rgba(255,255,255,.18) inset,0 .02em .05em rgba(0,0,0,.4);
+}
+.osito-face .hp-pad{left:.42em; top:.07em; width:.52em; height:.06em; border-radius:0 0 .07em .07em; background:linear-gradient(180deg,#8a56ff,#5b2ed6); translate:0 0 .01em}
+.osito-face .hp-cup{
+  top:.38em; width:.26em; height:.4em; border-radius:.12em;
+  background:radial-gradient(circle at 30% 22%,#6a7399 0,#2b3047 55%,#161927 100%);
+  box-shadow:inset 0 0 0 .012em rgba(255,255,255,.16),0 .03em .07em rgba(0,0,0,.5);
+}
+.osito-face .hp-cup.l{left:.04em; transform-origin:100% 50%; transform:rotateY(34deg); translate:0 0 .06em}
+.osito-face .hp-cup.r{right:.04em; transform-origin:0 50%; transform:rotateY(-34deg); translate:0 0 .06em}
+.osito-face .hp-cup::before{
+  content:""; position:absolute; left:18%; right:18%; top:20%; bottom:20%; border-radius:50%;
+  border:.016em solid #a173ff; box-shadow:0 0 .06em #a173ff,inset 0 0 .04em rgba(161,115,255,.6);
+  animation:ofBeatRing .6s ease-in-out infinite alternate;
+}
+@keyframes ofBeatRing{from{transform:scale(.9); opacity:.7}to{transform:scale(1.06); opacity:1}}
+.osito-face .hp-n{font-style:normal; font-size:.22em; line-height:1; opacity:0; color:#ffd1f0; text-shadow:0 0 .35em currentColor,0 .08em .15em rgba(0,0,0,.4); animation:ofNote 3s ease-out infinite}
+.osito-face .hp-n.n1{left:.02em; top:.3em}
+.osito-face .hp-n.n2{right:.0em; top:.28em; color:#a0f0ff; animation-delay:1s}
+.osito-face .hp-n.n3{left:.22em; top:.12em; color:#fff3a8; animation-delay:2s}
+@keyframes ofNote{
+  0%{opacity:0; transform:translate(0,.2em) rotateY(-80deg) scale(.5)}
+  20%{opacity:1; transform:translate(.04em,0) rotateY(10deg) scale(1.1)}
+  100%{opacity:0; transform:translate(-.06em,-.55em) rotateY(40deg) scale(1.2)}
+}
+
+/* ---------------- CUBO DE RUBIK (3D de verdad) ---------------- */
+.osito-face .cb-cube{
+  left:.06em; top:.06em; width:.3em; height:.3em; transform-style:preserve-3d;
+  transform:rotateX(-24deg) rotateY(34deg); animation:ofCubeSolve 6s ease-in-out infinite;
+}
+@keyframes ofCubeSolve{
+  0%,100%{transform:rotateX(-24deg) rotateY(26deg)}
+  50%{transform:rotateX(-31deg) rotateY(54deg)}
+}
+.osito-face .cb-f{
+  position:absolute; inset:0; display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr); gap:.012em; padding:.012em;
+  background:#0c0c11; border-radius:.012em; box-shadow:inset 0 0 .02em rgba(255,255,255,.15);
+}
+.osito-face .cb-f.fr{transform:translateZ(.15em)}
+.osito-face .cb-f.rt{transform:rotateY(90deg) translateZ(.15em); filter:brightness(.82)}
+.osito-face .cb-f.tp{transform:rotateX(90deg) translateZ(.15em); filter:brightness(1.1)}
+.osito-face .cb-f i{display:block; border-radius:.008em; box-shadow:inset 0 .006em .01em rgba(255,255,255,.45),inset 0 -.008em .01em rgba(0,0,0,.25)}
+.osito-face .cb-f .k0{background:#e23d3d}
+.osito-face .cb-f .k1{background:#ff8a2b}
+.osito-face .cb-f .k2{background:#ffd93b}
+.osito-face .cb-f .k3{background:#2fbf5b}
+.osito-face .cb-f .k4{background:#2f7bff}
+.osito-face .cb-f .k5{background:#f4f4f4}
+.osito-face .of-cubewrap .of-mitt.ml{left:-.11em; top:.1em}
+.osito-face .of-cubewrap .of-mitt.mr{right:-.11em; top:.1em}
+.osito-face .of-boredom-prop[data-beat="win"] .of-cubewrap{animation:ofCubeWin 1.3s ease-in-out 1}
+@keyframes ofCubeWin{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-.1em) scale(1.1)}}
+.osito-face .of-boredom-prop[data-beat="lose"] .of-cubewrap{animation:ofCubeLose 1.4s ease-in-out 1}
+@keyframes ofCubeLose{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(.04em) rotate(-5deg)}}
+
+/* ============== EXPRESIONES NUEVAS MIENTRAS USA CADA OBJETO ============== */
+/* --- TELÉFONO: scrolleando --- */
+.osito-face[data-act="t-scroll"]:not([data-expr]) .of-look{animation:ofScrollLook 2.8s ease-in-out infinite}
+.osito-face[data-act="t-scroll"]:not([data-expr]) .of-eye{scale:1 .94}
+.osito-face[data-act="t-scroll"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.005em)}
+.osito-face[data-act="t-scroll"]:not([data-expr]) .of-smile{opacity:.9; transform:scale(.8,.7)}
+@keyframes ofScrollLook{0%,100%{transform:translate(-.01em,.03em)}50%{transform:translate(.012em,.075em)}}
+/* --- TELÉFONO: escribiendo --- */
+.osito-face[data-act="t-type"]:not([data-expr]) .of-look{transform:translate(0,.06em); animation:none}
+.osito-face[data-act="t-type"]:not([data-expr]) .of-eye{scale:1 .9}
+.osito-face[data-act="t-type"]:not([data-expr]) .of-brow{opacity:1}
+.osito-face[data-act="t-type"]:not([data-expr]) .of-smile{opacity:.95; transform:translateX(.015em) scale(.8)}
+/* --- CAFÉ: sorbito con los ojitos cerrados --- */
+.osito-face[data-act="c-sip"]:not([data-expr]) .of-look{transform:translate(0,-.005em); animation:none}
+.osito-face[data-act="c-sip"]:not([data-expr]) .of-eye{scale:1 .36}
+.osito-face[data-act="c-sip"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.02em)}
+.osito-face[data-act="c-sip"]:not([data-expr]) .of-smile{opacity:.95; transform:scale(1.05)}
+.osito-face[data-act="c-sip"]:not([data-expr]) .of-cheek{opacity:.85}
+/* --- CAFÉ: sopla porque quema --- */
+.osito-face[data-act="c-blow"]:not([data-expr]) .of-look{transform:translate(0,-.02em); animation:none}
+.osito-face[data-act="c-blow"]:not([data-expr]) .of-eye{scale:1 .7}
+.osito-face[data-act="c-blow"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.03em)}
+.osito-face[data-act="c-blow"]:not([data-expr]) .of-smile{opacity:0}
+.osito-face[data-act="c-blow"]:not([data-expr]) .of-mouth{opacity:1; width:.07em; height:.07em; margin-left:-.035em; border-radius:50%; transform:scale(1)}
+/* --- AUDÍFONOS: siguiendo el ritmo --- */
+.osito-face[data-act="m-bop"]:not([data-expr]) .of-look{transform:translate(0,0); animation:none}
+.osito-face[data-act="m-bop"]:not([data-expr]) .of-eye{scale:1 .12}
+.osito-face[data-act="m-bop"]:not([data-expr]) .of-brow{opacity:1; transform:translateY(-.015em)}
+.osito-face[data-act="m-bop"]:not([data-expr]) .of-smile{opacity:1; transform:scale(1.15)}
+.osito-face[data-act="m-bop"]:not([data-expr]) .of-cheek{opacity:1}
+.osito-face[data-act="m-bop"]:not([data-expr]) .of-card{animation:ofBop 1.2s ease-in-out infinite alternate}
+@keyframes ofBop{from{rotate:-2.4deg; translate:-.008em 0}to{rotate:2.4deg; translate:.008em -.012em}}
+
+/* ============ RENDIMIENTO DE LOS OBJETOS NUEVOS ============ */
+html.low-end-device .osito-face .of-news,html.low-end-device .osito-face .of-tel,html.low-end-device .osito-face .of-cup,
+html.low-end-device .osito-face .of-hp,html.low-end-device .osito-face .cb-cube{animation:none!important}
+body.no-animations .osito-face[data-act] .of-card,body.ultra-performance .osito-face[data-act] .of-card{animation:none!important}
+body.no-animations .osito-face[data-fase] .of-card,body.ultra-performance .osito-face[data-fase] .of-card,
+body.no-animations .osito-face[data-fase] .of-eye,body.ultra-performance .osito-face[data-fase] .of-eye{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .osito-face[data-fase] .of-card,.osito-face[data-fase] .of-eye{animation:none!important}
+}

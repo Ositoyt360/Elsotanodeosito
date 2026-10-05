@@ -4172,7 +4172,10 @@ accent-color:#00ff88;
             const aiVoiceToggle = document.getElementById('ai-voice-toggle'); 
             let ultimaRespuestaIA = '';
             let turnoIA = 0;
-            let aiGenero = localStorage.getItem('osito_ai_genero') || '';
+            let aiGenero = localStorage.getItem('osito_ai_genero') || 'female';
+            if (!localStorage.getItem('osito_ai_genero')) {
+                localStorage.setItem('osito_ai_genero', 'female');
+            }
             // Nota: para cuentas registradas, el género real (elegido al registrarse)
             // llega un poco después vía firebase-integration.js y el evento
             // 'osito:firebase-auth-ready'. Por eso NO se fuerza aquí ningún valor
@@ -4852,18 +4855,21 @@ accent-color:#00ff88;
             }
 
             function setGeneroIA(genero) {
-                // En modo invitado se puede elegir/cambiar de género las veces
-                // que haga falta (antes quedaba bloqueado para siempre desde el
-                // primer click, incluso si venía guardado de una prueba vieja
-                // en localStorage, y entonces parecía que "no pasaba nada").
-                const esInvitadoAhora = typeof window.osEsInvitado === 'function' ? window.osEsInvitado() : true;
-                if (aiGenero && !esInvitadoAhora) return;
+                const ultimoCambioVoz = parseInt(localStorage.getItem('osito_voice_gender_last_change') || '0', 10);
+                const ahora = Date.now();
+                if (ahora - ultimoCambioVoz < 3600000) {
+                    const minutosRestantes = Math.ceil((3600000 - (ahora - ultimoCambioVoz)) / 60000);
+                    if (typeof showToast === 'function') showToast(`Puedes cambiar la voz de la IA una vez cada hora. Espera ${minutosRestantes} min ⏳`);
+                    return;
+                }
+                localStorage.setItem('osito_voice_gender_last_change', String(ahora));
                 aiGenero = genero;
                 localStorage.setItem('osito_ai_genero', genero);
                 aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === genero));
                 actualizarBloqueoIA();
                 const apodo = apodoIA();
                 agregarMensajeIA(`¡Qué onda, ${apodo}! Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
+                if (typeof showToast === 'function') showToast(`¡Voz cambiada a ${genero === 'female' ? 'Femenina (Osita)' : 'Masculina (Osito)'}! 🔊✨`);
             }
 
             function msParaProximoCambioNombre() {

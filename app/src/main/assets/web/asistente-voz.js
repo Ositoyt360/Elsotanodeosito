@@ -972,6 +972,10 @@
                 if (inputEl) inputEl.classList.remove('ia-input-dictating');
                 if (transcript) {
                     escribirEnCajaChatEnVivo(transcript, false);
+                    if (window.ositoEnLlamadaIA && window.CallModeEngine && typeof window.CallModeEngine.procesarEntradaUsuario === 'function') {
+                        window.CallModeEngine.procesarEntradaUsuario(transcript);
+                        return;
+                    }
                     const callBadge = getEl('ia-call-state-badge');
                     if (callBadge && window.ositoEnLlamadaIA) {
                         callBadge.textContent = '⚡ Micrófono apagado · Pensando respuesta...';

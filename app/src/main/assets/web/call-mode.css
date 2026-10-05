@@ -427,6 +427,29 @@
     border-radius: 4px 4px 20px 20px;
 }
 
+/* SAD */
+.call-avatar[data-state="SAD"] .call-avatar-body {
+    transform: translateY(3px) scale(0.97);
+}
+.call-avatar[data-state="SAD"] .call-avatar-glow {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.45) 0%, rgba(30, 58, 138, 0.25) 60%, transparent 80%);
+}
+.call-avatar[data-state="SAD"] .call-brow-left {
+    transform: translateY(-2px) rotate(-16deg);
+}
+.call-avatar[data-state="SAD"] .call-brow-right {
+    transform: translateY(-2px) rotate(16deg);
+}
+.call-avatar[data-state="SAD"] .call-avatar-mouth {
+    border-radius: 14px 14px 0 0;
+    border-top: 2px solid #9d4edd;
+    border-bottom: none;
+    height: 8px;
+}
+.call-avatar[data-state="SAD"] .call-eye-lid {
+    transform: scaleY(0.35);
+}
+
 /* TIRED / SLEEPING */
 .call-avatar[data-state="TIRED"] .call-eye-lid {
     transform: scaleY(0.55);
@@ -612,6 +635,25 @@
     background: rgba(239, 68, 68, 0.18) !important;
     border-color: #ef4444 !important;
     color: #fca5a5 !important;
+}
+.ia-call-mic-waves {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 14px;
+}
+.ia-call-mic-waves i {
+    width: 3px;
+    height: 10px;
+    border-radius: 2px;
+    background: currentColor;
+    animation: micWavePulse 0.9s ease-in-out infinite alternate;
+}
+.ia-call-mic-waves i:nth-child(2) { animation-delay: 0.2s; height: 14px; }
+.ia-call-mic-waves i:nth-child(3) { animation-delay: 0.4s; height: 8px; }
+@keyframes micWavePulse {
+    0% { transform: scaleY(0.4); opacity: 0.6; }
+    100% { transform: scaleY(1.2); opacity: 1; }
 }
 
 /* Botón de Cámara */

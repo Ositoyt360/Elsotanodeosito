@@ -26,6 +26,7 @@
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     <link rel="stylesheet" href="styles.css?v=v68">
     <link rel="stylesheet" href="v49.css?v=v68">
+    <link rel="stylesheet" href="call-mode.css?v=v68">
     <script id="v62-inline">
 /* =====================================================================
  * V62 — UN SOLO ARCHIVO con todo lo nuevo (no toca el resto de la página).
@@ -1433,40 +1434,82 @@ accent-color:#00ff88;
                     <div class="ia-call-view" id="ia-call-view" hidden aria-live="polite">
                         <div class="ia-call-top">
                             <span class="ia-call-live-pill"><span class="ia-call-dot"></span> VOZ EN VIVO</span>
-                            <span class="ia-vision-status-pill" id="ia-call-vision-badge" onclick="window.OsitoVision && window.OsitoVision.toggle && window.OsitoVision.toggle()" title="Conectar o desconectar la visión del cubo">
-                                <span class="ia-vision-off-dot"></span> 👁️ Activar Ojos del Cubo
-                            </span>
                             <span class="ia-call-timer" id="ia-call-timer">00:00</span>
                         </div>
                         <div class="ia-call-state-badge" id="ia-call-state-badge">✨ Conectando con La mascotita del Sótano...</div>
-                        <div class="ia-call-orb-stage">
-                            <div class="osito-face ia-call-mascot-face" id="ia-call-orb" data-estado="idle" role="button" tabindex="0" aria-label="Mascota en llamada de voz">
-                              <span class="of-card">
-                                <span class="of-blob"></span>
-                                <span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span>
-                                <span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span>
-                                <span class="of-mouth"></span>
-                              </span>
+
+                        <!-- Previsualización de Cámara Real Picture-In-Picture -->
+                        <div class="call-camera-preview-box" id="call-camera-preview-box" hidden>
+                            <video id="call-camera-video" playsinline muted autoplay></video>
+                            <div class="call-camera-badge">
+                                <span class="call-camera-dot"></span> Cámara en vivo
+                            </div>
+                            <button type="button" class="call-camera-close-btn" id="call-camera-close-btn" aria-label="Apagar cámara" title="Apagar cámara">✕</button>
+                        </div>
+
+                        <!-- Escenario del AVATAR CIRCULAR 2D (Personaje Principal en Modo Llamada) -->
+                        <div class="call-avatar-stage" id="call-avatar-stage">
+                            <div class="call-avatar" id="call-avatar" data-state="IDLE" role="button" tabindex="0" aria-label="Avatar interactivo en llamada">
+                                <div class="call-avatar-glow"></div>
+                                <div class="call-avatar-ear call-ear-left"></div>
+                                <div class="call-avatar-ear call-ear-right"></div>
+                                <div class="call-avatar-body">
+                                    <div class="call-avatar-face">
+                                        <div class="call-avatar-spark" id="call-avatar-spark" aria-hidden="true"></div>
+                                        <div class="call-avatar-brows">
+                                            <div class="call-brow call-brow-left"></div>
+                                            <div class="call-brow call-brow-right"></div>
+                                        </div>
+                                        <div class="call-avatar-eyes">
+                                            <div class="call-avatar-eye call-eye-left">
+                                                <div class="call-eye-lid"></div>
+                                                <div class="call-eye-pupil"><span class="call-eye-sparkle"></span></div>
+                                            </div>
+                                            <div class="call-avatar-eye call-eye-right">
+                                                <div class="call-eye-lid"></div>
+                                                <div class="call-eye-pupil"><span class="call-eye-sparkle"></span></div>
+                                            </div>
+                                        </div>
+                                        <div class="call-avatar-cheek call-cheek-left"></div>
+                                        <div class="call-avatar-cheek call-cheek-right"></div>
+                                        <div class="call-avatar-snout">
+                                            <div class="call-avatar-nose"></div>
+                                            <div class="call-avatar-mouth" id="call-avatar-mouth">
+                                                <div class="call-mouth-inner"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="ia-call-subtitle" id="ia-call-subtitle">Iniciando modo voz...</div>
+
+                        <!-- Panel de Respuestas Escritas Visibles y Transcripción en Vivo -->
+                        <div class="call-transcript-panel" id="call-transcript-panel">
+                            <div class="call-user-transcript" id="call-user-transcript" hidden>
+                                <span class="call-speaker-tag">TÚ:</span>
+                                <span id="call-user-transcript-text"></span>
+                            </div>
+                            <div class="call-response" id="call-response">
+                                <span class="call-speaker-tag">OSITO:</span>
+                                <span id="call-response-text">Iniciando modo llamada con voz en vivo...</span>
+                            </div>
+                        </div>
+
+                        <div class="ia-call-subtitle" id="ia-call-subtitle" style="display:none;">Iniciando modo voz...</div>
                         <div class="ia-call-voice-hint">💡 Puedes decir <strong>«cuelga la llamada»</strong> en cualquier momento para terminar</div>
+
                         <div class="ia-call-actions">
-                            <button class="ia-call-ctrl-btn ia-call-mic-toggle" id="ia-call-mic-btn" type="button" title="Alternar micrófono">
+                            <button class="call-mic-button ia-call-mic-toggle" id="ia-call-mic-btn" type="button" onclick="window.CallModeEngine && window.CallModeEngine.toggleMute()" title="Silenciar / Activar micrófono" aria-label="Alternar micrófono">
                                 <span class="ia-call-mic-emoji" aria-hidden="true">🎙️</span>
-                                <span class="ia-call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
+                                <span class="ia-call-mic-waves" id="call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
                                 <span id="ia-call-mic-label">Micrófono</span>
                             </button>
-                            <button class="ia-call-ctrl-btn ia-call-vision-btn" id="ia-call-vision-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.toggle && window.OsitoVision.toggle()" title="Conectar ojos del cubo (Visión directa de la IA)">
-                                <span class="ia-vision-btn-emoji" aria-hidden="true">👁️</span>
-                                <span class="ia-vision-btn-label">Ojos IA</span>
+                            <button class="call-camera-button" id="ia-call-cam-btn" type="button" onclick="window.CallModeEngine && window.CallModeEngine.toggleCamara()" title="Activar / Apagar cámara para visión en vivo" aria-label="Alternar cámara">
+                                <span aria-hidden="true" style="font-size: 1.15em;">📷</span>
+                                <span id="ia-call-cam-label">Cámara</span>
                             </button>
-                            <button class="ia-call-ctrl-btn ia-call-games-btn" id="ia-call-games-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" title="Juegos y Retos con el Cubo">
-                                <span aria-hidden="true">🎲</span>
-                                <span>Jugar</span>
-                            </button>
-                            <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" title="Colgar llamada y volver al chat" aria-label="Colgar llamada">
-                                <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Colgar llamada
+                            <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" onclick="window.finalizarLlamadaIA && window.finalizarLlamadaIA()" title="Colgar llamada y volver al modo normal" aria-label="Colgar llamada">
+                                <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Colgar
                             </button>
                         </div>
                     </div>
@@ -5524,32 +5567,11 @@ accent-color:#00ff88;
             let callIdleExprTimer = null;
             function actualizarUIEstadoLlamada(estado) {
                 if (!window.ositoEnLlamadaIA) return;
-                if (callOrbEl) {
-                    callOrbEl.setAttribute('data-estado', estado);
-                    callOrbEl.classList.toggle('is-speaking', estado === 'speaking');
-                    callOrbEl.classList.toggle('is-listening', estado === 'listening');
-                    callOrbEl.classList.toggle('is-thinking', estado === 'processing');
-                    if (estado === 'speaking') {
-                        // Mientras habla, la mascota no hace expresiones desfigurantes
-                        callOrbEl.removeAttribute('data-expr');
-                        if (callIdleExprTimer) {
-                            clearInterval(callIdleExprTimer);
-                            callIdleExprTimer = null;
-                        }
-                    } else {
-                        // Cuando no está hablando (en silencio o escuchando), hace expresiones amigables
-                        if (!callIdleExprTimer) {
-                            const exprLista = ['smile', 'curious', 'wink', 'cool', 'smile'];
-                            let eIdx = 0;
-                            callOrbEl.setAttribute('data-expr', 'smile');
-                            callIdleExprTimer = setInterval(() => {
-                                if (window.ositoEnLlamadaIA && !callOrbEl.classList.contains('is-speaking')) {
-                                    callOrbEl.setAttribute('data-expr', exprLista[eIdx % exprLista.length]);
-                                    eIdx += 1;
-                                }
-                            }, 3800);
-                        }
-                    }
+                if (window.CallModeEngine && typeof window.CallModeEngine.setCallAvatarState === 'function') {
+                    if (estado === 'listening') window.CallModeEngine.setCallAvatarState('LISTENING');
+                    else if (estado === 'speaking') window.CallModeEngine.setCallAvatarState('SPEAKING');
+                    else if (estado === 'processing') window.CallModeEngine.setCallAvatarState('THINKING');
+                    else window.CallModeEngine.setCallAvatarState('IDLE');
                 }
                 if (callMicBtn) {
                     callMicBtn.classList.toggle('active-mic', estado === 'listening');
@@ -5557,24 +5579,24 @@ accent-color:#00ff88;
                 }
                 if (callMicLabel) {
                     if (estado === 'listening') {
-                        callMicLabel.textContent = 'Escuchando tu voz...';
+                        callMicLabel.textContent = 'Escuchando...';
                     } else if (estado === 'speaking') {
-                        callMicLabel.textContent = 'IA hablando...';
+                        callMicLabel.textContent = 'Hablando...';
                     } else if (estado === 'processing') {
                         callMicLabel.textContent = 'Pensando...';
                     } else {
-                        callMicLabel.textContent = ' pulsar para hablar';
+                        callMicLabel.textContent = 'Micrófono';
                     }
                 }
                 if (callBadgeEl) {
                     if (estado === 'speaking') {
-                        callBadgeEl.textContent = '🔊 La IA está hablando...';
+                        callBadgeEl.textContent = '🔊 Osito está hablando...';
                     } else if (estado === 'listening') {
-                        callBadgeEl.textContent = '🎙️ Micrófono encendido · Tu turno';
+                        callBadgeEl.textContent = '🎙️ Micrófono encendido · Te escucho...';
                     } else if (estado === 'processing') {
-                        callBadgeEl.textContent = '⚡ Micrófono apagado · Pensando...';
+                        callBadgeEl.textContent = '⚡ Pensando respuesta...';
                     } else {
-                        callBadgeEl.textContent = '🎙️ Modo voz activo · La mascotita';
+                        callBadgeEl.textContent = '🎙️ Modo llamada activo';
                     }
                 }
             }
@@ -5641,6 +5663,11 @@ accent-color:#00ff88;
                     window.OsitoFaceSound.reproducir('call_start');
                 }
 
+                // Inicializar motor exclusivo de llamada con Avatar 2D Circular
+                if (window.CallModeEngine && typeof window.CallModeEngine.iniciarLlamada === 'function') {
+                    window.CallModeEngine.iniciarLlamada();
+                }
+
                 callSeconds = 0;
                 if (callTimerEl) callTimerEl.textContent = '00:00';
                 if (callTimerInterval) clearInterval(callTimerInterval);
@@ -5649,12 +5676,14 @@ accent-color:#00ff88;
                     if (callTimerEl) callTimerEl.textContent = formatearTiempoLlamada(callSeconds);
                 }, 1000);
 
-                const saludoLlamada = `¡Hola, ${prefijoIA()}! Ya estamos en modo voz. Cuando yo termine de hablar se encenderá tu micrófono automáticamente. ¿De qué quieres platicar?`;
+                const saludoLlamada = `¡Hola, ${prefijoIA()}! Ya estamos en modo llamada de voz en vivo. Puedes platicar conmigo o activar la cámara con el botón 📷. ¿De qué quieres platicar?`;
                 if (callSubEl) callSubEl.textContent = saludoLlamada;
+                if (window.CallModeEngine && typeof window.CallModeEngine.mostrarRespuestaTexto === 'function') {
+                    window.CallModeEngine.mostrarRespuestaTexto(saludoLlamada);
+                }
                 actualizarUIEstadoLlamada('speaking');
                 hablarIA(saludoLlamada);
 
-                // Si el navegador no tuviera síntesis de voz activa, abrimos el micrófono directo
                 setTimeout(() => {
                     if (window.ositoEnLlamadaIA && (!('speechSynthesis' in window) || (!window.speechSynthesis.speaking && !window.speechSynthesis.pending))) {
                         encenderMicrofonoTurnoLlamada();
@@ -5683,6 +5712,11 @@ accent-color:#00ff88;
                 document.body.classList.remove('ia-call-mode-active');
                 if (aiSectionEl) {
                     aiSectionEl.classList.remove('ia-call-active', 'ia-call-entering');
+                }
+
+                // Finalizar motor exclusivo de llamada
+                if (window.CallModeEngine && typeof window.CallModeEngine.finalizarLlamada === 'function') {
+                    window.CallModeEngine.finalizarLlamada();
                 }
 
                 // Restaurar botón X
@@ -7022,5 +7056,6 @@ accent-color:#00ff88;
     </script>
     <script src="firebase-integration.js?v=mod-v32-20260924"></script>
     <script src='asistente-voz.js?v=v68'></script>
-    <script src='face-100.js?v=v68' defer></script></body>
+    <script src='face-100.js?v=v68' defer></script>
+    <script src='call-mode-engine.js?v=v68'></script></body>
 </html>

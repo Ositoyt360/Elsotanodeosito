@@ -168,6 +168,17 @@ fun OsitoAppScreen(
                             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         }
 
+                        addJavascriptInterface(object {
+                            @android.webkit.JavascriptInterface
+                            fun getGeminiApiKey(): String {
+                                return try {
+                                    BuildConfig.GEMINI_API_KEY
+                                } catch (_: Exception) {
+                                    ""
+                                }
+                            }
+                        }, "AndroidBridge")
+
                         webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,

@@ -585,13 +585,18 @@
         if (/craftsman|bedwars/.test(t)) return 'Craftsman y BedWars son súper especiales en el canal: Osito planea crear un servidor y revivir esa comunidad tan nostálgica con los mapas antiguos. ⚔️';
         if (/estoy aburrido|me aburro|que hago/.test(t)) return '¡Para quitar el aburrimiento podemos jugar a preguntas y respuestas, te puedo contar datos curiosos o chistes, o puedes ver un video de OsitoGamer360YT! ¿Qué prefieres hacer primero? 😄';
         if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return '¡Claro! Dime exactamente qué pregunta de tu tarea o qué cuenta matemática tienes y te la explico paso a paso. 📚';
-        return null;
+        var RESPUESTAS_GENERALES = [
+            '¡Entiendo perfectamente! Sobre eso que mencionas, te cuento que es un tema fascinante porque abarca tanto aspectos prácticos como teóricos. ¿Te gustaría que profundicemos en algún detalle en específico? 🤔',
+            '¡Qué gran punto! Analizándolo bien, eso tiene mucha relación con cómo funcionan las cosas en el día a día, ya sea en tecnología, juegos o conocimiento general. ¿Qué más te gustaría saber al respecto? 💡',
+            '¡Interesantísimo! Eso que comentas es clave. Por ejemplo, en el mundo digital y en los videojuegos siempre surgen dudas similares. ¿Quieres que te explique cómo aplicarlo o prefieres que veamos otro ejemplo? ✨',
+            '¡Claro que sí! Tomando eso en cuenta, la mejor forma de abordarlo es paso a paso: primero analizando el contexto y luego buscando la solución más práctica. ¿En qué parte exacta te gustaría que te apoye? 🚀',
+            '¡Me encanta esa pregunta! Es de esos temas de los que vale la pena hablar largo y tendido. ¿Hay algún aspecto en particular que te cause curiosidad o lo exploramos desde cero? 🌟'
+        ];
+        var gen = RESPUESTAS_GENERALES[Math.floor(Math.random() * RESPUESTAS_GENERALES.length)];
+        return gen;
     }
     function mensajeSinClaude(codigo) {
-        if (codigo === 'ia_local' || codigo === 'ia_no_configurada' || codigo === 'ia_no_disponible' || codigo === 'ia_tiempo_agotado' || codigo === 'ia_sin_respuesta') {
-            return '¡Qué interesante! Pregúntame lo que quieras sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube), videojuegos como Minecraft y Roblox, cuentas matemáticas, datos curiosos o platica conmigo. 😊';
-        }
-        return null;
+        return '¡Qué interesante! Pregúntame lo que quieras sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube), videojuegos como Minecraft y Roblox, cuentas matemáticas, datos curiosos o platica conmigo. 😊';
     }
     if (estadoTexto) { estadoTexto.textContent = TEXTOS.idle; estadoTexto.dataset.iaOk = '1'; }
 

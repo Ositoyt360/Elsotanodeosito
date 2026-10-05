@@ -1,0 +1,673 @@
+/* ==========================================================================
+ * MODO LLAMADA / VOZ EN VIVO — SISTEMA AISLADO V64
+ * CallAvatar 2D circular + Animaciones + Lip-Sync + Cámara + Transcripción
+ * ========================================================================== */
+
+/* --- Contenedor de la llamada (Call Mode) --- */
+.ia-call-view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 18px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    gap: 10px;
+}
+
+/* Ocultar el cubo 3D viejo de la llamada si aún estuviera presente */
+.ia-call-view .ia-call-mascot-face,
+.ia-call-view .ia-call-orb-stage .osito-face {
+    display: none !important;
+}
+
+/* --- Escenario del Avatar Circular 2D --- */
+.call-avatar-stage {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+    min-height: 170px;
+}
+
+/* Avatar Circular 2D */
+.call-avatar {
+    position: relative;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-height: 640px) {
+    .call-avatar {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+/* Aura / Resplandor exterior */
+.call-avatar-glow {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(157, 78, 221, 0.25) 55%, transparent 75%);
+    filter: blur(8px);
+    transition: all 0.4s ease;
+    z-index: 1;
+    pointer-events: none;
+    animation: callAuraIdle 3.8s ease-in-out infinite alternate;
+}
+
+@keyframes callAuraIdle {
+    0% { transform: scale(0.96); opacity: 0.6; }
+    100% { transform: scale(1.06); opacity: 0.95; }
+}
+
+/* Cuerpo circular del avatar */
+.call-avatar-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #5833b5 0%, #301777 50%, #170d3d 100%);
+    box-shadow:
+        inset 0 4px 14px rgba(255, 255, 255, 0.45),
+        inset 0 -6px 16px rgba(0, 0, 0, 0.65),
+        0 10px 30px rgba(0, 0, 0, 0.6);
+    border: 3px solid rgba(0, 242, 254, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    overflow: visible;
+    transform-origin: 50% 85%;
+    animation: callBreathe 3.4s ease-in-out infinite;
+}
+
+@keyframes callBreathe {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    50% { transform: translateY(-3px) scale(1.015, 1.02); }
+}
+
+/* Orejitas 2D de Osito */
+.call-avatar-ear {
+    position: absolute;
+    top: -14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #683cd4 0%, #3a1c8c 60%, #201052 100%);
+    border: 2.5px solid rgba(0, 242, 254, 0.5);
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.35);
+    z-index: 1;
+    transition: transform 0.25s ease;
+}
+.call-avatar-ear::after {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff70a6 0%, #c026d3 100%);
+    opacity: 0.85;
+}
+.call-ear-left {
+    left: 8px;
+    transform: rotate(-18deg);
+}
+.call-ear-right {
+    right: 8px;
+    transform: rotate(18deg);
+}
+
+/* Rostro 2D */
+.call-avatar-face {
+    position: relative;
+    width: 86%;
+    height: 86%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+}
+
+/* Mejillas sonrojadas */
+.call-avatar-cheek {
+    position: absolute;
+    top: 54%;
+    width: 20px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 112, 166, 0.55);
+    filter: blur(2px);
+    transition: all 0.3s ease;
+}
+.call-cheek-left { left: 4px; }
+.call-cheek-right { right: 4px; }
+
+/* Contenedor de Ojos */
+.call-avatar-eyes {
+    position: relative;
+    width: 78%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    z-index: 4;
+}
+
+.call-avatar-eye {
+    position: relative;
+    width: 32px;
+    height: 38px;
+    background: #090616;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.8),
+        inset 0 0 4px rgba(0, 242, 254, 0.4);
+    transition: transform 0.2s ease;
+}
+
+/* Párpado para parpadeo natural */
+.call-eye-lid {
+    position: absolute;
+    inset: 0;
+    background: #462594;
+    border-bottom: 2px solid rgba(0, 242, 254, 0.6);
+    transform-origin: top;
+    transform: scaleY(0);
+    transition: transform 0.08s ease-in-out;
+    z-index: 5;
+}
+.call-avatar.blinking .call-eye-lid {
+    transform: scaleY(1);
+}
+
+/* Pupila y brillo */
+.call-eye-pupil {
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 45% 45%, #00f2fe 0%, #1e114a 65%, #0a041c 100%);
+    transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.4, 1.2);
+}
+.call-eye-sparkle {
+    position: absolute;
+    top: 18%;
+    left: 20%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 6px #ffffff;
+}
+.call-eye-sparkle::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    right: -8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+/* Cejas */
+.call-avatar-brows {
+    position: absolute;
+    top: 14%;
+    width: 76%;
+    display: flex;
+    justify-content: space-between;
+    z-index: 5;
+}
+.call-brow {
+    width: 22px;
+    height: 5px;
+    background: #9d4edd;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    transition: transform 0.24s ease;
+}
+.call-brow-left { transform: rotate(4deg); }
+.call-brow-right { transform: rotate(-4deg); }
+
+/* Hocico y Nariz */
+.call-avatar-snout {
+    position: relative;
+    width: 66px;
+    height: 48px;
+    border-radius: 50% 50% 45% 45%;
+    background: radial-gradient(circle at 50% 35%, #764ad8 0%, #4c269c 100%);
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    z-index: 4;
+}
+
+.call-avatar-nose {
+    width: 16px;
+    height: 11px;
+    border-radius: 50% 50% 40% 40%;
+    background: #090514;
+    border: 1px solid rgba(0, 242, 254, 0.5);
+    margin-top: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Boca dinámica con Lip-Sync */
+.call-avatar-mouth {
+    position: relative;
+    width: 24px;
+    height: calc(6px + var(--call-mouth-open, 0) * 18px);
+    max-height: 26px;
+    background: #080314;
+    border-radius: 0 0 14px 14px;
+    border: 2px solid #9d4edd;
+    border-top: none;
+    margin-top: 4px;
+    overflow: hidden;
+    transition: height 0.06s ease-out, border-radius 0.15s ease;
+}
+.call-mouth-inner {
+    position: absolute;
+    bottom: -2px;
+    left: 20%;
+    right: 20%;
+    height: 55%;
+    border-radius: 50% 50% 0 0;
+    background: #ff5c8a;
+    transition: all 0.08s ease;
+}
+
+/* Chispa / Emoji de expresión flotante */
+.call-avatar-spark {
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+    opacity: 0;
+    transform: scale(0.6);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
+    pointer-events: none;
+}
+.call-avatar-spark.show {
+    opacity: 1;
+    transform: scale(1.1) translateY(-4px);
+}
+
+/* ==========================================================================
+ * ESTADOS EMOCIONALES Y DEL AVATAR (.call-avatar[data-state])
+ * ========================================================================== */
+
+/* LISTENING: Escuchando al usuario */
+.call-avatar[data-state="LISTENING"] .call-avatar-glow {
+    background: radial-gradient(circle, rgba(0, 242, 254, 0.65) 0%, rgba(56, 189, 248, 0.35) 55%, transparent 80%);
+    animation: callAuraListening 1.4s ease-in-out infinite alternate;
+}
+@keyframes callAuraListening {
+    0% { transform: scale(1.02); opacity: 0.75; }
+    100% { transform: scale(1.14); opacity: 1; }
+}
+.call-avatar[data-state="LISTENING"] .call-avatar-body {
+    border-color: #00f2fe;
+    animation: callAttentive 1.8s ease-in-out infinite;
+}
+@keyframes callAttentive {
+    0%, 100% { transform: translateY(-2px) scale(1.02); }
+    50% { transform: translateY(-5px) scale(1.03); }
+}
+.call-avatar[data-state="LISTENING"] .call-brow {
+    transform: translateY(-2px) rotate(0deg);
+}
+
+/* THINKING: Pensando */
+.call-avatar[data-state="THINKING"] .call-avatar-glow {
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.65) 0%, rgba(236, 72, 153, 0.35) 60%, transparent 80%);
+}
+.call-avatar[data-state="THINKING"] .call-eye-pupil {
+    transform: translate(4px, -6px); /* Mira hacia arriba a un lado */
+}
+.call-avatar[data-state="THINKING"] .call-brow-left {
+    transform: translateY(-5px) rotate(14deg);
+}
+.call-avatar[data-state="THINKING"] .call-brow-right {
+    transform: translateY(2px) rotate(-8deg);
+}
+.call-avatar[data-state="THINKING"] .call-avatar-body {
+    animation: callThinkTilt 2.2s ease-in-out infinite alternate;
+}
+@keyframes callThinkTilt {
+    0% { transform: rotate(-3deg) translateY(-2px); }
+    100% { transform: rotate(3deg) translateY(-4px); }
+}
+
+/* SPEAKING: Hablando con Lip-Sync */
+.call-avatar[data-state="SPEAKING"] .call-avatar-glow {
+    background: radial-gradient(circle, rgba(0, 242, 254, 0.6) 0%, rgba(192, 38, 211, 0.4) 50%, transparent 80%);
+}
+.call-avatar[data-state="SPEAKING"] .call-avatar-body {
+    animation: callSpeakBob 0.38s ease-in-out infinite alternate;
+}
+@keyframes callSpeakBob {
+    0% { transform: translateY(0) scale(1, 1); }
+    100% { transform: translateY(-3px) scale(1.02, 1.01); }
+}
+
+/* HAPPY / EXCITED */
+.call-avatar[data-state="HAPPY"] .call-avatar-body,
+.call-avatar[data-state="EXCITED"] .call-avatar-body {
+    animation: callHappyBounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate;
+}
+@keyframes callHappyBounce {
+    0% { transform: translateY(0) scale(1, 0.98); }
+    100% { transform: translateY(-7px) scale(1.03, 1.05); }
+}
+.call-avatar[data-state="HAPPY"] .call-avatar-cheek,
+.call-avatar[data-state="EXCITED"] .call-avatar-cheek {
+    background: rgba(255, 75, 140, 0.85);
+    transform: scale(1.35);
+}
+.call-avatar[data-state="HAPPY"] .call-avatar-mouth {
+    border-radius: 4px 4px 18px 18px;
+    height: 14px;
+}
+
+/* SURPRISED */
+.call-avatar[data-state="SURPRISED"] .call-avatar-body {
+    transform: scale(1.07);
+}
+.call-avatar[data-state="SURPRISED"] .call-avatar-eye {
+    transform: scale(1.22);
+}
+.call-avatar[data-state="SURPRISED"] .call-avatar-mouth {
+    width: 18px;
+    height: 20px;
+    border-radius: 50%;
+}
+.call-avatar[data-state="SURPRISED"] .call-brow {
+    transform: translateY(-8px);
+}
+
+/* CONFUSED */
+.call-avatar[data-state="CONFUSED"] .call-avatar-body {
+    transform: rotate(6deg);
+}
+.call-avatar[data-state="CONFUSED"] .call-brow-left {
+    transform: translateY(-7px) rotate(16deg);
+}
+.call-avatar[data-state="CONFUSED"] .call-brow-right {
+    transform: translateY(3px) rotate(-14deg);
+}
+
+/* LAUGHING */
+.call-avatar[data-state="LAUGHING"] .call-avatar-body {
+    animation: callLaughShake 0.16s ease-in-out infinite alternate;
+}
+@keyframes callLaughShake {
+    0% { transform: translateY(0) rotate(-1.5deg); }
+    100% { transform: translateY(-4px) rotate(1.5deg); }
+}
+.call-avatar[data-state="LAUGHING"] .call-avatar-mouth {
+    height: 18px;
+    border-radius: 4px 4px 20px 20px;
+}
+
+/* TIRED / SLEEPING */
+.call-avatar[data-state="TIRED"] .call-eye-lid {
+    transform: scaleY(0.55);
+}
+.call-avatar[data-state="SLEEPING"] .call-eye-lid {
+    transform: scaleY(1);
+}
+.call-avatar[data-state="SLEEPING"] .call-avatar-body {
+    animation: callSleepBreathe 4.8s ease-in-out infinite alternate;
+}
+@keyframes callSleepBreathe {
+    0% { transform: translateY(2px) scale(0.98); }
+    100% { transform: translateY(-2px) scale(1.02); }
+}
+
+/* ==========================================================================
+ * PREVISUALIZACIÓN DE CÁMARA (Small Picture-In-Picture Preview)
+ * ========================================================================== */
+.call-camera-preview-box {
+    position: relative;
+    width: min(200px, 50vw);
+    height: min(130px, 32vw);
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    border: 2px solid #00f2fe;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 242, 254, 0.35);
+    margin: 4px auto;
+    z-index: 20;
+    animation: callCamPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes callCamPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.call-camera-preview-box video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Efecto espejo frontal */
+}
+
+.call-camera-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 8px;
+    background: rgba(4, 7, 16, 0.82);
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #e2f7ff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+}
+
+.call-camera-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00f2fe;
+    box-shadow: 0 0 8px #00f2fe;
+    animation: camDotBlink 1.2s infinite;
+}
+@keyframes camDotBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.call-camera-close-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.call-camera-close-btn:hover {
+    background: rgba(239, 68, 68, 0.8);
+}
+
+/* ==========================================================================
+ * PANEL DE RESPUESTAS DE TEXTO Y TRANSCRIPCIÓN
+ * ========================================================================== */
+.call-transcript-panel {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 2px 0 6px;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+.call-user-transcript {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    color: #d1d5db;
+    max-height: 48px;
+    overflow-y: auto;
+    word-break: break-word;
+}
+
+.call-response {
+    background: linear-gradient(135deg, rgba(14, 21, 38, 0.92) 0%, rgba(20, 14, 40, 0.92) 100%);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: #ffffff;
+    max-height: 90px;
+    overflow-y: auto;
+    word-break: break-word;
+    scrollbar-width: thin;
+    transition: all 0.2s ease;
+}
+
+.call-speaker-tag {
+    font-weight: 800;
+    color: #00f2fe;
+    margin-right: 4px;
+}
+.call-user-transcript .call-speaker-tag {
+    color: #9d4edd;
+}
+
+/* ==========================================================================
+ * ACCIONES Y BOTONES DE LLAMADA (Mute, Cámara, Colgar)
+ * ========================================================================== */
+.ia-call-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 440px;
+    margin-top: auto;
+}
+
+/* Botón de Micrófono / Mute */
+.call-mic-button {
+    flex: 1 1 0;
+    min-height: 48px;
+    border-radius: 16px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    background: rgba(0, 242, 254, 0.12);
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    color: #00f2fe;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.call-mic-button:hover {
+    background: rgba(0, 242, 254, 0.24);
+    border-color: #00f2fe;
+}
+.call-mic-button.call-mic-muted {
+    background: rgba(239, 68, 68, 0.18) !important;
+    border-color: #ef4444 !important;
+    color: #fca5a5 !important;
+}
+
+/* Botón de Cámara */
+.call-camera-button {
+    flex: 0 0 auto;
+    min-height: 48px;
+    min-width: 48px;
+    border-radius: 16px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e2f7ff;
+    transition: all 0.2s ease;
+}
+.call-camera-button:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+.call-camera-button.call-camera-active {
+    background: rgba(0, 242, 254, 0.22) !important;
+    border-color: #00f2fe !important;
+    color: #00f2fe !important;
+    box-shadow: 0 0 14px rgba(0, 242, 254, 0.4);
+}
+
+/* Botón Colgar Llamada */
+.ia-call-actions .ia-call-hangup {
+    flex: 1 1 0;
+    min-height: 48px;
+    border-radius: 16px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%) !important;
+    border: 1px solid #f87171 !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5) !important;
+    transition: all 0.2s ease;
+}
+.ia-call-actions .ia-call-hangup:hover {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.6) !important;
+}
+.ia-call-actions .ia-call-hangup:active {
+    transform: translateY(0);
+}

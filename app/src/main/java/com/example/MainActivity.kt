@@ -13,9 +13,13 @@ import android.view.WindowManager
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.io.ByteArrayInputStream
+import java.net.URLDecoder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -198,6 +202,60 @@ fun OsitoAppScreen(
                                     } catch (_: Exception) {}
                                 }
                                 return false
+                            }
+
+                            override fun shouldInterceptRequest(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): WebResourceResponse? {
+                                val reqUri = request?.url ?: return super.shouldInterceptRequest(view, request)
+                                val uriString = reqUri.toString()
+                                if (uriString.startsWith("file:///android_asset/")) {
+                                    try {
+                                        var rawPath = reqUri.path ?: ""
+                                        if (rawPath.startsWith("/android_asset/")) {
+                                            rawPath = rawPath.substring("/android_asset/".length)
+                                        } else if (rawPath.startsWith("/")) {
+                                            rawPath = rawPath.substring(1)
+                                        }
+                                        val decodedPath = URLDecoder.decode(rawPath, "UTF-8")
+                                        if (decodedPath.endsWith("musica_snowfall.mp3") || decodedPath.endsWith("fondo_banner_png.png")) {
+                                            return WebResourceResponse(
+                                                if (decodedPath.endsWith(".mp3")) "audio/mpeg" else "image/png",
+                                                null,
+                                                ByteArrayInputStream(ByteArray(0))
+                                            )
+                                        }
+
+                                        val mappedPath = when (decodedPath) {
+                                            "web/hallowen de osito.mp3" -> "web/halloween_osito.mp3"
+                                            "web/cumple de osito.mp3" -> "web/cumple_osito.mp3"
+                                            "web/navidad de osito.mp3" -> "web/navidad_osito.mp3"
+                                            "web/san valentin de osito.mp3" -> "web/san_valentin_osito.mp3"
+                                            "web/video hallowen.mp4" -> "web/fondos/halloween-lite.mp4"
+                                            "web/Fondo Navidad.mp4" -> "web/fondos/navidad-lite.mp4"
+                                            "web/fondo de cumple.mp4" -> "web/fondos/cumpleanos-lite.mp4"
+                                            else -> decodedPath
+                                        }
+
+                                        val mimeType = when {
+                                            mappedPath.endsWith(".html") -> "text/html"
+                                            mappedPath.endsWith(".js") -> "application/javascript"
+                                            mappedPath.endsWith(".css") -> "text/css"
+                                            mappedPath.endsWith(".json") -> "application/json"
+                                            mappedPath.endsWith(".png") -> "image/png"
+                                            mappedPath.endsWith(".jpg") || mappedPath.endsWith(".jpeg") -> "image/jpeg"
+                                            mappedPath.endsWith(".svg") -> "image/svg+xml"
+                                            mappedPath.endsWith(".mp3") -> "audio/mpeg"
+                                            mappedPath.endsWith(".mp4") -> "video/mp4"
+                                            else -> "application/octet-stream"
+                                        }
+                                        val encoding = if (mimeType.startsWith("text/") || mimeType.contains("javascript") || mimeType.contains("json") || mimeType.contains("svg")) "UTF-8" else null
+                                        val inputStream = context.assets.open(mappedPath)
+                                        return WebResourceResponse(mimeType, encoding, inputStream)
+                                    } catch (_: Exception) {}
+                                }
+                                return super.shouldInterceptRequest(view, request)
                             }
                         }
 

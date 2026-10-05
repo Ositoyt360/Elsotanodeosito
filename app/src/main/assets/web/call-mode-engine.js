@@ -158,6 +158,25 @@
             avatarEl.setAttribute('data-state', newState);
         }
 
+        var mascotFace = document.getElementById('call-mascot-cube-face');
+        if (mascotFace) {
+            var mapStateToCube = {
+                IDLE: 'idle',
+                LISTENING: 'listening',
+                THINKING: 'thinking',
+                SPEAKING: 'speaking',
+                HAPPY: 'happy',
+                SAD: 'sad',
+                SURPRISED: 'surprised',
+                CONFUSED: 'confused',
+                LAUGHING: 'happy',
+                EXCITED: 'happy',
+                TIRED: 'sleepy',
+                SLEEPING: 'sleepy'
+            };
+            mascotFace.setAttribute('data-estado', mapStateToCube[newState] || 'idle');
+        }
+
         // Chispa / emoji flotante
         if (sparkEl) {
             var sparkEmoji = SPARKS[newState] || '';
@@ -539,9 +558,9 @@
             // Solicitar el permiso REAL del navegador (muestra el cuadro de diálogo nativo)
             var stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
+                    facingMode: { ideal: 'user' },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 },
                 audio: false
             });

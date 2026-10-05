@@ -4499,6 +4499,14 @@ accent-color:#00ff88;
                     historyToggleBtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
                     historyToggleBtn.classList.toggle('active', abrir);
                 }
+                const chatShell = document.getElementById('ai-chat-shell');
+                if (chatShell) {
+                    const elsToHide = chatShell.querySelectorAll('.ai-profile-row, .ia-messages, .ai-suggestions, .ai-image-preview-bar, #ai-form, .ai-voice-status');
+                    elsToHide.forEach(el => {
+                        el.style.display = abrir ? 'none' : '';
+                    });
+                    chatShell.classList.toggle('history-drawer-active', abrir);
+                }
                 if (abrir) actualizarCabeceraYListaSesiones();
             }
 

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Sótano de Osito - 1000 Personalidades</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .contenedor {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1000px;
+            width: 100%;
+            padding: 40px;
+            overflow-y: auto;
+            max-height: 95vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .seccion-principal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .cara-contenedor {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 350px;
+            border: 3px solid #667eea;
+        }
+
+        #osito-cara {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .informacion {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .info-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .info-valor {
+            color: #333;
+            font-size: 16px;
+            word-break: break-word;
+        }
+
+        .comportamientos {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .comportamientos li {
+            background: #e8eef7;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 5px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .reacciones {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .reacciones li {
+            background: #f0e8f7;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 5px 0;
+            color: #333;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .botones-control {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-principal {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            grid-column: 1 / -1;
+            padding: 15px 20px;
+            font-size: 16px;
+        }
+
+        .btn-principal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secundario {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-secundario:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+
+        .btn-categoria {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-categoria:hover {
+            background: #764ba2;
+        }
+
+        .selector-personalidades {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .selector-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .lista-personalidades {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .personalidad-item {
+            padding: 12px;
+            border-left: 4px solid #667eea;
+            background: #f9f9f9;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .personalidad-item:hover {
+            background: #e8eef7;
+            transform: translateX(5px);
+        }
+
+        .personalidad-numero {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .personalidad-nombre {
+            color: #333;
+        }
+
+        .categoria-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .controles-audio {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-volumen {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-volumen input {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .toggle-btn {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .toggle-btn:hover {
+            background: #764ba2;
+        }
+
+        .estadisticas {
+            background: #e8eef7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .estadisticas strong {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .tabla-personalidades {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .tabla-personalidades th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .tabla-personalidades td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tabla-personalidades tr:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .numero-personalidad {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .seccion-principal {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .contenedor {
+                padding: 20px;
+            }
+        }
+
+        .boton-sonido {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .boton-sonido:hover {
+            background: #ff5252;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-button:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>🎭 El Sótano de Osito - 1000 Personalidades</h1>
+        <p class="subtitulo">Sistema de gestión dinámico de personalidades con expresiones faciales y sonidos</p>
+
+        <div class="estadisticas">
+            <p>Total de personalidades: <strong id="total-personalidades">0</strong></p>
+            <p>Personalidad actual: <strong id="personalidad-actual">-</strong></p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="cambiarTab('demo')">Demo</button>
+            <button class="tab-button" onclick="cambiarTab('selector')">Selector de Personalidades</button>
+            <button class="tab-button" onclick="cambiarTab('categorias')">Por Categoría</button>
+            <button class="tab-button" onclick="cambiarTab('tabla')">Ver Todas</button>
+        </div>
+
+        <div id="demo" class="tab-content active">
+            <div class="seccion-principal">
+                <div class="cara-contenedor">
+                    <div id="osito-cara"></div>
+                </div>
+
+                <div class="informacion">
+                    <div class="info-item">
+                        <div class="info-label">ID</div>
+                        <div class="info-valor" id="info-id">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Nombre</div>
+                        <div class="info-valor" id="info-nombre">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Categoría</div>
+                        <div class="info-valor" id="info-categoria">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Comportamientos</div>
+                        <ul class="comportamientos" id="info-comportamientos"></ul>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Reacciones</div>
+                        <ul class="reacciones" id="info-reacciones"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="botones-control">
+                <button class="btn-principal" onclick="cambiarPersonalidadAleatoria()">🎲 PERSONALIDAD ALEATORIA</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Triste')">Triste</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Dramático')">Dramático</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Dormilón')">Dormilón</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Enojado')">Enojado</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Graciosa')">Graciosa</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Tierno')">Tierno</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Rebelde')">Rebelde</button>
+                <button class="btn-categoria" onclick="cambiarPersonalidadCategoria('Especial')">Especial ✨</button>
+            </div>
+
+            <div class="controles-audio">
+                <div class="control-volumen">
+                    <label>Volumen: <span id="volumen-valor">30</span>%</label>
+                    <input type="range" id="volumen-control" min="0" max="100" value="30" onchange="cambiarVolumen(this.value)">
+                </div>
+                <button class="toggle-btn" id="btn-sonido" onclick="toggleSonido()">🔊 Sonidos ON</button>
+                <button class="boton-sonido" onclick="reproducirSonidoActual()">🔔 Reproducir Sonido</button>
+            </div>
+        </div>
+
+        <div id="selector" class="tab-content">
+            <div class="selector-personalidades">
+                <label class="selector-label">Selecciona una personalidad:</label>
+                <select id="selector-personalidad" onchange="seleccionarPersonalidad(this.value)">
+                    <option value="">-- Elige una personalidad --</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="categorias" class="tab-content">
+            <div id="contenedor-categorias"></div>
+        </div>
+
+        <div id="tabla" class="tab-content">
+            <div id="contenedor-tabla"></div>
+        </div>
+    </div>
+
+    <script>
+        let administrador = null;
+        let expresion = null;
+        let sonidos = null;
+
+        // Clase para gestionar las personalidades
+        class PersonalidadManager {
+            constructor() {
+                this.personalidadActual = null;
+                this.historialPersonalidades = [];
+                this.sonoridad = true;
+            }
+
+            obtenerPersonalidad(id) {
+                return PERSONALIDADES_DATABASE[id] || null;
+            }
+
+            obtenerPersonalidadAleatoria(categoria = null) {
+                let ids = Object.keys(PERSONALIDADES_DATABASE);
+                
+                if (categoria) {
+                    ids = ids.filter(id => PERSONALIDADES_DATABASE[id].categoria === categoria);
+                }
+                
+                return ids[Math.floor(Math.random() * ids.length)];
+            }
+
+            cambiarPersonalidad(id) {
+                const personalidad = this.obtenerPersonalidad(id);
+                if (personalidad) {
+                    this.personalidadActual = { id, ...personalidad };
+                    this.historialPersonalidades.push(id);
+                    return this.personalidadActual;
+                }
+                return null;
+            }
+
+            cambiarPersonalidadAleatoria() {
+                const id = this.obtenerPersonalidadAleatoria();
+                return this.cambiarPersonalidad(id);
+            }
+
+            obtenerCategoria(nombreCategoria) {
+                const ids = Object.keys(PERSONALIDADES_DATABASE).filter(
+                    id => PERSONALIDADES_DATABASE[id].categoria === nombreCategoria
+                );
+                return ids.map(id => ({ id, ...PERSONALIDADES_DATABASE[id] }));
+            }
+
+            obtenerTodasLasPersonalidades() {
+                return Object.entries(PERSONALIDADES_DATABASE).map(([id, data]) => ({ id, ...data }));
+            }
+
+            obtenerResumenPersonalidades() {
+                const categorias = {};
+                for (const [id, data] of Object.entries(PERSONALIDADES_DATABASE)) {
+                    if (!categorias[data.categoria]) {
+                        categorias[data.categoria] = [];
+                    }
+                    categorias[data.categoria].push({ id, nombre: data.nombre });
+                }
+                return categorias;
+            }
+        }
+
+        // Base de datos de personalidades (versión comprimida para demo)
+        const PERSONALIDADES_DATABASE = {
+            001: { nombre: "Triste", categoria: "Triste", expresion: "sad", sonido: "suspiro", comportamientos: ["mirada baja", "hombros caídos"], reacciones: ["*suspira*", "*mira al piso*"] },
+            002: { nombre: "Melancólico", categoria: "Triste", expresion: "melancholic", sonido: "nostalgia", comportamientos: ["mirada perdida"], reacciones: ["*suspira nostálgicamente*"] },
+            051: { nombre: "Dramático", categoria: "Dramático", expresion: "dramatic", sonido: "dramatico", comportamientos: ["brazos abiertos"], reacciones: ["*drama intenso*"] },
+            052: { nombre: "Exagerado", categoria: "Dramático", expresion: "exaggerated", sonido: "wow", comportamientos: ["ojos muy abiertos"], reacciones: ["*expresión exagerada*"] },
+            101: { nombre: "Dormilón", categoria: "Dormilón", expresion: "sleepy", sonido: "bostezo", comportamientos: ["ojos semicerrados"], reacciones: ["*bosteza*"] },
+            102: { nombre: "Perezoso", categoria: "Dormilón", expresion: "lazy", sonido: "gruñido", comportamientos: ["movimientos lentos"], reacciones: ["*se estira*"] },
+            151: { nombre: "Enojado", categoria: "Enojado", expresion: "angry", sonido: "gruñido_enojo", comportamientos: ["cejas fruncidas"], reacciones: ["*gruñe*"] },
+            152: { nombre: "Gruñón", categoria: "Enojado", expresion: "grumpy", sonido: "gruñido", comportamientos: ["cejas bajas"], reacciones: ["*farfulla*"] },
+            201: { nombre: "Rebelde", categoria: "Rebelde", expresion: "rebel", sonido: "guitarraelectrica", comportamientos: ["puño levantado"], reacciones: ["*desafía*"] },
+            251: { nombre: "Tierno", categoria: "Tierno", expresion: "sweet", sonido: "ternura", comportamientos: ["sonrisa suave"], reacciones: ["*abraza*"] },
+            252: { nombre: "Adorable", categoria: "Tierno", expresion: "adorable", sonido: "aww", comportamientos: ["ojos brillantes"], reacciones: ["*es adorable*"] },
+            301: { nombre: "Gracioso", categoria: "Gracioso", expresion: "funny", sonido: "risa", comportamientos: ["boca abierta"], reacciones: ["*ríe*"] },
+            302: { nombre: "Bromista", categoria: "Gracioso", expresion: "joker", sonido: "risa_bromista", comportamientos: ["guiña el ojo"], reacciones: ["*hace una broma*"] },
+            351: { nombre: "Loco Divertido", categoria: "Caótico", expresion: "crazy_fun", sonido: "carcajada_loca", comportamientos: ["movimientos erráticos"], reacciones: ["*carcajada*"] },
+            401: { nombre: "Sarcástico", categoria: "Sarcástico", expresion: "sarcastic", sonido: "sarcasmo", comportamientos: ["arqueamiento de cejas"], reacciones: ["*pone los ojos en blanco*"] },
+            451: { nombre: "Aburrido", categoria: "Aburrido", expresion: "bored", sonido: "suspiro_aburrido", comportamientos: ["mirada vacía"], reacciones: ["*bosteza sin disimulo*"] },
+            501: { nombre: "Curioso", categoria: "Curioso", expresion: "curious", sonido: "pregunta", comportamientos: ["cabeza inclinada"], reacciones: ["*pregunta interesado*"] },
+            551: { nombre: "Travieso", categoria: "Travieso", expresion: "mischievous", sonido: "risa_picarona", comportamientos: ["sonrisa pícara"], reacciones: ["*hace una travesura*"] },
+            601: { nombre: "Oscuro", categoria: "Oscuro", expresion: "dark", sonido: "oscuridad", comportamientos: ["sombras en los ojos"], reacciones: ["*desaparece*"] },
+            651: { nombre: "Gamer", categoria: "Gamer", expresion: "gamer", sonido: "video_game", comportamientos: ["manos en controles"], reacciones: ["*juega*"] },
+            701: { nombre: "Musical", categoria: "Musical", expresion: "musical", sonido: "nota_musical", comportamientos: ["mueve la cabeza"], reacciones: ["*tararea*"] },
+            751: { nombre: "Robot Clásico", categoria: "Robótico", expresion: "robot_classic", sonido: "beep_boop", comportamientos: ["movimientos mecánicos"], reacciones: ["*BEEP BOOP*"] },
+            801: { nombre: "Tímido", categoria: "Tímido", expresion: "shy", sonido: "timidez", comportamientos: ["mirada baja"], reacciones: ["*se sonroja*"] },
+            851: { nombre: "Presumido", categoria: "Presumido", expresion: "proud", sonido: "fanfarria", comportamientos: ["pecho hinchado"], reacciones: ["*se vanagloria*"] },
+            901: { nombre: "Cariñoso", categoria: "Cariñoso", expresion: "affectionate", sonido: "amor", comportamientos: ["abrazo imaginario"], reacciones: ["*te da un abrazo*"] },
+            951: { nombre: "Misterioso Especial", categoria: "Especial", expresion: "mysterious_special", sonido: "misterio_profundo", comportamientos: ["desaparece"], reacciones: ["*aparece de la nada*"] },
+            1000: { nombre: "OSITO EMO - SUPREMO", categoria: "Suprema", expresion: "ultimate_osito", sonido: "osito_supremo", comportamientos: ["todas las personalidades"], reacciones: ["*es todo a la vez*"] }
+        };
+
+        // Expresiones faciales SVG
+        class ExpresionDinamica {
+            constructor(contenedorId = 'osito-cara') {
+                this.contenedor = document.getElementById(contenedorId);
+            }
+
+            generarExpresion(personalidad) {
+                const svg = this.crearSVGBase();
+                
+                // Cara base
+                const cabeza = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                cabeza.setAttribute('cx', '200');
+                cabeza.setAttribute('cy', '200');
+                cabeza.setAttribute('r', '100');
+                cabeza.setAttribute('fill', '#F8E5B8');
+                cabeza.setAttribute('stroke', '#000');
+                cabeza.setAttribute('stroke-width', '3');
+                svg.appendChild(cabeza);
+
+                // Ojos
+                const expresiones = {
+                    sad: { ojosColor: '#0000ff', ojosAltura: 165, bocaY: 260, bocaTipo: 'triste' },
+                    sleepy: { ojosColor: '#000', ojosAltura: 150, bocaY: 260, bocaTipo: 'neutral', ojoCerrado: true },
+                    angry: { ojosColor: '#ff0000', ojosAltura: 150, bocaY: 260, bocaTipo: 'enojado' },
+                    funny: { ojosColor: '#000', ojosAltura: 150, bocaY: 260, bocaTipo: 'sonrisa_grande' },
+                    sweet: { ojosColor: '#000', ojosAltura: 150, bocaY: 260, bocaTipo: 'sonrisa', caraColor: '#FFB6C1' },
+                    default: { ojosColor: '#000', ojosAltura: 150, bocaY: 260, bocaTipo: 'sonrisa' }
+                };
+
+                const exp = expresiones[personalidad.expresion] || expresiones.default;
+                
+                if (exp.caraColor) {
+                    cabeza.setAttribute('fill', exp.caraColor);
+                }
+
+                // Crear ojos
+                if (exp.ojoCerrado) {
+                    const linea1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    linea1.setAttribute('x1', '160');
+                    linea1.setAttribute('y1', exp.ojosAltura);
+                    linea1.setAttribute('x2', '180');
+                    linea1.setAttribute('y2', exp.ojosAltura);
+                    linea1.setAttribute('stroke', '#000');
+                    linea1.setAttribute('stroke-width', '6');
+                    svg.appendChild(linea1);
+
+                    const linea2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    linea2.setAttribute('x1', '220');
+                    linea2.setAttribute('y1', exp.ojosAltura);
+                    linea2.setAttribute('x2', '240');
+                    linea2.setAttribute('y2', exp.ojosAltura);
+                    linea2.setAttribute('stroke', '#000');
+                    linea2.setAttribute('stroke-width', '6');
+                    svg.appendChild(linea2);
+                } else {
+                    for (let x of [160, 240]) {
+                        const ojo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        ojo.setAttribute('cx', x);
+                        ojo.setAttribute('cy', exp.ojosAltura);
+                        ojo.setAttribute('r', '15');
+                        ojo.setAttribute('fill', exp.ojosColor);
+                        svg.appendChild(ojo);
+
+                        const iris = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        iris.setAttribute('cx', x);
+                        iris.setAttribute('cy', exp.ojosAltura);
+                        iris.setAttribute('r', '8');
+                        iris.setAttribute('fill', '#fff');
+                        svg.appendChild(iris);
+                    }
+                }
+
+                // Boca
+                const boca = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const bocaData = {
+                    sonrisa: 'M 160 260 Q 200 280 240 260',
+                    sonrisa_grande: 'M 150 260 Q 200 290 250 260',
+                    triste: 'M 160 260 Q 200 240 240 260',
+                    enojado: 'M 160 260 L 240 260',
+                    neutral: 'M 160 260 L 240 260'
+                };
+
+                boca.setAttribute('d', bocaData[exp.bocaTipo] || bocaData.sonrisa);
+                boca.setAttribute('stroke', '#000');
+                boca.setAttribute('stroke-width', '4');
+                boca.setAttribute('fill', 'none');
+                boca.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(boca);
+
+                if (this.contenedor) {
+                    this.contenedor.innerHTML = '';
+                    this.contenedor.appendChild(svg);
+                }
+            }
+
+            crearSVGBase() {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('viewBox', '0 0 400 400');
+                svg.setAttribute('width', '300');
+                svg.setAttribute('height', '300');
+                svg.style.maxWidth = '100%';
+                return svg;
+            }
+        }
+
+        // Gestor de sonidos básico
+        class GestorSonidos {
+            constructor() {
+                this.audioContext = null;
+                this.sonoridadActivada = true;
+                this.volumen = 0.3;
+            }
+
+            inicializarAudio() {
+                if (!this.audioContext) {
+                    try {
+                        const audioClass = window.AudioContext || window.webkitAudioContext;
+                        this.audioContext = new audioClass();
+                    } catch (e) {
+                        console.log('AudioContext no disponible');
+                    }
+                }
+            }
+
+            reproducirSonido(tipo) {
+                if (!this.sonoridadActivada || !this.audioContext) return;
+
+                this.inicializarAudio();
+                if (!this.audioContext) return;
+
+                const ctx = this.audioContext;
+                const ahora = ctx.currentTime;
+
+                const oscilador = ctx.createOscillator();
+                const ganancia = ctx.createGain();
+
+                oscilador.type = 'sine';
+                oscilador.frequency.setValueAtTime(400, ahora);
+                oscilador.frequency.linearRampToValueAtTime(200, ahora + 0.3);
+
+                ganancia.gain.setValueAtTime(this.volumen * 0.1, ahora);
+                ganancia.gain.linearRampToValueAtTime(0, ahora + 0.3);
+
+                oscilador.connect(ganancia);
+                ganancia.connect(ctx.destination);
+
+                oscilador.start(ahora);
+                oscilador.stop(ahora + 0.3);
+            }
+
+            setVolumen(valor) {
+                this.volumen = Math.max(0, Math.min(1, valor / 100));
+            }
+
+            activarSonido(estado) {
+                this.sonoridadActivada = estado;
+            }
+        }
+
+        // Inicialización
+        function inicializar() {
+            administrador = new PersonalidadManager();
+            expresion = new ExpresionDinamica();
+            sonidos = new GestorSonidos();
+
+            // Llenar selector de personalidades
+            const selector = document.getElementById('selector-personalidad');
+            for (const [id, data] of Object.entries(PERSONALIDADES_DATABASE)) {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${id} - ${data.nombre} (${data.categoria})`;
+                selector.appendChild(option);
+            }
+
+            // Actualizar estadísticas
+            document.getElementById('total-personalidades').textContent = Object.keys(PERSONALIDADES_DATABASE).length;
+
+            // Cargar categorías
+            cargarCategorias();
+            cargarTabla();
+
+            // Personalidad inicial
+            cambiarPersonalidadAleatoria();
+        }
+
+        function cambiarPersonalidadAleatoria() {
+            const personalidad = administrador.cambiarPersonalidadAleatoria();
+            if (personalidad) {
+                mostrarPersonalidad(personalidad);
+            }
+        }
+
+        function cambiarPersonalidadCategoria(categoria) {
+            const id = administrador.obtenerPersonalidadAleatoria(categoria);
+            const personalidad = administrador.cambiarPersonalidad(id);
+            if (personalidad) {
+                mostrarPersonalidad(personalidad);
+            }
+        }
+
+        function seleccionarPersonalidad(id) {
+            if (id) {
+                const personalidad = administrador.cambiarPersonalidad(id);
+                if (personalidad) {
+                    mostrarPersonalidad(personalidad);
+                }
+            }
+        }
+
+        function mostrarPersonalidad(personalidad) {
+            // Actualizar información
+            document.getElementById('info-id').textContent = personalidad.id;
+            document.getElementById('info-nombre').textContent = personalidad.nombre;
+            document.getElementById('info-categoria').textContent = personalidad.categoria;
+            document.getElementById('personalidad-actual').textContent = `${personalidad.id} - ${personalidad.nombre}`;
+
+            // Comportamientos
+            const comportDiv = document.getElementById('info-comportamientos');
+            comportDiv.innerHTML = '';
+            (personalidad.comportamientos || []).forEach(c => {
+                const li = document.createElement('li');
+                li.textContent = c;
+                comportDiv.appendChild(li);
+            });
+
+            // Reacciones
+            const reacDiv = document.getElementById('info-reacciones');
+            reacDiv.innerHTML = '';
+            (personalidad.reacciones || []).forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = r;
+                reacDiv.appendChild(li);
+            });
+
+            // Generar expresión
+            expresion.generarExpresion(personalidad);
+
+            // Reproducir sonido
+            sonidos.reproducirSonido(personalidad.sonido);
+        }
+
+        function reproducirSonidoActual() {
+            if (administrador.personalidadActual) {
+                sonidos.reproducirSonido(administrador.personalidadActual.sonido);
+            }
+        }
+
+        function cambiarVolumen(valor) {
+            document.getElementById('volumen-valor').textContent = valor;
+            sonidos.setVolumen(valor);
+        }
+
+        function toggleSonido() {
+            sonidos.sonoridadActivada = !sonidos.sonoridadActivada;
+            const btn = document.getElementById('btn-sonido');
+            btn.textContent = sonidos.sonoridadActivada ? '🔊 Sonidos ON' : '🔇 Sonidos OFF';
+        }
+
+        function cambiarTab(tabName) {
+            // Ocultar todos
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar seleccionado
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function cargarCategorias() {
+            const resumen = administrador.obtenerResumenPersonalidades();
+            const contenedor = document.getElementById('contenedor-categorias');
+            
+            for (const [categoria, personalidades] of Object.entries(resumen)) {
+                const seccion = document.createElement('div');
+                seccion.style.marginBottom = '30px';
+                
+                const titulo = document.createElement('h3');
+                titulo.textContent = categoria;
+                titulo.style.color = '#667eea';
+                titulo.style.marginBottom = '15px';
+                seccion.appendChild(titulo);
+
+                const listaPers = document.createElement('div');
+                listaPers.className = 'lista-personalidades';
+                
+                personalidades.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'personalidad-item';
+                    item.onclick = () => seleccionarPersonalidad(p.id);
+                    item.innerHTML = `<span class="personalidad-numero">${p.id}:</span><span class="personalidad-nombre">${p.nombre}</span>`;
+                    listaPers.appendChild(item);
+                });
+
+                seccion.appendChild(listaPers);
+                contenedor.appendChild(seccion);
+            }
+        }
+
+        function cargarTabla() {
+            const todas = administrador.obtenerTodasLasPersonalidades();
+            const contenedor = document.getElementById('contenedor-tabla');
+
+            let html = '<table class="tabla-personalidades"><thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Acción</th></tr></thead><tbody>';
+
+            todas.forEach(p => {
+                html += `<tr onclick="seleccionarPersonalidad('${p.id}')">
+                    <td class="numero-personalidad">${p.id}</td>
+                    <td>${p.nombre}</td>
+                    <td><span class="categoria-badge">${p.categoria}</span></td>
+                    <td><button class="btn-secundario" onclick="event.stopPropagation(); seleccionarPersonalidad('${p.id}')">Ver</button></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            contenedor.innerHTML = html;
+        }
+
+        // Iniciar cuando carga el documento
+        window.addEventListener('load', inicializar);
+    </script>
+</body>
+</html>

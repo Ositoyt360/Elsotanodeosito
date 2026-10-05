@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Suite - IA de El Sótano de Osito</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 24px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { color: #58a6ff; }
+        .summary {
+            background: #161b22;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .pass-count { color: #3fb950; font-weight: bold; }
+        .fail-count { color: #f85149; font-weight: bold; }
+        .test-case {
+            background: #161b22;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            margin-bottom: 10px;
+        }
+        .test-case.pass { border-left: 5px solid #3fb950; }
+        .test-case.fail { border-left: 5px solid #f85149; }
+        .test-name { font-weight: bold; }
+        .test-details { font-size: 13px; color: #8b949e; margin-top: 4px; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge.pass { background: #238636; color: #fff; }
+        .badge.fail { background: #da3633; color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Suite: IA de "El Sótano de Osito"</h1>
+    <div class="summary" id="summary">Ejecutando pruebas...</div>
+    <div id="results"></div>
+
+    <script src="base-conocimiento.js"></script>
+    <script>
+        const tests = [
+            // 1. YouTube & Maxwhish
+            {
+                name: "1. Pregunta principal: ¿Cuándo empezaste a interesarte por YouTube?",
+                input: "¿Cuándo empezaste a interesarte por YouTube?",
+                expectedSubstr: "Maxwhish"
+            },
+            {
+                name: "1. Variación: ¿Quién te inspiró?",
+                input: "¿Quién te inspiró?",
+                expectedSubstr: "Maxwhish"
+            },
+            {
+                name: "1. Informal: quien t inspiro para hacer videos",
+                input: "quien t inspiro para hacer videos",
+                expectedSubstr: "Maxwhish"
+            },
+
+            // 2. Primer canal
+            {
+                name: "2. Pregunta principal: ¿Cómo se llamaba tu primer canal?",
+                input: "¿Cómo se llamaba tu primer canal?",
+                expectedSubstr: "Momentos Divertidos con OsitoGamer"
+            },
+            {
+                name: "2. Variación: ¿Cuál era tu primer canal de YouTube?",
+                input: "¿Cuál era tu primer canal de YouTube?",
+                expectedSubstr: "Momentos Divertidos con OsitoGamer"
+            },
+            {
+                name: "2. Variación: ¿Cómo se llamaba tu canal antes de OsitoYT360?",
+                input: "¿Cómo se llamaba tu canal antes de OsitoYT360?",
+                expectedSubstr: "Momentos Divertidos con OsitoGamer"
+            },
+
+            // 3. Primer video
+            {
+                name: "3. Pregunta principal: ¿Cuál fue tu primer video?",
+                input: "¿Cuál fue tu primer video?",
+                expectedSubstr: "Las Perrerías de Mike"
+            },
+            {
+                name: "3. Variación: ¿Qué video subiste primero?",
+                input: "¿Qué video subiste primero?",
+                expectedSubstr: "Las Perrerías de Mike"
+            },
+            {
+                name: "3. Informal: q video hiciste al principio",
+                input: "q video hiciste al principio",
+                expectedSubstr: "Las Perrerías de Mike"
+            },
+
+            // 4. Cara / Face reveal
+            {
+                name: "4. Pregunta principal: ¿Por qué no muestras tu cara?",
+                input: "¿Por qué no muestras tu cara?",
+                expectedSubstr: "inseguridades"
+            },
+            {
+                name: "4. Variación: ¿Harás face reveal?",
+                input: "¿Harás face reveal?",
+                expectedSubstr: "inseguridades"
+            },
+            {
+                name: "4. Informal con ortografía: x k no ases feis ribil",
+                input: "x k no ases feis ribil",
+                expectedSubstr: "inseguridades"
+            },
+
+            // 5. Juegos favoritos
+            {
+                name: "5. Pregunta principal: ¿Cuáles son tus juegos favoritos para grabar?",
+                input: "¿Cuáles son tus juegos favoritos para grabar?",
+                expectedSubstr: "Minecraft y Roblox"
+            },
+            {
+                name: "5. Variación: ¿También juegas Roblox?",
+                input: "¿También juegas Roblox?",
+                expectedSubstr: "Minecraft y Roblox"
+            },
+
+            // 6. Qué te gusta de crear contenido
+            {
+                name: "6. Pregunta principal: ¿Qué es lo que más te gusta de crear contenido?",
+                input: "¿Qué es lo que más te gusta de crear contenido?",
+                expectedSubstr: "hablar con la comunidad y editar"
+            },
+
+            // 7. Sueño con YouTube
+            {
+                name: "7. Pregunta principal: ¿Cuál es tu sueño con YouTube?",
+                input: "¿Cuál es tu sueño con YouTube?",
+                expectedSubstr: "youtuber más grande de Centroamérica"
+            },
+            {
+                name: "7. Variación: ¿Hasta dónde quieres llegar?",
+                input: "¿Hasta dónde quieres llegar con tu canal?",
+                expectedSubstr: "youtuber más grande de Centroamérica"
+            },
+
+            // 8. Fecha primer video
+            {
+                name: "8. Pregunta principal: ¿Cuándo fue tu primer video en tu primer canal?",
+                input: "¿Cuándo fue tu primer video en tu primer canal?",
+                expectedSubstr: "22 de octubre de 2021"
+            },
+            {
+                name: "8. Variación: ¿En qué fecha comenzaste?",
+                input: "¿En qué fecha comenzaste?",
+                expectedSubstr: "22 de octubre de 2021"
+            },
+
+            // 9. Origen OsitoGamer360
+            {
+                name: "9. Pregunta principal: ¿Por qué elegiste el nombre OsitoGamer360?",
+                input: "¿Por qué elegiste el nombre OsitoGamer360?",
+                expectedSubstr: "peluche de panda"
+            },
+            {
+                name: "9. Variación: ¿De dónde salió OsitoGamer360?",
+                input: "¿De dónde salió OsitoGamer360?",
+                expectedSubstr: "Nintendo"
+            },
+
+            // 10. Video favorito
+            {
+                name: "10. Pregunta principal: ¿Cuál es tu video favorito?",
+                input: "¿Cuál es tu video favorito?",
+                expectedSubstr: "Osito Expo 2026"
+            },
+
+            // 11. Video más difícil de editar
+            {
+                name: "11. Pregunta principal: ¿Cuál ha sido el video más difícil de editar?",
+                input: "¿Cuál ha sido el video más difícil de editar?",
+                expectedSubstr: "Osito Expo 2026"
+            },
+            {
+                name: "11. Variación: ¿Qué video te costó más editar?",
+                input: "¿Qué video te costó más editar?",
+                expectedSubstr: "Osito Expo 2026"
+            },
+
+            // 12. Qué disfrutas hacer
+            {
+                name: "12. Pregunta principal: ¿Qué es lo que más disfrutas hacer?",
+                input: "¿Qué es lo que más disfrutas hacer?",
+                expectedSubstr: "Jugar."
+            },
+
+            // 13. Qué quieres mejorar
+            {
+                name: "13. Pregunta principal: ¿Qué quieres mejorar en tus videos?",
+                input: "¿Qué quieres mejorar en tus videos?",
+                expectedSubstr: "trabarme al hablar"
+            },
+
+            // 14. Qué les gusta a tus seguidores
+            {
+                name: "14. Pregunta principal: ¿Qué les gusta a tus seguidores?",
+                input: "¿Qué les gusta a tus seguidores?",
+                expectedSubstr: "BedWars, Craftsman, Roblox"
+            },
+
+            // 15. Directos
+            {
+                name: "15. Pregunta principal: ¿Vas a volver a hacer directos?",
+                input: "¿Vas a volver a hacer directos?",
+                expectedSubstr: "no tengo un horario fijo"
+            },
+            {
+                name: "15. Variación: ¿Volverás a hacer streams?",
+                input: "¿Volverás a hacer streams?",
+                expectedSubstr: "no tengo un horario fijo"
+            },
+
+            // 16. Evento grande
+            {
+                name: "16. Pregunta principal: ¿Tienes planeado algún evento grande?",
+                input: "¿Tienes planeado algún evento grande?",
+                expectedSubstr: "Por el momento no tengo planeado un evento grande."
+            },
+
+            // 17. Planes Craftsman
+            {
+                name: "17. Pregunta principal: ¿Qué planes tienes para Craftsman?",
+                input: "¿Qué planes tienes para Craftsman?",
+                expectedSubstr: "revivir la comunidad de Craftsman"
+            },
+            {
+                name: "17. Variación con error ortográfico: kieres revibir crafsman?",
+                input: "kieres revibir crafsman?",
+                expectedSubstr: "revivir la comunidad de Craftsman"
+            },
+
+            // 18. Por qué revivir Craftsman
+            {
+                name: "18. Pregunta principal: ¿Por qué quieres revivir la comunidad de Craftsman?",
+                input: "¿Por qué quieres revivir la comunidad de Craftsman?",
+                expectedSubstr: "están muy apagados"
+            },
+            {
+                name: "18. Variación: ¿Por qué te da nostalgia Craftsman?",
+                input: "¿Por qué te da nostalgia Craftsman?",
+                expectedSubstr: "nostálgico"
+            },
+
+            // 19. Recuperar antiguos servidores
+            {
+                name: "19. Pregunta principal: ¿Qué quieres recuperar de los antiguos servidores?",
+                input: "¿Qué quieres recuperar de los antiguos servidores?",
+                expectedSubstr: "Los mapas de esos años"
+            },
+
+            // Extras
+            {
+                name: "Extra: Canciones",
+                input: "¿Vas a sacar canciones?",
+                expectedSubstr: "Voy a sacar canciones, pero no seguidamente"
+            },
+            {
+                name: "Extra: Osito Expo 2026",
+                input: "¿Cuándo es Osito Expo 2026?",
+                expectedSubstr: "Se viene Osito Expo 2026 muy pronto."
+            },
+
+            // Regla Final: No inventar información
+            {
+                name: "Anti-Alucinación: Pregunta no existente en la base",
+                input: "¿Cuál es tu comida favorita?",
+                expectedSubstr: "todavía no está disponible en la base de datos"
+            },
+            {
+                name: "Anti-Alucinación: Pregunta de cultura general externa",
+                input: "¿Quién es el presidente de Francia?",
+                expectedSubstr: "todavía no está disponible en la base de datos"
+            }
+        ];
+
+        let pass = 0;
+        let fail = 0;
+        const resultsEl = document.getElementById('results');
+
+        tests.forEach((t) => {
+            const result = window.OsitoConocimiento.buscarEnBaseConocimiento(t.input) ||
+                window.OsitoConocimiento.MENSAJES_NO_DISPONIBLE[0];
+            const isPass = result.toLowerCase().includes(t.expectedSubstr.toLowerCase());
+
+            if (isPass) pass++; else fail++;
+
+            const div = document.createElement('div');
+            div.className = `test-case ${isPass ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <div class="test-name">
+                    <span class="badge ${isPass ? 'pass' : 'fail'}">${isPass ? 'PASS' : 'FAIL'}</span>
+                    ${t.name}
+                </div>
+                <div class="test-details"><strong>Pregunta:</strong> "${t.input}"</div>
+                <div class="test-details"><strong>Respuesta obtenida:</strong> "${result}"</div>
+            `;
+            resultsEl.appendChild(div);
+        });
+
+        // Prueba de bienvenida y hora local
+        const bienvenidaTest = window.OsitoConocimiento.generarMensajeBienvenidaLocal('Mario');
+        const bienvenidaValida = (bienvenidaTest.includes('Buenos días') || bienvenidaTest.includes('Buenas tardes') || bienvenidaTest.includes('Buenas noches')) && bienvenidaTest.includes('Mario') && bienvenidaTest.includes('El Sótano de Osito');
+        if (bienvenidaValida) pass++; else fail++;
+        const bDiv = document.createElement('div');
+        bDiv.className = `test-case ${bienvenidaValida ? 'pass' : 'fail'}`;
+        bDiv.innerHTML = `
+            <div class="test-name">
+                <span class="badge ${bienvenidaValida ? 'pass' : 'fail'}">${bienvenidaValida ? 'PASS' : 'FAIL'}</span>
+                Bienvenida por voz según hora local y nombre del usuario
+            </div>
+            <div class="test-details"><strong>Mensaje generado:</strong> "${bienvenidaTest}"</div>
+        `;
+        resultsEl.appendChild(bDiv);
+
+        document.getElementById('summary').innerHTML = `
+            Resultados: <span class="pass-count">${pass} pasadas</span>, 
+            <span class="fail-count">${fail} fallidas</span> (Total: ${pass + fail})
+        `;
+    </script>
+</body>
+</html>
+

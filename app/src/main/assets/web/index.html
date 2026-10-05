@@ -1428,7 +1428,6 @@ accent-color:#00ff88;
                     <button class="ia-sound-btn ia-cube-hub-btn" id="ia-cube-hub-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" aria-label="Auto-entrenamiento y juegos del cubo" title="🧠 Auto-Entrenamiento y Juegos del Cubo">🧠</button>
                     <button class="ia-sound-btn ia-cfg-header-btn" id="ia-cfg-header-btn" type="button" aria-label="Configuración de voz e IA" title="Configuración de voz e IA">⚙️</button>
                     <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
-                    <button class="ia-mobile-back-btn" id="ia-mobile-back-btn" type="button" onclick="document.body.classList.remove('ai-panel-open'); toggleIAPanel(); if(window.finalizarLlamadaIA) window.finalizarLlamadaIA();" title="Regresar al Sótano">← Regresar</button>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar La mascotita del Sotano">✕</button>
                 </div>
                 <div class="ia-setup">
@@ -1448,19 +1447,38 @@ accent-color:#00ff88;
                             <button type="button" class="call-camera-close-btn" id="call-camera-close-btn" aria-label="Apagar cámara" title="Apagar cámara">✕</button>
                         </div>
 
-                        <!-- Escenario del AVATAR CIRCULAR 2D (Cubo de la mascota en modo circular 2D) -->
+                        <!-- Escenario del AVATAR CIRCULAR 2D (Personaje Principal en Modo Llamada) -->
                         <div class="call-avatar-stage" id="call-avatar-stage">
                             <div class="call-avatar" id="call-avatar" data-state="IDLE" role="button" tabindex="0" aria-label="Avatar interactivo en llamada">
                                 <div class="call-avatar-glow"></div>
-                                <div class="call-avatar-body" style="border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, #5833b5 0%, #301777 50%, #170d3d 100%);">
-                                    <span class="osito-face" data-estado="idle" id="call-mascot-cube-face" aria-hidden="true" style="transform: scale(1.35);">
-                                        <span class="of-card">
-                                            <span class="of-blob"></span>
-                                            <span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span>
-                                            <span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span>
-                                            <span class="of-mouth" id="call-avatar-mouth"></span>
-                                        </span>
-                                    </span>
+                                <div class="call-avatar-ear call-ear-left"></div>
+                                <div class="call-avatar-ear call-ear-right"></div>
+                                <div class="call-avatar-body">
+                                    <div class="call-avatar-face">
+                                        <div class="call-avatar-spark" id="call-avatar-spark" aria-hidden="true"></div>
+                                        <div class="call-avatar-brows">
+                                            <div class="call-brow call-brow-left"></div>
+                                            <div class="call-brow call-brow-right"></div>
+                                        </div>
+                                        <div class="call-avatar-eyes">
+                                            <div class="call-avatar-eye call-eye-left">
+                                                <div class="call-eye-lid"></div>
+                                                <div class="call-eye-pupil"><span class="call-eye-sparkle"></span></div>
+                                            </div>
+                                            <div class="call-avatar-eye call-eye-right">
+                                                <div class="call-eye-lid"></div>
+                                                <div class="call-eye-pupil"><span class="call-eye-sparkle"></span></div>
+                                            </div>
+                                        </div>
+                                        <div class="call-avatar-cheek call-cheek-left"></div>
+                                        <div class="call-avatar-cheek call-cheek-right"></div>
+                                        <div class="call-avatar-snout">
+                                            <div class="call-avatar-nose"></div>
+                                            <div class="call-avatar-mouth" id="call-avatar-mouth">
+                                                <div class="call-mouth-inner"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5751,7 +5769,11 @@ accent-color:#00ff88;
             }
 
             function toggleLlamadaIA() {
-                window.location.href = 'ia.html';
+                if (window.ositoEnLlamadaIA) {
+                    finalizarLlamadaIA();
+                } else {
+                    iniciarLlamadaIA();
+                }
             }
 
             window.iniciarLlamadaIA = iniciarLlamadaIA;
@@ -5839,7 +5861,19 @@ accent-color:#00ff88;
         })();
 
         function toggleIAPanel() {
-            window.location.href = 'ia.html';
+            const panel = document.getElementById('ai-section');
+            const bubble = document.getElementById('ia-bubble');
+            if (!panel) return;
+            if (window.ositoEnLlamadaIA) {
+                if (typeof window.finalizarLlamadaIA === 'function') {
+                    window.finalizarLlamadaIA();
+                }
+            }
+            const isNowActive = panel.classList.toggle('active');
+            if (bubble) {
+                bubble.classList.toggle('open', isNowActive);
+                bubble.setAttribute('aria-expanded', isNowActive ? 'true' : 'false');
+            }
         }
     </script>
 

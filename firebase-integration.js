@@ -617,6 +617,10 @@
     }
 
     function renderAiMessages(messages) {
+        if (window.OsitoChatHistory && typeof window.OsitoChatHistory.recibirMensajesRemotos === 'function') {
+            window.OsitoChatHistory.recibirMensajesRemotos(messages);
+            return;
+        }
         const container = document.getElementById('ai-messages');
         if (!container) return;
 
@@ -625,11 +629,11 @@
             return !text.includes('esto encontre sobre rosebud');
         });
 
-        container.innerHTML = '';
         if (!visibleMessages.length) {
             return;
         }
 
+        container.innerHTML = '';
         visibleMessages.forEach((item) => {
             const row = document.createElement('div');
             row.className = `msg ${item.role === 'user' ? 'user' : 'bot'}`;
@@ -643,26 +647,7 @@
     async function seedAiHistoryFromDom(uid) {
         if (state.aiSeededFromDom) return;
         if (!db || !window.collectionFirebase || !window.addDocFirebase) return;
-
-        const container = document.getElementById('ai-messages');
-        if (!container) return;
-
-        const nodes = Array.from(container.querySelectorAll('.msg'));
-        if (!nodes.length) return;
-
         state.aiSeededFromDom = true;
-        const collectionRef = window.collectionFirebase(db, 'aiChats', uid, 'messages');
-
-        for (const node of nodes) {
-            const role = node.classList.contains('user') ? 'user' : 'bot';
-            const text = escapeText(node.textContent);
-            if (!text) continue;
-            await window.addDocFirebase(collectionRef, {
-                role,
-                text,
-                timestamp: Date.now()
-            });
-        }
     }
 
     async function startAiListener(uid) {
@@ -679,7 +664,7 @@
         const queryRef = window.queryFirebase(
             collectionRef,
             window.orderByFirebase('timestamp'),
-            window.limitFirebase(80)
+            window.limitFirebase(120)
         );
 
         state.aiUnsubscribe = window.onSnapshotFirebase(queryRef, async (snapshot) => {
@@ -690,12 +675,13 @@
                     id: docSnap.id,
                     role: data.role === 'user' ? 'user' : 'bot',
                     text: data.text || '',
+                    sessionId: data.sessionId || '',
+                    sessionTitle: data.sessionTitle || '',
                     timestamp: Number(data.timestamp) || Date.now()
                 });
             });
 
             if (!messages.length) {
-                await seedAiHistoryFromDom(uid);
                 return;
             }
 
@@ -1320,6 +1306,8 @@
             {
                 role,
                 text,
+                sessionId: String(payload?.sessionId || '').slice(0, 64),
+                sessionTitle: String(payload?.sessionTitle || '').slice(0, 80),
                 timestamp: Date.now(),
                 uid: state.currentUser.uid,
                 email: state.currentUser.email || ''

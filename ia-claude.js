@@ -50,7 +50,7 @@
     }
 
     var TEXTOS = {
-        idle: 'En línea · IA Gemini',
+        idle: 'En línea · Lista para conversar',
         listening: 'Escuchando…',
         thinking: 'Pensando…',
         speaking: 'Hablando…'
@@ -278,14 +278,15 @@
         var lista = [];
         Array.prototype.forEach.call(aiMessages.querySelectorAll('.msg.user, .msg.bot'), function (nodo) {
             if (nodo.classList.contains('typing')) return;
-            var texto = (nodo.textContent || '').replace(/^🤖\s*/, '').trim();
+            var bodyEl = nodo.querySelector('.ia-msg-body, .ia-msg-user-text');
+            var rawTexto = bodyEl ? bodyEl.textContent : nodo.textContent;
+            var texto = (rawTexto || '').replace(/^🤖\s*/, '').trim();
             if (!texto || nodo.querySelector('button')) return;
             lista.push({ role: nodo.classList.contains('user') ? 'user' : 'assistant', text: texto });
         });
-        // La pregunta actual ya está pintada como último mensaje del usuario: el servidor la agrega aparte.
         var ultimo = lista[lista.length - 1];
         if (ultimo && ultimo.role === 'user' && ultimo.text === preguntaActual) lista.pop();
-        return lista.slice(-8);
+        return lista.slice(-14);
     }
 
     function mostrarEscribiendo() {
@@ -321,7 +322,7 @@
     }
 
     /**
-     * Pregunta a la IA Gemini en el servidor (/api/ia) enviando historial de conversación.
+     * Pregunta a la IA Gemini en el servidor (/api/ia) enviando historial de conversación y memoria de chats.
      * Devuelve { texto } o { error }.
      */
     async function preguntar(pregunta, opciones) {
@@ -333,9 +334,12 @@
         var nombre = opts.nombre || localStorage.getItem('osito_ai_nombre') || '';
         var genero = opts.genero || localStorage.getItem('osito_ai_genero') || '';
         var historial = Array.isArray(opts.historial) ? opts.historial : historialDesdePantalla(textoPregunta);
+        var memoriaGlobal = String(opts.memoriaGlobal || '').trim();
+        var tituloChat = String(opts.tituloChat || '').trim();
 
-        var claveCache = !imagen ? (nombre + '|' + genero + '|' + textoPregunta.toLowerCase()) : '';
-        if (!imagen && historial.length <= 1 && claveCache && cacheClienteIA[claveCache]) {
+        var esCharlaCorta = textoPregunta.length <= 22 || /^(vale|ok|okay|si|sii|no|claro|bueno|dale|jaja|jeje|ya|bien|genial|interesante|cuentame|dime|como|por que|porque|y luego|que mas)\b/i.test(textoPregunta);
+        var claveCache = (!imagen && !esCharlaCorta) ? (nombre + '|' + genero + '|' + textoPregunta.toLowerCase()) : '';
+        if (!imagen && !esCharlaCorta && historial.length <= 1 && claveCache && cacheClienteIA[claveCache]) {
             return { texto: cacheClienteIA[claveCache] };
         }
 
@@ -351,13 +355,15 @@
             for (var i = 0; i < endpoints.length; i++) {
                 var url = endpoints[i];
                 var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 16000 : 9500) : 0;
+                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 15000 : 8500) : 0;
                 try {
                     var payload = {
                         pregunta: textoPregunta,
                         nombre: nombre,
                         genero: genero,
-                        historial: historial
+                        historial: historial,
+                        memoriaGlobal: memoriaGlobal,
+                        tituloChat: tituloChat
                     };
                     if (imagen) payload.imagen = imagen;
                     var res = await fetch(url, {
@@ -370,7 +376,7 @@
                     var data = await res.json().catch(function () { return {}; });
                     if (res.ok && data && data.texto) {
                         var limpio = String(data.texto).trim();
-                        if (!imagen && historial.length <= 1 && claveCache) cacheClienteIA[claveCache] = limpio;
+                        if (!imagen && !esCharlaCorta && historial.length <= 1 && claveCache) cacheClienteIA[claveCache] = limpio;
                         return { texto: limpio };
                     }
                     if (data && data.error) {
@@ -384,7 +390,7 @@
             if (imagen) {
                 return { texto: 'Vi tu imagen adjunta 📷, pero en este momento la conexión con el motor visual tardó en responder. Intenta enviarla de nuevo o dime qué aparece en ella y te ayudo enseguida. 😊' };
             }
-            var respaldoLocal = respuestaLibre(textoPregunta);
+            var respaldoLocal = respuestaLibre(textoPregunta, historial);
             if (respaldoLocal) return { texto: respaldoLocal };
             return { error: ultimoError };
         } finally {
@@ -518,9 +524,45 @@
             return x === 'div0' ? 'No se puede dividir entre cero, ni en Minecraft. 😅' : null;
         }
     }
-    function respuestaLibre(pregunta) {
+    var SEGUIMIENTO_CHARLA = [
+        '¡Claro que sí! Dime, ¿de qué te gustaría que platiquemos ahora? Podemos hablar de videojuegos, de alguna curiosidad, resolver una duda o inventar una historia. 😊',
+        '¡Va, me parece genial! Cuéntame qué tienes en mente ahorita: ¿quieres que hablemos de Minecraft, Roblox, tecnología, tareas o jugamos a las adivinanzas? 🎮',
+        '¡Perfecto! Aquí sigo contigo al cien. Dime qué otro tema te da curiosidad o cuéntame cómo va tu día hoy. 😄',
+        '¡De una! Tú mandas en la conversación: pregúntame lo que quieras de cualquier tema o dime de qué tienes ganas de charlar. ✨'
+    ];
+    var turnoSeguimiento = 0;
+
+    function respuestaLibre(pregunta, historialOpcional) {
         var t = plano(pregunta);
         if (!t) return null;
+        var hist = Array.isArray(historialOpcional) ? historialOpcional : historialDesdePantalla(pregunta);
+        var ultimoBot = '';
+        for (var h = hist.length - 1; h >= 0; h--) {
+            if (hist[h] && hist[h].role === 'assistant') {
+                ultimoBot = plano(hist[h].text);
+                break;
+            }
+        }
+
+        // Si el usuario responde "vale", "ok", "sí", "claro", "dale", "bueno", continuamos el hilo del mensaje anterior
+        if (/^(vale|ok|okay|si|sii|claro|bueno|dale|va|de una|esta bien|me parece|perfecto|genial|entiendo|ya veo|ah ya|jaja|jeje)$/.test(t)) {
+            if (/minecraft|survivalang/.test(ultimoBot)) {
+                return '¡Genial! Por cierto, en Minecraft ¿tú prefieres construir bases gigantes en survival o jugar partidas intensas tipo BedWars? ⛏️';
+            }
+            if (/roblox/.test(ultimoBot)) {
+                return '¡Buenísimo! ¿Y cuál es el modo o juego dentro de Roblox que más te divierte jugar con amigos? 🎮';
+            }
+            if (/chiste|nada|zombi|abeja|quimicos/.test(ultimoBot)) {
+                return '¡Jajaja! Si quieres te cuento otro chiste distinto: ' + siguiente(CHISTES, 'chiste');
+            }
+            if (/dato|pulpos|miel|koalas|ballena|rayo/.test(ultimoBot)) {
+                return '¡Aquí tienes otro dato curioso genial! ' + siguiente(DATOS, 'dato') + ' ¿Quieres otro o cambiamos de tema?';
+            }
+            var pick = SEGUIMIENTO_CHARLA[turnoSeguimiento % SEGUIMIENTO_CHARLA.length];
+            turnoSeguimiento += 1;
+            return pick;
+        }
+
         if (/\b(crea|crear|genera|generar|haz|hacer|dibuja|dibujar)\s+(una\s+|la\s+|algunas\s+)?(imagen|imagenes|foto|fotos|dibujo|ilustracion)\b/.test(t)) {
             return 'No genero imágenes, pero puedo responderte cualquier pregunta, ayudarte con tus tareas, contarte sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube) o platicar contigo. 😊';
         }
@@ -530,18 +572,18 @@
         if (/(como se llama (el|tu|su) canal|cual es (el nombre de(l| tu| su) canal|(tu|su|el) canal)|nombre de(l| tu| su) canal)/.test(t) && !/(primer|anterior|original|antes|video)/.test(t)) {
             return 'El canal se llama OsitoGamer360YT (Osito Gamer 360 YouTube).';
         }
-        if (/\b(chiste|broma|hazme reir|chistoso)\b/.test(t)) return siguiente(CHISTES, 'chiste');
+        if (/\b(chiste|broma|hazme reir|chistoso|otro chiste)\b/.test(t)) return siguiente(CHISTES, 'chiste');
         if (/dato curioso|curiosidad|sabias que|dime algo (interesante|curioso)|cuentame algo/.test(t)) return siguiente(DATOS, 'dato');
         var c = calcular(pregunta); if (c) return c;
-        if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy en El Sótano de Osito para lo que necesites. 😄';
-        if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano de Osito. 👋';
-        if (/como estas|que tal estas|como te va|como andas|todo bien/.test(t)) return '¡Muy bien, con mucha energía! Gracias por preguntar. ¿Y tú cómo estás hoy? 😊';
-        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy La mascotita del Sótano, la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoGamer360YT (Osito Gamer 360 YouTube). Puedo conversar contigo en chat o en llamada, responder todas las preguntas del canal, ayudarte con tareas, matemáticas y mucho más. 🤖✨';
+        if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy en El Sótano de Osito para lo que necesites. ¿En qué más te ayudo? 😄';
+        if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano de Osito, aquí te espero. 👋';
+        if (/como estas|que tal estas|como te va|como andas|todo bien/.test(t)) return '¡Muy bien y con mucha energía para platicar contigo! Gracias por preguntar. ¿Y tú cómo estás hoy? 😊';
+        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy La mascotita del Sótano, la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoGamer360YT. Puedo conversar contigo de cualquier tema, recordar nuestros chats, responder dudas del canal, ayudarte con tareas y mucho más. 🤖✨';
         if (/quien es osito|hablame de osito|sobre osito/.test(t)) return 'Osito (creador del canal OsitoGamer360YT / Osito Gamer 360 YouTube) es un creador de contenido salvadoreño nacido el 28 de septiembre de 2008. Su canal actual empezó el 2 de junio de 2022 y sube videos de Minecraft, Roblox, Craftsman, BedWars y más. 🎮';
         if (/minecraft|survivalang/.test(t)) return '¡Minecraft es uno de los juegos favoritos de Osito para grabar! Además en el canal OsitoGamer360YT tiene la serie Survivalang y le encanta construir, jugar survival y BedWars con la comunidad. ⛏️';
         if (/roblox/.test(t)) return '¡Roblox es de los juegos que más disfruta grabar Osito junto con Minecraft! También les encanta a los seguidores del canal OsitoGamer360YT. 🎮';
         if (/craftsman|bedwars/.test(t)) return 'Craftsman y BedWars son súper especiales en el canal: Osito planea crear un servidor y revivir esa comunidad tan nostálgica con los mapas antiguos. ⚔️';
-        if (/estoy aburrido|me aburro|que hago/.test(t)) return '¡Para quitar el aburrimiento puedes ver un video o directo de OsitoGamer360YT aquí en la página, iniciar una llamada conmigo, pedirme un chiste o un dato curioso! 😄';
+        if (/estoy aburrido|me aburro|que hago/.test(t)) return '¡Para quitar el aburrimiento podemos jugar a preguntas y respuestas, te puedo contar datos curiosos o chistes, o puedes ver un video de OsitoGamer360YT! ¿Qué prefieres hacer primero? 😄';
         if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return '¡Claro! Dime exactamente qué pregunta de tu tarea o qué cuenta matemática tienes y te la explico paso a paso. 📚';
         return null;
     }

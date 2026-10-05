@@ -582,9 +582,84 @@
             : '<span class="btn-icon">🔇</span> Voz Off';
     }
 
-    // Tiempos de espera del micrófono (en milisegundos).
+    // Tiempos de espera y configuración inteligente del micrófono (ajustables en Configuración).
     const ESPERA_SIN_HABLAR_MS = 12000; // Si nadie dice nada, se apaga a los 12s.
-    const ESPERA_TRAS_HABLAR_MS = 1150; // Al terminar de hablar, espera ~1.1s de silencio y envía de inmediato.
+    function obtenerEsperaSilencioMs() {
+        const guardado = parseInt(localStorage.getItem('osito_mic_silence_ms') || '1050', 10);
+        return Number.isFinite(guardado) ? Math.min(2500, Math.max(650, guardado)) : 1050;
+    }
+    function antiRepeticionActiva() {
+        return localStorage.getItem('osito_mic_anti_repeat') !== 'false';
+    }
+
+    // Limpia repeticiones consecutivas del micrófono (ej. "cómo cómo cómo" -> "cómo", "hola hola" -> "hola")
+    function limpiarRepeticionesVoz(texto) {
+        let limpio = String(texto || '').replace(/\s+/g, ' ').trim();
+        if (!limpio || !antiRepeticionActiva()) return limpio;
+
+        const tokens = limpio.split(' ');
+        const sinDupSimple = [];
+        for (let i = 0; i < tokens.length; i++) {
+            const actualNorm = normalize(tokens[i]);
+            const prevNorm = sinDupSimple.length > 0 ? normalize(sinDupSimple[sinDupSimple.length - 1]) : '';
+            if (actualNorm && actualNorm === prevNorm) {
+                continue;
+            }
+            sinDupSimple.push(tokens[i]);
+        }
+
+        // También colapsa pares de 2 palabras repetidas seguidas (ej. "como estas como estas" -> "como estas")
+        const resultado = [];
+        let i = 0;
+        while (i < sinDupSimple.length) {
+            if (i + 3 < sinDupSimple.length) {
+                const par1 = normalize(sinDupSimple[i] + ' ' + sinDupSimple[i + 1]);
+                const par2 = normalize(sinDupSimple[i + 2] + ' ' + sinDupSimple[i + 3]);
+                if (par1 && par1 === par2) {
+                    resultado.push(sinDupSimple[i], sinDupSimple[i + 1]);
+                    i += 4;
+                    while (i + 1 < sinDupSimple.length && normalize(sinDupSimple[i] + ' ' + sinDupSimple[i + 1]) === par1) {
+                        i += 2;
+                    }
+                    continue;
+                }
+            }
+            resultado.push(sinDupSimple[i]);
+            i += 1;
+        }
+
+        return resultado.join(' ').replace(/\s+/g, ' ').trim();
+    }
+
+    // Une dos fragmentos de voz evitando el bug acumulativo de Chrome/Android donde results[1] repite results[0]
+    function unirSegmentosVozSinSolapar(base, nuevo) {
+        const a = String(base || '').replace(/\s+/g, ' ').trim();
+        const b = String(nuevo || '').replace(/\s+/g, ' ').trim();
+        if (!a) return limpiarRepeticionesVoz(b);
+        if (!b) return limpiarRepeticionesVoz(a);
+
+        const aNorm = normalize(a);
+        const bNorm = normalize(b);
+        if (!aNorm) return limpiarRepeticionesVoz(b);
+        if (!bNorm) return limpiarRepeticionesVoz(a);
+
+        if (aNorm === bNorm) return limpiarRepeticionesVoz(b);
+        if (bNorm.startsWith(aNorm)) return limpiarRepeticionesVoz(b);
+        if (aNorm.startsWith(bNorm)) return limpiarRepeticionesVoz(a);
+        if (aNorm.endsWith(' ' + bNorm) || aNorm === bNorm) return limpiarRepeticionesVoz(a);
+
+        const aWords = a.split(' ');
+        const bWords = b.split(' ');
+        const maxOverlap = Math.min(aWords.length, bWords.length, 8);
+        for (let k = maxOverlap; k >= 1; k--) {
+            const sufijoA = normalize(aWords.slice(aWords.length - k).join(' '));
+            const prefijoB = normalize(bWords.slice(0, k).join(' '));
+            if (sufijoA && sufijoA === prefijoB) {
+                return limpiarRepeticionesVoz(aWords.concat(bWords.slice(k)).join(' '));
+            }
+        }
+        return limpiarRepeticionesVoz(a + ' ' + b);
+    }
 
     function escribirEnCajaChatEnVivo(texto, esParcial) {
         const input = getEl('ai-input');
@@ -694,40 +769,27 @@
             };
 
             this.recognition.onresult = (event) => {
-                let finalAdded = '';
-                let interimText = '';
-                const start = Number(event.resultIndex || 0);
-                for (let i = start; i < event.results.length; i++) {
+                let sessionCombined = '';
+                let hasAny = false;
+                for (let i = 0; i < event.results.length; i++) {
                     const result = event.results[i];
                     const spoken = String(result?.[0]?.transcript || '').trim();
                     if (!spoken) continue;
-                    if (result.isFinal) {
-                        const key = String(i);
-                        if (this.sessionFinalResults[key] === spoken) continue;
-                        this.sessionFinalResults[key] = spoken;
-                        finalAdded += (finalAdded ? ' ' : '') + spoken;
-                    } else {
-                        interimText += (interimText ? ' ' : '') + spoken;
-                    }
-                }
-                finalAdded = finalAdded.trim();
-                interimText = interimText.trim();
-                if (finalAdded) {
-                    this.accumulatedTranscript = [this.accumulatedTranscript, finalAdded]
-                        .filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
-                    this.pendingSpeech = null;
-                } else if (interimText) {
-                    this.pendingSpeech = interimText;
+                    hasAny = true;
+                    sessionCombined = unirSegmentosVozSinSolapar(sessionCombined, spoken);
                 }
 
-                if (finalAdded || interimText) {
+                if (hasAny && sessionCombined) {
                     this.hasHeardSpeech = true;
                     this.lastSpeechTime = Date.now();
-                    const textoEnVivo = [this.accumulatedTranscript, this.pendingSpeech]
-                        .filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+                    const textoEnVivo = unirSegmentosVozSinSolapar(this.baseBeforeRestart || '', sessionCombined);
+                    this.accumulatedTranscript = textoEnVivo;
+                    this.pendingSpeech = null;
+
                     const normEnVivo = normalize(textoEnVivo);
                     if (window.ositoEnLlamadaIA && /\b(cuelga( la llamada)?|colgar( la llamada)?|termina(r)?( la)? llamada|finaliza(r)?( la)? llamada|corta(r)?( la)? llamada|cierra( la)? llamada|salir de( la)? llamada)\b/.test(normEnVivo)) {
                         this.accumulatedTranscript = '';
+                        this.baseBeforeRestart = '';
                         this.pendingSpeech = null;
                         this.stopListening();
                         const input = getEl('ai-input');
@@ -747,9 +809,6 @@
             };
 
             this.recognition.onerror = (event) => {
-                // "no-speech" y "aborted" ocurren seguido como parte normal del
-                // reinicio silencioso del micrófono; dejamos que "onend" decida
-                // si hay que reiniciar o finalizar, sin mostrar error alguno.
                 if (event.error === 'no-speech' || event.error === 'aborted') {
                     return;
                 }
@@ -774,16 +833,15 @@
                 this.intentionalStop = false;
 
                 if (!fueUnCorteIntencional) {
-                    // El navegador cortó el micrófono por su cuenta. Si todavía no
-                    // se cumplen nuestros tiempos de espera (15s sin hablar o 2s
-                    // de silencio tras la última palabra), lo reiniciamos solo.
                     const ahora = Date.now();
+                    const esperaSilencio = window.ositoEnLlamadaIA ? 920 : obtenerEsperaSilencioMs();
                     const siguePendienteDeHablar = !this.hasHeardSpeech
                         && (ahora - this.sessionStartTime) < ESPERA_SIN_HABLAR_MS;
                     const siguePendienteDeSilencioFinal = this.hasHeardSpeech
-                        && (ahora - this.lastSpeechTime) < ESPERA_TRAS_HABLAR_MS;
+                        && (ahora - this.lastSpeechTime) < esperaSilencio;
 
                     if (siguePendienteDeHablar || siguePendienteDeSilencioFinal) {
+                        this.baseBeforeRestart = limpiarRepeticionesVoz(this.accumulatedTranscript || '');
                         try {
                             this.recognition.start();
                             return;
@@ -793,8 +851,9 @@
                     }
                 }
 
-                const transcript = (this.accumulatedTranscript || this.pendingSpeech || '').trim();
+                const transcript = limpiarRepeticionesVoz(this.accumulatedTranscript || this.pendingSpeech || '');
                 this.accumulatedTranscript = '';
+                this.baseBeforeRestart = '';
                 this.pendingSpeech = null;
                 const inputEl = getEl('ai-input');
                 if (inputEl) inputEl.classList.remove('ia-input-dictating');
@@ -825,13 +884,9 @@
             };
         }
 
-        // Calcula cuánto falta para el próximo límite de tiempo (12s sin hablar,
-        // o ~1s de silencio tras la última palabra) y programa una sola revisión
-        // en ese momento. Se reprograma cada vez que llega audio nuevo, así que
-        // sobrevive sin problema a los reinicios silenciosos del micrófono.
         scheduleDeadlineCheck() {
             this.detenerTemporizadorDeadline();
-            const esperaSilencio = window.ositoEnLlamadaIA ? 980 : ESPERA_TRAS_HABLAR_MS;
+            const esperaSilencio = window.ositoEnLlamadaIA ? 920 : obtenerEsperaSilencioMs();
             const deadline = this.hasHeardSpeech
                 ? this.lastSpeechTime + esperaSilencio
                 : this.sessionStartTime + ESPERA_SIN_HABLAR_MS;
@@ -842,7 +897,7 @@
         checkDeadline() {
             if (!this.isListening) return;
             const ahora = Date.now();
-            const esperaSilencio = window.ositoEnLlamadaIA ? 980 : ESPERA_TRAS_HABLAR_MS;
+            const esperaSilencio = window.ositoEnLlamadaIA ? 920 : obtenerEsperaSilencioMs();
             if (this.hasHeardSpeech) {
                 if ((ahora - this.lastSpeechTime) >= esperaSilencio) {
                     this.finalizarEscucha();
@@ -851,7 +906,6 @@
                 }
             } else if ((ahora - this.sessionStartTime) >= ESPERA_SIN_HABLAR_MS) {
                 if (window.ositoEnLlamadaIA) {
-                    // En modo llamada mantiene el micrófono atento esperando a que la persona hable
                     this.sessionStartTime = Date.now();
                     this.scheduleDeadlineCheck();
                     return;
@@ -906,6 +960,7 @@
             this.sessionStartTime = Date.now();
             this.lastSpeechTime = 0;
             this.accumulatedTranscript = '';
+            this.baseBeforeRestart = '';
             this.pendingSpeech = null;
             try {
                 this.recognition.start();
@@ -990,14 +1045,9 @@
                 setStatusLabel(DEFAULT_HINT);
                 return;
             }
-            const PREGUNTA_O_CHARLA = /\b(que|como|cual|cuales|quien|quienes|por que|porque|cuando|cuanto|cuantos|cuantas|donde|explica|explicame|dime|cuentame|ayudame|sabes|puedes|vas a|volveras|haras|tienes|te gusta|juegas|osito|edad|anos|años|cumpleanos|canal|primer|favorito|craftsman|bedwars|santiago|survivalang|creador)\b/;
-            const ES_ORDEN_EXPLICITA = /^(abre|abrir|ir a|ve a|llevame a|mostrar|muestrame|ver pestana|cambia a|activar|desactivar|modo ultra|pausa|reanuda|silencia)\b/;
-            const SOLO_SI_ES_ORDEN = ['music', 'tab', 'toggle', 'search', 'font', 'compact', 'theme', 'advanced_animation', 'promo', 'playlists'];
-            const SOLO_SI_ES_CORTO = ['greeting', 'thanks', 'help'];
-            const palabras = tokenize(rawText).length;
-            if ((SOLO_SI_ES_ORDEN.includes(command.type) && (PREGUNTA_O_CHARLA.test(normRaw) || !ES_ORDEN_EXPLICITA.test(normRaw)))
-                || (palabras > 3 && SOLO_SI_ES_CORTO.includes(command.type))) {
-                command = { type: 'forward', text: rawText };
+            const ES_ORDEN_SITIO_ESTRICTA = /^(abre el chat|abrir chat|abrir el chat|ir al chat|abre el canal|abrir canal|ir al canal|llevame al canal|pausa la musica|reanuda la musica|apaga la musica|enciende la musica|activar modo ultra|desactivar modo ultra|cambia a pestana|abrir pestana)\b/;
+            if (!ES_ORDEN_SITIO_ESTRICTA.test(normRaw)) {
+                command = { type: 'forward', text: limpiarRepeticionesVoz(rawText) };
             }
 
             try {

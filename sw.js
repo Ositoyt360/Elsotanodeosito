@@ -10,8 +10,8 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v64-auto';
-const OTA_CACHE_NAME = 'osito-ota-github-v64';
+const CACHE_NAME = 'osito-pwa-v66-auto';
+const OTA_CACHE_NAME = 'osito-ota-github-v66';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
 
 const CORE_ASSETS = [
@@ -184,12 +184,6 @@ self.addEventListener('fetch', (event) => {
   if (isCodeOrDoc) {
     event.respondWith(
       (async () => {
-        const isCapacitorLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-        if (isCapacitorLocal) {
-          const otaCache = await caches.open(OTA_CACHE_NAME);
-          const otaMatch = await otaCache.match(req, { ignoreSearch: true });
-          if (otaMatch) return otaMatch;
-        }
         try {
           const freshResponse = await fetch(new Request(req.url, {
             method: 'GET',

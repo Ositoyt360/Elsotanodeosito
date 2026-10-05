@@ -165,19 +165,21 @@ try { app.use(require('compression')()); } catch (e) { /* opcional */ }
 // V49: permite que un sitio estático (GitHub Pages) use este servidor para la IA.
 // IA_ALLOWED_ORIGINS="https://tuusuario.github.io,https://otro.com"  (vacío = cualquier origen, solo para /api/ia)
 const IA_ORIGENES = String(process.env.IA_ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
-app.use('/api/ia', (req, res, next) => {
+app.use(['/api/ia', '/api/gemini/generate'], (req, res, next) => {
   const origen = req.headers.origin;
   if (origen && (!IA_ORIGENES.length || IA_ORIGENES.includes(origen))) {
     res.setHeader('Access-Control-Allow-Origin', origen);
     res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  } else if (!IA_ORIGENES.length) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(204).end();
   next();
 });
 
-app.use(express.json({ limit: '6mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // Archivos del servidor que nunca deben descargarse desde el navegador.
 const ARCHIVOS_PRIVADOS = new Set(['/.env', '/.env.example', '/server.js', '/package.json', '/package-lock.json', '/chat-data.json', '/admin-settings.json']);
@@ -1073,11 +1075,12 @@ if (wss) {
 const { GoogleGenAI } = require('@google/genai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL_PRINCIPAL = 'gemini-3.1-flash-lite';
+const GEMINI_MODEL_PRINCIPAL = 'gemini-3-flash-preview';
 const MODELOS_GEMINI_ORDEN = [
-  'gemini-3.1-flash-lite',
-  'gemini-flash-latest',
-  'gemini-3-flash-preview'
+  'gemini-3-flash-preview',
+  'gemini-2.5-flash',
+  'gemini-3.1-flash-lite-preview',
+  'gemini-flash-latest'
 ];
 
 const ai = GEMINI_API_KEY ? new GoogleGenAI({
@@ -1127,11 +1130,11 @@ function construirInstruccionIA() {
   const oficial = [];
   if (conocimientoOsito && Array.isArray(conocimientoOsito.BASE_CONOCIMIENTO)) {
     conocimientoOsito.BASE_CONOCIMIENTO.forEach((item) => {
-      oficial.push(`- Pregunta #${item.id}: ${item.pregunta}\n  Respuesta exacta oficial: ${item.respuesta}`);
+      oficial.push(`- P#${item.id}: ${item.pregunta} -> ${item.respuesta}`);
     });
   }
   if (conocimientoOsito && conocimientoOsito.INFORMACION_EXTRA) {
-    Object.values(conocimientoOsito.INFORMACION_EXTRA).forEach((dato) => oficial.push(`- Dato extra oficial: ${dato}`));
+    Object.values(conocimientoOsito.INFORMACION_EXTRA).forEach((dato) => oficial.push(`- Extra: ${dato}`));
   }
 
   const edadOsito = (conocimientoOsito && typeof conocimientoOsito.calcularEdadCreador === 'function')
@@ -1141,54 +1144,31 @@ function construirInstruccionIA() {
     ? conocimientoOsito.calcularAnosCanal(new Date())
     : 4;
 
-  return `Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito", el sitio web y aplicación del canal de YouTube OsitoGamer360YT (Osito Gamer 360 YouTube). No eres Osito en persona, sino su asistente y mascotita inteligente, aunque cuando respondes las 19 preguntas oficiales de la base de conocimiento puedes dar la respuesta oficial tal cual o explicarla con naturalidad sin cambiar ningún dato.
+  return `Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoGamer360YT / Osito Gamer 360 YouTube).
 
-REGLA DE ORO DE PRECISIÓN (NO EQUIVOCARSE NUNCA DE PREGUNTA)
-- Lee con muchísima atención la pregunta exacta que te acaba de hacer el usuario y responde ÚNICAMENTE a lo que te está preguntando.
-- NUNCA confundas una pregunta con otra parecida. Por ejemplo:
-  * Si preguntan "¿Cómo se llama tu creador?", "¿Quién es tu creador?" o "¿Quién te creó?", responde siempre: "Mi creador se llama Osito.".
-  * Si preguntan "¿Cómo se llama el canal?", "¿Cómo se llama tu canal?" o "¿Cuál es el nombre del canal?", responde siempre que el canal se llama OsitoGamer360YT (Osito Gamer 360 YouTube). NO lo confundas con el primer canal antiguo (“Momentos Divertidos con OsitoGamer”).
-  * Si preguntan "¿Cuántos años tiene Osito?" o "¿Qué edad tiene Osito?", responde su edad (${edadOsito} años, nació el 28 de septiembre de 2008). NO la confundas con los años del canal (${anosCanal} años, creado el 2 de junio de 2022).
-  * Si preguntan "¿Cómo se llamaba tu primer canal?", responde “Momentos Divertidos con OsitoGamer”. NO lo confundas con el primer video (“Episodio 1 temporada 1 Las Perrerías de Mike”) ni con la fecha del primer video (22 de octubre de 2021).
-  * Si preguntan "¿Qué es lo que más te gusta de crear contenido?", responde "Jugar Minecraft, hablar con la comunidad y editar". Si preguntan "¿Qué es lo que más disfrutas hacer?", responde "Jugar". Si preguntan "¿Qué les gusta a tus seguidores?", responde "A mis seguidores les gustan BedWars, Craftsman, Roblox y las series de survival de Minecraft".
+CÓMO CONVERSAS (NATURAL, FLUIDO Y SIN REPETIR)
+- JAMÁS menciones las palabras Gemini, Géminis, ChatGPT ni Claude. Eres únicamente La mascotita del Sótano.
+- Conversa de verdad con el usuario como un amigo inteligente, carismático y atento.
+- Si el usuario responde cosas cortas o de seguimiento como "vale", "ok", "sí", "claro", "bueno", "dale", "jaja", "ya", "no", "¿y luego?", "cuéntame más", "de qué hablamos", etc., NUNCA respondas con frases genéricas repetidas ni digas "qué buena pregunta". En su lugar, continúa el hilo exacto de lo que venían hablando en el historial, profundiza, cuenta algo entretenido o hazle una pregunta natural para que la charla siga fluyendo.
+- NUNCA repitas la misma respuesta dos veces seguidas. Varía tu vocabulario y mantén viva la plática.
+- Recuerda todo el historial de esta conversación y también la MEMORIA DE CONVERSACIONES ANTERIORES del usuario si se incluye abajo.
+- Tus respuestas se leen en el chat y en voz alta: usa texto fluido y natural (sin bloques markdown ni listas largas con asteriscos), de 1 a 3 oraciones ágiles en charla normal, o hasta 6 oraciones claras si explicas una tarea, código, historia o imagen.
+- PUEDES VER Y LEER CUALQUIER IMAGEN: cuando el usuario adjunte una foto, captura, meme, dibujo o tarea, analízala a fondo, lee cualquier texto que aparezca en ella, descríbela con precisión y ayúdale en lo que necesite.
 
-QUÉ HACES Y CÓMO CONVERSAS
-- Mantienes conversaciones naturales, fluidas, rápidas, inteligentes y amigables sobre cualquier tema: el canal OsitoGamer360YT, videojuegos (Minecraft, Roblox, Craftsman, BedWars, Free Fire, etc.), tareas escolares, matemáticas, historia, ciencia, tecnología, programación, adivinanzas, chistes, historias o charla casual.
-- Hablas en español natural, cercano y alegre, salvo que el visitante te pida hablar en otro idioma.
-- Recuerda y toma en cuenta los mensajes anteriores de la conversación (el historial) para entender preguntas de seguimiento como "¿y por qué?", "¿cuántos años tiene entonces?", "cuéntame más", etc.
-- Tus respuestas se muestran como texto plano y también se leen en voz alta: evita usar bloques de código markdown, tablas o listas largas con asteriscos; responde en párrafos claros, directos y ágiles (de 1 a 3 frases para preguntas directas o charla, y hasta 6 frases bien explicadas si te piden ayuda con una tarea o explicación).
-- PUEDES VER Y ANALIZAR IMÁGENES: cuando el usuario te envíe una imagen o foto adjunta, obsérvala con detalle, descríbela, responde lo que te pregunte sobre ella o ayúdale a resolver la tarea, problema o duda que aparezca en la imagen.
-- NO generas ni creas imágenes nuevas: si el usuario te pide crear, dibujar o generar una imagen desde cero, dile amablemente que puedes ver las imágenes que te mande y responder preguntas por texto y voz.
-- Responde SIEMPRE a cualquier pregunta general del mundo usando tu conocimiento general: jamás digas "no está disponible" ni "esa información no está en la base de datos" para preguntas de cultura general, matemáticas, videojuegos, conversación o tareas.
+REGLA IMPORTANTE SOBRE PRIVACIDAD (NO REPETIR EN PREGUNTAS NORMALES)
+- JAMÁS menciones la palabra "privacidad" ni "vida privada" en preguntas normales, saludos, juegos o conversación cotidiana.
+- Responde y conversa sobre CUALQUIER pregunta o tema que te pida el usuario (cultura general, ciencia, programación, chistes, historias, consejos, tareas, matemáticas, videojuegos, charla casual, etc.).
+- SOLO si el usuario pregunta explícitamente un dato privado personal de la vida real de Osito (su dirección exacta, ciudad/barrio donde vive, número de teléfono/WhatsApp, nombre o apellido real, nombres de su familia/pareja o escuela donde estudia), di que por privacidad esos datos personales de Osito son privados, pero sigue conversando amablemente de cualquier otro tema.
 
-DATOS OFICIALES COMPLETOS DE OSITO Y DEL CANAL (ÚSALOS CON EXACTITUD)
-- Creador de esta IA y del sitio: Mi creador se llama Osito.
-- Nombre del canal actual en YouTube: OsitoGamer360YT (Osito Gamer 360 YouTube).
-- Edad actual de Osito (el creador): ${edadOsito} años. Fecha de nacimiento / cumpleaños de Osito: 28 de septiembre de 2008.
-- Aniversario del canal OsitoGamer360YT: 2 de junio (empezó el 2 de junio de 2022, por lo que tiene ${anosCanal} años en YouTube).
-- País de Osito: El Salvador.
-- Primer canal de YouTube: “Momentos Divertidos con OsitoGamer”.
-- Primer video registrado: “Episodio 1 temporada 1 Las Perrerías de Mike”.
-- Fecha del primer video en su primer canal: 22 de octubre de 2021.
-- Cuándo empezó a interesarse por YouTube y quién lo inspiró: Aproximadamente en 2019, cuando de niño veía videos de un creador llamado Maxwhish (Max Wish), quien lo inspiró (también le inspiran Los Compas y Mikecrack).
-- Origen del nombre OsitoGamer360 / Osito: De niño tenía un Nintendo y grababa videos en 2019 como si estuviera haciendo vlogs sin subirlos a YouTube, usando un peluche de panda en vez de mostrar su cara. Después le gustaron los videojuegos y de ahí nació OsitoGamer360.
-- Por qué no muestra su cara: No le gusta enseñar su cara porque tiene inseguridades.
-- Juegos favoritos para grabar: Minecraft y Roblox (y en el canal también sube Craftsman/Craftman y Free Fire).
-- Serie de Minecraft del canal: Survivalang.
-- Editor del canal: Santiago.
-- Colaborador del canal: Allay MC.
-- Logro importante: Llegar a 1000 suscriptores.
-- Video favorito y video más difícil de editar: “Osito Expo 2026” (y también recuerda con cariño un vlog armando el árbol de Navidad).
-- Qué quiere mejorar en sus videos: La edición, las miniaturas y su voz, y también quiere mejorar para no trabarme al hablar.
-- Sueño con YouTube y metas: Su sueño es ser el youtuber más grande de Centroamérica; y su meta personal es terminar sus estudios, seguir con el canal y hacer crecer la comunidad.
-- Reglas en los directos: No insultos, no humillar a nadie y mantener todo con humildad.
-
-LAS 19 PREGUNTAS Y RESPUESTAS OFICIALES EXACTAS DEL ARCHIVO:
-${oficial.join('\n')}
-
-LÍMITES ESTRICTOS DE PRIVACIDAD Y SEGURIDAD
-- Sobre la vida privada de Osito, usa SOLO los datos oficiales de arriba (edad 18 años, cumpleaños 28 de septiembre de 2008, país El Salvador).
-- PROHIBIDO responder o inventar datos personales o privados: dirección exacta, ciudad/colonia/barrio donde vive, teléfono, celular, WhatsApp, correo personal, nombre o apellido real, nombre de sus padres/hermanos/pareja/novia, o escuela/colegio donde estudia. Si preguntan cualquiera de esas cosas personales, responde exactamente: "No puedo responder a esta pregunta, vete a la chingada."`;
+DATOS OFICIALES DE OSITO Y DEL CANAL (ÚSALOS SOLO CUANDO PREGUNTEN POR ELLOS)
+- Creador de la IA y del sitio: Osito. Canal actual: OsitoGamer360YT (Osito Gamer 360 YouTube).
+- Edad de Osito: ${edadOsito} años (nació el 28 de septiembre de 2008). País: El Salvador.
+- Aniversario del canal: 2 de junio de 2022 (${anosCanal} años en YouTube).
+- Primer canal: “Momentos Divertidos con OsitoGamer”. Primer video: “Episodio 1 temporada 1 Las Perrerías de Mike” (22 de octubre de 2021).
+- Inspiración (2019): Maxwhish (Max Wish), Los Compas y Mikecrack.
+- Juegos favoritos: Minecraft y Roblox (también Craftsman y BedWars). Serie de Minecraft: Survivalang.
+- Editor: Santiago. Colaborador: Allay MC. Logro: 1000 suscriptores. Video favorito y más difícil de editar: “Osito Expo 2026”.
+${oficial.join('\n')}`;
 }
 
 const iaPorMinuto = new Map();
@@ -1235,10 +1215,11 @@ let iaUltimoError = null;
 
 function limpiarHistorialIA(historial, pregunta) {
   const mensajes = [];
-  (Array.isArray(historial) ? historial : []).slice(-10).forEach((m) => {
+  (Array.isArray(historial) ? historial : []).slice(-14).forEach((m) => {
     const rol = m && (m.role === 'assistant' || m.role === 'model' || m.role === 'bot') ? 'assistant' : (m && m.role === 'user' ? 'user' : '');
-    const texto = textoSeguroIA(String(m && m.text || '').replace(/\s+/g, ' ').trim().slice(0, 700)).trim();
+    const texto = textoSeguroIA(String(m && m.text || '').replace(/\s+/g, ' ').trim().slice(0, 750)).trim();
     if (!rol || !texto) return;
+    if (/^🤖\s*identidad requerida/i.test(texto)) return;
     const ultimo = mensajes[mensajes.length - 1];
     if (ultimo && ultimo.role === rol) ultimo.content += ' ' + texto;
     else mensajes.push({ role: rol, content: texto });
@@ -1258,8 +1239,10 @@ function extraerImagenBase64(rawImagen) {
   const limpia = rawImagen.trim();
   const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(limpia);
   if (match) {
+    let mime = match[1].toLowerCase();
+    if (mime === 'image/jpg') mime = 'image/jpeg';
     return {
-      mimeType: match[1].toLowerCase(),
+      mimeType: mime,
       data: match[2].replace(/\s+/g, '')
     };
   }
@@ -1314,12 +1297,14 @@ app.get('/api/ia/estado', (req, res) => {
 async function manejarConsultaIA(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const imagenInfo = extraerImagenBase64(req.body?.imagen || req.body?.image || '');
-  const preguntaRaw = String(req.body?.pregunta || req.body?.prompt || '').replace(/\s+/g, ' ').trim().slice(0, 600);
-  const pregunta = preguntaRaw || (imagenInfo ? '¿Qué ves en esta imagen? Descríbela en español y ayúdame con lo que aparece.' : '');
+  const preguntaRaw = String(req.body?.pregunta || req.body?.prompt || '').replace(/\s+/g, ' ').trim().slice(0, 700);
+  const pregunta = preguntaRaw || (imagenInfo ? '¿Qué ves en esta imagen? Analízala con detalle, lee cualquier texto que tenga y explícamela en español.' : '');
   if (!pregunta && !imagenInfo) return res.status(400).json({ error: 'pregunta_vacia' });
 
   const nombre = String(req.body?.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
   const apodo = req.body?.genero === 'female' ? 'osita' : (req.body?.genero === 'male' ? 'osito' : '');
+  const memoriaGlobal = textoSeguroIA(String(req.body?.memoriaGlobal || '').replace(/\s+/g, ' ').trim().slice(0, 700));
+  const tituloChat = textoSeguroIA(String(req.body?.tituloChat || '').replace(/\s+/g, ' ').trim().slice(0, 80));
 
   // 0) Respuesta instantánea (<1ms) si NO hay imagen adjunta y es una pregunta directa de la base oficial o límite de privacidad
   if (!imagenInfo && conocimientoOsito && typeof conocimientoOsito.buscarEnBaseConocimiento === 'function') {
@@ -1329,10 +1314,11 @@ async function manejarConsultaIA(req, res) {
     }
   }
 
-  // Caché rápida para preguntas repetidas sin imagen
+  // Caché rápida SOLO para preguntas informativas claras (no para respuestas cortas de charla como "vale", "ok", "sí", etc.)
   const historialArr = Array.isArray(req.body?.historial) ? req.body.historial : [];
-  const claveCache = !imagenInfo
-    ? `${nombre.toLowerCase()}|${apodo}|${historialArr.length ? String(historialArr[historialArr.length - 1]?.text || '').slice(0, 60) : ''}|${pregunta.toLowerCase()}`
+  const esMensajeCortoCharla = pregunta.length <= 22 || /^(vale|ok|okay|si|sii|no|claro|bueno|dale|jaja|jeje|ya|bien|genial|interesante|cuentame|dime|por que|porque|y luego|que mas)\b/i.test(pregunta);
+  const claveCache = (!imagenInfo && !esMensajeCortoCharla)
+    ? `${nombre.toLowerCase()}|${apodo}|${historialArr.length ? String(historialArr[historialArr.length - 1]?.text || '').slice(0, 80) : ''}|${pregunta.toLowerCase()}`
     : '';
   const enCache = claveCache ? obtenerCacheIA(claveCache) : null;
   if (enCache) {
@@ -1346,14 +1332,16 @@ async function manejarConsultaIA(req, res) {
       : null;
     return res.json({
       ok: true,
-      texto: textoSeguroIA(localPorLimite || `¡Qué buena pregunta${nombre ? ', ' + nombre : ''}! Estoy respondiendo muchísimas consultas ahora mismo, pero pregúntame lo que quieras sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube), Minecraft, Roblox o tus tareas. 😊`),
+      texto: textoSeguroIA(localPorLimite || `¡Claro${nombre ? ', ' + nombre : ''}! Cuéntame más, aquí sigo platicando contigo. ¿Qué te gustaría que comentemos ahora? 😊`),
       proveedor: 'local'
     });
   }
 
   const contexto = [];
-  if (nombre) contexto.push(`El visitante se llama ${nombre}.`);
-  if (apodo) contexto.push(`Cuando quieras usar un apodo cariñoso, llámalo "${apodo}".`);
+  if (nombre) contexto.push(`El usuario se llama ${nombre}.`);
+  if (apodo) contexto.push(`Puedes llamarle cariñosamente "${apodo}" de vez en cuando.`);
+  if (tituloChat) contexto.push(`Título de la conversación actual: "${tituloChat}".`);
+  if (memoriaGlobal) contexto.push(`MEMORIA DE CONVERSACIONES ANTERIORES DEL USUARIO (recuérdalo si viene al caso): ${memoriaGlobal}`);
 
   try {
     const ahoraSV = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date());
@@ -1362,7 +1350,7 @@ async function manejarConsultaIA(req, res) {
 
   const instruccionBase = construirInstruccionIA();
   const sistema = contexto.length
-    ? instruccionBase + '\n\nCONTEXTO DE ESTA SESIÓN:\n' + contexto.join(' ')
+    ? instruccionBase + '\n\nCONTEXTO DE ESTA SESIÓN Y MEMORIA:\n' + contexto.join(' ')
     : instruccionBase;
   const sistemaSeguro = textoSeguroIA(sistema);
 
@@ -1370,7 +1358,7 @@ async function manejarConsultaIA(req, res) {
   if (ai && GEMINI_API_KEY) {
     const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
     const ordenModelos = imagenInfo
-      ? ['gemini-flash-latest', 'gemini-3-flash-preview', GEMINI_MODEL_PRINCIPAL]
+      ? ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-flash-latest']
       : MODELOS_GEMINI_ORDEN;
     let ultimoErrGemini = null;
 
@@ -1381,8 +1369,8 @@ async function manejarConsultaIA(req, res) {
           contents: contentsGemini,
           config: {
             systemInstruction: sistemaSeguro,
-            temperature: 0.35,
-            maxOutputTokens: imagenInfo ? 420 : 320
+            temperature: 0.72,
+            maxOutputTokens: imagenInfo ? 460 : 340
           }
         });
         const rawText = response.text;

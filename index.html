@@ -24,8 +24,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=v61">
-    <link rel="stylesheet" href="v49.css?v=v56">
+    <link rel="stylesheet" href="styles.css?v=v65">
+    <link rel="stylesheet" href="v49.css?v=v65">
     <script id="v62-inline">
 /* =====================================================================
  * V62 — UN SOLO ARCHIVO con todo lo nuevo (no toca el resto de la página).
@@ -1368,20 +1368,8 @@ accent-color:#00ff88;
                 </div>
             </div>
 
-            <div class="sidebar-card settings-section cuenta-personalizacion" id="ultra-performance-card">
-                <div class="sidebar-card-title"><span class="btn-icon">⚙️</span> Rendimiento Ultra</div>
-                <div class="settings-stack">
-                    <button class="btn-action" id="btn-ultra-performance" type="button" onclick="toggleModoUltra()">
-                        Modo ultra
-                    </button>
-                    <div class="cd-date" style="opacity:1; text-align:left; padding: 0 4px; font-size: 11px;">
-                        Exclusivo para cuentas. Apaga efectos pesados para que la página vuele incluso en celulares con 1GB de RAM o menos.
-                    </div>
-                </div>
-            </div>
-
             <div class="sidebar-card settings-section" id="interface-settings-card"> 
-                <div class="sidebar-card-title">Ajustes de Interfaz</div>
+                <div class="sidebar-card-title">Ajustes de Interfaz y Voz</div>
                 <div class="settings-stack">
                     <div class="setting-row">
                         <label for="font-size-range">Tamaño fuente</label>
@@ -1390,6 +1378,10 @@ accent-color:#00ff88;
                     <div class="setting-row">
                         <label for="layout-compact">Compacto</label>
                         <input id="layout-compact" type="checkbox">
+                    </div>
+                    <div class="setting-row">
+                        <label for="sidebar-mic-antirepeat" title="Evita que el micrófono repita palabras como 'cómo cómo'">Filtro eco micrófono</label>
+                        <input id="sidebar-mic-antirepeat" type="checkbox" checked>
                     </div>
                 </div>
             </div>
@@ -1413,7 +1405,7 @@ accent-color:#00ff88;
                         <span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span>
                         <div class="ia-header-text">
                             <h3>La mascotita del Sotano</h3>
-                            <p><span class="ia-status-dot" aria-hidden="true"></span><span id="ia-face-status-text">En línea · IA Gemini</span></p>
+                            <p><span class="ia-status-dot" aria-hidden="true"></span><span id="ia-face-status-text">En línea · Lista para conversar</span></p>
                         </div>
                         <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
                             <span class="live-dot"></span> 🔴 EN VIVO
@@ -1458,6 +1450,65 @@ accent-color:#00ff88;
                         </div>
                     </div>
                     <div class="ai-chat-shell" id="ai-chat-shell">
+                        <div class="ai-sessions-bar" aria-label="Historial y sesiones de chat">
+                            <button class="ai-session-btn ai-history-toggle-btn" id="ai-history-toggle-btn" type="button" aria-expanded="false" aria-controls="ai-sessions-drawer" title="Ver historial de conversaciones">
+                                <span aria-hidden="true">🗂️</span>
+                                <span>Historial</span>
+                                <span class="ai-history-count-badge" id="ai-history-count-badge">1</span>
+                            </button>
+                            <div class="ai-current-chat-pill" id="ai-current-chat-title" title="Conversación activa">💬 Nuevo chat</div>
+                            <button class="ai-session-btn ai-new-chat-btn" id="ai-new-chat-btn" type="button" title="Iniciar una nueva conversación">
+                                <span aria-hidden="true">＋</span>
+                                <span>Nuevo chat</span>
+                            </button>
+                            <button class="ai-session-btn ai-mic-cfg-btn" id="ai-mic-config-toggle" type="button" aria-expanded="false" aria-controls="ai-mic-config-panel" title="Configuración de micrófono y voz">
+                                <span aria-hidden="true">⚙️</span>
+                            </button>
+                        </div>
+
+                        <div class="ai-mic-config-panel" id="ai-mic-config-panel" hidden>
+                            <div class="ai-mic-config-head">
+                                <span>🎙️ Configuración de Micrófono y Voz</span>
+                                <button type="button" class="ai-mic-config-close" id="ai-mic-config-close" aria-label="Cerrar ajustes de voz">✕</button>
+                            </div>
+                            <div class="ai-mic-config-grid">
+                                <label class="ai-mic-cfg-row">
+                                    <span>Evitar palabras repetidas («cómo cómo»)</span>
+                                    <input type="checkbox" id="ai-cfg-antirepeat" checked />
+                                </label>
+                                <label class="ai-mic-cfg-row">
+                                    <span>Pausa al hablar</span>
+                                    <select id="ai-cfg-silence-ms">
+                                        <option value="850">Rápido (0.8s)</option>
+                                        <option value="1050" selected>Normal (1.0s)</option>
+                                        <option value="1500">Pausado (1.5s)</option>
+                                    </select>
+                                </label>
+                                <label class="ai-mic-cfg-row">
+                                    <span>Velocidad de voz IA</span>
+                                    <select id="ai-cfg-voice-rate">
+                                        <option value="0.94">Suave (0.94x)</option>
+                                        <option value="1.0" selected>Normal (1.0x)</option>
+                                        <option value="1.12">Rápida (1.12x)</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="ai-sessions-drawer" id="ai-sessions-drawer" hidden aria-label="Conversaciones guardadas">
+                            <div class="ai-sessions-drawer-head">
+                                <div>
+                                    <strong>🗂️ Historial de conversaciones</strong>
+                                    <p>Toca cualquier chat para retomarlo con su memoria completa</p>
+                                </div>
+                                <div class="ai-sessions-drawer-actions">
+                                    <button type="button" class="ai-session-clear-all" id="ai-sessions-clear-btn" title="Borrar todas las conversaciones">🗑️ Limpiar</button>
+                                    <button type="button" class="ai-session-close-drawer" id="ai-sessions-close-btn" aria-label="Cerrar historial">✕</button>
+                                </div>
+                            </div>
+                            <div class="ai-sessions-list" id="ai-sessions-list" role="list"></div>
+                        </div>
+
                         <div class="ai-profile-row">
                             <div class="ai-profile-actions">
                                 <button class="btn-action ai-gender-btn" data-gender="male" type="button">
@@ -1508,8 +1559,8 @@ accent-color:#00ff88;
                                             <div class="twinkle"></div>
                                         </div>
                                         <div class="flare"></div>
-                                        <div class="floating-label">Your message</div>
-                                        <input placeholder="Ask me anything..." id="ai-input" type="text" maxlength="500" autocomplete="off" aria-label="Pregunta para la IA" />
+                                        <div class="floating-label">Tu mensaje</div>
+                                        <input placeholder="Escribe cualquier pregunta..." id="ai-input" type="text" maxlength="500" autocomplete="off" aria-label="Pregunta para la IA" />
                                         <div class="animation-container">
                                             <div class="pulse-animation"></div>
                                             <div class="wave-animation">
@@ -3834,15 +3885,276 @@ accent-color:#00ff88;
         }); 
     </script> 
 
-    <script src="performance-lite.js?v=v50-3"></script>
-    <script src="base-conocimiento.js?v=v48"></script>
-    <script src="v49.js?v=v61"></script>
-    <script src="face-sound.js?v=v61" defer></script>
-    <script src="ia-claude.js?v=v61-2" defer></script>
-    <link rel="stylesheet" href="personalidades-animaciones-1000.css?v=v58">
-    <link rel="stylesheet" href="osito-cara3d.css?v=v61">
-    <link rel="stylesheet" href="osito-actividades-3d.css?v=v61">
-    <link rel="stylesheet" href="v61.css?v=v61-3">
+    <script src="performance-lite.js?v=v66"></script>
+    <script src="base-conocimiento.js?v=v66"></script>
+    <script src="v49.js?v=v66"></script>
+    <script src="face-sound.js?v=v66" defer></script>
+    <script src="ia-claude.js?v=v66" defer></script>
+    <link rel="stylesheet" href="personalidades-animaciones-1000.css?v=v66">
+    <link rel="stylesheet" href="osito-cara3d.css?v=v66">
+    <link rel="stylesheet" href="osito-actividades-3d.css?v=v66">
+    <link rel="stylesheet" href="v61.css?v=v66">
+    <style id="v66-chat-buttons-style">
+        .ai-sessions-bar {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px 10px !important;
+            margin-bottom: 10px !important;
+            background: linear-gradient(135deg, rgba(8, 15, 26, 0.94), rgba(13, 24, 39, 0.94)) !important;
+            border: 1px solid rgba(0, 242, 254, 0.32) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+            flex-wrap: nowrap !important;
+        }
+        .ai-session-btn {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            min-height: 36px !important;
+            padding: 6px 12px !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(0, 242, 254, 0.42) !important;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.16), rgba(0, 165, 205, 0.1)) !important;
+            color: #f2fbff !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28) !important;
+            transition: transform 0.14s ease, background 0.16s ease, border-color 0.16s ease !important;
+        }
+        .ai-session-btn:hover,
+        .ai-session-btn.active {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.28), rgba(57, 255, 106, 0.2)) !important;
+            border-color: rgba(0, 242, 254, 0.85) !important;
+            transform: translateY(-1px) !important;
+        }
+        .ai-new-chat-btn {
+            background: linear-gradient(135deg, rgba(57, 255, 106, 0.2), rgba(0, 242, 254, 0.16)) !important;
+            border-color: rgba(57, 255, 106, 0.52) !important;
+        }
+        .ai-history-count-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 20px !important;
+            height: 20px !important;
+            padding: 0 6px !important;
+            border-radius: 999px !important;
+            background: rgba(0, 242, 254, 0.3) !important;
+            border: 1px solid rgba(0, 242, 254, 0.5) !important;
+            color: #ffffff !important;
+            font-size: 0.7rem !important;
+            font-weight: 800 !important;
+        }
+        .ai-current-chat-pill {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            display: block !important;
+            padding: 7px 11px !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            color: #e2f3ff !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .ai-mic-config-panel,
+        .ai-sessions-drawer {
+            margin-bottom: 10px !important;
+            padding: 12px 14px !important;
+            border-radius: 14px !important;
+            background: linear-gradient(150deg, rgba(7, 13, 23, 0.98), rgba(13, 23, 38, 0.98)) !important;
+            border: 1px solid rgba(0, 242, 254, 0.36) !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.48) !important;
+            color: #eef8ff !important;
+        }
+        .ai-mic-config-panel[hidden],
+        .ai-sessions-drawer[hidden] {
+            display: none !important;
+        }
+        .ai-mic-config-head,
+        .ai-sessions-drawer-head {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            padding-bottom: 8px !important;
+            margin-bottom: 10px !important;
+            border-bottom: 1px solid rgba(0, 242, 254, 0.18) !important;
+        }
+        .ai-sessions-drawer-head strong,
+        .ai-mic-config-head > span {
+            font-size: 0.86rem !important;
+            font-weight: 800 !important;
+            color: #00f2fe !important;
+        }
+        .ai-sessions-drawer-head p {
+            margin: 2px 0 0 !important;
+            font-size: 0.73rem !important;
+            color: rgba(200, 228, 255, 0.78) !important;
+        }
+        .ai-sessions-drawer-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+        }
+        .ai-session-clear-all {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            height: 30px !important;
+            padding: 0 11px !important;
+            border-radius: 9px !important;
+            border: 1px solid rgba(255, 105, 105, 0.48) !important;
+            background: linear-gradient(135deg, rgba(255, 75, 75, 0.2), rgba(185, 30, 50, 0.16)) !important;
+            color: #ffe0e0 !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+        }
+        .ai-session-clear-all:hover {
+            background: linear-gradient(135deg, rgba(255, 80, 80, 0.34), rgba(215, 40, 60, 0.28)) !important;
+            border-color: rgba(255, 130, 130, 0.85) !important;
+            color: #ffffff !important;
+        }
+        .ai-mic-config-close,
+        .ai-session-close-drawer,
+        .ai-session-delete-btn {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 9px !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            font-size: 0.84rem !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            flex-shrink: 0 !important;
+        }
+        .ai-mic-config-close:hover,
+        .ai-session-close-drawer:hover,
+        .ai-session-delete-btn:hover {
+            background: rgba(255, 75, 75, 0.28) !important;
+            border-color: rgba(255, 110, 110, 0.75) !important;
+            color: #ffffff !important;
+        }
+        .ai-mic-config-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)) !important;
+            gap: 8px !important;
+        }
+        .ai-mic-cfg-row {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            padding: 8px 11px !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(255, 255, 255, 0.09) !important;
+            font-size: 0.77rem !important;
+            font-weight: 600 !important;
+            color: #eaf6ff !important;
+        }
+        .ai-mic-cfg-row select {
+            background: rgba(6, 12, 22, 0.96) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(0, 242, 254, 0.45) !important;
+            border-radius: 8px !important;
+            padding: 5px 9px !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+        }
+        .ai-sessions-list {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 7px !important;
+            max-height: 210px !important;
+            overflow-y: auto !important;
+        }
+        .ai-session-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
+            padding-right: 6px !important;
+            border-radius: 11px !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            transition: background 0.15s ease, border-color 0.15s ease !important;
+        }
+        .ai-session-item:hover {
+            background: rgba(0, 242, 254, 0.1) !important;
+            border-color: rgba(0, 242, 254, 0.38) !important;
+        }
+        .ai-session-item.active {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.16), rgba(57, 255, 106, 0.1)) !important;
+            border-color: rgba(0, 242, 254, 0.62) !important;
+        }
+        .ai-session-select-btn {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+            padding: 9px 12px !important;
+            background: transparent !important;
+            border: none !important;
+            color: #f2f9ff !important;
+            text-align: left !important;
+            cursor: pointer !important;
+            font-family: inherit !important;
+        }
+        .ai-session-item-top {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        .ai-session-item-title {
+            font-size: 0.82rem !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .ai-session-item-date {
+            font-size: 0.69rem !important;
+            font-weight: 600 !important;
+            color: #00f2fe !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        .ai-session-item-preview {
+            font-size: 0.73rem !important;
+            color: rgba(205, 228, 250, 0.78) !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+    </style>
     <script src="personalidades-animaciones-1000.js?v=v58" defer></script>
     <script src="personalidades-1000.js?v=v59" defer></script>
     <script src="face-extra.js?v=v53-1" defer></script>
@@ -3918,7 +4230,481 @@ accent-color:#00ff88;
                 });
             }
 
-            function agregarMensajeIA(texto, tipo, imagenAdjunta = '') {
+            // =========================================================================
+            // HISTORIAL DE CONVERSACIONES ESTILO CHATGPT (localStorage + Firestore)
+            // =========================================================================
+            const SESSIONS_STORAGE_KEY = 'osito_ai_sessions_v2';
+            const ACTIVE_SESSION_KEY = 'osito_ai_active_session_v2';
+            const MAX_SESSIONS_GUARDADAS = 35;
+            const MAX_MSGS_POR_SESION = 60;
+
+            const historyToggleBtn = document.getElementById('ai-history-toggle-btn');
+            const historyCountBadge = document.getElementById('ai-history-count-badge');
+            const currentChatTitleEl = document.getElementById('ai-current-chat-title');
+            const newChatBtn = document.getElementById('ai-new-chat-btn');
+            const sessionsDrawer = document.getElementById('ai-sessions-drawer');
+            const sessionsListEl = document.getElementById('ai-sessions-list');
+            const sessionsClearBtn = document.getElementById('ai-sessions-clear-btn');
+            const sessionsCloseBtn = document.getElementById('ai-sessions-close-btn');
+
+            const micConfigToggle = document.getElementById('ai-mic-config-toggle');
+            const micConfigPanel = document.getElementById('ai-mic-config-panel');
+            const micConfigClose = document.getElementById('ai-mic-config-close');
+            const cfgAntiRepeat = document.getElementById('ai-cfg-antirepeat');
+            const sidebarAntiRepeat = document.getElementById('sidebar-mic-antirepeat');
+            const cfgSilenceMs = document.getElementById('ai-cfg-silence-ms');
+            const cfgVoiceRate = document.getElementById('ai-cfg-voice-rate');
+
+            function esMensajeObsoletoPrivacidad(texto) {
+                const t = String(texto || '').toLowerCase();
+                return t.includes('sobre la vida privada de osito solo comparto') || t.includes('esto encontre sobre rosebud');
+            }
+
+            function generarTituloAutomaticoChat(textoUsuario) {
+                const limpio = String(textoUsuario || '')
+                    .replace(/^[¡!¿?\s.,;:]+|[¡!¿?\s.,;:]+$/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (!limpio) return 'Conversación con la IA';
+                const quitarPrefijo = limpio
+                    .replace(/^(hola|buenas|oye|osito|osita|mascotita|dime|cuentame|explicame|una pregunta|quiero saber|por favor)\s+/i, '')
+                    .trim() || limpio;
+                const capitalizado = quitarPrefijo.charAt(0).toUpperCase() + quitarPrefijo.slice(1);
+                return capitalizado.length > 38 ? capitalizado.slice(0, 36).trim() + '…' : capitalizado;
+            }
+
+            function leerSesionesLocales() {
+                try {
+                    const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
+                    if (!raw) return [];
+                    const parsed = JSON.parse(raw);
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed.map((s) => ({
+                        id: String(s?.id || ''),
+                        title: String(s?.title || 'Nuevo chat').slice(0, 60),
+                        createdAt: Number(s?.createdAt) || Date.now(),
+                        updatedAt: Number(s?.updatedAt) || Date.now(),
+                        messages: (Array.isArray(s?.messages) ? s.messages : [])
+                            .filter((m) => m && m.text && !esMensajeObsoletoPrivacidad(m.text))
+                            .slice(-MAX_MSGS_POR_SESION)
+                    })).filter((s) => s.id);
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            let sesionesChat = leerSesionesLocales();
+            let sesionActivaId = localStorage.getItem(ACTIVE_SESSION_KEY) || '';
+
+            function guardarSesionesLocales() {
+                try {
+                    if (sesionesChat.length > MAX_SESSIONS_GUARDADAS) {
+                        sesionesChat.sort((a, b) => b.updatedAt - a.updatedAt);
+                        sesionesChat = sesionesChat.slice(0, MAX_SESSIONS_GUARDADAS);
+                    }
+                    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sesionesChat));
+                    if (sesionActivaId) {
+                        localStorage.setItem(ACTIVE_SESSION_KEY, sesionActivaId);
+                    }
+                } catch (e) {}
+            }
+
+            function obtenerOCrearSesionActiva() {
+                let actual = sesionesChat.find((s) => s.id === sesionActivaId);
+                if (!actual) {
+                    if (sesionesChat.length > 0) {
+                        sesionesChat.sort((a, b) => b.updatedAt - a.updatedAt);
+                        actual = sesionesChat[0];
+                        sesionActivaId = actual.id;
+                    } else {
+                        actual = {
+                            id: 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                            title: 'Nuevo chat',
+                            createdAt: Date.now(),
+                            updatedAt: Date.now(),
+                            messages: []
+                        };
+                        sesionesChat.unshift(actual);
+                        sesionActivaId = actual.id;
+                    }
+                    guardarSesionesLocales();
+                }
+                return actual;
+            }
+
+            function formatearFechaCortaSesion(ts) {
+                try {
+                    const ahora = new Date();
+                    const fecha = new Date(ts || Date.now());
+                    const esHoy = ahora.toDateString() === fecha.toDateString();
+                    if (esHoy) {
+                        return 'Hoy · ' + fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    return fecha.toLocaleDateString('es-SV', { day: '2-digit', month: 'short' }) + ' · ' +
+                        fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' });
+                } catch (e) {
+                    return 'Reciente';
+                }
+            }
+
+            function actualizarCabeceraYListaSesiones() {
+                const activa = obtenerOCrearSesionActiva();
+                if (currentChatTitleEl) {
+                    currentChatTitleEl.textContent = '💬 ' + (activa.title || 'Nuevo chat');
+                }
+                const conMensajes = sesionesChat.filter((s) => s.messages && s.messages.length > 0);
+                const totalMostrar = Math.max(1, conMensajes.length || sesionesChat.length);
+                if (historyCountBadge) {
+                    historyCountBadge.textContent = String(totalMostrar);
+                }
+                if (!sessionsListEl) return;
+
+                sessionsListEl.replaceChildren();
+                const ordenadas = [...sesionesChat].sort((a, b) => b.updatedAt - a.updatedAt);
+                ordenadas.forEach((sesion) => {
+                    const item = document.createElement('div');
+                    item.className = 'ai-session-item' + (sesion.id === sesionActivaId ? ' active' : '');
+                    item.setAttribute('role', 'listitem');
+
+                    const mainBtn = document.createElement('button');
+                    mainBtn.type = 'button';
+                    mainBtn.className = 'ai-session-select-btn';
+                    const ultimoMsg = sesion.messages && sesion.messages.length
+                        ? sesion.messages[sesion.messages.length - 1].text
+                        : 'Sin mensajes todavía';
+                    const preview = String(ultimoMsg || '').slice(0, 54) + (String(ultimoMsg || '').length > 54 ? '…' : '');
+                    mainBtn.innerHTML =
+                        `<div class="ai-session-item-top">` +
+                            `<span class="ai-session-item-title">${ (sesion.title || 'Nuevo chat').replace(/</g, '&lt;') }</span>` +
+                            `<span class="ai-session-item-date">${ formatearFechaCortaSesion(sesion.updatedAt) }</span>` +
+                        `</div>` +
+                        `<div class="ai-session-item-preview">${ preview.replace(/</g, '&lt;') } (${ sesion.messages.length } msj)</div>`;
+                    mainBtn.addEventListener('click', () => {
+                        cambiarASesionChat(sesion.id);
+                        toggleDrawerHistorial(false);
+                    });
+
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'ai-session-delete-btn';
+                    delBtn.title = 'Eliminar esta conversación';
+                    delBtn.setAttribute('aria-label', 'Eliminar conversación');
+                    delBtn.textContent = '✕';
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        eliminarSesionChat(sesion.id);
+                    });
+
+                    item.appendChild(mainBtn);
+                    item.appendChild(delBtn);
+                    sessionsListEl.appendChild(item);
+                });
+            }
+
+            function renderizarMensajesSesionActiva() {
+                if (!aiMessages) return;
+                const activa = obtenerOCrearSesionActiva();
+                aiMessages.replaceChildren();
+
+                const msgBienvenida = document.createElement('div');
+                msgBienvenida.className = 'msg bot';
+                const esInvitado = typeof window.osEsInvitado === 'function' ? window.osEsInvitado() : true;
+                if (esInvitado && !aiGenero) {
+                    msgBienvenida.textContent = '🤖 Identidad requerida: ¿Eres Osito o Osita?';
+                } else {
+                    msgBienvenida.textContent = `🤖 ¡Qué onda, ${prefijoIA()}! Pregúntame lo que quieras o retoma cualquier tema.`;
+                }
+                aiMessages.appendChild(msgBienvenida);
+
+                (activa.messages || []).forEach((m) => {
+                    if (!m || !m.text || esMensajeObsoletoPrivacidad(m.text)) return;
+                    const div = document.createElement('div');
+                    div.className = `msg ${m.role === 'user' ? 'user' : 'bot'} ia-msg-complete`;
+                    if (m.role === 'user') {
+                        const span = document.createElement('span');
+                        span.className = 'ia-msg-user-text';
+                        span.textContent = m.text;
+                        div.appendChild(span);
+                    } else {
+                        const bodySpan = document.createElement('span');
+                        bodySpan.className = 'ia-msg-body';
+                        bodySpan.textContent = m.text;
+                        const waveSpan = document.createElement('span');
+                        waveSpan.className = 'ia-msg-wave';
+                        waveSpan.setAttribute('aria-hidden', 'true');
+                        waveSpan.innerHTML = '<i></i><i></i><i></i><i></i>';
+                        div.appendChild(bodySpan);
+                        div.appendChild(waveSpan);
+                    }
+                    aiMessages.appendChild(div);
+                });
+                desplazarChatSuave();
+            }
+
+            function iniciarNuevoChatIA() {
+                const actual = obtenerOCrearSesionActiva();
+                // Si el chat actual ya está vacío, solo limpiamos la vista y cerramos el cajón
+                if (!actual.messages || actual.messages.length === 0) {
+                    actual.title = 'Nuevo chat';
+                    actual.updatedAt = Date.now();
+                    guardarSesionesLocales();
+                    renderizarMensajesSesionActiva();
+                    actualizarCabeceraYListaSesiones();
+                    if (aiInput && !aiInput.disabled) aiInput.focus();
+                    return;
+                }
+                const nueva = {
+                    id: 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                    title: 'Nuevo chat',
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                    messages: []
+                };
+                sesionesChat.unshift(nueva);
+                sesionActivaId = nueva.id;
+                guardarSesionesLocales();
+                renderizarMensajesSesionActiva();
+                actualizarCabeceraYListaSesiones();
+                if (aiInput && !aiInput.disabled) aiInput.focus();
+            }
+
+            function cambiarASesionChat(id) {
+                const encontrada = sesionesChat.find((s) => s.id === id);
+                if (!encontrada) return;
+                sesionActivaId = encontrada.id;
+                guardarSesionesLocales();
+                renderizarMensajesSesionActiva();
+                actualizarCabeceraYListaSesiones();
+            }
+
+            function eliminarSesionChat(id) {
+                sesionesChat = sesionesChat.filter((s) => s.id !== id);
+                if (sesionActivaId === id) {
+                    sesionActivaId = sesionesChat[0]?.id || '';
+                }
+                obtenerOCrearSesionActiva();
+                guardarSesionesLocales();
+                renderizarMensajesSesionActiva();
+                actualizarCabeceraYListaSesiones();
+            }
+
+            function toggleDrawerHistorial(forzar) {
+                if (!sessionsDrawer) return;
+                const abrir = typeof forzar === 'boolean' ? forzar : sessionsDrawer.hidden;
+                sessionsDrawer.hidden = !abrir;
+                if (historyToggleBtn) {
+                    historyToggleBtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+                    historyToggleBtn.classList.toggle('active', abrir);
+                }
+                if (abrir) actualizarCabeceraYListaSesiones();
+            }
+
+            // Construye un resumen compacto de conversaciones anteriores y de la sesión actual para que la IA tenga memoria estilo ChatGPT
+            function construirMemoriaGlobalChats() {
+                const fragmentos = [];
+                const ordenadas = [...sesionesChat].sort((a, b) => b.updatedAt - a.updatedAt);
+                for (const s of ordenadas.slice(0, 6)) {
+                    if (!s.messages || !s.messages.length) continue;
+                    const ultimosUsuario = s.messages
+                        .filter((m) => m.role === 'user' && m.text)
+                        .slice(-3)
+                        .map((m) => m.text.slice(0, 70))
+                        .join(' / ');
+                    if (ultimosUsuario) {
+                        fragmentos.push(`[Chat "${s.title}": ${ultimosUsuario}]`);
+                    }
+                }
+                return fragmentos.join(' ').slice(0, 650);
+            }
+
+            function obtenerHistorialSesionActivaParaAPI(preguntaActual) {
+                const activa = obtenerOCrearSesionActiva();
+                const lista = (activa.messages || []).map((m) => ({
+                    role: m.role === 'user' ? 'user' : 'assistant',
+                    text: String(m.text || '').trim()
+                })).filter((m) => m.text && !esMensajeObsoletoPrivacidad(m.text));
+                const ultimo = lista[lista.length - 1];
+                if (ultimo && ultimo.role === 'user' && ultimo.text === preguntaActual) {
+                    lista.pop();
+                }
+                return lista.slice(-16);
+            }
+
+            function registrarMensajeEnSesionLocal(role, texto) {
+                const limpio = String(texto || '').trim();
+                if (!limpio || /^🤖\s*identidad requerida/i.test(limpio) || esMensajeObsoletoPrivacidad(limpio)) return null;
+                const activa = obtenerOCrearSesionActiva();
+                if (!Array.isArray(activa.messages)) activa.messages = [];
+
+                // Evitar duplicado exacto consecutivo del mismo rol en el mismo segundo
+                const ultimo = activa.messages[activa.messages.length - 1];
+                if (ultimo && ultimo.role === role && ultimo.text === limpio && (Date.now() - (ultimo.ts || 0)) < 1500) {
+                    return activa;
+                }
+
+                if (role === 'user' && (!activa.title || activa.title === 'Nuevo chat')) {
+                    const tieneUsuarioPrevio = activa.messages.some((m) => m.role === 'user');
+                    if (!tieneUsuarioPrevio && !/^(hola|buenas|hey|que onda|osito|osita)$/i.test(limpio)) {
+                        activa.title = generarTituloAutomaticoChat(limpio);
+                    } else if (tieneUsuarioPrevio) {
+                        activa.title = generarTituloAutomaticoChat(limpio);
+                    }
+                }
+
+                activa.messages.push({
+                    role: role === 'user' ? 'user' : 'bot',
+                    text: limpio,
+                    ts: Date.now()
+                });
+                if (activa.messages.length > MAX_MSGS_POR_SESION) {
+                    activa.messages = activa.messages.slice(-MAX_MSGS_POR_SESION);
+                }
+                activa.updatedAt = Date.now();
+                guardarSesionesLocales();
+                actualizarCabeceraYListaSesiones();
+                return activa;
+            }
+
+            // Recibe historial de Firestore sin borrar ni interrumpir la conversación en vivo
+            function recibirMensajesRemotosFirestore(remotos) {
+                if (!Array.isArray(remotos) || !remotos.length) return;
+                const limpios = remotos.filter((m) => m && m.text && !esMensajeObsoletoPrivacidad(m.text));
+                if (!limpios.length) return;
+
+                let huboCambios = false;
+                const porSesion = new Map();
+                limpios.forEach((m) => {
+                    const sid = m.sessionId || 'chat_cloud_historial';
+                    if (!porSesion.has(sid)) {
+                        porSesion.set(sid, {
+                            title: m.sessionTitle || '',
+                            items: []
+                        });
+                    }
+                    const grupo = porSesion.get(sid);
+                    if (m.sessionTitle && !grupo.title) grupo.title = m.sessionTitle;
+                    grupo.items.push({
+                        role: m.role === 'user' ? 'user' : 'bot',
+                        text: String(m.text || '').trim(),
+                        ts: Number(m.timestamp) || Date.now()
+                    });
+                });
+
+                porSesion.forEach((grupo, sid) => {
+                    let existente = sesionesChat.find((s) => s.id === sid);
+                    if (!existente) {
+                        const primerUser = grupo.items.find((x) => x.role === 'user');
+                        existente = {
+                            id: sid,
+                            title: grupo.title || (primerUser ? generarTituloAutomaticoChat(primerUser.text) : 'Conversación guardada'),
+                            createdAt: grupo.items[0]?.ts || Date.now(),
+                            updatedAt: grupo.items[grupo.items.length - 1]?.ts || Date.now(),
+                            messages: grupo.items.slice(-MAX_MSGS_POR_SESION)
+                        };
+                        sesionesChat.push(existente);
+                        huboCambios = true;
+                    } else if (grupo.items.length > existente.messages.length) {
+                        existente.messages = grupo.items.slice(-MAX_MSGS_POR_SESION);
+                        if (grupo.title && existente.title === 'Nuevo chat') existente.title = grupo.title;
+                        huboCambios = true;
+                    }
+                });
+
+                if (huboCambios) {
+                    guardarSesionesLocales();
+                    const activa = obtenerOCrearSesionActiva();
+                    const estaEscribiendo = Boolean(aiMessages && aiMessages.querySelector('.typing, .ia-streaming'));
+                    if (!estaEscribiendo && aiMessages && aiMessages.children.length <= 1 && activa.messages.length > 0) {
+                        renderizarMensajesSesionActiva();
+                    }
+                    actualizarCabeceraYListaSesiones();
+                }
+            }
+
+            window.OsitoChatHistory = {
+                iniciarNuevoChat: iniciarNuevoChatIA,
+                cambiarASesion: cambiarASesionChat,
+                recibirMensajesRemotos: recibirMensajesRemotosFirestore,
+                construirMemoriaGlobal: construirMemoriaGlobalChats
+            };
+
+            if (historyToggleBtn) {
+                historyToggleBtn.addEventListener('click', () => toggleDrawerHistorial());
+            }
+            if (sessionsCloseBtn) {
+                sessionsCloseBtn.addEventListener('click', () => toggleDrawerHistorial(false));
+            }
+            if (newChatBtn) {
+                newChatBtn.addEventListener('click', () => {
+                    toggleDrawerHistorial(false);
+                    iniciarNuevoChatIA();
+                });
+            }
+            if (sessionsClearBtn) {
+                sessionsClearBtn.addEventListener('click', () => {
+                    sesionesChat = [];
+                    sesionActivaId = '';
+                    obtenerOCrearSesionActiva();
+                    guardarSesionesLocales();
+                    renderizarMensajesSesionActiva();
+                    actualizarCabeceraYListaSesiones();
+                    toggleDrawerHistorial(false);
+                });
+            }
+
+            // Enlaces de Configuración de Micrófono y Voz
+            function sincronizarControlesVoz() {
+                const antiRep = localStorage.getItem('osito_mic_anti_repeat') !== 'false';
+                const silMs = localStorage.getItem('osito_mic_silence_ms') || '1050';
+                const vRate = localStorage.getItem('osito_ai_voice_rate') || '1.0';
+                if (cfgAntiRepeat) cfgAntiRepeat.checked = antiRep;
+                if (sidebarAntiRepeat) sidebarAntiRepeat.checked = antiRep;
+                if (cfgSilenceMs) cfgSilenceMs.value = silMs;
+                if (cfgVoiceRate) cfgVoiceRate.value = vRate;
+            }
+            sincronizarControlesVoz();
+
+            if (micConfigToggle && micConfigPanel) {
+                micConfigToggle.addEventListener('click', () => {
+                    const abrir = micConfigPanel.hidden;
+                    micConfigPanel.hidden = !abrir;
+                    micConfigToggle.classList.toggle('active', abrir);
+                    micConfigToggle.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+                });
+            }
+            if (micConfigClose && micConfigPanel) {
+                micConfigClose.addEventListener('click', () => {
+                    micConfigPanel.hidden = true;
+                    if (micConfigToggle) {
+                        micConfigToggle.classList.remove('active');
+                        micConfigToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+            if (cfgAntiRepeat) {
+                cfgAntiRepeat.addEventListener('change', () => {
+                    localStorage.setItem('osito_mic_anti_repeat', cfgAntiRepeat.checked ? 'true' : 'false');
+                    if (sidebarAntiRepeat) sidebarAntiRepeat.checked = cfgAntiRepeat.checked;
+                });
+            }
+            if (sidebarAntiRepeat) {
+                sidebarAntiRepeat.addEventListener('change', () => {
+                    localStorage.setItem('osito_mic_anti_repeat', sidebarAntiRepeat.checked ? 'true' : 'false');
+                    if (cfgAntiRepeat) cfgAntiRepeat.checked = sidebarAntiRepeat.checked;
+                });
+            }
+            if (cfgSilenceMs) {
+                cfgSilenceMs.addEventListener('change', () => {
+                    localStorage.setItem('osito_mic_silence_ms', cfgSilenceMs.value);
+                });
+            }
+            if (cfgVoiceRate) {
+                cfgVoiceRate.addEventListener('change', () => {
+                    localStorage.setItem('osito_ai_voice_rate', cfgVoiceRate.value);
+                });
+            }
+
+            function agregarMensajeIA(texto, tipo, imagenAdjunta = '', guardarEnHistorial = true) {
                 if (!aiMessages) return;
                 const enLlamada = Boolean(window.ositoEnLlamadaIA);
                 const msg = document.createElement('div');
@@ -3943,8 +4729,7 @@ accent-color:#00ff88;
 
                     const modoLigero = esEquipoGamaBajaIA() || enLlamada;
                     const palabras = String(texto || '').split(' ');
-                    if (modoLigero || palabras.length <= 3) {
-                        // Gama baja / ultrabaja o modo llamada: 0 timers de escritura para no competir con la voz (TTS)
+                    if (modoLigero || palabras.length <= 4) {
                         bodySpan.textContent = texto;
                         msg.classList.add('ia-msg-complete');
                         if (!enLlamada) desplazarChatSuave();
@@ -3953,12 +4738,12 @@ accent-color:#00ff88;
                         bodySpan.textContent = '';
                         let idx = 0;
                         let pasoNum = 0;
-                        const paso = Math.max(2, Math.ceil(palabras.length / 14));
+                        const paso = Math.max(3, Math.ceil(palabras.length / 10));
                         const timerStream = setInterval(() => {
                             idx = Math.min(palabras.length, idx + paso);
                             pasoNum += 1;
                             bodySpan.textContent = palabras.slice(0, idx).join(' ');
-                            if (pasoNum % 3 === 0 || idx >= palabras.length) {
+                            if (pasoNum % 2 === 0 || idx >= palabras.length) {
                                 desplazarChatSuave();
                             }
                             if (idx >= palabras.length) {
@@ -3966,7 +4751,7 @@ accent-color:#00ff88;
                                 msg.classList.remove('ia-streaming');
                                 msg.classList.add('ia-msg-complete');
                             }
-                        }, 36);
+                        }, 28);
                     }
                 } else {
                     if (imagenAdjunta && String(imagenAdjunta).startsWith('data:image/')) {
@@ -3986,28 +4771,22 @@ accent-color:#00ff88;
                     desplazarChatSuave();
                 }
 
-                if (typeof window.registrarMensajeIAEnFirebase === 'function') {
+                let sesionActual = null;
+                if (guardarEnHistorial && texto) {
+                    sesionActual = registrarMensajeEnSesionLocal(tipo, texto);
+                }
+
+                if (guardarEnHistorial && typeof window.registrarMensajeIAEnFirebase === 'function') {
                     window.registrarMensajeIAEnFirebase({
                         role: tipo,
-                        text: texto
+                        text: texto,
+                        sessionId: sesionActual?.id || sesionActivaId || '',
+                        sessionTitle: sesionActual?.title || ''
                     }).catch(() => {});
                 }
                 document.dispatchEvent(new CustomEvent('osito:ia-message', { detail: { role: tipo, text: texto } }));
                 if (tipo === 'bot') {
                     hablarIA(texto);
-                    // Si estamos en llamada y el usuario hizo una pregunta personal/privada, la IA responde grosero y cuelga la llamada
-                    if (window.ositoEnLlamadaIA && /no te importa,\s*metiche/i.test(String(texto || ''))) {
-                        const colgarTrasRespuesta = () => {
-                            document.removeEventListener('osito:tts-end', colgarTrasRespuesta);
-                            if (window.ositoEnLlamadaIA && typeof window.finalizarLlamadaIA === 'function') {
-                                setTimeout(() => {
-                                    if (window.ositoEnLlamadaIA) window.finalizarLlamadaIA();
-                                }, 350);
-                            }
-                        };
-                        document.addEventListener('osito:tts-end', colgarTrasRespuesta);
-                        setTimeout(colgarTrasRespuesta, 4200);
-                    }
                 }
             }
 
@@ -4122,7 +4901,8 @@ accent-color:#00ff88;
                 if (!limpio) return;
                 const utterance = new SpeechSynthesisUtterance(limpio);
                 utterance.lang = 'es-419';
-                utterance.rate = esEquipoGamaBajaIA() ? 1.03 : 1.0;
+                const velConfig = typeof obtenerVelocidadVozIA === 'function' ? obtenerVelocidadVozIA() : 1.0;
+                utterance.rate = velConfig || (esEquipoGamaBajaIA() ? 1.03 : 1.0);
                 utterance.pitch = 1;
                 window.speechSynthesis.speak(utterance);
             }
@@ -4289,27 +5069,22 @@ accent-color:#00ff88;
                     return `¡Listo, ${nombre}! Te abrí el canal de YouTube.`;
                 }
 
-                // 4. Saludos cortos (solo si el mensaje es únicamente un saludo y no incluye una pregunta)
-                if (/^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|saludos|que onda|hola osito|hola mascotita)(\s+como estas|\s+que tal)?[!.?]*$/.test(texto)) {
-                    return `¡Qué onda, ${nombre}! Todo muy bien por aquí en El Sótano de Osito. 😊 ¿Qué te gustaría saber o de qué quieres platicar hoy?`;
+                // 4. Funciones de la página
+                if (/^(que puedo hacer (aqui|en la pagina|en el sitio|en el sotano)|para que sirve (la pagina|el sitio)|funciones de(l sitio| la pagina)|de que trata (el sitio|la pagina))[?.!]*$/.test(texto)) {
+                    return `Aquí en El Sótano de Osito puedes ver videos recientes, directos, canciones, guardar tus favoritos con la estrella, ajustar temas de color y conversar conmigo de cualquier tema que quieras.`;
                 }
 
-                // 5. Funciones de la página
-                if (/que puedo hacer (aqui|en la pagina|en el sitio|en el sotano)|para que sirve (la pagina|el sitio)|funciones de(l sitio| la pagina)|de que trata (el sitio|la pagina)/.test(texto)) {
-                    return `Aquí en El Sótano de Osito puedes ver videos recientes, directos, canciones, guardar tus favoritos con la estrella, ajustar temas de color y conversar conmigo o preguntarme lo que quieras.`;
+                // 5. Protección de datos personales y privados (SOLO cuando preguntan datos privados de Osito, jamás en preguntas normales)
+                if (/ubicacion exacta de osito|direccion exacta de osito|donde vive osito|donde vives exactamente|en que (ciudad|municipio|departamento|colonia|calle|casa|barrio) (vive osito|vives)|cual es (tu|su) (direccion|numero de telefono|telefono personal|celular personal|whatsapp|apellido real|nombre real)|dame (tu|su) (numero|telefono|whatsapp|celular|direccion)|apellido (completo|de osito|real)|como se llama osito en la vida real|nombre real de osito|en que (colegio|instituto|escuela|universidad) (estudia|estudias) osito|donde (estudia|estudias) osito|como se llaman (tus|sus) (padres|papas|hermanos) de osito|osito tiene (novia|novio|pareja)|quien es (la novia|el novio|la pareja) de osito/.test(texto)) {
+                    return `Por privacidad no comparto datos personales privados de Osito (como dirección exacta, teléfono, nombre real, familia o lugar de estudio), ¡pero pregúntame lo que quieras de cualquier otro tema, videojuegos o del canal y platicamos! 🛡️`;
                 }
 
-                // 6. Protección de datos personales y privados (solo cuando preguntan datos privados de Osito, sin bloquear preguntas escolares o de teléfonos)
-                if (/ubicacion exacta|direccion exacta|donde vive osito|donde vives exactamente|en que (ciudad|municipio|departamento|colonia|calle|casa|barrio) (vive|vives)|cual es (tu|su) (direccion|numero de telefono|telefono|celular|whatsapp|apellido|nombre real)|dame (tu|su) (numero|telefono|whatsapp|celular|direccion)|apellido (completo|de osito|real)|como se llama osito en la vida real|nombre real de osito|en que (colegio|instituto|escuela|universidad) (estudia|estudias)|donde (estudia|estudias) osito|como se llaman (tus|sus) (padres|papas|hermanos)|tienes (novia|novio|pareja)|quien es (tu|su) (novia|novio|pareja)/.test(texto)) {
-                    return `Por privacidad y seguridad no respondo preguntas personales ni comparto datos privados (como dirección, teléfono, WhatsApp, nombre o apellido real, familia o lugar de estudio). ¡Pregúntame lo que quieras sobre el canal, videojuegos o cualquier otro tema! 🛡️`;
-                }
-
-                // 6.1 Aviso si piden crear o generar imágenes
+                // 5.1 Aviso si piden crear o generar imágenes
                 if (/\b(crea|crear|genera|generar|haz|hacer|dibuja|dibujar)\s+(una\s+|la\s+|algunas\s+)?(imagen|imagenes|foto|fotos|dibujo|ilustracion)\b/.test(texto)) {
                     return `No genero imágenes, pero puedo responderte cualquier pregunta, ayudarte con tus tareas, explicarte cosas de videojuegos o platicar contigo de lo que quieras. 😊`;
                 }
 
-                // 7. Consultas de Hora
+                // 6. Consultas de Hora
                 if (/\bhora en el salvador\b/.test(texto) || (/\bque hora\b/.test(texto) && /salvador/.test(texto))) {
                     return `En El Salvador son las ${horaElSalvador()}.`;
                 }
@@ -4320,39 +5095,43 @@ accent-color:#00ff88;
                     return `En tu ubicación son las ${horaLocalStr}${infoLocal?.pais ? ` (${infoLocal.pais})` : ''}. En El Salvador son las ${horaElSalvador()}.`;
                 }
 
-                // 8. Búsqueda exacta en la Base de Conocimiento oficial (las 19 preguntas, edad de Osito, años del canal, extras y variaciones)
+                // 7. Búsqueda exacta en la Base de Conocimiento oficial del canal (solo datos exactos de OsitoGamer360YT)
                 if (window.OsitoConocimiento && typeof window.OsitoConocimiento.buscarEnBaseConocimiento === 'function') {
-                    const respuestaConocimiento = window.OsitoConocimiento.buscarEnBaseConocimiento(pregunta);
+                    const respuestaConocimiento = window.OsitoConocimiento.buscarEnBaseConocimiento(pregunta, { modoOffline: false });
                     if (respuestaConocimiento) {
                         return respuestaConocimiento;
                     }
                 }
 
-                // 9. Respaldo directo con infoCanal en index.html por si preguntan nombre del creador, nombre del canal, edad de Osito o años del canal
-                if (/(como se llama (tu|el) creador|quien (es (tu|el) creador|te creo|te hizo|te programo|creo (esta ia|el sitio|la pagina|el sotano))|cual es el nombre de (tu|el) creador|nombre de (tu|el) creador)/.test(texto)) {
+                // 8. Respaldo directo con infoCanal en index.html por si preguntan nombre del creador, nombre del canal, edad de Osito o años del canal
+                if (/^(como se llama (tu|el) creador|quien (es (tu|el) creador|te creo|te hizo|te programo|creo (esta ia|el sitio|la pagina|el sotano))|cual es el nombre de (tu|el) creador|nombre de (tu|el) creador)[?.!]*$/.test(texto)) {
                     return 'Mi creador se llama Osito.';
                 }
-                if (/(como se llama (el|tu|su) canal|cual es (el nombre de(l| tu| su) canal|(tu|su|el) canal)|nombre de(l| tu| su) canal)/.test(texto) && !/(primer|anterior|original|antes|video)/.test(texto)) {
+                if (/^(como se llama (el|tu|su) canal|cual es (el nombre de(l| tu| su) canal|(tu|su|el) canal)|nombre de(l| tu| su) canal)[?.!]*$/.test(texto) && !/(primer|anterior|original|antes|video)/.test(texto)) {
                     return 'El canal se llama OsitoGamer360YT (Osito Gamer 360 YouTube).';
                 }
-                if (/(cuantos anos tiene osito|cuantos anos tienes|que edad tiene osito|que edad tienes|edad de osito)/.test(texto) && !/canal/.test(texto)) {
+                if (/^(cuantos anos tiene osito|cuantos anos tienes|que edad tiene osito|que edad tienes|edad de osito)[?.!]*$/.test(texto) && !/canal/.test(texto)) {
                     const edad = edadEnFecha(infoCanal.cumpleCreador);
                     return `Osito tiene ${edad} años (nació el 28 de septiembre de 2008).`;
                 }
-                if (/(cuantos anos tiene el canal|cuantos anos lleva el canal)/.test(texto)) {
+                if (/^(cuantos anos tiene el canal|cuantos anos lleva el canal)[?.!]*$/.test(texto)) {
                     const anos = anosCanal();
                     return `El canal ${infoCanal.canal} tiene ${anos} años en YouTube. Su aniversario es el 2 de junio (empezó el 2 de junio de 2022). 🎉`;
                 }
 
-                // 10. Si no es una pregunta fija de la base local, devolvemos null para que responda Gemini API con conversación completa
+                // 9. Para todo lo demás (conversación, saludos, preguntas abiertas, "vale", "cómo", cultura general, juegos, etc.) responde Gemini API con memoria completa
                 return null;
             }
 
             function mensajeNoDisponibleLocal() {
-                const noDisponible = (window.OsitoConocimiento && window.OsitoConocimiento.MENSAJES_NO_DISPONIBLE) || [
-                    'Esa información todavía no está disponible en la base de datos y podría agregarse en el futuro.'
+                const respuestasCharla = [
+                    `¡Claro, ${prefijoIA()}! Cuéntame un poco más sobre eso o dime qué te gustaría saber y lo platicamos a fondo. 😊`,
+                    `¡Te escucho, ${prefijoIA()}! Explícame un poquito más tu idea o pregunta para darte una respuesta bien completa.`,
+                    `¡Qué buen tema, ${prefijoIA()}! Dime qué detalle te interesa más y seguimos conversando.`
                 ];
-                return noDisponible[turnoIA % noDisponible.length];
+                const msg = respuestasCharla[turnoIA % respuestasCharla.length];
+                turnoIA += 1;
+                return msg;
             }
 
             let imagenPendienteIA = '';
@@ -4513,12 +5292,16 @@ accent-color:#00ff88;
                     }
                 }
 
-                // 3) Conversación inteligente y análisis de imágenes con la API de Gemini (/api/ia)
+                // 3) Conversación inteligente y análisis de imágenes con la API de Gemini (/api/ia) + Memoria de chats estilo ChatGPT
                 if (window.OsitoIA && typeof window.OsitoIA.preguntar === 'function') {
+                    const sesionActual = typeof obtenerSesionActiva === 'function' ? obtenerSesionActiva() : null;
+                    const memoriaChats = typeof construirMemoriaGlobalChats === 'function' ? construirMemoriaGlobalChats() : '';
                     const resultadoGemini = await window.OsitoIA.preguntar(limpia || 'Describe qué ves en esta imagen y comenta al respecto.', {
                         nombre: aiNombre,
                         genero: aiGenero,
-                        imagen: imagenEnviada
+                        imagen: imagenEnviada,
+                        memoriaGlobal: memoriaChats,
+                        tituloChat: sesionActual ? sesionActual.title : ''
                     });
                     if (resultadoGemini && resultadoGemini.texto) {
                         agregarMensajeIA(resultadoGemini.texto, 'bot');
@@ -4526,12 +5309,12 @@ accent-color:#00ff88;
                     }
                 }
 
-                // 4) Respaldo offline si el dispositivo está sin internet
+                // 4) Respaldo conversacional offline si el dispositivo está sin internet
+                const libre = window.OsitoIA && window.OsitoIA.respuestaLibre ? window.OsitoIA.respuestaLibre(limpia) : null;
                 const respaldoOffline = (window.OsitoConocimiento && typeof window.OsitoConocimiento.buscarEnBaseConocimiento === 'function')
                     ? window.OsitoConocimiento.buscarEnBaseConocimiento(limpia, { modoOffline: true })
                     : null;
-                const libre = window.OsitoIA && window.OsitoIA.respuestaLibre ? window.OsitoIA.respuestaLibre(limpia) : null;
-                setTimeout(() => agregarMensajeIA(respaldoOffline || libre || mensajeNoDisponibleLocal(), 'bot'), 40);
+                setTimeout(() => agregarMensajeIA(libre || respaldoOffline || mensajeNoDisponibleLocal(), 'bot'), 40);
             }
 
             aiGenderBtns.forEach(btn => {

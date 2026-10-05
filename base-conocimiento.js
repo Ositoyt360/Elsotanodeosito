@@ -368,20 +368,22 @@
         directosHorario: 'Los directos volverán, pero todavía no tienen horario fijo.'
     };
 
-    // Mensajes para respuestas no encontradas en la base (respaldo conversacional amigable, nunca da error)
+    // Mensajes conversacionales variados para continuar la charla (nunca repite avisos de privacidad en preguntas normales)
     const MENSAJES_NO_DISPONIBLE = [
-        '¡Qué buena pregunta! Sobre la vida privada de Osito solo comparto los datos oficiales del canal, pero si quieres podemos platicar de Minecraft, Roblox, Craftsman, tus tareas o cualquier curiosidad. 😊',
-        'De ese detalle específico del canal todavía no hay un registro oficial, ¡pero pregúntame lo que quieras sobre los videos de Osito, videojuegos, matemáticas, historias o chistes! 🎮',
-        'Todavía no tengo ese dato exacto anotado en el Sótano, pero estoy lista para ayudarte con cualquier duda de juegos, tareas escolares, curiosidades o platicar un rato. 😄'
+        '¡Claro que sí! Dime, ¿de qué te gustaría que platiquemos ahora? Podemos hablar de videojuegos, del canal OsitoGamer360YT, de alguna tarea o de lo que tú quieras. 😊',
+        '¡Va, me parece genial! Cuéntame más o dime qué tienes en mente: ¿jugamos a las adivinanzas, hablamos de Minecraft y Roblox, o resolvemos alguna duda? 🎮',
+        '¡Te escucho! Sígueme contando o pregúntame lo que quieras sobre el canal, videojuegos, curiosidades, matemáticas o cualquier tema que te guste. 😄',
+        '¡Perfecto! Aquí sigo contigo para platicar. ¿Qué te parece si hablamos de tu juego favorito o me cuentas qué estás haciendo hoy? ✨',
+        '¡De una! Cuéntame qué más quieres saber o de qué tema tienes ganas de conversar ahorita. 🤖💬'
     ];
 
-    // Filtro estricto contra preguntas personales o privadas
+    // Filtro estricto: SOLO se activa cuando preguntan datos privados reales de la vida personal de Osito
     function esPreguntaPersonalPrivada(textoNorm) {
         if (!textoNorm) return false;
-        return /(ubicacion exacta|direccion exacta|donde vive|donde vivis|donde vives|en que (ciudad|municipio|departamento|colonia|calle|casa|barrio) (vive|vives|esta)|cual es (tu|su) (direccion|telefono|numero|celular|whatsapp|correo personal|apellido|nombre real|documento|dui)|dame (tu|su) (numero|telefono|whatsapp|celular|direccion)|apellido (completo|de osito|real)|como se llama osito en la vida real|nombre real de osito|en que (colegio|instituto|escuela|universidad) (estudia|estudias)|donde (estudia|estudias)|como se llaman (tus|sus) (padres|papas|hermanos|familiares)|tienes (novia|novio|pareja)|quien es (tu|su) (novia|novio|pareja|mama|papa)|mostrar.*ubicacion|mandame.*ubicacion)/.test(textoNorm);
+        return /\b(ubicacion exacta|direccion exacta|donde vive osito|donde vives exactamente|en que (ciudad|municipio|departamento|colonia|calle|casa|barrio) (vive|vives)|cual es (tu|su|el) (direccion|telefono|numero de telefono|celular|whatsapp|correo personal|apellido|nombre real|documento|dui)|dame (tu|su) (numero|telefono|whatsapp|celular|direccion)|apellido (completo|de osito|real)|como se llama osito en la vida real|nombre real de osito|en que (colegio|instituto|escuela|universidad) (estudia|estudias)|donde (estudia|estudias) osito|como se llaman (tus|sus) (padres|papas|hermanos|familiares)|tienes (novia|novio|pareja)|quien es (tu|su) (novia|novio|pareja|mama|papa))\b/.test(textoNorm);
     }
 
-    const RESPUESTA_PRIVACIDAD = 'No puedo responder a esta pregunta, vete a la chingada.';
+    const RESPUESTA_PRIVACIDAD = 'Por privacidad no comparto datos personales privados de Osito (como dirección exacta, teléfono, nombre real, familia o lugar de estudio), ¡pero pregúntame lo que quieras de cualquier otro tema, videojuegos o del canal y platicamos! 🛡️';
 
     // Mensajes variados cuando el invitado alcanza el límite de 5 preguntas
     const MENSAJES_LIMITE_INVITADO = [

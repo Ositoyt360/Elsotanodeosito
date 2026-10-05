@@ -37,16 +37,20 @@
 
     function isApkEnvironment() {
         var proto = window.location.protocol || '';
-        var host = window.location.hostname || '';
-        var ua = navigator.userAgent || '';
         return (
             proto === 'file:' ||
             proto === 'capacitor:' ||
             proto === 'app:' ||
-            (host === 'localhost' && /wv|Android.*Version\/[0-9]/i.test(ua)) ||
-            !!window.Capacitor ||
-            window.matchMedia('(display-mode: standalone)').matches
+            !!window.Capacitor
         );
+    }
+
+    // Limpiar estilos OTA antiguos si estamos en servidor web (http/https) para no pisar los cambios recientes del servidor
+    if (!isApkEnvironment()) {
+        try {
+            localStorage.removeItem(STORAGE_OTA_CSS_KEY);
+            document.querySelectorAll('style[id^="osito-ota-css-"]').forEach(function (el) { el.remove(); });
+        } catch (_) {}
     }
 
     function isUserBusy() {
@@ -230,9 +234,9 @@
         }, 400);
     }
 
-    // 1) Verificación directa contra el repositorio de GitHub (funciona tanto en APK como en Web)
+    // 1) Verificación directa contra el repositorio de GitHub (solo para APK empaquetado sin servidor propio)
     async function checkGithubRepoVersion() {
-        if (document.hidden) return;
+        if (document.hidden || !isApkEnvironment()) return;
         try {
             var res = await fetch(GITHUB_API_COMMITS, {
                 method: 'GET',

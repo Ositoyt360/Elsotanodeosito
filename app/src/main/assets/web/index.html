@@ -173,12 +173,21 @@
     'html body .video-card{contain:layout paint style}',
     'html body .video-card img,html body .video-thumbnail img{content-visibility:auto}',
     /* el desenfoque de fondo es lo más caro de pintar: se quita en celulares, Redmi, gama baja y mientras carga */
-    'html.mobile-lite *,html.low-end-device *,html.redmi-fluid-mode *,html.charging-fluid-mode *,html.hz-fluid-boost *,html body.no-animations *,html body.ultra-performance *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}',
+    'html.mobile-lite *,html.low-end-device *,html.redmi-fluid-mode *,html.charging-fluid-mode *,html.hz-fluid-boost *,html.hz-120 *,html.hz-90 *,html[data-screen-hz] *,html body.no-animations *,html body.ultra-performance *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}',
     /* el video de fondo en celulares / Redmi 15C / cargando usa opacity:1 + filter:none para entrar al plano directo de Hardware Composer (0% lag en GPU Mali/Adreno) */
     'html body .modo-sitio-video video.modo-bg-video{opacity:1!important;filter:none!important;mix-blend-mode:normal!important;transform:translate3d(0,0,0)!important;backface-visibility:hidden!important;will-change:transform!important;transition:none!important}',
     'html body .modo-sitio-video::after{content:"";position:absolute;inset:0;background:rgba(4,6,14,.22);pointer-events:none;z-index:1}',
     'html.charging-fluid-mode #space-canvas,html.redmi-fluid-mode #space-canvas,html.low-end-device #space-canvas,body:not(.modo-normal) #space-canvas{display:none!important}',
-    'html.charging-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(n+4),html.redmi-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(n+5){display:none!important}'
+    'html.charging-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(n+4),html.redmi-fluid-mode .modo-sitio-decoracion .modo-decor-item:nth-child(n+5){display:none!important}',
+
+    /* ---------- 6) Modo llamada: desaparece el chat, desaparece la X de salir, botón de colgar siempre visible y destacado ---------- */
+    'html body.ia-call-mode-active #ai-section .ai-chat-shell,html body #ai-section.ia-call-active .ai-chat-shell,html body #ai-section .ai-chat-shell.ia-call-hidden,html body #ai-section .ai-chat-shell[hidden]{display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;max-height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:none!important}',
+    'html body.ia-call-mode-active #ai-section .ia-close-btn,html body #ai-section.ia-call-active .ia-close-btn{display:none!important;visibility:hidden!important;pointer-events:none!important;width:0!important;height:0!important;margin:0!important;padding:0!important;opacity:0!important}',
+    'html body.ia-call-mode-active #ai-section .ia-setup{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;height:100%!important;min-height:0!important;padding:8px!important;overflow:hidden!important}',
+    'html body.ia-call-mode-active #ai-section #ia-call-view{display:flex!important;visibility:visible!important;flex:1 1 auto!important;height:100%!important;min-height:0!important;flex-direction:column!important;justify-content:space-between!important}',
+    'html body.ia-call-mode-active #ia-call-hangup-btn{display:inline-flex!important;visibility:visible!important;background:linear-gradient(135deg,#ef4444 0%,#dc2626 50%,#b91c1c 100%)!important;color:#fff!important;border:1px solid #f87171!important;min-height:48px!important;font-weight:800!important;box-shadow:0 4px 18px rgba(220,38,38,.55)!important}',
+    'html body.ia-call-mode-active #space-canvas,html body.ia-call-mode-active .ambient-glow,html body.ia-call-mode-active .promo-bg-fx{display:none!important}',
+    'html.hz-120 body,html.hz-90 body{scroll-behavior:smooth;-webkit-overflow-scrolling:touch}'
     ].join('\n');
 
     var styleEl = null;
@@ -1444,8 +1453,8 @@ accent-color:#00ff88;
                                 <span class="ia-call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
                                 <span id="ia-call-mic-label">Micrófono</span>
                             </button>
-                            <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" title="Colgar llamada y volver al chat">
-                                <span aria-hidden="true">✕</span> Colgar llamada
+                            <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" title="Colgar llamada y volver al chat" aria-label="Colgar llamada">
+                                <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Colgar llamada
                             </button>
                         </div>
                     </div>
@@ -5589,9 +5598,22 @@ accent-color:#00ff88;
                     aiSectionEl.classList.add('ia-call-active', 'ia-call-entering');
                     setTimeout(() => aiSectionEl.classList.remove('ia-call-entering'), 520);
                 }
-                if (chatShellEl) chatShellEl.hidden = true;
+
+                // Ocultar botón X de cerrar la IA mientras dure la llamada para que no se buguee
+                const closeBtns = document.querySelectorAll('.ia-close-btn');
+                closeBtns.forEach(b => b.style.setProperty('display', 'none', 'important'));
+
+                // Ocultar por completo el chat de la IA
+                if (chatShellEl) {
+                    chatShellEl.hidden = true;
+                    chatShellEl.classList.add('ia-call-hidden');
+                    chatShellEl.style.setProperty('display', 'none', 'important');
+                    chatShellEl.style.setProperty('visibility', 'hidden', 'important');
+                    chatShellEl.style.setProperty('height', '0px', 'important');
+                }
                 if (callViewEl) {
                     callViewEl.hidden = false;
+                    callViewEl.style.removeProperty('display');
                     callViewEl.classList.remove('ia-call-view-enter');
                     void callViewEl.offsetWidth;
                     callViewEl.classList.add('ia-call-view-enter');
@@ -5649,6 +5671,11 @@ accent-color:#00ff88;
                 if (aiSectionEl) {
                     aiSectionEl.classList.remove('ia-call-active', 'ia-call-entering');
                 }
+
+                // Restaurar botón X
+                const closeBtns = document.querySelectorAll('.ia-close-btn');
+                closeBtns.forEach(b => b.style.removeProperty('display'));
+
                 if (callAutoMicTimeout) {
                     clearTimeout(callAutoMicTimeout);
                     callAutoMicTimeout = null;
@@ -5678,6 +5705,10 @@ accent-color:#00ff88;
                 }
                 if (chatShellEl) {
                     chatShellEl.hidden = false;
+                    chatShellEl.classList.remove('ia-call-hidden');
+                    chatShellEl.style.removeProperty('display');
+                    chatShellEl.style.removeProperty('visibility');
+                    chatShellEl.style.removeProperty('height');
                 }
                 if (callHeaderBtn) {
                     callHeaderBtn.classList.remove('active');
@@ -5786,6 +5817,11 @@ accent-color:#00ff88;
             const panel = document.getElementById('ai-section');
             const bubble = document.getElementById('ia-bubble');
             if (!panel) return;
+            if (window.ositoEnLlamadaIA) {
+                if (typeof window.finalizarLlamadaIA === 'function') {
+                    window.finalizarLlamadaIA();
+                }
+            }
             const isNowActive = panel.classList.toggle('active');
             if (bubble) {
                 bubble.classList.toggle('open', isNowActive);

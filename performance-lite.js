@@ -131,7 +131,7 @@
     var boostTimeout = 0;
 
     function snapToStandardHz(fps) {
-        if (fps >= 130) return 144;
+        if (fps >= 135) return 144;
         if (fps >= 102) return 120;
         if (fps >= 75) return 90;
         return 60;
@@ -144,8 +144,27 @@
         root.classList.toggle('hz-90', hz === 90);
         root.classList.toggle('hz-60', hz <= 60);
         root.style.setProperty('--screen-hz', String(hz));
-        root.style.setProperty('--frame- budget-ms', (1000 / hz).toFixed(2) + 'ms');
+        root.style.setProperty('--frame-budget-ms', (1000 / hz).toFixed(2) + 'ms');
     }
+
+    // Sondeo inicial rápido para sincronizar 120Hz al instante
+    try {
+        var probeStart = performance.now();
+        var probeFrames = 0;
+        var probeCount = function (t) {
+            probeFrames++;
+            if (t - probeStart >= 180) {
+                var initialFps = (probeFrames * 1000) / (t - probeStart);
+                if (initialFps >= 80) {
+                    var detected = snapToStandardHz(initialFps);
+                    applyHzClasses(detected);
+                }
+                return;
+            }
+            rafNative(probeCount);
+        };
+        rafNative(probeCount);
+    } catch (_) {}
 
     function activateFluidBoost(durationMs) {
         if (!state.fluidBoostActive) {

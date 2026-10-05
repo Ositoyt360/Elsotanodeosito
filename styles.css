@@ -6915,8 +6915,37 @@ html body button.promo-arrow:not(:disabled):active {
 /* 3. En Modo Llamada desaparece por completo el chat de la IA y solo queda la zona de animación */
 body.ia-call-mode-active .ai-chat-shell,
 .ia-section.ia-call-active .ai-chat-shell,
-.ai-chat-shell[hidden] {
+.ai-chat-shell[hidden],
+html body.ia-call-mode-active #ai-section .ai-chat-shell,
+html body #ai-section.ia-call-active .ai-chat-shell,
+html body #ai-section .ai-chat-shell[hidden],
+html body #ai-section .ai-chat-shell.ia-call-hidden {
   display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Ocultar botón X de cerrar la IA en modo llamada para evitar que se buguee */
+body.ia-call-mode-active .ia-close-btn,
+.ia-section.ia-call-active .ia-close-btn,
+html body.ia-call-mode-active #ai-section .ia-close-btn,
+html body #ai-section.ia-call-active .ia-close-btn {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 body.ia-call-mode-active .ia-setup,
@@ -7251,15 +7280,33 @@ button.ia-call-header-btn {
   animation-delay: 0.3s;
 }
 .ia-call-hangup {
-  flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #e2ecff;
+  flex: 1 1 0;
+  min-height: 48px !important;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%) !important;
+  border: 1px solid #f87171 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.55), 0 0 12px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  letter-spacing: 0.3px !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
 }
 .ia-call-hangup:not(:disabled):hover {
-  background: rgba(255, 75, 95, 0.22);
-  border-color: rgba(255, 110, 125, 0.55);
-  color: #ffd8de;
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%) !important;
+  border-color: #fca5a5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 22px rgba(220, 38, 38, 0.7), 0 0 16px rgba(239, 68, 68, 0.5) !important;
+}
+.ia-call-hangup:active {
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.6) !important;
 }
 
 /* 5. Mejora de la animación de las respuestas del chat de IA */
@@ -8027,21 +8074,31 @@ body.ia-call-mode-active .ia-call-mascot-face.is-speaking .of-brow {
         width: 100% !important;
         flex-shrink: 0 !important;
         margin-top: auto !important;
-        padding: 4px 0 2px 0 !important;
+        padding: 8px 6px 6px 6px !important;
         position: sticky !important;
         bottom: 0 !important;
-        z-index: 10 !important;
+        z-index: 50 !important;
+        background: linear-gradient(180deg, rgba(6, 10, 20, 0.6) 0%, rgba(6, 10, 20, 0.98) 35%, #060a14 100%) !important;
+        border-top: 1px solid rgba(0, 255, 204, 0.2) !important;
+        border-radius: 0 0 16px 16px !important;
     }
     .ia-call-ctrl-btn {
         flex: 1 1 0 !important;
-        min-height: 44px !important;
-        max-width: 190px !important;
+        min-height: 48px !important;
+        max-width: none !important;
         padding: 8px 10px !important;
-        font-size: 12px !important;
+        font-size: 13px !important;
         border-radius: 12px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+    }
+    .ia-call-hangup {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%) !important;
+        border: 1px solid #f87171 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        box-shadow: 0 4px 18px rgba(220, 38, 38, 0.55), 0 0 12px rgba(239, 68, 68, 0.35) !important;
     }
 }
 

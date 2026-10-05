@@ -293,6 +293,40 @@ html body #welcome-screen #btn-ready:not([style*="display:none"]):not([style*="d
     overflow: hidden;
 }
 
+/* En Modo Llamada desaparece por completo el chat de la IA y el botón X de cerrar */
+html body.ia-call-mode-active #ai-section .ai-chat-shell,
+html body #ai-section.ia-call-active .ai-chat-shell,
+html body #ai-section .ai-chat-shell[hidden],
+html body #ai-section .ai-chat-shell.ia-call-hidden,
+body.ia-call-mode-active .ai-chat-shell,
+.ia-section.ia-call-active .ai-chat-shell {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+html body.ia-call-mode-active #ai-section .ia-close-btn,
+html body #ai-section.ia-call-active .ia-close-btn,
+body.ia-call-mode-active .ia-close-btn,
+.ia-section.ia-call-active .ia-close-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+}
+
 /* Barra superior de sesiones */
 .ai-sessions-bar {
     display: flex !important;
@@ -1162,6 +1196,35 @@ html body .ia-section.active {
         bottom: 12px !important;
         height: min(88dvh, 620px) !important;
         max-height: calc(100dvh - 75px) !important;
+    }
+
+    html body.ia-call-mode-active #ai-section .ia-close-btn,
+    html body #ai-section.ia-call-active .ia-close-btn {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+    }
+
+    html body.ia-call-mode-active #ai-section .ai-chat-shell,
+    html body #ai-section.ia-call-active .ai-chat-shell,
+    html body #ai-section .ai-chat-shell[hidden],
+    html body #ai-section .ai-chat-shell.ia-call-hidden {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
     }
 
     html body #ai-section.ia-section.active {

@@ -5,9 +5,11 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -46,6 +48,30 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Configurar tasa de refresco ultra fluida a 120Hz / máxima del panel
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.attributes = window.attributes.apply {
+                    preferredRefreshRate = 120f
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                @Suppress("DEPRECATION")
+                val display = windowManager.defaultDisplay
+                val modes = display.supportedModes
+                val highRateMode = modes.filter { it.refreshRate >= 89f }.maxByOrNull { it.refreshRate }
+                if (highRateMode != null) {
+                    val params = window.attributes
+                    params.preferredDisplayModeId = highRateMode.modeId
+                    window.attributes = params
+                }
+            }
+        } catch (_: Exception) {}
+
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+        )
 
         setContent {
             ElSotanoDeOsitoTheme {

@@ -219,3 +219,58 @@ html body #welcome-screen #btn-ready:focus-visible {
         padding: 13px 22px !important;
     }
 }
+
+/* V62 — Acceso inicial: los dos métodos forman un único selector.
+   El botón de continuar solo aparece cuando el flujo lo habilita. */
+html body #welcome-screen .landing-buttons {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: min(430px, 90vw) !important;
+    padding: 7px !important;
+    margin: 18px auto 0 !important;
+    box-sizing: border-box !important;
+    border: 1px solid rgba(0, 242, 254, .28) !important;
+    border-radius: 18px !important;
+    background: linear-gradient(135deg, rgba(8, 24, 31, .88), rgba(13, 20, 29, .92)) !important;
+    box-shadow: 0 12px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+html body #welcome-screen .landing-buttons .landing-btn {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    padding: 12px 16px !important;
+    border: 1px solid transparent !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #eafcff !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    letter-spacing: .8px !important;
+    text-transform: uppercase !important;
+}
+html body #welcome-screen .landing-buttons .landing-btn:hover {
+    transform: translateY(-1px) !important;
+    border-color: rgba(0,242,254,.34) !important;
+    background: rgba(0,242,254,.10) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+html body #welcome-screen .landing-buttons .landing-btn:active {
+    transform: scale(.985) !important;
+}
+/* Evita que el CSS fuerce a mostrarse aunque el HTML lo tenga oculto. */
+html body #welcome-screen #btn-ready[style*="display:none"],
+html body #welcome-screen #btn-ready[style*="display: none"] {
+    display: none !important;
+}
+html body #welcome-screen #btn-ready:not([style*="display:none"]):not([style*="display: none"]) {
+    display: inline-flex !important;
+}
+@media (max-width: 480px) {
+    html body #welcome-screen .landing-buttons { width: min(360px, 92vw) !important; }
+    html body #welcome-screen .landing-buttons .landing-btn { padding: 11px 8px !important; font-size: 10px !important; }
+}

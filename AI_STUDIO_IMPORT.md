@@ -27,4 +27,4 @@ No se incluye ninguna clave real en este paquete.
 
 ## Configuración de Gemini
 
-La IA del sitio usa `@google/genai` en el servidor. Coloca tu clave como secreto/variable `GEMINI_API_KEY`; no la pegues en `index.html`, `call-mode-engine.js` ni en `localStorage`. El chat de texto, análisis de imágenes y el modo llamada pasan por `/api/ia`.
+La IA del sitio llama a la API REST de Gemini desde el servidor (sin SDK, así no depende de ninguna versión de paquete). Coloca tu clave como secreto/variable `GEMINI_API_KEY`; no la pegues en `index.html`, `call-mode-engine.js` ni en `localStorage`. El chat de texto, análisis de imágenes y el modo llamada pasan por `/api/ia`.

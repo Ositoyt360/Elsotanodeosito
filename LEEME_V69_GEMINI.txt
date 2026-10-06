@@ -1,0 +1,24 @@
+V69 — IA con Gemini corregida (texto, imágenes y modo voz)
+
+CAUSA DEL FALLO
+- El servidor pedía a Gemini un máximo de 700 tokens de salida. Los modelos Gemini 3.x "piensan"
+  antes de responder y ese razonamiento cuenta dentro del límite, así que la respuesta llegaba VACÍA.
+  Al quedar vacía, el servidor probaba todos los modelos y terminaba usando la base local.
+- Además dependía del paquete @google/genai (versión fijada "^2.27.0"), que puede fallar al instalar.
+
+QUÉ SE CAMBIÓ (solo server.js, package.json y notas)
+1) Gemini se llama por REST directo (fetch). Se quitó @google/genai de package.json.
+2) thinkingLevel "low" y maxOutputTokens 1536 (texto) / 2048 (imagen). Si un modelo no acepta
+   thinkingConfig, se reintenta sin él.
+3) Se ignoran las partes de "pensamiento" y solo se devuelve el texto de la respuesta.
+4) Modelos (verificados en la documentación oficial): gemini-3.8-flash, 3.7, 3.6, 3.5, 3.5-flash-lite
+   y 3.1-flash-lite. Se quitó gemini-2.5-flash (Google lo limita a quien ya lo usaba).
+5) Si la llave es inválida se corta en seguida; si la respuesta es bloqueada o vacía se registra el motivo.
+6) Diagnóstico: abre  /api/ia/estado?probar=1  y muestra si Gemini responde de verdad o el error exacto.
+7) Texto, imágenes (botón 📷) y modo llamada por voz usan el mismo /api/ia.
+
+QUÉ NECESITAS
+- Variable/secreto del servidor GEMINI_API_KEY (opcional GEMINI_MODEL para cambiar el principal).
+- Node 20 o superior. Después de subir los archivos: npm install y reiniciar el servidor.
+- Si el sitio se sirve como archivos estáticos (sin server.js), la IA no puede funcionar: añade en
+  index.html e ia.html <meta name="osito-ia-url" content="https://TU-SERVIDOR"> apuntando al servidor.

@@ -1068,31 +1068,26 @@ if (wss) {
 
 
 // ============================================================
-// IA CON GEMINI API (@google/genai) + BASE DE CONOCIMIENTO OFICIAL
+// IA CON GEMINI API (REST, sin SDK) + BASE DE CONOCIMIENTO OFICIAL
 // La llave vive en process.env.GEMINI_API_KEY en el servidor.
 // El navegador conversa mediante /api/ia (y /api/gemini/generate).
 // ============================================================
-const { GoogleGenAI } = require('@google/genai');
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL_PRINCIPAL = 'gemini-3.8-flash';
+// Llamamos a la API REST de Gemini directamente con fetch (Node >= 18):
+// no depende de ninguna versión del SDK, así que no puede romperse al instalar.
+const GEMINI_API_KEY = String(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
+const GEMINI_API_BASE = String(process.env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com/v1beta/models').replace(/\/+$/, '');
+// Modelos vigentes (verificado en la documentación oficial, oct 2026).
+// Se prueban en orden; si uno falla se pasa al siguiente.
 const MODELOS_GEMINI_ORDEN = [
   'gemini-3.8-flash',
   'gemini-3.7-flash',
   'gemini-3.6-flash',
   'gemini-3.5-flash',
   'gemini-3.5-flash-lite',
-  'gemini-2.5-flash'
+  'gemini-3.1-flash-lite'
 ];
-
-const ai = GEMINI_API_KEY ? new GoogleGenAI({
-  apiKey: GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
-  }
-}) : null;
+const GEMINI_MODEL_PRINCIPAL = process.env.GEMINI_MODEL || MODELOS_GEMINI_ORDEN[0];
+const ai = GEMINI_API_KEY ? true : null; // compatibilidad con el resto del archivo
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const MODELO_IA_RESPALDO = 'claude-haiku-4-5-20251001';
@@ -1283,6 +1278,60 @@ function construirContentsGemini(historial, pregunta, imagenInfo) {
   });
 }
 
+
+function extraerTextoGemini(data) {
+  const cand = data && Array.isArray(data.candidates) ? data.candidates[0] : null;
+  const partes = cand && cand.content && Array.isArray(cand.content.parts) ? cand.content.parts : [];
+  // Ignora las partes de "pensamiento" y quédate solo con el texto de la respuesta.
+  const texto = partes.filter((p) => p && typeof p.text === 'string' && !p.thought).map((p) => p.text).join(' ').trim();
+  return { texto, finishReason: cand && cand.finishReason || '', bloqueo: data && data.promptFeedback && data.promptFeedback.blockReason || '' };
+}
+
+async function llamarGemini(modelo, contents, sistema, conImagen) {
+  const url = `${GEMINI_API_BASE}/${encodeURIComponent(modelo)}:generateContent`;
+  const generationConfig = {
+    temperature: 0.72,
+    // El razonamiento interno cuenta dentro de este límite. Con 700 la respuesta
+    // salía vacía; por eso se sube y además se baja el nivel de razonamiento.
+    maxOutputTokens: conImagen ? 2048 : 1536,
+    thinkingConfig: { thinkingLevel: 'low' }
+  };
+  const armar = (cfg) => JSON.stringify({
+    systemInstruction: { parts: [{ text: sistema }] },
+    contents,
+    generationConfig: cfg
+  });
+  const ejecutar = async (cuerpo) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), conImagen ? 30000 : 20000);
+    try {
+      return await fetch(url, {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+        body: cuerpo
+      });
+    } finally { clearTimeout(t); }
+  };
+
+  let resp = await ejecutar(armar(generationConfig));
+  // Si el modelo no acepta thinkingConfig, reintenta sin él.
+  if (resp.status === 400) {
+    const detalle = await resp.clone().text().catch(() => '');
+    if (/thinking/i.test(detalle)) {
+      const { thinkingConfig, ...sinPensar } = generationConfig;
+      resp = await ejecutar(armar(sinPensar));
+    }
+  }
+  if (!resp.ok) {
+    const detalle = await resp.text().catch(() => '');
+    const err = new Error(detalle.slice(0, 300) || ('HTTP ' + resp.status));
+    err.status = resp.status;
+    throw err;
+  }
+  return extraerTextoGemini(await resp.json());
+}
+
 function textoPlanoIA(texto) {
   return String(texto || '')
     .replace(/```[\s\S]*?```/g, ' ')
@@ -1293,18 +1342,28 @@ function textoPlanoIA(texto) {
     .slice(0, 1400);
 }
 
-app.get('/api/ia/estado', (req, res) => {
+app.get('/api/ia/estado', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const tieneGemini = Boolean(GEMINI_API_KEY && ai);
+  const tieneGemini = Boolean(GEMINI_API_KEY);
   const tieneClaude = Boolean(ANTHROPIC_API_KEY);
-  res.json({
+  const estado = {
     activa: tieneGemini || tieneClaude,
     configurada: tieneGemini || tieneClaude,
     proveedor: tieneGemini ? 'gemini' : (tieneClaude ? 'anthropic' : 'local'),
     modelo: tieneGemini ? GEMINI_MODEL_PRINCIPAL : (tieneClaude ? ANTHROPIC_MODEL : null),
     endpoint: '/api/ia',
     ultimoError: iaUltimoError
-  });
+  };
+  // Diagnóstico real: /api/ia/estado?probar=1 hace una llamada mínima a Gemini.
+  if (req.query && req.query.probar && tieneGemini) {
+    try {
+      const r = await llamarGemini(GEMINI_MODEL_PRINCIPAL, [{ role: 'user', parts: [{ text: 'Responde solo: ok' }] }], 'Responde en una palabra.', false);
+      estado.prueba = { ok: Boolean(r.texto), respuesta: r.texto.slice(0, 40), finishReason: r.finishReason };
+    } catch (err) {
+      estado.prueba = { ok: false, status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 200) };
+    }
+  }
+  res.json(estado);
 });
 
 function calcularOperacionIAExacta(texto) {
@@ -1398,38 +1457,31 @@ async function manejarConsultaIA(req, res) {
     : instruccionBase;
   const sistemaSeguro = textoSeguroIA(sistema);
 
-  // 1) Intentar primero con Google Gemini API (@google/genai)
-  if (ai && GEMINI_API_KEY) {
+  // 1) Google Gemini (REST). Texto, imágenes y modo voz usan este mismo camino.
+  if (GEMINI_API_KEY) {
     const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
-    const ordenModelos = imagenInfo
-      ? ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash']
-      : MODELOS_GEMINI_ORDEN;
+    const ordenModelos = [GEMINI_MODEL_PRINCIPAL, ...MODELOS_GEMINI_ORDEN.filter((m) => m !== GEMINI_MODEL_PRINCIPAL)];
     let ultimoErrGemini = null;
+    let ultimoMotivoVacio = '';
 
     for (const modeloGemini of ordenModelos) {
       try {
-        const response = await ai.models.generateContent({
-          model: modeloGemini,
-          contents: contentsGemini,
-          config: {
-            systemInstruction: sistemaSeguro,
-            temperature: 0.72,
-            maxOutputTokens: imagenInfo ? 800 : 700
-          }
-        });
-        const rawText = response.text;
-        const texto = textoPlanoIA(rawText);
+        const r = await llamarGemini(modeloGemini, contentsGemini, sistemaSeguro, Boolean(imagenInfo));
+        const texto = textoPlanoIA(r.texto);
         if (texto) {
           iaUltimoError = null;
           const seguro = textoSeguroIA(texto);
           if (claveCache) guardarCacheIA(claveCache, seguro);
           return res.json({ ok: true, texto: seguro, modelo: modeloGemini, proveedor: 'gemini' });
         }
+        ultimoMotivoVacio = r.bloqueo || r.finishReason || 'respuesta_vacia';
+        console.warn(`[IA Gemini] ${modeloGemini} devolvió respuesta vacía (${ultimoMotivoVacio}).`);
+        if (r.bloqueo) break; // bloqueada por seguridad: otro modelo dará lo mismo
       } catch (err) {
         ultimoErrGemini = err;
-        console.warn(`[IA Gemini] Falló intento con ${modeloGemini}:`, err?.status || '', err?.message?.slice(0, 180));
-        if (err?.status === 403 || /API_KEY_INVALID/i.test(String(err?.message || ''))) {
-          break;
+        console.warn(`[IA Gemini] Falló ${modeloGemini}:`, err?.status || err?.name || '', String(err?.message || '').slice(0, 220));
+        if (err?.status === 401 || err?.status === 403 || /API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(String(err?.message || ''))) {
+          break; // la llave no sirve: no tiene caso probar más modelos
         }
       }
     }
@@ -1441,6 +1493,8 @@ async function manejarConsultaIA(req, res) {
         mensaje: String(ultimoErrGemini?.message || '').slice(0, 200),
         cuando: new Date().toISOString()
       };
+    } else if (ultimoMotivoVacio) {
+      iaUltimoError = { proveedor: 'gemini', status: 200, mensaje: 'Respuesta vacía: ' + ultimoMotivoVacio, cuando: new Date().toISOString() };
     }
   }
 
@@ -1493,7 +1547,7 @@ async function manejarConsultaIA(req, res) {
 
   return res.json({
     ok: true,
-    texto: 'No pude conectar con Gemini en este momento. Revisa que el servidor tenga configurada GEMINI_API_KEY e inténtalo de nuevo.',
+    texto: GEMINI_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta GEMINI_API_KEY).',
     proveedor: 'error-conexion'
   });
 }
@@ -1804,8 +1858,9 @@ app.get('/descargar-apk', (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor iniciado en http://0.0.0.0:${PORT}`);
-  console.log(ANTHROPIC_API_KEY
-    ? `[IA] Claude activo (modelo ${ANTHROPIC_MODEL}).`
-    : '[IA] Falta ANTHROPIC_API_KEY: la IA responderá solo con su base de conocimiento local.');
+  console.log(GEMINI_API_KEY
+    ? `[IA] Gemini activo (modelo ${GEMINI_MODEL_PRINCIPAL}).`
+    : '[IA] Falta GEMINI_API_KEY: la IA responderá solo con su base de conocimiento local.');
+  if (ANTHROPIC_API_KEY) console.log(`[IA] Respaldo Anthropic disponible (${ANTHROPIC_MODEL}).`);
   consultarGitHubUltimoCommit(true).catch(() => {});
 });

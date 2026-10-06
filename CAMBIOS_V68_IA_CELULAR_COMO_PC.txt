@@ -1,0 +1,7 @@
+V68 - IA en celular igual que en PC
+- ia.html: boton "Regresar al Sotano" arriba, cubo 3D de la mascota al centro, debajo el mismo panel del PC.
+- Ya no pide Osito/Osita: el genero y el nombre vienen de la cuenta (saludo con tu nombre, boton "Cambiar nombre").
+- Nuevo chat-ia-core.js: controlador del chat compartido por index.html y ia.html (index.html pesa ~90 KB menos). En celular ahora funcionan envio, historial, voz y modo llamada.
+- Nuevo ia-page.css (diseno movil), firebase-compat-init.js (cuenta en ia.html). Se arreglo un <style> mal cerrado.
+- sw.js: cache v68. Recarga fuerte / borra cache del sitio.
+- Nota: app/src/main/assets/web no se sincronizo (ya estaba desactualizada).

@@ -713,3 +713,199 @@
 .ia-call-actions .ia-call-hangup:active {
     transform: translateY(0);
 }
+
+<style></style>
+.call-avatar .call-avatar-body{border-radius:50%!important;overflow:hidden!important}.call-mascot-speaking{animation:callMascotSpeakBounce .38s ease-in-out infinite alternate!important}.call-mascot-speaking .of-mouth{animation:callMascotMouth .14s steps(2,end) infinite alternate}@keyframes callMascotSpeakBounce{from{transform:translateY(0) scale(1)}to{transform:translateY(-7px) scale(1.025)}}@keyframes callMascotMouth{from{transform:scaleY(.7) scaleX(.9)}to{transform:scaleY(1.35) scaleX(1.12)}}
+
+/* V65: la mascota original es el avatar de llamada; el círculo solo actúa como recorte. */
+.call-avatar-body{background:transparent!important;border:0!important;box-shadow:none!important;overflow:hidden!important;padding:0!important}
+.call-avatar-body > .osito-face{width:100%!important;height:100%!important;--fs:100%!important;transform:scale(1)!important;display:grid!important;place-items:center!important}
+.call-avatar-body > .osito-face .of-card{width:100%!important;height:100%!important}
+.call-avatar-body > .osito-face .of-blob{border-radius:50%!important}
+.call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face{animation:callMascotTalkBounce .38s ease-in-out infinite alternate!important}
+.call-avatar[data-state="LISTENING"] .call-avatar-body > .osito-face{animation:callMascotListen 1.8s ease-in-out infinite!important}
+@keyframes callMascotTalkBounce{0%{transform:scale(1)!important}100%{transform:translateY(-4px) scale(1.025)!important}}
+@keyframes callMascotListen{0%,100%{transform:scale(1)}50%{transform:translateY(-2px) scale(1.015)}}
+@media (min-width:1025px){html body .ia-floating-container .ia-section.active{width:min(390px,calc(100vw - 36px))!important;max-width:390px!important}.ia-floating-container .ai-chat-shell{max-width:100%!important}}
+
+/* V66 — avatar de llamada realmente 2D, circular y quieto cuando no habla */
+.call-avatar,
+.call-avatar-body,
+.call-avatar-body > .osito-face,
+.call-avatar-body > .osito-face .of-card,
+.call-avatar-body > .osito-face .of-blob {
+  transform-style: flat !important;
+  perspective: none !important;
+}
+.call-avatar-body > .osito-face {
+  transform: none !important;
+  rotate: none !important;
+  scale: 1 !important;
+  translate: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+}
+.call-avatar-body > .osito-face .of-card {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  transform: none !important;
+  rotate: none !important;
+  scale: 1 !important;
+  translate: none !important;
+  box-shadow: inset 0 0 0.05em rgba(255,255,255,.38) !important;
+}
+.call-avatar-body > .osito-face .of-blob { border-radius: 50% !important; }
+.call-avatar-body > .osito-face .of-rig { transform:none !important; animation:none !important; }
+.call-avatar-body > .osito-face .of-card::before,
+.call-avatar-body > .osito-face .of-card::after { transform:none !important; }
+.call-avatar-glow { animation:none !important; }
+.call-avatar[data-state="LISTENING"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="THINKING"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="IDLE"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="HAPPY"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="SAD"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="SURPRISED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="CONFUSED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="LAUGHING"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="EXCITED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="TIRED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="SLEEPING"] .call-avatar-body > .osito-face {
+  animation:none !important;
+  transform:none !important;
+}
+.call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face {
+  animation:callMascotTalkBounceV66 .42s ease-in-out infinite alternate !important;
+}
+.call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face .of-mouth {
+  animation:callMascotMouthV66 .13s steps(2,end) infinite alternate !important;
+}
+@keyframes callMascotTalkBounceV66 {
+  from { transform:translateY(0) scale(1) !important; }
+  to { transform:translateY(-5px) scale(1.018) !important; }
+}
+@keyframes callMascotMouthV66 {
+  from { transform:scaleY(.72) scaleX(.92) !important; }
+  to { transform:scaleY(1.3) scaleX(1.1) !important; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face { animation:none !important; }
+  .call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face .of-mouth { animation:none !important; }
+}
+
+
+/* ================= V67 — AVATAR DE LLAMADA 2D CIRCULAR REAL =================
+   La mascota original se conserva, pero en llamada se muestra como una cara 2D
+   circular. Nada de cubo/3D y el círculo permanece quieto salvo al hablar. */
+.call-avatar,
+.call-avatar-body,
+.call-avatar-body > .osito-face,
+.call-avatar-body > .osito-face .of-card,
+.call-avatar-body > .osito-face .of-blob,
+.call-avatar-body > .osito-face .of-blob::before {
+  border-radius: 50% !important;
+}
+.call-avatar {
+  transform: none !important;
+  animation: none !important;
+  rotate: none !important;
+  scale: 1 !important;
+  perspective: none !important;
+  transform-style: flat !important;
+}
+.call-avatar-glow {
+  animation: none !important;
+  opacity: .72 !important;
+}
+.call-avatar-body {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  transform: none !important;
+  transform-style: flat !important;
+}
+.call-avatar-body > .osito-face {
+  width: 100% !important;
+  height: 100% !important;
+  --fs: 100% !important;
+  display: block !important;
+  perspective: none !important;
+  transform: none !important;
+  transform-style: flat !important;
+  animation: none !important;
+  overflow: hidden !important;
+}
+.call-avatar-body > .osito-face .of-rig,
+.call-avatar-body > .osito-face .of-card,
+.call-avatar-body > .osito-face .of-blob,
+.call-avatar-body > .osito-face .of-blob::before,
+.call-avatar-body > .osito-face .of-eye,
+.call-avatar-body > .osito-face .of-mouth,
+.call-avatar-body > .osito-face .of-happy {
+  transform-style: flat !important;
+}
+.call-avatar-body > .osito-face .of-rig {
+  transform: none !important;
+  rotate: none !important;
+  translate: none !important;
+  animation: none !important;
+}
+.call-avatar-body > .osito-face .of-card {
+  overflow: hidden !important;
+  box-shadow: inset 0 0 .05em rgba(255,255,255,.28) !important;
+  transform: none !important;
+  rotate: none !important;
+  translate: none !important;
+}
+.call-avatar-body > .osito-face .of-blob {
+  inset: 0 !important;
+  overflow: hidden !important;
+  background: none !important;
+}
+.call-avatar-body > .osito-face .of-blob::before {
+  inset: -12% !important;
+  animation: none !important;
+}
+/* Expresiones siguen cambiando, pero el círculo no se mueve. */
+.call-avatar[data-state="IDLE"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="LISTENING"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="THINKING"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="HAPPY"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="SAD"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="SURPRISED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="CONFUSED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="LAUGHING"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="EXCITED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="TIRED"] .call-avatar-body > .osito-face,
+.call-avatar[data-state="SLEEPING"] .call-avatar-body > .osito-face {
+  animation: none !important;
+}
+/* ÚNICA animación del círculo: mientras Osito habla. */
+.call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face {
+  animation: ositoCall2DSpeak .42s ease-in-out infinite alternate !important;
+  will-change: transform;
+}
+.call-avatar[data-state="SPEAKING"] .call-avatar-body > .osito-face .of-mouth {
+  animation: ositoCall2DMouth .16s ease-in-out infinite alternate !important;
+  will-change: transform;
+}
+@keyframes ositoCall2DSpeak {
+  from { transform: scale(1) translateY(0); }
+  to   { transform: scale(1.035) translateY(-5px); }
+}
+@keyframes ositoCall2DMouth {
+  from { transform: scale(.92,.65); }
+  to   { transform: scale(1.16,1.28); }
+}
+
+/* En pantallas táctiles, el avatar no debe generar zoom/selección accidental. */
+@media (hover:none), (pointer:coarse) {
+  .call-avatar { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+}

@@ -215,7 +215,7 @@
 
     // --- Loop de Procesamiento Óptico en Vivo (Rastreo de Usuario) ---
     var ultimoProcesamiento = 0;
-    var contadorMovimientoFuerte = 0;
+    var contadorMovimientoFuerte = 0; var ultimoAvisoMovimientoIA=0;
 
     function procesarFrameOptico() {
         if (!streamCamara || !streamCamara.active || !videoHeadless || videoHeadless.readyState < 2) {
@@ -285,6 +285,8 @@
                 contadorMovimientoFuerte++;
                 if (contadorMovimientoFuerte === 4) {
                     reaccionarCubo('saludo_detectado');
+                    var ahoraAviso=Date.now();
+                    if(window.ositoEnLlamadaIA&&ahoraAviso-ultimoAvisoMovimientoIA>12000&&typeof window.hablarIA==='function'){ultimoAvisoMovimientoIA=ahoraAviso;window.hablarIA('¡Ey! Vi que te moviste. ¿Qué estás haciendo?');}
                 }
             } else {
                 contadorMovimientoFuerte = Math.max(0, contadorMovimientoFuerte - 1);

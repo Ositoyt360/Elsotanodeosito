@@ -493,6 +493,8 @@
         }
         m = /raiz cuadrada de (\d+(?:[.,]\d+)?)/.exec(t);
         if (m) return 'La raíz cuadrada de ' + m[1] + ' es ' + fmtNum(Math.sqrt(parseFloat(m[1].replace(',', '.')))) + '. 🧮';
+        var directo=/^(-?\d+(?:[.,]\d+)?)\s*([+\-*/x×÷])\s*(-?\d+(?:[.,]\d+)?)$/.exec(t);
+        if(directo){var a=parseFloat(directo[1].replace(',','.')),b=parseFloat(directo[3].replace(',','.')),op=directo[2],rr=op==='+'?a+b:op==='-'?a-b:(op==='*'||op==='x'||op==='×')?a*b:(b===0?null:a/b);if(rr!==null&&isFinite(rr))return directo[1]+' '+op+' '+directo[3]+' = '+fmtNum(rr)+'. 🧮';}
         var e = ' ' + t + ' ';
         e = e.replace(/\bcuanto (es|son|da|dan|seria|sera)\b/g, ' ')
              .replace(/\bcual es el resultado de\b/g, ' ')

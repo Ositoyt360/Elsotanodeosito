@@ -10,14 +10,18 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v66-auto';
-const OTA_CACHE_NAME = 'osito-ota-github-v66';
+const CACHE_NAME = 'osito-pwa-v68-auto';
+const OTA_CACHE_NAME = 'osito-ota-github-v68';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
 
 const CORE_ASSETS = [
   './',
   './index.html',
   './perfil.html',
+  './ia.html',
+  './ia-page.css',
+  './chat-ia-core.js',
+  './firebase-compat-init.js',
   './moderador.html',
   './manifest.json',
   './styles.css',

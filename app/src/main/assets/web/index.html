@@ -800,7 +800,9 @@ accent-color:#00ff88;
 }
 </style>
 
-</head>
+<style>
+.maintenance-overlay{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 35%,rgba(16,31,45,.98),rgba(3,7,13,.99));backdrop-filter:blur(8px)}.maintenance-overlay[hidden]{display:none!important}.maintenance-card{width:min(560px,92vw);text-align:center;padding:34px 24px;border:1px solid rgba(0,242,254,.3);border-radius:28px;background:rgba(9,14,25,.94);box-shadow:0 20px 70px rgba(0,0,0,.55)}.maintenance-card h2{margin:18px 0 8px;font-size:clamp(1.35rem,4vw,2rem)}.maintenance-card p{margin:0;color:#b8c7d9}.maintenance-mascot{display:grid;place-items:center}.maintenance-mascot .osito-face{width:110px;height:110px;transform:none!important;animation:v62-hop 2.2s ease-in-out infinite}@media(max-width:1024px){html,body{max-width:100%;overflow-x:hidden}.ia-floating-container{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}.ia-toggle-bubble{width:64px;height:64px}button,input,textarea,select{font-size:max(16px,1em)}}@media(max-width:700px){.ia-toggle-bubble{width:60px;height:60px}.maintenance-card{padding:28px 18px;border-radius:22px}.maintenance-mascot .osito-face{width:92px;height:92px}}
+</style></head>
 <body>
     <canvas id="space-canvas"></canvas>
     <div class="ambient-glow" id="glow-1"></div>
@@ -5861,23 +5863,26 @@ accent-color:#00ff88;
         })();
 
         function toggleIAPanel() {
-            const panel = document.getElementById('ai-section');
-            const bubble = document.getElementById('ia-bubble');
+            const esMovilTablet = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
+            if (esMovilTablet && !window.ositoEnIAPage) { window.location.href = 'ia.html'; return; }
+            const panel = document.getElementById('ai-section'), bubble = document.getElementById('ia-bubble');
             if (!panel) return;
-            if (window.ositoEnLlamadaIA) {
-                if (typeof window.finalizarLlamadaIA === 'function') {
-                    window.finalizarLlamadaIA();
-                }
-            }
+            if (window.ositoEnLlamadaIA && typeof window.finalizarLlamadaIA === 'function') window.finalizarLlamadaIA();
             const isNowActive = panel.classList.toggle('active');
-            if (bubble) {
-                bubble.classList.toggle('open', isNowActive);
-                bubble.setAttribute('aria-expanded', isNowActive ? 'true' : 'false');
-            }
+            if (bubble) { bubble.classList.toggle('open', isNowActive); bubble.setAttribute('aria-expanded', isNowActive ? 'true' : 'false'); }
         }
+        (function iniciarMantenimientoGlobal(){
+            function pintar(activo){ const o=document.getElementById('maintenance-overlay'); if(!o)return; o.hidden=!activo; document.body.classList.toggle('site-maintenance-active',!!activo); }
+            window.__ositoMaintenancePaint=pintar;
+            document.addEventListener('DOMContentLoaded',function(){ try{
+                if(window.dbFirebase && window.dbFirebase.doc) window.dbFirebase.doc('siteSettings/public').onSnapshot(function(s){ pintar(!!(s.exists && s.data() && s.data().maintenance)); },function(){});
+            }catch(_){} });
+        })();
     </script>
 
-        <!-- CHAT EN VIVO REHECHO DESDE CERO -->
+        <section id="maintenance-overlay" class="maintenance-overlay" hidden aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>El Sótanocito está en mantenimiento</h2><p>Estamos haciendo unos ajustes. Vuelve a entrar en un ratito. 🛠️</p></div></section>
+
+    <!-- CHAT EN VIVO REHECHO DESDE CERO -->
     <div class="livechat-floating-container">
         <button class="livechat-toggle-bubble" id="livechat-bubble" onclick="toggleLiveChatPanel()" type="button" aria-label="Abrir Chat en Vivo" aria-expanded="false">
             <span class="livechat-bubble-icon" aria-hidden="true">💬</span>

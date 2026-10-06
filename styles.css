@@ -8324,3 +8324,140 @@ html.battery-saver-mode * {
 
 
 
+
+/* V65: panel IA de escritorio más compacto; móvil/tablet conservan ancho adaptativo. */
+@media (min-width:1025px){html body .ia-floating-container .ia-section.active{width:min(390px,calc(100vw - 36px))!important;max-width:390px!important}.ia-floating-container .ai-chat-shell{width:100%!important;max-width:100%!important}}
+.maintenance-overlay .maintenance-mascot,.maintenance-overlay .maintenance-mascot *{pointer-events:none!important}
+
+/* V66 — IA independiente: mismo chat en PC, tablet y teléfono */
+html body[data-ia-page="true"] .ia-standalone-header {
+  min-height:56px;
+  box-sizing:border-box;
+}
+html body[data-ia-page="true"] .ia-standalone-title {
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  font-size:clamp(.78rem,1.6vw,.95rem);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+html body[data-ia-page="true"] .ia-standalone-call {
+  min-height:42px;
+  padding:8px 13px;
+  border-radius:13px;
+  border:1px solid rgba(0,255,220,.45);
+  background:linear-gradient(135deg,rgba(8,24,34,.94),rgba(25,12,46,.94));
+  color:#eaffff;
+  font-weight:800;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex:0 0 auto;
+  touch-action:manipulation;
+}
+html body[data-ia-page="true"] .ia-standalone-call.active {
+  background:linear-gradient(135deg,#00c8aa,#0088ff,#8c00ff);
+  border-color:#fff;
+}
+html body[data-ia-page="true"] #ai-section {
+  width:min(700px,calc(100vw - 24px)) !important;
+  max-width:700px !important;
+  margin:12px auto !important;
+  height:calc(100% - 24px) !important;
+  max-height:calc(100% - 24px) !important;
+  border-radius:18px !important;
+  overflow:hidden !important;
+  contain:layout paint style;
+}
+html body[data-ia-page="true"] #ai-section .ia-header {
+  flex:0 0 auto !important;
+}
+html body[data-ia-page="true"] #ai-section .ia-setup {
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+html body[data-ia-page="true"] #ai-section .ai-chat-shell {
+  min-height:0 !important;
+  height:100% !important;
+  max-height:100% !important;
+  contain:layout paint style;
+}
+html body[data-ia-page="true"] #ai-section .ia-messages {
+  contain:content;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+html body[data-ia-page="true"] #ai-section .ai-suggestions,
+html body[data-ia-page="true"] #ai-section .ai-input-row {
+  flex-shrink:0;
+}
+html body[data-ia-page="true"] .ia-call-view {
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+}
+html body[data-ia-page="true"] .ia-call-view[hidden] { display:none !important; }
+html body[data-ia-page="true"].ia-call-mode-active #ai-section {
+  width:min(700px,calc(100vw - 24px)) !important;
+}
+
+/* Mantenimiento: el texto nunca se sale de la pantalla */
+.maintenance-overlay .maintenance-card {
+  box-sizing:border-box;
+  max-width:calc(100vw - 24px);
+  overflow:hidden;
+}
+.maintenance-overlay .maintenance-card h2,
+.maintenance-overlay .maintenance-card p,
+.maintenance-preview-card strong {
+  overflow-wrap:anywhere;
+  word-break:normal;
+  hyphens:auto;
+  max-width:100%;
+}
+.maintenance-overlay .maintenance-card h2 {
+  line-height:1.15;
+}
+@media (max-width:700px) {
+  html body[data-ia-page="true"] .ia-standalone-header { padding-inline:8px; }
+  html body[data-ia-page="true"] .ia-standalone-call { padding:7px 9px; min-height:40px; }
+  html body[data-ia-page="true"] .ia-standalone-call span { display:none; }
+  html body[data-ia-page="true"] #ai-section,
+  html body[data-ia-page="true"].ia-call-mode-active #ai-section {
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    height:100% !important;
+    max-height:none !important;
+    border-radius:0 !important;
+  }
+  .maintenance-overlay { padding:12px !important; }
+  .maintenance-overlay .maintenance-card { width:100%; padding:22px 15px; border-radius:20px; }
+  .maintenance-overlay .maintenance-card h2 { font-size:clamp(1.05rem,5vw,1.45rem); }
+  .maintenance-overlay .maintenance-card p { font-size:.88rem; line-height:1.45; }
+}
+
+/* V66 — suavizado adaptativo para Chrome y pantallas de alta frecuencia */
+html[data-screen-hz="120"], html[data-screen-hz="144"] {
+  scroll-behavior:auto;
+}
+html.hz-fluid-boost .promo-bg-fx,
+html.hz-fluid-boost .v62-grid3d,
+html.hz-fluid-boost .ambient-glow {
+  will-change:auto !important;
+}
+html.low-end-device .ia-section .ia-suggestions,
+html.low-end-device .ia-section .ai-chat-shell,
+html.perf-lite .ia-section .ai-chat-shell {
+  box-shadow:none !important;
+}
+html.low-end-device .ia-section .ai-suggestions,
+html.perf-lite .ia-section .ai-suggestions {
+  animation:none !important;
+}

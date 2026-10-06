@@ -307,6 +307,43 @@
 
     var cacheClienteIA = Object.create(null);
 
+    // Memoria aprendida local: guarda solo preferencias/contexto no sensible para
+    // que la mascota mantenga continuidad entre chats sin "entrenar" el modelo.
+    var MEMORIA_KEY = 'osito_ia_memoria_aprendida_v2';
+    function cargarMemoriaAprendida() {
+        try {
+            var raw = JSON.parse(localStorage.getItem(MEMORIA_KEY) || '[]');
+            return Array.isArray(raw) ? raw.filter(function (x) { return typeof x === 'string' && x.length < 180; }).slice(-12) : [];
+        } catch (_) { return []; }
+    }
+    function guardarMemoriaAprendida(lista) {
+        try { localStorage.setItem(MEMORIA_KEY, JSON.stringify(lista.slice(-12))); } catch (_) {}
+    }
+    function aprenderDeConversacion(texto) {
+        var t = String(texto || '').trim().replace(/\s+/g, ' ');
+        if (!t || t.length > 220) return;
+        // No almacenar credenciales ni datos especialmente sensibles.
+        if (/(contraseñ|password|clave|numero de telefono|número de teléfono|direccion exacta|dirección exacta|correo electronico|correo electrónico)/i.test(t)) return;
+        var candidatos = [];
+        var patrones = [
+            /\bme gusta[n]?\s+([^.!?]{2,100})/i,
+            /\bmi juego favorito es\s+([^.!?]{2,100})/i,
+            /\bmi comida favorita es\s+([^.!?]{2,100})/i,
+            /\bprefiero\s+([^.!?]{2,100})/i,
+            /\bsoy fan de\s+([^.!?]{2,100})/i,
+            /\bmi color favorito es\s+([^.!?]{2,100})/i
+        ];
+        patrones.forEach(function (rx) { var m = rx.exec(t); if (m && m[1]) candidatos.push(t.slice(0, 170)); });
+        if (!candidatos.length) return;
+        var mem = cargarMemoriaAprendida();
+        candidatos.forEach(function (item) { if (mem.indexOf(item) === -1) mem.push(item); });
+        guardarMemoriaAprendida(mem);
+    }
+
+    function obtenerMemoriaAprendidaTexto() {
+        return cargarMemoriaAprendida().join(' | ').slice(0, 900);
+    }
+
     function obtenerEndpointsIA() {
         var urls = [];
         var meta = document.querySelector('meta[name="osito-ia-url"]');
@@ -329,7 +366,9 @@
         var nombre = opts.nombre || localStorage.getItem('osito_ai_nombre') || '';
         var genero = opts.genero || localStorage.getItem('osito_ai_genero') || '';
         var historial = Array.isArray(opts.historial) ? opts.historial : historialDesdePantalla(textoPregunta);
+        aprenderDeConversacion(textoPregunta);
         var memoriaGlobal = String(opts.memoriaGlobal || '').trim();
+        var memoriaAprendida = obtenerMemoriaAprendidaTexto();
         var tituloChat = String(opts.tituloChat || '').trim();
 
         var esCharlaCorta = textoPregunta.length <= 22 || /^(vale|ok|okay|si|sii|no|claro|bueno|dale|jaja|jeje|ya|bien|genial|interesante|cuentame|dime|como|por que|porque|y luego|que mas)\b/i.test(textoPregunta);
@@ -358,6 +397,7 @@
                         genero: genero,
                         historial: historial,
                         memoriaGlobal: memoriaGlobal,
+                        memoriaAprendida: memoriaAprendida,
                         tituloChat: tituloChat
                     };
                     if (imagen) payload.imagen = imagen;
@@ -493,6 +533,8 @@
         }
         m = /raiz cuadrada de (\d+(?:[.,]\d+)?)/.exec(t);
         if (m) return 'La raíz cuadrada de ' + m[1] + ' es ' + fmtNum(Math.sqrt(parseFloat(m[1].replace(',', '.')))) + '. 🧮';
+        var directo=/^(-?\d+(?:[.,]\d+)?)\s*([+\-*/x×÷])\s*(-?\d+(?:[.,]\d+)?)$/.exec(t);
+        if(directo){var a=parseFloat(directo[1].replace(',','.')),b=parseFloat(directo[3].replace(',','.')),op=directo[2],rr=op==='+'?a+b:op==='-'?a-b:(op==='*'||op==='x'||op==='×')?a*b:(b===0?null:a/b);if(rr!==null&&isFinite(rr))return directo[1]+' '+op+' '+directo[3]+' = '+fmtNum(rr)+'. 🧮';}
         var e = ' ' + t + ' ';
         e = e.replace(/\bcuanto (es|son|da|dan|seria|sera)\b/g, ' ')
              .replace(/\bcual es el resultado de\b/g, ' ')

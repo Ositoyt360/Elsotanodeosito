@@ -61,6 +61,24 @@
         <button id="publish-announcement" class="btn" type="button">📣 Publicar en chat en vivo</button>
       </section>
 
+      <section class="panel maintenance-panel" data-creator-only>
+        <div class="panel-head responsive">
+          <div><span class="kicker">SITIO</span><h2>Modo mantenimiento</h2></div>
+          <span class="live-pill">● GLOBAL</span>
+        </div>
+        <p class="muted">Muestra una pantalla de mantenimiento a todos los visitantes. La mascota se anima en el centro y no abre la IA.</p>
+        <div class="maintenance-control-row">
+          <button id="toggle-maintenance" class="btn" type="button">🛠️ Modo mantenimiento</button>
+          <div id="maintenance-current" class="small-card">Estado: Desactivado</div>
+        </div>
+        <div class="maintenance-preview-card" aria-hidden="true">
+          <div class="maintenance-preview-mascot">
+            <span class="osito-face" data-estado="idle"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.87648 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888 6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.87648 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888 6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span>
+          </div>
+          <strong>El Sótanocito está en mantenimiento</strong>
+        </div>
+      </section>
+
       <section class="panel theme-panel" data-creator-only>
         <div class="panel-head"><div><span class="kicker">APARIENCIA DEL SITIO</span><h2>Modos especiales</h2></div><span class="live-pill">● EN VIVO</span></div>
         <p class="muted">Elige un modo para toda la página. El fondo y la decoración cambian para todos los visitantes.</p>

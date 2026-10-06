@@ -55,7 +55,7 @@
     try {
       const snap=await siteSettingsRef.get();
       const settings=snap.exists ? (snap.data()||{}) : {};
-      setThemeUI(settings.theme||'normal');
+      setThemeUI(settings.theme||'normal'); setMaintenanceUI(settings.maintenance===true);
       const titleInput=$('site-title');
       if(titleInput && settings.title) titleInput.value=settings.title;
       // Si el creador guardó una lista vacía, debe permanecer vacía: no
@@ -79,6 +79,8 @@
       throw new Error('No se pudo guardar el modo especial: '+(error.message||'error de Firestore'));
     }
   }
+  function setMaintenanceUI(active){const on=!!active,b=$('toggle-maintenance'),l=$('maintenance-current');if(b){b.textContent=on?'🛠️ Desactivar modo mantenimiento':'🛠️ Modo mantenimiento';b.classList.toggle('danger',on);}if(l)l.textContent='Estado: '+(on?'Activo':'Desactivado');}
+  async function toggleMaintenance(){const snap=await siteSettingsRef.get();const on=!!(snap.exists&&snap.data()&&snap.data().maintenance);await saveSiteSettings({maintenance:!on});setMaintenanceUI(!on);toast(!on?'Mantenimiento activado para todos.':'Mantenimiento desactivado para todos.');}
   function setThemeUI(theme){ const t=THEME_LABELS[theme]?theme:'normal'; document.querySelectorAll('[data-theme-mode]').forEach(b=>b.classList.toggle('active',b.dataset.themeMode===t)); const label=$('theme-current-label'); if(label) label.textContent='Modo actual: '+THEME_LABELS[t]; }
   async function saveTheme(theme){
     if(!THEME_LABELS[theme]) return;
@@ -267,6 +269,7 @@
   $('user-search').addEventListener('input',renderUsers);
   $('refresh-messages').addEventListener('click',()=>loadMessages().catch(e=>toast(e.message,true)));
   document.querySelectorAll('[data-theme-mode]').forEach(b=>b.addEventListener('click',()=>saveTheme(b.dataset.themeMode).catch(e=>toast(e.message,true))));
+  const maintenanceBtn=$('toggle-maintenance'); if(maintenanceBtn) maintenanceBtn.addEventListener('click',()=>toggleMaintenance().catch(e=>toast(e.message,true)));
   if($('save-title')) $('save-title').addEventListener('click',()=>saveTitle().catch(e=>toast(e.message,true)));
   if($('add-countdown')) $('add-countdown').addEventListener('click',()=>addCountdown());
   document.addEventListener('click',async e=>{

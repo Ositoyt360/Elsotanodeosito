@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>La Mascotita del Sótano — IA & Llamada</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,97 +13,210 @@
     <link rel="stylesheet" href="osito-cara3d.css">
     <link rel="stylesheet" href="osito-actividades-3d.css">
     <link rel="stylesheet" href="personalidades-animaciones-1000.css">
-    <style>
-        body {
-            background: #080a0f;
-            color: #e2f7ff;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .ia-standalone-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 18px;
-            background: rgba(12, 16, 28, 0.95);
-            border-bottom: 1px solid rgba(0, 242, 254, 0.25);
-            z-index: 100;
-        }
-        .ia-standalone-back {
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            color: #080a0f;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.35);
-            transition: transform 0.2s ease;
-        }
-        .ia-standalone-back:active {
-            transform: scale(0.96);
-        }
-        .ia-standalone-content {
-            flex: 1 1 auto;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            background: radial-gradient(circle at center, #121931 0%, #080a0f 100%);
-        }
-        #ai-section {
-            position: relative !important;
-            inset: auto !important;
-            width: 100% !important;
-            height: 100% !important;
-            max-width: none !important;
-            max-height: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            background: transparent !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-        #ai-section .ia-header {
-            display: none !important; /* Usamos ia-standalone-header */
-        }
-        #ai-section .ia-setup {
-            display: flex !important;
-            flex: 1 1 auto !important;
-            flex-direction: column !important;
-            height: 100% !important;
-        }
-        #ia-call-view {
-            display: flex !important;
-            flex: 1 1 auto !important;
-            height: 100% !important;
-        }
-    </style>
+    <link rel="stylesheet" href="ia-page.css">
 </head>
-<body class="ia-call-mode-active">
+<body class="ia-page" data-ia-page="true"><section id="maintenance-overlay" class="maintenance-overlay" hidden><div class="maintenance-card"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>El Sótanocito está en mantenimiento</h2><p>Estamos haciendo unos ajustes. Vuelve a entrar en un ratito. 🛠️</p></div></section>
+    <div class="toast-notification" id="toast"><span style="font-size: 20px;">🔔</span><div id="toast-text"></div></div>
     <header class="ia-standalone-header">
-        <button class="ia-standalone-back" type="button" onclick="window.location.href='index.html'">
+        <button class="ia-standalone-back" id="ia-standalone-back" type="button" onclick="window.regresarAlSotano && window.regresarAlSotano()">
             ← Regresar al Sótano
         </button>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="ia-status-dot"></span>
-            <span style="font-weight: 700; font-size: 0.95rem;">La Mascotita del Sótano (IA en Vivo)</span>
+        <div class="ia-m-mascot" id="ia-m-mascot">
+            <span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span>
         </div>
     </header>
 
     <div class="ia-standalone-content">
         <section class="ia-section active" id="ai-section">
+                            <div class="ia-header">
+                    <div class="ia-header-title">
+                        
+                        <div class="ia-header-text">
+                            <h3>La mascotita del Sotano</h3>
+                            <p><span class="ia-status-dot" aria-hidden="true"></span><span id="ia-face-status-text">En línea · Lista para conversar</span></p>
+                        </div>
+                        <a class="ia-live-badge" id="ai-live-indicator" href="https://www.youtube.com/@OsitoYT360/live" target="_blank" style="display: none;" title="¡Transmitiendo en directo!">
+                            <span class="live-dot"></span> 🔴 EN VIVO
+                        </a>
+                    </div>
+                    <button class="ia-call-header-btn" id="ia-call-header-btn" type="button" onclick="window.toggleLlamadaIA && window.toggleLlamadaIA()" aria-pressed="false" aria-label="Modo voz en vivo con la IA" title="Modo voz en vivo con la IA">
+                        <span class="call-wave-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span class="call-btn-mic-glyph" aria-hidden="true">🎙️</span>
+                    </button>
+                    <button class="ia-sound-btn ia-cube-hub-btn" id="ia-cube-hub-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" aria-label="Auto-entrenamiento y juegos del cubo" title="🧠 Auto-Entrenamiento y Juegos del Cubo">🧠</button>
+                    <button class="ia-sound-btn ia-cfg-header-btn" id="ia-cfg-header-btn" type="button" aria-label="Configuración de voz e IA" title="Configuración de voz e IA">⚙️</button>
+                    <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
+                </div>
             <div class="ia-setup">
-                <div class="ia-call-view" id="ia-call-view" aria-live="polite">
+                <div class="ai-chat-shell" id="ai-chat-shell">
+                        <div class="ai-sessions-bar" aria-label="Historial y sesiones de chat">
+                            <button class="ai-session-btn ai-history-toggle-btn" id="ai-history-toggle-btn" type="button" aria-expanded="false" aria-controls="ai-sessions-drawer" title="Ver historial de conversaciones">
+                                <span aria-hidden="true">🗂️</span>
+                                <span>Historial</span>
+                                <span class="ai-history-count-badge" id="ai-history-count-badge">1</span>
+                            </button>
+                            <div class="ai-current-chat-pill" id="ai-current-chat-title" title="Conversación activa">💬 Nuevo chat</div>
+                            <button class="ai-session-btn ai-new-chat-btn" id="ai-new-chat-btn" type="button" title="Iniciar una nueva conversación">
+                                <span aria-hidden="true">＋</span>
+                                <span>Nuevo chat</span>
+                            </button>
+                            <button class="ai-session-btn ai-mic-cfg-btn" id="ai-mic-config-toggle" type="button" aria-expanded="false" aria-controls="ai-mic-config-panel" title="Configuración de micrófono y voz">
+                                <span aria-hidden="true">⚙️</span>
+                            </button>
+                        </div>
+
+                        <div class="ai-mic-config-panel" id="ai-mic-config-panel" hidden>
+                            <div class="ai-mic-config-head">
+                                <span>🎙️ Configuración de Micrófono y Voz</span>
+                                <button type="button" class="ai-mic-config-close" id="ai-mic-config-close" aria-label="Cerrar ajustes de voz">✕</button>
+                            </div>
+                            <div class="ai-mic-config-grid">
+                                <label class="ai-mic-cfg-row" style="grid-column: 1 / -1; flex-direction: column; align-items: stretch; gap: 6px;">
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: #00f2fe;">🎙️ Selección de Voz de la IA (cambio disponible 1 vez por hora):</span>
+                                    <select id="ai-cfg-voice-select" style="width: 100%; font-size: 0.82rem; padding: 7px 10px;">
+                                        <option value="">(Cargando voces disponibles...)</option>
+                                    </select>
+                                </label>
+                                <label class="ai-mic-cfg-row">
+                                    <span>Evitar palabras repetidas («cómo cómo»)</span>
+                                    <input type="checkbox" id="ai-cfg-antirepeat" checked />
+                                </label>
+                                <label class="ai-mic-cfg-row">
+                                    <span>Pausa al hablar</span>
+                                    <select id="ai-cfg-silence-ms">
+                                        <option value="850">Rápido (0.8s)</option>
+                                        <option value="1050" selected>Normal (1.0s)</option>
+                                        <option value="1500">Pausado (1.5s)</option>
+                                    </select>
+                                </label>
+                                <label class="ai-mic-cfg-row">
+                                    <span>Velocidad de voz IA</span>
+                                    <select id="ai-cfg-voice-rate">
+                                        <option value="0.94">Suave (0.94x)</option>
+                                        <option value="1.0" selected>Normal (1.0x)</option>
+                                        <option value="1.12">Rápida (1.12x)</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="ai-sessions-drawer" id="ai-sessions-drawer" hidden aria-label="Conversaciones guardadas">
+                            <div class="ai-sessions-drawer-head">
+                                <div>
+                                    <strong>🗂️ Historial de conversaciones</strong>
+                                    <p>Toca cualquier chat para retomarlo con su memoria completa</p>
+                                </div>
+                                <div class="ai-sessions-drawer-actions">
+                                    <button type="button" class="ai-session-clear-all" id="ai-sessions-clear-btn" title="Borrar todas las conversaciones">🗑️ Limpiar</button>
+                                    <button type="button" class="ai-session-close-drawer" id="ai-sessions-close-btn" aria-label="Cerrar historial">✕</button>
+                                </div>
+                            </div>
+                            <div class="ai-sessions-list" id="ai-sessions-list" role="list"></div>
+                        </div>
+
+                        <div class="ai-profile-row">
+                            <div class="ai-profile-actions">
+                                <button class="btn-action ai-gender-btn" data-gender="male" type="button">
+                                    <span class="btn-icon">🐻</span> Osito
+                                </button>
+                                <button class="btn-action ai-gender-btn" data-gender="female" type="button">
+                                    <span class="btn-icon">🐻</span> Osita
+                                </button>
+                                <button class="btn-action" id="ai-voice-toggle" type="button">
+                                    <span class="btn-icon">🔊</span> Voz On
+                                </button>
+                            </div>
+                            <div class="ai-name-row">
+                                <input id="ai-name-input" class="input-gamer" autocomplete="name" maxlength="24" placeholder="Escribe tu nombre..." aria-label="Nombre para la IA">
+                                <button class="btn-action ai-name-save" id="ai-name-save" type="button"><span aria-hidden="true">&#10003;</span> Guardar mi nombre</button>
+                            </div>
+                        </div>
+                        <div class="ia-messages" id="ai-messages" role="log" aria-live="polite"> 
+                            <div class="msg bot">🤖 ¡Qué onda! Pregúntame lo que quieras o retoma cualquier tema.</div>
+                        </div>
+                        <div class="ai-suggestions" aria-label="Preguntas rápidas">
+                            <ul><li><button class="btn-action ai-suggestion" type="button" data-question="¿Qué puedo hacer aquí?"><span>💡</span> Info del sitio</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Cómo se llama tu creador?"><span>👑</span> Creador</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Vas a volver a hacer directos?"><span>🔴</span> Directos</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Cuáles son tus juegos favoritos para grabar?"><span>🎮</span> Juegos</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Cuál fue tu primer canal?"><span>📺</span> Primer canal</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="Cuéntame un chiste corto"><span>😂</span> Un chiste</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="Dime un dato curioso"><span>🤯</span> Dato curioso</button></li><li><button class="btn-action ai-suggestion" type="button" data-question="¿Me ayudas con una tarea?"><span>📚</span> Ayuda con tarea</button></li></ul>
+                            <ul aria-hidden="true"><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Qué puedo hacer aquí?"><span>💡</span> Info del sitio</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Cómo se llama tu creador?"><span>👑</span> Creador</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Vas a volver a hacer directos?"><span>🔴</span> Directos</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Cuáles son tus juegos favoritos para grabar?"><span>🎮</span> Juegos</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Cuál fue tu primer canal?"><span>📺</span> Primer canal</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="Cuéntame un chiste corto"><span>😂</span> Un chiste</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="Dime un dato curioso"><span>🤯</span> Dato curioso</button></li><li><button class="btn-action ai-suggestion" type="button" tabindex="-1" data-question="¿Me ayudas con una tarea?"><span>📚</span> Ayuda con tarea</button></li></ul>
+                        </div>
+                        <div class="ai-image-preview-bar" id="ai-image-preview-bar" hidden>
+                            <img id="ai-image-preview-thumb" src="" alt="Vista previa de imagen para la IA" />
+                            <span class="ai-image-preview-label">📸 Imagen lista para que la IA la vea</span>
+                            <button type="button" class="ai-image-preview-remove" id="ai-image-preview-remove" aria-label="Quitar imagen" title="Quitar imagen">✕</button>
+                        </div>
+                        <form class="ai-input-row ai-input" id="ai-form">
+                            <input type="file" id="ai-image-input" accept="image/*" hidden />
+                            <div class="container">
+                                <div class="ai-input-container">
+                                    <button class="ai-attach-img-btn" id="ai-image-btn" type="button" aria-label="Enviar imagen a la IA" title="Enviar imagen para que la IA la vea">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    </button>
+                                    <div class="ai-input-field">
+                                        <div class="twinkle-container">
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                            <div class="twinkle"></div>
+                                        </div>
+                                        <div class="flare"></div>
+                                        <div class="floating-label">Tu mensaje</div>
+                                        <input placeholder="Escribe cualquier pregunta..." id="ai-input" type="text" maxlength="500" autocomplete="off" aria-label="Pregunta para la IA" />
+                                        <div class="animation-container">
+                                            <div class="pulse-animation"></div>
+                                            <div class="wave-animation">
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                                <span></span>
+                                            </div>
+                                        </div>
+                                        <div class="typing-indicator">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                    <button class="ai-mic-btn" id="ai-mic-btn" type="button" aria-label="Pulsar para hablar por voz" title="Pulsar para hablar">
+                                        <span class="mic-icon">🎙️</span>
+                                        <span class="mic-pulse-ring"></span>
+                                    </button>
+                                    <button class="ai-call-inline-btn" id="ai-call-btn" type="button" onclick="window.toggleLlamadaIA && window.toggleLlamadaIA()" aria-label="Modo conversación por voz con la IA" title="Abrir modo voz en vivo">
+                                        <span class="ai-call-btn-glow" aria-hidden="true"></span>
+                                        <span class="call-wave-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                                    </button>
+                                    <button id="send-button" class="btn-send" type="submit" aria-label="Enviar pregunta">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path
+                                                stroke-linejoin="round"
+                                                stroke-linecap="round"
+                                                stroke-width="2"
+                                                stroke="currentColor"
+                                                d="M22 2L11 13"
+                                            ></path>
+                                            <path
+                                                stroke-linejoin="round"
+                                                stroke-linecap="round"
+                                                stroke-width="2"
+                                                stroke="currentColor"
+                                                d="M22 2L15 22L11 13L2 9L22 2Z"
+                                            ></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="ai-voice-status" id="ai-voice-status" style="font-size: 11px; color: var(--text-muted, #888); margin-top: 4px; text-align: center;">
+                            🎙️ Pulsa el micrófono para hablar o 📸 envía una imagen
+                        </div>
+                    </div>
+                    <div class="ia-call-view" id="ia-call-view" hidden aria-live="polite">
                     <div class="ia-call-top">
                         <span class="ia-call-live-pill"><span class="ia-call-dot"></span> VOZ EN VIVO</span>
                         <span class="ia-call-timer" id="ia-call-timer">00:00</span>
@@ -123,8 +236,8 @@
                     <div class="call-avatar-stage" id="call-avatar-stage">
                         <div class="call-avatar" id="call-avatar" data-state="IDLE" role="button" tabindex="0" aria-label="Avatar interactivo en llamada">
                             <div class="call-avatar-glow"></div>
-                            <div class="call-avatar-body" style="border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, #5833b5 0%, #301777 50%, #170d3d 100%);">
-                                <span class="osito-face" data-estado="idle" id="call-mascot-cube-face" aria-hidden="true" style="transform: scale(1.35);">
+                            <div class="call-avatar-body" style="border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:transparent;">
+                                <span class="osito-face" data-estado="idle" id="call-mascot-cube-face" aria-hidden="true" style="transform:scale(1);">
                                     <span class="of-card">
                                         <span class="of-blob"></span>
                                         <span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span>
@@ -160,7 +273,7 @@
                             <span aria-hidden="true" style="font-size: 1.15em;">📷</span>
                             <span id="ia-call-cam-label">Cámara</span>
                         </button>
-                        <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" onclick="window.location.href='index.html'" title="Regresar al Sótano" aria-label="Regresar al Sótano">
+                        <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" onclick="if(window.ositoEnLlamadaIA&&window.finalizarLlamadaIA)window.finalizarLlamadaIA(); else if(history.length>1)history.back(); else window.location.href='index.html'" title="Regresar al Sótano" aria-label="Regresar al Sótano">
                             <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Salir
                         </button>
                     </div>
@@ -169,8 +282,42 @@
         </section>
     </div>
 
-    <!-- Scripts de la IA y Llamada -->
+    <!-- Scripts de la IA (mismo controlador de chat que el PC) -->
+    <script>window.ositoEnIAPage=true;</script>
     <script src="performance-lite.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-compat-init.js"></script>
+    <script>
+    (function(){
+        'use strict';
+        window.osEsInvitado = function osEsInvitado() {
+            var tienePerfil = localStorage.getItem('osito_user_profile');
+            var authUser = (window.firebaseAuth && window.firebaseAuth.currentUser) || window.currentUser;
+            return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser);
+        };
+        window.actualizarVisibilidadSeccionesCuenta = function () {
+            document.body.classList.toggle('solo-invitado', window.osEsInvitado());
+        };
+        window.showToast = function showToast(message) {
+            var t = document.getElementById('toast'), l = document.getElementById('toast-text');
+            if (!t || !l) return;
+            l.textContent = message;
+            t.classList.add('show');
+            clearTimeout(showToast.timer);
+            showToast.timer = setTimeout(function () { t.classList.remove('show'); }, 3200);
+        };
+        window.actualizarVisibilidadSeccionesCuenta();
+        window.addEventListener('osito:firebase-auth-ready', window.actualizarVisibilidadSeccionesCuenta);
+        window.regresarAlSotano = function () {
+            if (window.ositoEnLlamadaIA && typeof window.finalizarLlamadaIA === 'function') { window.finalizarLlamadaIA(); return; }
+            var mismoSitio = false;
+            try { mismoSitio = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (_) {}
+            if (mismoSitio && history.length > 1) history.back(); else location.href = 'index.html';
+        };
+    })();
+    </script>
     <script src="base-conocimiento.js"></script>
     <script src="v49.js"></script>
     <script src="face-sound.js" defer></script>
@@ -181,17 +328,11 @@
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
+    <script src="chat-ia-core.js"></script>
+    <script>window.toggleIAPanel = function () { window.regresarAlSotano(); };</script>
     <script src="firebase-integration.js"></script>
     <script src="asistente-voz.js"></script>
     <script src="face-100.js" defer></script>
     <script src="call-mode-engine.js"></script>
-    <script>
-        window.ositoEnLlamadaIA = true;
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.CallModeEngine && typeof window.CallModeEngine.iniciarLlamada === 'function') {
-                window.CallModeEngine.iniciarLlamada();
-            }
-        });
-    </script>
 </body>
 </html>

@@ -137,6 +137,18 @@
         return 60;
     }
 
+    // V67: no se puede forzar físicamente el panel a 120 Hz desde una web,
+    // pero sí mantener el render preparado para la frecuencia real del dispositivo.
+    function preferNativeRefreshRate() {
+        try {
+            root.style.setProperty('--target-frame-ms', '8.33ms');
+            root.setAttribute('data-refresh-policy', 'native-120-when-supported');
+            if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                root.setAttribute('data-refresh-policy', 'reduced-motion');
+            }
+        } catch (_) {}
+    }
+
     function applyHzClasses(hz) {
         state.hz = hz;
         root.setAttribute('data-screen-hz', String(hz));
@@ -311,6 +323,7 @@
     // 7. Inicio inmediato
     detectHardwareAndGpu();
     applyHzClasses(60);
+    preferNativeRefreshRate();
     setupBatteryChargingOptimizer();
     setupBackgroundAppOptimizer();
     markUserActive();

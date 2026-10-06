@@ -57,7 +57,7 @@
     var cameraStream = null;
     var isCameraActive = false;
     var latestFrameBase64 = null;
-    var frameCaptureTimer = null;
+    var frameCaptureTimer = null; var callMotionCanvas=null,callMotionCtx=null,callMotionPrev=null,callMotionLastAsk=0;
 
     // Web Audio API para Lip-Sync y Sonidos de Expresión
     var audioCtx = null;
@@ -660,13 +660,14 @@
         }
     }
 
+    function procesarMovimientoCamara(){if(!isCameraActive||!camVideo||camVideo.readyState<2)return;if(!callMotionCanvas){callMotionCanvas=document.createElement('canvas');callMotionCanvas.width=96;callMotionCanvas.height=72;callMotionCtx=callMotionCanvas.getContext('2d',{willReadFrequently:true});}try{callMotionCtx.drawImage(camVideo,0,0,96,72);var d=callMotionCtx.getImageData(0,0,96,72).data;if(!callMotionPrev){callMotionPrev=new Uint8ClampedArray(d);return;}var ch=0,tot=0;for(var i=0;i<d.length;i+=16){var df=(Math.abs(d[i]-callMotionPrev[i])+Math.abs(d[i+1]-callMotionPrev[i+1])+Math.abs(d[i+2]-callMotionPrev[i+2]))/3;tot+=df;if(df>24)ch++;}callMotionPrev=new Uint8ClampedArray(d);if(ch>18&&tot/(d.length/16)>12&&Date.now()-callMotionLastAsk>12000){callMotionLastAsk=Date.now();var tx='👀 ¡Ey! Vi que te moviste. ¿Qué estás haciendo?';setCallAvatarState('SURPRISED');mostrarRespuestaTexto(tx);hablarRespuesta(tx);}}catch(_){}}
     function iniciarCapturaFramesPeriodica() {
         if (frameCaptureTimer) clearInterval(frameCaptureTimer);
         frameCaptureTimer = setInterval(function () {
             if (isCameraActive) {
-                capturarFrameActual();
+                capturarFrameActual(); procesarMovimientoCamara();
             }
-        }, 2600);
+        }, 500);
     }
 
     // ========================================================================
@@ -785,6 +786,7 @@
 
         try {
             var respuesta = null;
+            if(!fotoAEnviar && window.OsitoIA && typeof window.OsitoIA.calcular==='function'){try{respuesta=window.OsitoIA.calcular(limpia);}catch(_){}}
 
             // 1. Intentar llamada directa a Gemini Live REST si hay clave disponible
             try {
@@ -893,14 +895,10 @@
         inicializarElementos();
         asegurarAudioContext();
 
-        // Ocultar cualquier cubo que pudiera existir en la cabecera del modo llamada
-        var callView = document.getElementById('ia-call-view');
-        if (callView) {
-            var cubosViejos = callView.querySelectorAll('.osito-face, .ia-call-mascot-face');
-            cubosViejos.forEach(function (c) {
-                c.style.setProperty('display', 'none', 'important');
-            });
-        }
+        // La cara de la llamada es la mascota 2D circular oficial.
+        var callView=document.getElementById('ia-call-view');
+        var callMascotFace=callView&&callView.querySelector('#call-mascot-cube-face');
+        if(callMascotFace){callMascotFace.style.removeProperty('display');callMascotFace.setAttribute('data-expr','idle');}
 
         // Restablecer estados
         isMicMuted = false;

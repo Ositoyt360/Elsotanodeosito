@@ -1,0 +1,314 @@
+/* =====================================================================
+ * ia-page.css — V68
+ * Diseño de la página de IA (ia.html) para celular y tablet.
+ * Es el MISMO panel del PC (cabecera, historial, voz, nombre, mensajes,
+ * sugerencias y barra de entrada), pero a pantalla completa:
+ *
+ *      [ ← Regresar al Sótano ]      <- arriba de todo
+ *            ( cubo 3D )             <- al centro
+ *   ┌────────── panel del chat ──────────┐
+ *   │ título · estado        🎙 🧠 ⚙️ 🔔 │
+ *   │ Historial · chat actual · + · ⚙️    │
+ *   │ Voz On · nombre · Cambiar nombre    │
+ *   │ mensajes …                          │
+ *   │ sugerencias · barra de mensaje      │
+ *   └─────────────────────────────────────┘
+ *
+ * Se carga al final para ganar a styles.css / v61.css (que traen reglas
+ * de panel flotante con !important).
+ * ===================================================================== */
+
+html, body.ia-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #080a0f;
+    color: #e2f7ff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+html { height: 100%; }
+body.ia-page {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+body.ia-page::before {                       /* fondo suave detrás del panel */
+    content: "";
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 14%, rgba(0, 242, 254, .13), transparent 46%),
+        radial-gradient(circle at 80% 90%, rgba(145, 71, 255, .12), transparent 50%),
+        #080a0f;
+}
+body.ia-page > * { position: relative; z-index: 1; }
+body.ia-page > .maintenance-overlay { position: fixed; }
+
+/* ---------- Parte de arriba: botón de regresar + mascota 3D ---------- */
+.ia-standalone-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: max(10px, env(safe-area-inset-top)) 12px 2px;
+    background: transparent;
+    border: 0;
+    z-index: 100;
+}
+.ia-standalone-back {
+    min-height: 44px;
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #080a0f;
+    font: 800 .92rem/1 inherit;
+    font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 242, 254, .35);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .2s ease;
+}
+.ia-standalone-back:active { transform: scale(.96); }
+
+.ia-m-mascot {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    padding: 6px 0 2px;
+    filter: drop-shadow(0 8px 22px rgba(0, 242, 254, .22));
+}
+.ia-m-mascot .osito-face { --fs: clamp(68px, 13dvh, 112px); }
+
+/* ---------- Contenedor y panel ---------- */
+.ia-standalone-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 8px max(8px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+    background: transparent;
+    overflow: hidden;
+}
+
+html body #ai-section.ia-section.active,
+html body.ia-call-mode-active #ai-section.ia-section.active {
+    position: relative !important;
+    inset: auto !important;
+    left: auto !important; right: auto !important; top: auto !important; bottom: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 600px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    border-radius: 22px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    transform: none;
+    z-index: 1 !important;
+}
+
+/* Cabecera del panel (igual que en PC) */
+html body #ai-section .ia-header {
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    padding: 9px 10px !important;
+    gap: 6px !important;
+    min-width: 0;
+    background: linear-gradient(135deg, rgba(0, 242, 254, .14), rgba(145, 71, 255, .14)) !important;
+}
+html body #ai-section .ia-header-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+}
+html body #ai-section .ia-header-text { min-width: 0; }
+html body #ai-section .ia-header-text h3 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .88rem !important;
+}
+html body #ai-section .ia-header-text p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .68rem !important;
+}
+html body #ai-section .ia-header > button {
+    flex: 0 0 auto;
+    min-width: 36px;
+    min-height: 36px;
+    touch-action: manipulation;
+}
+
+/* Interior: columna que reparte el alto; los mensajes se estiran */
+html body #ai-section .ia-setup {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 8px 10px 10px !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+html body #ai-section .ai-chat-shell,
+html body #ai-section #ai-chat-shell {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+html body #ai-section #ai-chat-shell[hidden],
+html body #ai-section #ia-call-view[hidden] { display: none !important; }
+
+/* Nada se sale del panel */
+html body #ai-section .ai-chat-shell > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+
+/* Barra de historial: el título del chat se encoge, los botones no */
+html body #ai-section .ai-sessions-bar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 5px 6px !important;
+    overflow: hidden !important;
+}
+html body #ai-section .ai-sessions-bar .ai-session-btn { flex: 0 0 auto !important; white-space: nowrap; }
+html body #ai-section .ai-sessions-bar .ai-current-chat-pill {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Voz + nombre: ya no se pregunta el género (viene de la cuenta) */
+html body #ai-section .ai-gender-btn { display: none !important; }
+html body #ai-section .ai-profile-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
+}
+html body #ai-section .ai-profile-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    gap: 5px !important;
+}
+html body #ai-section .ai-profile-actions .btn-action { white-space: nowrap; }
+html body #ai-section .ai-name-row {
+    display: flex !important;
+    flex: 1 1 200px !important;
+    min-width: 0 !important;
+    gap: 5px !important;
+    width: auto !important;
+}
+html body #ai-section #ai-name-input { flex: 1 1 0 !important; min-width: 0 !important; width: 100% !important; }
+html body #ai-section #ai-name-save { flex: 0 0 auto !important; white-space: nowrap; }
+
+/* Mensajes: toman todo el alto libre */
+html body #ai-section .ia-messages,
+html body #ai-section #ai-messages {
+    flex: 1 1 auto !important;
+    min-height: 90px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Sugerencias rápidas y barra de mensaje */
+html body #ai-section .ai-suggestions { flex: 0 0 auto !important; max-width: 100% !important; overflow: hidden; }
+html body #ai-section #ai-form,
+html body #ai-section .ai-input-row {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+html body #ai-section #ai-form .container,
+html body #ai-section .ai-input-container { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
+html body #ai-section .ai-input-field { flex: 1 1 0 !important; min-width: 0 !important; }
+html body #ai-section #ai-input { min-width: 0 !important; width: 100% !important; font-size: 16px !important; } /* 16px: iOS no hace zoom al escribir */
+html body #ai-section .ai-voice-status { flex: 0 0 auto; text-align: center; margin: 0 !important; }
+
+/* ---------- Modo llamada (se abre solo al pulsar el botón de llamada) ---------- */
+#ia-call-view { flex: 1 1 auto; min-height: 0; }
+#ia-call-view:not([hidden]) { display: flex !important; flex-direction: column; justify-content: space-between; height: 100% !important; }
+body.ia-call-mode-active .ia-m-mascot { display: none; }
+.call-avatar-stage { min-height: clamp(170px, 32dvh, 340px); display: grid; place-items: center; }
+.call-avatar { width: clamp(140px, 44vw, 260px); height: clamp(140px, 44vw, 260px); }
+.call-transcript-panel, .ia-call-actions { max-width: min(680px, 94%); }
+.ia-call-actions button { min-height: 48px; touch-action: manipulation; }
+@media (max-width: 700px) {
+    .ia-call-view { padding: 8px !important; }
+    .call-camera-preview-box { width: min(150px, 42vw); height: min(100px, 28vw); }
+    .call-response { max-height: 110px !important; }
+    .ia-call-actions { gap: 6px; }
+    .ia-call-actions button { font-size: .78rem !important; padding: 8px 6px !important; }
+}
+
+/* ---------- Pantallas bajas (teclado abierto, celulares chicos) ---------- */
+@media (max-height: 720px) {
+    .ia-m-mascot .osito-face { --fs: 60px; }
+    .ia-standalone-back { min-height: 40px; padding: 6px 16px; }
+}
+@media (max-height: 560px) {
+    .ia-m-mascot { display: none; }
+}
+
+/* ---------- Tablet y PC angosto ---------- */
+@media (min-width: 641px) {
+    .ia-m-mascot .osito-face { --fs: clamp(84px, 14dvh, 130px); }
+}
+
+/* ---------- Mantenimiento: texto siempre legible ---------- */
+.maintenance-overlay { position: fixed; inset: 0; z-index: 999999; display: grid; place-items: center; padding: clamp(12px, 4vw, 28px); background: rgba(3, 7, 13, .97); }
+.maintenance-overlay[hidden] { display: none !important; }
+.maintenance-card { width: min(560px, calc(100vw - 24px)); box-sizing: border-box; overflow: hidden; padding: 32px 22px; text-align: center; border: 1px solid rgba(0, 242, 254, .3); border-radius: 26px; background: #090e19; box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+.maintenance-card h2 { font-size: clamp(1.3rem, 4vw, 2rem); }
+.maintenance-card h2, .maintenance-card p { overflow-wrap: anywhere; white-space: normal; }
+.maintenance-mascot { display: grid; place-items: center; }
+.maintenance-mascot .osito-face { width: 100px; height: 100px; transform: none !important; }
+.ia-standalone-title, .ia-standalone-call { display: none; }   /* ya no se usan (la cabecera del panel los reemplaza) */
+
+/* ---------- Ahorro de batería: sin sombras animadas en equipos lentos ---------- */
+html.low-end-device .ia-m-mascot,
+body.ultra-performance .ia-m-mascot { filter: none; }
+
+/* ---------- Ajustes V68b: fila de nombre y tamaños ---------- */
+html body #ai-section .ai-name-row { flex: 1 1 0 !important; overflow: hidden; }
+html body #ai-section #ai-name-input { flex: 1 1 70px !important; min-width: 70px !important; width: auto !important; }
+html body #ai-section #ai-name-save { flex: 0 1 auto !important; padding: 4px 8px !important; font-size: .66rem !important; min-width: 0 !important; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+html body #ai-section .ia-header > button { width: 38px !important; height: 38px !important; min-width: 38px !important; padding: 0 !important; }
+html body #ai-section .ia-header > .ia-call-header-btn { width: auto !important; padding: 0 8px !important; }
+.ia-m-mascot .osito-face { --fs: clamp(60px, 10dvh, 92px); }

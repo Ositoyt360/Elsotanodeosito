@@ -1153,6 +1153,9 @@ CÓMO CONVERSAS (NATURAL, FLUIDO Y COMO CHATGPT)
 - NUNCA repitas la misma respuesta dos veces seguidas. Varía tu vocabulario y mantén viva la plática.
 - Recuerda todo el historial de esta conversación y también la MEMORIA DE CONVERSACIONES ANTERIORES del usuario si se incluye abajo.
 - REGLA DE ORO SOBRE RESPUESTAS DIRECTAS: Cuando el usuario te haga una pregunta o te pida información, dale una respuesta DIRECTA, precisa, clara y útil de inmediato. JAMÁS respondas con otra pregunta ni desvíes el tema a menos que el usuario haya hecho un saludo muy breve o te pida explícitamente conversar.
+- EXACTITUD: nunca inventes un resultado. En matemáticas, lógica, fechas y conversiones debes comprobar el resultado antes de responder. Si la operación es sencilla, responde con el cálculo exacto y no la reemplaces por charla.
+- HUMANIDAD: habla natural, pero no uses respuestas de plantilla repetidas. Si ya conoces el contexto de la conversación, úsalo para que la respuesta parezca una continuación real.
+- APRENDIZAJE DE CONVERSACIÓN: puedes usar la MEMORIA APRENDIDA que te entregue el sistema para recordar preferencias y datos no sensibles del usuario. No digas que estás entrenando el modelo ni que cambias tus pesos; simplemente utiliza esos recuerdos de forma natural.
 - Tus respuestas se leen en el chat y en voz alta: usa texto fluido y natural (sin bloques markdown ni listas largas con asteriscos), de 1 a 3 oraciones ágiles en charla normal, o hasta 6 oraciones claras si explicas una tarea, código, historia o imagen.
 - PUEDES VER Y LEER CUALQUIER IMAGEN: cuando el usuario adjunte una foto, captura, meme, dibujo o tarea, analízala a fondo, lee cualquier texto que aparezca en ella, descríbela con precisión y ayúdale en lo que necesite.
 - CUBO 3D INTELIGENTE CON VISIÓN EN VIVO Y AUTO-ENTRENAMIENTO:
@@ -1300,6 +1303,19 @@ app.get('/api/ia/estado', (req, res) => {
   });
 });
 
+function calcularOperacionIAExacta(texto) {
+  const t = String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿?¡!]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t || t.length > 90 || !/\d/.test(t)) return null;
+  let m = /^(?:cuanto es|cual es|resultado de|calcula|resuelve)?\s*(-?\d+(?:[.,]\d+)?)\s*([+\-*/x×÷])\s*(-?\d+(?:[.,]\d+)?)\s*$/i.exec(t);
+  if (!m) return null;
+  const a = Number(m[1].replace(',', '.')), b = Number(m[3].replace(',', '.')), op = m[2];
+  let r;
+  if (op === '+') r = a + b; else if (op === '-') r = a - b; else if (op === '*' || op === 'x' || op === '×') r = a * b; else { if (b === 0) return 'No se puede dividir entre cero. 🧮'; r = a / b; }
+  if (!Number.isFinite(r)) return null;
+  const fmt = Number.isInteger(r) ? String(r) : String(Math.round(r * 1e8) / 1e8).replace('.', ',');
+  return `${m[1]} ${op} ${m[3]} = ${fmt}. 🧮`;
+}
+
 async function manejarConsultaIA(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const imagenInfo = extraerImagenBase64(req.body?.imagen || req.body?.image || '');
@@ -1307,9 +1323,15 @@ async function manejarConsultaIA(req, res) {
   const pregunta = preguntaRaw || (imagenInfo ? '¿Qué ves en esta imagen? Analízala con detalle, lee cualquier texto que tenga y explícamela en español.' : '');
   if (!pregunta && !imagenInfo) return res.status(400).json({ error: 'pregunta_vacia' });
 
+  if (!imagenInfo) {
+    const calculoExacto = calcularOperacionIAExacta(pregunta);
+    if (calculoExacto) return res.json({ ok: true, texto: calculoExacto, proveedor: 'calculadora-exacta' });
+  }
+
   const nombre = String(req.body?.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
   const apodo = req.body?.genero === 'female' ? 'osita' : (req.body?.genero === 'male' ? 'osito' : '');
   const memoriaGlobal = textoSeguroIA(String(req.body?.memoriaGlobal || '').replace(/\s+/g, ' ').trim().slice(0, 700));
+  const memoriaAprendida = textoSeguroIA(String(req.body?.memoriaAprendida || '').replace(/\s+/g, ' ').trim().slice(0, 900));
   const tituloChat = textoSeguroIA(String(req.body?.tituloChat || '').replace(/\s+/g, ' ').trim().slice(0, 80));
 
   // 0) Respuesta instantánea (<1ms) si NO hay imagen adjunta y es una pregunta directa de la base oficial o límite de privacidad
@@ -1359,6 +1381,7 @@ async function manejarConsultaIA(req, res) {
   if (apodo) contexto.push(`Puedes llamarle cariñosamente "${apodo}" de vez en cuando.`);
   if (tituloChat) contexto.push(`Título de la conversación actual: "${tituloChat}".`);
   if (memoriaGlobal) contexto.push(`MEMORIA DE CONVERSACIONES ANTERIORES DEL USUARIO (recuérdalo si viene al caso): ${memoriaGlobal}`);
+  if (memoriaAprendida) contexto.push(`MEMORIA APRENDIDA NO SENSIBLE (úsala solo cuando sea útil): ${memoriaAprendida}`);
 
   try {
     const ahoraSV = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date());

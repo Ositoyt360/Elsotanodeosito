@@ -1,0 +1,10 @@
+V67
+
+- Chat de IA es siempre la vista inicial en telefono, tablet y PC.
+- Modo llamada se abre unicamente al pulsar el boton de llamada.
+- Corregido CSS que anulaba el atributo hidden de la vista de llamada.
+- Mascota de llamada: cara original del Sotano en 2D circular, sin cubo/3D.
+- El circulo permanece quieto cuando no habla y solo rebota/mueve la boca mientras habla.
+- Panel de chat de la IA unificado y mas estrecho en PC para evitar zoom.
+- Mantenimiento: boton visible y texto adaptable en movil/tablet.
+- Rendimiento: se prepara el render para 120 Hz cuando el dispositivo lo soporta y se mantiene adaptacion automatica cuando baja el rendimiento.

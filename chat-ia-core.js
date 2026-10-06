@@ -1061,14 +1061,7 @@
             }
 
             function mensajeNoDisponibleLocal() {
-                const respuestasCharla = [
-                    `¡Claro, ${prefijoIA()}! Cuéntame un poco más sobre eso o dime qué te gustaría saber y lo platicamos a fondo. 😊`,
-                    `¡Te escucho, ${prefijoIA()}! Explícame un poquito más tu idea o pregunta para darte una respuesta bien completa.`,
-                    `¡Qué buen tema, ${prefijoIA()}! Dime qué detalle te interesa más y seguimos conversando.`
-                ];
-                const msg = respuestasCharla[turnoIA % respuestasCharla.length];
-                turnoIA += 1;
-                return msg;
+                return 'No pude conectar con la IA en este momento. Revisa la conexión del servidor y la configuración de Gemini.';
             }
 
             let imagenPendienteIA = '';

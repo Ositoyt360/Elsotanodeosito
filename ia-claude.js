@@ -581,19 +581,9 @@
             }
         }
 
-        // Saludos directos y naturales
-        if (/^(hola|buenas|que onda|qué onda|que tal|qué tal|buenos dias|buenas tardes|buenas noches|hey|holis|saludos)(\s+(osito|osita|mascota|mascotita|amigo|amiga|crack|bot|ia|a todos))?[!.]*$/.test(t)) {
-            var SALUDOS = [
-                '¡Qué onda! ¿Cómo estás? Me da muchísimo gusto saludarte. ¿Qué cuentas hoy o de qué tienes ganas de platicar? 😊',
-                '¡Hola! Todo súper bien por acá en El Sótano de Osito. Dime qué necesitas o qué duda tienes y lo platicamos con gusto. 🐻✨',
-                '¡Buenas! Aquí ando al cien. ¿Quieres saber novedades de OsitoYT360, hablar de videojuegos o alguna otra cosa? 🎮',
-                '¡Hola! Un gustazo platicar contigo. ¿Cómo va tu día? Cuéntame y charlamos un rato. 😄'
-            ];
-            return SALUDOS[Math.floor(Math.random() * SALUDOS.length)];
-        }
-        if (/^(que haces|qué haces|que estas haciendo|qué estás haciendo)[?.!]*$/.test(t)) {
-            return '¡Aquí cuidando El Sótano de Osito, saludando a la comunidad y acompañándote! ¿Y tú qué andas haciendo de bueno? 🎮';
-        }
+        // Los saludos y la charla cotidiana NO se responden con textos prefabricados.
+        // Se dejan pasar al servidor para que Gemini continúe la conversación usando
+        // el historial, la personalidad y la memoria de la sesión.
 
         // Si el usuario responde "vale", "ok", "sí", "claro", "dale", "bueno", continuamos el hilo del mensaje anterior
         if (/^(vale|ok|okay|si|sii|claro|bueno|dale|va|de una|esta bien|me parece|perfecto|genial|entiendo|ya veo|ah ya|jaja|jeje)$/.test(t)) {
@@ -629,27 +619,20 @@
         if (/\b(chiste|broma|hazme reir|chistoso|otro chiste)\b/.test(t)) return siguiente(CHISTES, 'chiste');
         if (/dato curioso|curiosidad|sabias que|dime algo (interesante|curioso)|cuentame algo/.test(t)) return siguiente(DATOS, 'dato');
         var c = calcular(pregunta); if (c) return c;
-        if (/\b(gracias|muchas gracias|thx|thanks)\b/.test(t)) return '¡De nada! Aquí estoy en El Sótano de Osito para lo que necesites. ¿En qué más te ayudo? 😄';
-        if (/\b(adios|chao|chau|nos vemos|hasta luego|bye)\b/.test(t)) return '¡Hasta luego! Vuelve cuando quieras al Sótano de Osito, aquí te espero. 👋';
-        if (/como estas|que tal estas|como te va|como andas|todo bien/.test(t)) return '¡Muy bien y con mucha energía para platicar contigo! Gracias por preguntar. ¿Y tú cómo estás hoy? 😊';
-        if (/quien eres|como te llamas|que eres|eres una ia|eres un robot/.test(t)) return 'Soy La mascotita del Sótano, la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoGamer360YT. Puedo conversar contigo de cualquier tema, recordar nuestros chats, responder dudas del canal, ayudarte con tareas y mucho más. 🤖✨';
+        // Gracias, despedidas, "cómo estás", identidad y demás charla cotidiana
+        // también pasan a Gemini para evitar respuestas repetitivas prefabricadas.
         if (/quien es osito|hablame de osito|sobre osito/.test(t)) return 'Osito (creador del canal OsitoGamer360YT / Osito Gamer 360 YouTube) es un creador de contenido salvadoreño nacido el 28 de septiembre de 2008. Su canal actual empezó el 2 de junio de 2022 y sube videos de Minecraft, Roblox, Craftsman, BedWars y más. 🎮';
         if (/minecraft|survivalang/.test(t)) return '¡Minecraft es uno de los juegos favoritos de Osito para grabar! Además en el canal OsitoGamer360YT tiene la serie Survivalang y le encanta construir, jugar survival y BedWars con la comunidad. ⛏️';
         if (/roblox/.test(t)) return '¡Roblox es de los juegos que más disfruta grabar Osito junto con Minecraft! También les encanta a los seguidores del canal OsitoGamer360YT. 🎮';
         if (/craftsman|bedwars/.test(t)) return 'Craftsman y BedWars son súper especiales en el canal: Osito planea crear un servidor y revivir esa comunidad tan nostálgica con los mapas antiguos. ⚔️';
         if (/estoy aburrido|me aburro|que hago/.test(t)) return '¡Para quitar el aburrimiento podemos jugar a preguntas y respuestas, te puedo contar datos curiosos o chistes, o puedes ver un video de OsitoGamer360YT! ¿Qué prefieres hacer primero? 😄';
         if (/ayuda.*(tarea|deber)|tarea|deberes/.test(t)) return '¡Claro! Dime exactamente qué pregunta de tu tarea o qué cuenta matemática tienes y te la explico paso a paso. 📚';
-        var RESPUESTAS_GENERALES = [
-            '¡Qué buen punto! Dime qué detalle específico te gustaría saber o qué duda tienes y lo revisamos juntos con gusto. 😊',
-            '¡Te entiendo bien! Cuéntame un poquito más para darte una respuesta bien clara y completa. ¿En qué aspecto te gustaría profundizar? 💡',
-            '¡Buena pregunta! Si me das más contexto te lo explico paso a paso. También puedes preguntarme de juegos, tareas o del canal de Osito. ✨',
-            '¡Me encanta platicar contigo! Pregúntame con toda confianza lo que quieras saber y seguimos conversando. 🚀'
-        ];
-        var gen = RESPUESTAS_GENERALES[Math.floor(Math.random() * RESPUESTAS_GENERALES.length)];
-        return gen;
+        // Las conversaciones abiertas NO reciben respuestas genéricas locales.
+        // Si Gemini está disponible, la función preguntar() responde de forma natural.
+        return null;
     }
     function mensajeSinClaude(codigo) {
-        return '¡Qué interesante! Pregúntame lo que quieras sobre el canal OsitoGamer360YT (Osito Gamer 360 YouTube), videojuegos como Minecraft y Roblox, cuentas matemáticas, datos curiosos o platica conmigo. 😊';
+        return null;
     }
     if (estadoTexto) { estadoTexto.textContent = TEXTOS.idle; estadoTexto.dataset.iaOk = '1'; }
 

@@ -1075,11 +1075,14 @@ if (wss) {
 const { GoogleGenAI } = require('@google/genai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL_PRINCIPAL = 'gemini-3.5-flash';
+const GEMINI_MODEL_PRINCIPAL = 'gemini-3.8-flash';
 const MODELOS_GEMINI_ORDEN = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
   'gemini-3.5-flash',
-  'gemini-flash-latest',
-  'gemini-3.1-flash-lite-preview'
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash'
 ];
 
 const ai = GEMINI_API_KEY ? new GoogleGenAI({
@@ -1349,8 +1352,8 @@ async function manejarConsultaIA(req, res) {
       : null;
     return res.json({
       ok: true,
-      texto: textoSeguroIA(localPorLimite || `¡Claro${nombre ? ', ' + nombre : ''}! Cuéntame más, aquí sigo platicando contigo. ¿Qué te gustaría que comentemos ahora? 😊`),
-      proveedor: 'local'
+      texto: textoSeguroIA(localPorLimite || 'Has alcanzado temporalmente el límite de uso de la IA. Intenta de nuevo más tarde.'),
+      proveedor: 'limite'
     });
   }
 
@@ -1375,7 +1378,7 @@ async function manejarConsultaIA(req, res) {
   if (ai && GEMINI_API_KEY) {
     const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
     const ordenModelos = imagenInfo
-      ? ['gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
+      ? ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash']
       : MODELOS_GEMINI_ORDEN;
     let ultimoErrGemini = null;
 

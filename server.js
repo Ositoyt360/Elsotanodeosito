@@ -1081,7 +1081,8 @@ const MODELOS_GEMINI_ORDEN = [
   'gemini-3.7-flash',
   'gemini-3.6-flash',
   'gemini-3.5-flash',
-  'gemini-3.1-flash-lite'
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash'
 ];
 
 const ai = GEMINI_API_KEY ? new GoogleGenAI({
@@ -1374,8 +1375,8 @@ async function manejarConsultaIA(req, res) {
       : null;
     return res.json({
       ok: true,
-      texto: textoSeguroIA(localPorLimite || `¡Claro${nombre ? ', ' + nombre : ''}! Cuéntame más, aquí sigo platicando contigo. ¿Qué te gustaría que comentemos ahora? 😊`),
-      proveedor: 'local'
+      texto: textoSeguroIA(localPorLimite || 'Has alcanzado temporalmente el límite de uso de la IA. Intenta de nuevo más tarde.'),
+      proveedor: 'limite'
     });
   }
 
@@ -1401,7 +1402,7 @@ async function manejarConsultaIA(req, res) {
   if (ai && GEMINI_API_KEY) {
     const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
     const ordenModelos = imagenInfo
-      ? ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite']
+      ? ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash']
       : MODELOS_GEMINI_ORDEN;
     let ultimoErrGemini = null;
 
@@ -1492,8 +1493,8 @@ async function manejarConsultaIA(req, res) {
 
   return res.json({
     ok: true,
-    texto: `¡Hola${nombre ? ', ' + nombre : ''}! Estoy aquí en El Sótano de Osito lista para ayudarte con cualquier duda sobre el canal OsitoYT360 (Osito Gamer 360 YouTube), sus videos, Minecraft, Roblox, Craftsman, cuentas matemáticas o curiosidades. ¡Dime qué te gustaría saber! 😊`,
-    proveedor: 'local'
+    texto: 'No pude conectar con Gemini en este momento. Revisa que el servidor tenga configurada GEMINI_API_KEY e inténtalo de nuevo.',
+    proveedor: 'error-conexion'
   });
 }
 

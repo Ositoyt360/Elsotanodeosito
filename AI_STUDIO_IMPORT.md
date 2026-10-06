@@ -24,3 +24,7 @@ Configura como secretos/variables del servidor cuando corresponda:
 - `GITHUB_REPO` (opcional; por defecto `Ositoyt360/Elsotanodeosito`)
 
 No se incluye ninguna clave real en este paquete.
+
+## Configuración de Gemini
+
+La IA del sitio usa `@google/genai` en el servidor. Coloca tu clave como secreto/variable `GEMINI_API_KEY`; no la pegues en `index.html`, `call-mode-engine.js` ni en `localStorage`. El chat de texto, análisis de imágenes y el modo llamada pasan por `/api/ia`.

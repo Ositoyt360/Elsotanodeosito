@@ -531,51 +531,27 @@
     // ========================================================================
     // 10. CONVERSACIÓN EN TIEMPO REAL CON GEMINI LIVE
     // ========================================================================
-    function obtenerApiKeyGemini() {
-        var key = '';
-        if (window.AndroidBridge && typeof window.AndroidBridge.getGeminiApiKey === 'function') {
-            try { key = window.AndroidBridge.getGeminiApiKey(); } catch (_) {}
-        }
-        if (!key && window.GEMINI_API_KEY) key = window.GEMINI_API_KEY;
-        if (!key) key = localStorage.getItem('GEMINI_API_KEY') || '';
-        return String(key).trim();
-    }
-
+    // La clave de Gemini NUNCA se expone en el navegador.
+    // El modo llamada usa el mismo backend seguro /api/ia que el chat.
+    // Así funciona con la GEMINI_API_KEY guardada como secreto del servidor.
     async function llamarGeminiLiveRest(pregunta, frameBase64) {
-        var apiKey = obtenerApiKeyGemini();
-        if (!apiKey) return null; // Fallback al servidor /api/ia o local
-
-        var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
-
-        var parts = [{ text: pregunta }];
-
-        var systemPrompt = 'Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoGamer360YT). ' +
-            'Estás en una llamada de voz en tiempo real con el usuario. ' +
-            'Habla de manera alegre, cercana, inteligente y expresiva. ' +
-            'Tus respuestas deben ser naturales, fluidas, directas y concisas (1 a 3 oraciones claras). ' +
-            'Responde exactamente a lo que el usuario pregunta; no te quedes repitiendo frases genéricas y no inventes datos. Si no sabes algo, dilo claramente.';
-
-        var requestBody = {
-            contents: [{ parts: parts }],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 300
-            },
-            systemInstruction: {
-                parts: [{ text: systemPrompt }]
-            }
-        };
-
-        var res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!res.ok) throw new Error('Error en Gemini API status ' + res.status);
-        var data = await res.json();
-        var replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        return replyText ? String(replyText).trim() : null;
+        try {
+            var res = await fetch('/api/ia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pregunta: String(pregunta || '').trim(),
+                    imagen: frameBase64 || '',
+                    nombre: localStorage.getItem('osito_ai_nombre') || '',
+                    genero: localStorage.getItem('osito_ai_genero') || 'male'
+                })
+            });
+            if (!res.ok) return null;
+            var data = await res.json();
+            return data && data.texto ? String(data.texto).trim() : null;
+        } catch (_) {
+            return null;
+        }
     }
 
     async function procesarEntradaUsuario(preguntaUsuario) {

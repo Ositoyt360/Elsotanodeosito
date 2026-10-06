@@ -1075,11 +1075,13 @@ if (wss) {
 const { GoogleGenAI } = require('@google/genai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL_PRINCIPAL = 'gemini-3.5-flash';
+const GEMINI_MODEL_PRINCIPAL = 'gemini-3.8-flash';
 const MODELOS_GEMINI_ORDEN = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
   'gemini-3.5-flash',
-  'gemini-flash-latest',
-  'gemini-3.1-flash-lite-preview'
+  'gemini-3.1-flash-lite'
 ];
 
 const ai = GEMINI_API_KEY ? new GoogleGenAI({
@@ -1399,7 +1401,7 @@ async function manejarConsultaIA(req, res) {
   if (ai && GEMINI_API_KEY) {
     const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
     const ordenModelos = imagenInfo
-      ? ['gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
+      ? ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite']
       : MODELOS_GEMINI_ORDEN;
     let ultimoErrGemini = null;
 

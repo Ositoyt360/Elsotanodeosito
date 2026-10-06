@@ -15,7 +15,7 @@
     // INFORMACIÓN OFICIAL DEL CANAL Y DE OSITO
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const INFO_CANAL = {
-        canal: 'OsitoGamer360YT',
+        canal: 'OsitoYT360',
         canalTexto: 'Osito Gamer 360 YouTube',
         primerCanal: 'Momentos Divertidos con OsitoGamer',
         primerVideo: 'Episodio 1 temporada 1 Las Perrerías de Mike',
@@ -370,7 +370,7 @@
 
     // Mensajes conversacionales variados para continuar la charla (nunca repite avisos de privacidad en preguntas normales)
     const MENSAJES_NO_DISPONIBLE = [
-        '¡Claro que sí! Dime, ¿de qué te gustaría que platiquemos ahora? Podemos hablar de videojuegos, del canal OsitoGamer360YT, de alguna tarea o de lo que tú quieras. 😊',
+        '¡Claro que sí! Dime, ¿de qué te gustaría que platiquemos ahora? Podemos hablar de videojuegos, del canal OsitoYT360, de alguna tarea o de lo que tú quieras. 😊',
         '¡Va, me parece genial! Cuéntame más o dime qué tienes en mente: ¿jugamos a las adivinanzas, hablamos de Minecraft y Roblox, o resolvemos alguna duda? 🎮',
         '¡Te escucho! Sígueme contando o pregúntame lo que quieras sobre el canal, videojuegos, curiosidades, matemáticas o cualquier tema que te guste. 😄',
         '¡Perfecto! Aquí sigo contigo para platicar. ¿Qué te parece si hablamos de tu juego favorito o me cuentas qué estás haciendo hoy? ✨',
@@ -531,7 +531,7 @@
 
         // 0.0a2 Nombre de la IA / Quién eres
         if (/(quien eres|como te llamas|cual es tu nombre|que eres|como te pusieron|tu nombre)/.test(normUsuario) && !/(canal|creador|editor|colaborador|sitio|pagina|app)/.test(normUsuario)) {
-            return 'Soy «La mascotita del Sótano», la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoGamer360YT.';
+            return 'Soy «La mascotita del Sótano», la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoYT360.';
         }
 
         // 0.0b Nombre actual del CANAL en YouTube (sin confundir con "primer canal" ni con "primer video")
@@ -548,7 +548,7 @@
                 return obtenerTiempoFaltaCanal(mNum ? Number(mNum[1]) : undefined);
             }
             const anos = calcularAnosCanal();
-            return `El canal OsitoGamer360YT tiene ${anos} años en YouTube. Su aniversario es el 2 de junio (empezó el 2 de junio de 2022). 🎉`;
+            return `El canal OsitoYT360 tiene ${anos} años en YouTube. Su aniversario es el 2 de junio (empezó el 2 de junio de 2022). 🎉`;
         }
 
         if (/cuanto falta para.*(aniversario|cumpleanos del canal|anos en youtube|años en youtube)/.test(normUsuario)) {
@@ -601,7 +601,7 @@
 
         // 0.9 Nombre del sitio y de la aplicación oficial
         if (/(como se llama (el|este|tu)?\s*(sitio|pagina|web|app|aplicacion|lugar)|cual es el nombre (del|de este|de la)?\s*(sitio|pagina|web|app|aplicacion)|de que es (el|este)?\s*(sitio|pagina|web|app))/.test(normUsuario)) {
-            return 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoGamer360YT / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊';
+            return 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoYT360 / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊';
         }
 
         // 1. REVISIÓN EXACTA DE LAS 19 PREGUNTAS OFICIALES

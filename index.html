@@ -828,7 +828,40 @@ accent-color:#00ff88;
 .loader__circle:nth-child(2n) {animation-delay:300ms;background-color:#e499ff}
 .loader__circle:nth-child(3n) {animation-delay:600ms}
 @keyframes loader__circle__jumping {0%,100%{transform:translateY(0)}25%{transform:translateY(-15px) scale(0.5)}50%{transform:translateY(0)}75%{transform:translateY(5px) scale(0.9)}}
-</style></head>
+</style><style id="v69-maintenance-clean-3d">
+/* V69 — mascota de mantenimiento: 3D limpio, sin bordes/cuadrícula marcados */
+.maintenance-overlay .maintenance-mascot {
+  perspective: 900px !important;
+  overflow: visible !important;
+}
+.maintenance-overlay .maintenance-mascot .osito-face {
+  width: 110px !important; height: 110px !important;
+  perspective: 900px !important;
+  transform: none !important;
+  transform-style: preserve-3d !important;
+  overflow: visible !important;
+  filter: drop-shadow(0 12px 18px rgba(0,0,0,.38));
+}
+.maintenance-overlay .maintenance-mascot .of-rig {
+  transform-style: preserve-3d !important;
+}
+.maintenance-overlay .maintenance-mascot .of-card {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: inset 0 0 .05em rgba(255,255,255,.30), 0 .035em .14em rgba(0,0,0,.28) !important;
+}
+.maintenance-overlay .maintenance-mascot .of-cube-f {
+  box-shadow: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+}
+.maintenance-overlay .maintenance-mascot .cf-back { background: linear-gradient(160deg,#30245f,#17112f) !important; }
+.maintenance-overlay .maintenance-mascot .cf-left { background: linear-gradient(90deg,#5540a0,#30246c) !important; }
+.maintenance-overlay .maintenance-mascot .cf-right { background: linear-gradient(90deg,#29205d,#171238) !important; }
+.maintenance-overlay .maintenance-mascot .cf-top { background: linear-gradient(#7860c8,#5540a0) !important; }
+.maintenance-overlay .maintenance-mascot .cf-bottom { background:#120d29 !important; }
+</style>
+</head>
 <body>
     <canvas id="space-canvas"></canvas>
     <div class="ambient-glow" id="glow-1"></div>
@@ -1347,6 +1380,7 @@ accent-color:#00ff88;
 
         <aside class="sidebar-subscribe" id="sidebar-panel">
             <audio id="bg-music" src="musica_snowfall.mp3" preload="metadata" loop></audio>
+            <audio id="maintenance-music" src="mantenimiento_suave.mp3" preload="metadata" loop></audio>
 
             <a href="https://www.youtube.com/@OsitoYT360" target="_blank" class="btn-directos-nav">
                 <img src="logo_yt.png" alt="" class="yt-channel-logo" width="26" height="26" loading="lazy" decoding="async">
@@ -1466,15 +1500,6 @@ accent-color:#00ff88;
                         </div>
                         <div class="ia-call-state-badge" id="ia-call-state-badge">✨ Conectando con La mascotita del Sótano...</div>
 
-                        <!-- Previsualización de Cámara Real Picture-In-Picture -->
-                        <div class="call-camera-preview-box" id="call-camera-preview-box" hidden>
-                            <video id="call-camera-video" playsinline muted autoplay></video>
-                            <div class="call-camera-badge">
-                                <span class="call-camera-dot"></span> Cámara en vivo
-                            </div>
-                            <button type="button" class="call-camera-close-btn" id="call-camera-close-btn" aria-label="Apagar cámara" title="Apagar cámara">✕</button>
-                        </div>
-
                         <!-- Escenario de la MASCOTA ORIGINAL en 2D CIRCULAR -->
                         <div class="call-avatar-stage" id="call-avatar-stage">
                             <div class="call-avatar" id="call-avatar" data-state="IDLE" role="button" tabindex="0" aria-label="Mascota original en modo llamada">
@@ -1512,10 +1537,6 @@ accent-color:#00ff88;
                                 <span class="ia-call-mic-emoji" aria-hidden="true">🎙️</span>
                                 <span class="ia-call-mic-waves" id="call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
                                 <span id="ia-call-mic-label">Micrófono</span>
-                            </button>
-                            <button class="call-camera-button" id="ia-call-cam-btn" type="button" onclick="window.CallModeEngine && window.CallModeEngine.toggleCamara()" title="Activar / Apagar cámara para visión en vivo" aria-label="Alternar cámara">
-                                <span aria-hidden="true" style="font-size: 1.15em;">📷</span>
-                                <span id="ia-call-cam-label">Cámara</span>
                             </button>
                             <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" onclick="window.finalizarLlamadaIA && window.finalizarLlamadaIA()" title="Colgar llamada y volver al modo normal" aria-label="Colgar llamada">
                                 <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Colgar
@@ -1956,6 +1977,7 @@ accent-color:#00ff88;
 
         function cambiarMusicaModo(theme) {
             const audio = document.getElementById('bg-music');
+            if (document.body && document.body.classList.contains('site-maintenance-active')) { if (audio) audio.pause(); return; }
             if (!audio) return;
             const src = MODE_MUSIC[theme] || MODE_MUSIC.normal;
             const next = new URL(src, window.location.href).href;
@@ -3385,6 +3407,7 @@ accent-color:#00ff88;
 
         function iniciarMusicaFondo() {
             const audio = document.getElementById('bg-music');
+            if (document.body && document.body.classList.contains('site-maintenance-active')) { if (audio) audio.pause(); return; }
             const toggleBtn = document.getElementById('music-toggle');
             const volSlider = document.getElementById('music-volume');
             const volValue = document.getElementById('music-volume-value');

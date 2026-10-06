@@ -14,8 +14,42 @@
     <link rel="stylesheet" href="osito-actividades-3d.css">
     <link rel="stylesheet" href="personalidades-animaciones-1000.css">
     <link rel="stylesheet" href="ia-page.css">
+<style id="v69-maintenance-clean-3d">
+/* V69 — mascota de mantenimiento: 3D limpio, sin bordes/cuadrícula marcados */
+.maintenance-overlay .maintenance-mascot {
+  perspective: 900px !important;
+  overflow: visible !important;
+}
+.maintenance-overlay .maintenance-mascot .osito-face {
+  width: 110px !important; height: 110px !important;
+  perspective: 900px !important;
+  transform: none !important;
+  transform-style: preserve-3d !important;
+  overflow: visible !important;
+  filter: drop-shadow(0 12px 18px rgba(0,0,0,.38));
+}
+.maintenance-overlay .maintenance-mascot .of-rig {
+  transform-style: preserve-3d !important;
+}
+.maintenance-overlay .maintenance-mascot .of-card {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: inset 0 0 .05em rgba(255,255,255,.30), 0 .035em .14em rgba(0,0,0,.28) !important;
+}
+.maintenance-overlay .maintenance-mascot .of-cube-f {
+  box-shadow: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+}
+.maintenance-overlay .maintenance-mascot .cf-back { background: linear-gradient(160deg,#30245f,#17112f) !important; }
+.maintenance-overlay .maintenance-mascot .cf-left { background: linear-gradient(90deg,#5540a0,#30246c) !important; }
+.maintenance-overlay .maintenance-mascot .cf-right { background: linear-gradient(90deg,#29205d,#171238) !important; }
+.maintenance-overlay .maintenance-mascot .cf-top { background: linear-gradient(#7860c8,#5540a0) !important; }
+.maintenance-overlay .maintenance-mascot .cf-bottom { background:#120d29 !important; }
+</style>
 </head>
 <body class="ia-page" data-ia-page="true"><section id="maintenance-overlay" class="maintenance-overlay" hidden><div class="maintenance-card"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>El Sótanocito está en mantenimiento</h2><p>Estamos haciendo unos ajustes. Vuelve a entrar en un ratito. 🛠️</p></div></section>
+    <audio id="maintenance-music" src="mantenimiento_suave.mp3" preload="metadata" loop></audio>
     <div class="toast-notification" id="toast"><span style="font-size: 20px;">🔔</span><div id="toast-text"></div></div>
     <header class="ia-standalone-header">
         <button class="ia-standalone-back" id="ia-standalone-back" type="button" onclick="window.regresarAlSotano && window.regresarAlSotano()">

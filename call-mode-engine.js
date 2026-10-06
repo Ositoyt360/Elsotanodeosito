@@ -15,7 +15,7 @@
  *   - Boca con Lip-Sync REAL mediante Web Audio API AnalyserNode.
  *   - Sonidos y expresiones naturales ("ah", "mmm", suspiro, bostezo, risa).
  *   - Conversación en tiempo real con Gemini Live (Voz + Texto progresivo).
- *   - Cámara real mediante navigator.mediaDevices.getUserMedia con visión.
+ *   - Modo llamada exclusivamente por micrófono; no usa cámara.
  *   - Mute real y finalización limpia con retorno al cubo del modo normal.
  * ============================================================================
  */
@@ -54,7 +54,7 @@
     var recognitionInstance = null;
 
     // Estado de la Cámara Real y Visión
-    var cameraStream = null;
+    var cameraStream = null; // compatibilidad interna; nunca se solicita cámara
     var isCameraActive = false;
     var latestFrameBase64 = null;
     var frameCaptureTimer = null; var callMotionCanvas=null,callMotionCtx=null,callMotionPrev=null,callMotionLastAsk=0;
@@ -101,26 +101,11 @@
         micBtn = document.getElementById('ia-call-mic-btn');
         micLabel = document.getElementById('ia-call-mic-label');
         micWaves = document.getElementById('call-mic-waves');
-        camBtn = document.getElementById('ia-call-cam-btn');
-        camLabel = document.getElementById('ia-call-cam-label');
-        camBox = document.getElementById('call-camera-preview-box');
-        camVideo = document.getElementById('call-camera-video');
+        camBtn = null;
+        camLabel = null;
+        camBox = null;
+        camVideo = null;
         stateBadgeEl = document.getElementById('ia-call-state-badge');
-
-        var camCloseBtn = document.getElementById('call-camera-close-btn');
-        if (camCloseBtn) {
-            camCloseBtn.onclick = function (e) {
-                e.stopPropagation();
-                desactivarCamara();
-            };
-        }
-
-        if (camBtn) {
-            camBtn.onclick = function (e) {
-                e.preventDefault();
-                toggleCamara();
-            };
-        }
 
         if (micBtn) {
             micBtn.onclick = function (e) {
@@ -519,208 +504,28 @@
     }
 
     // ========================================================================
-    // 8. CÁMARA REAL & VISIÓN EN TIEMPO REAL CON GEMINI
+    // 8. CÁMARA DESACTIVADA
+    // El modo llamada es exclusivamente por micrófono. Nunca solicita permisos
+    // de cámara ni crea streams de vídeo.
     // ========================================================================
-    async function toggleCamara() {
-        if (isCameraActive) {
-            desactivarCamara();
-        } else {
-            await activarCamaraReal();
-        }
+    function toggleCamara() {
+        desactivarCamara();
+        if (typeof showToast === 'function') showToast('El modo llamada usa solo el micrófono.');
     }
 
-    async function activarCamaraReal() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            if (typeof showToast === 'function') {
-                showToast('Tu dispositivo no soporta acceso a la cámara.');
-            }
-            return;
-        }
-
-        try {
-            // Solicitar el permiso REAL del navegador (muestra el cuadro de diálogo nativo)
-            var stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: false
-            });
-
-            cameraStream = stream;
-            isCameraActive = true;
-            callMotionPrev = null;
-            callMotionLastAsk = 0;
-
-            if (camBox) camBox.hidden = false;
-            if (camVideo) {
-                camVideo.srcObject = stream;
-                camVideo.play().catch(function () {});
-            }
-
-            if (camBtn) {
-                camBtn.classList.add('call-camera-active');
-            }
-            if (camLabel) {
-                camLabel.textContent = 'Cámara On';
-            }
-
-            setCallAvatarState('SURPRISED');
-            playCallExpressionSound('ah');
-
-            var textoBienvenidaCam = '¡Woooow! Ya puedo ver lo que me muestras por tu cámara. ¡Enséñame lo que tienes ahí! 👀';
-            mostrarRespuestaTexto(textoBienvenidaCam);
-            hablarRespuesta(textoBienvenidaCam);
-
-            iniciarCapturaFramesPeriodica();
-            if (typeof showToast === 'function') {
-                showToast('👁️ Cámara activa: Osito puede ver lo que le muestres');
-            }
-        } catch (err) {
-            // Si el usuario rechaza el permiso:
-            // NO terminar la llamada. NO cerrar Gemini Live. NO apagar el micrófono.
-            console.warn('[CallCamera] Permiso de cámara no autorizado o cancelado:', err);
-            isCameraActive = false;
-            if (typeof showToast === 'function') {
-                showToast('Cámara no autorizada. La conversación por voz continúa normalmente.');
-            }
-        }
+    function activarCamaraReal() {
+        return Promise.resolve(false);
     }
 
     function desactivarCamara() {
-        if (frameCaptureTimer) {
-            clearInterval(frameCaptureTimer);
-            frameCaptureTimer = null;
-        }
-
+        if (frameCaptureTimer) { clearInterval(frameCaptureTimer); frameCaptureTimer = null; }
         if (cameraStream) {
-            try {
-                // Detener todas las pistas de vídeo
-                cameraStream.getTracks().forEach(function (track) {
-                    track.stop();
-                });
-            } catch (_) {}
+            try { cameraStream.getTracks().forEach(function (track) { track.stop(); }); } catch (_) {}
             cameraStream = null;
         }
-
         isCameraActive = false;
         latestFrameBase64 = null;
         callMotionPrev = null;
-
-        if (camVideo) {
-            camVideo.srcObject = null;
-        }
-        if (camBox) {
-            camBox.hidden = true;
-        }
-        if (camBtn) {
-            camBtn.classList.remove('call-camera-active');
-        }
-        if (camLabel) {
-            camLabel.textContent = 'Cámara';
-        }
-
-        if (typeof showToast === 'function') {
-            showToast('Cámara apagada. La llamada de voz sigue activa.');
-        }
-    }
-
-    function capturarFrameActual() {
-        if (!isCameraActive || !camVideo || camVideo.readyState < 2) {
-            return latestFrameBase64;
-        }
-        try {
-            var c = document.createElement('canvas');
-            var vw = camVideo.videoWidth || 640;
-            var vh = camVideo.videoHeight || 480;
-            c.width = 480;
-            c.height = Math.round((480 * vh) / vw);
-            var ctx = c.getContext('2d');
-            ctx.drawImage(camVideo, 0, 0, c.width, c.height);
-            var dataUrl = c.toDataURL('image/jpeg', 0.80);
-            latestFrameBase64 = dataUrl;
-            return dataUrl;
-        } catch (e) {
-            return latestFrameBase64;
-        }
-    }
-
-    function procesarMovimientoCamara(){
-        if(!isCameraActive||!camVideo||camVideo.readyState<2)return;
-        if(!callMotionCanvas){
-            callMotionCanvas=document.createElement('canvas');
-            callMotionCanvas.width=96; callMotionCanvas.height=72;
-            callMotionCtx=callMotionCanvas.getContext('2d',{willReadFrequently:true});
-        }
-        try{
-            callMotionCtx.drawImage(camVideo,0,0,96,72);
-            var d=callMotionCtx.getImageData(0,0,96,72).data;
-            if(!callMotionPrev){callMotionPrev=new Uint8ClampedArray(d);return;}
-            var changed=0,total=0,samples=0;
-            for(var i=0;i<d.length;i+=16){
-                var diff=(Math.abs(d[i]-callMotionPrev[i])+Math.abs(d[i+1]-callMotionPrev[i+1])+Math.abs(d[i+2]-callMotionPrev[i+2]))/3;
-                total+=diff; samples++; if(diff>18)changed++;
-            }
-            callMotionPrev=new Uint8ClampedArray(d);
-            var avg=total/Math.max(1,samples);
-            if(changed>12 && avg>7 && Date.now()-callMotionLastAsk>9000){
-                callMotionLastAsk=Date.now();
-                var tx='👀 ¡Ey! Vi que te moviste. ¿Qué estás haciendo?';
-                setCallAvatarState('SURPRISED'); mostrarRespuestaTexto(tx); hablarRespuesta(tx);
-            }
-        }catch(_){}
-    }
-    function iniciarCapturaFramesPeriodica() {
-        if (frameCaptureTimer) clearInterval(frameCaptureTimer);
-        frameCaptureTimer = setInterval(function () {
-            if (isCameraActive) {
-                capturarFrameActual(); procesarMovimientoCamara();
-            }
-        }, 500);
-    }
-
-    // ========================================================================
-    // 9. TRANSCRIPCIÓN Y VISUALIZACIÓN DE RESPUESTAS ESCRITAS PROGRESIVAS
-    // ========================================================================
-    function mostrarTranscripcionUsuario(texto) {
-        if (!texto) return;
-        if (transcriptUserEl) transcriptUserEl.textContent = texto;
-        if (transcriptUserBox) transcriptUserBox.hidden = false;
-    }
-
-    function mostrarRespuestaTexto(texto) {
-        if (!texto) return;
-        if (responseTextEl) responseTextEl.textContent = texto;
-        if (responseBox) responseBox.scrollTop = responseBox.scrollHeight;
-    }
-
-    function mostrarRespuestaTextoProgresiva(textoCompleto, callback) {
-        if (!responseTextEl) {
-            if (callback) callback();
-            return;
-        }
-        if (textStreamTimer) {
-            clearInterval(textStreamTimer);
-            textStreamTimer = null;
-        }
-
-        var palabras = String(textoCompleto || '').split(' ');
-        var actual = '';
-        var idx = 0;
-
-        textStreamTimer = setInterval(function () {
-            if (idx < palabras.length) {
-                actual += (idx === 0 ? '' : ' ') + palabras[idx];
-                responseTextEl.textContent = actual;
-                if (responseBox) responseBox.scrollTop = responseBox.scrollHeight;
-                idx++;
-            } else {
-                clearInterval(textStreamTimer);
-                textStreamTimer = null;
-                if (callback) callback();
-            }
-        }, 80);
     }
 
     // ========================================================================
@@ -744,22 +549,11 @@
 
         var parts = [{ text: pregunta }];
 
-        if (frameBase64 && frameBase64.startsWith('data:image/')) {
-            var rawData = frameBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-            parts.push({
-                inlineData: {
-                    mimeType: 'image/jpeg',
-                    data: rawData
-                }
-            });
-        }
-
         var systemPrompt = 'Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoGamer360YT). ' +
             'Estás en una llamada de voz en tiempo real con el usuario. ' +
             'Habla de manera alegre, cercana, inteligente y expresiva. ' +
-            'Tus respuestas deben ser naturales, fluidas y concisas (1 a 3 oraciones claras). ' +
-            'Si la cámara está activa y hay una imagen, analiza con atención lo que el usuario te muestra frente a la cámara (objetos, mascotas, ropa, gestos). ' +
-            'Identifícalos con total certeza. Si no estás seguro de algo, dilo honestamente sin inventar.';
+            'Tus respuestas deben ser naturales, fluidas, directas y concisas (1 a 3 oraciones claras). ' +
+            'Responde exactamente a lo que el usuario pregunta; no te quedes repitiendo frases genéricas y no inventes datos. Si no sabes algo, dilo claramente.';
 
         var requestBody = {
             contents: [{ parts: parts }],
@@ -791,8 +585,8 @@
         mostrarTranscripcionUsuario(limpia);
         setCallAvatarState('THINKING');
 
-        // Capturar frame de la cámara si está activa
-        var fotoAEnviar = isCameraActive ? capturarFrameActual() : null;
+        // Modo llamada: solo micrófono, sin cámara ni fotogramas.
+        var fotoAEnviar = null;
 
         try {
             var respuesta = null;
@@ -826,13 +620,8 @@
                 respuesta = window.OsitoConocimiento.buscarEnBaseConocimiento(limpia);
             }
 
-            // 4. Si la cámara está activa y el usuario preguntó qué ve
-            if (!respuesta && isCameraActive && /(que ves|mira esto|ves|que tengo|como me veo)/i.test(limpia)) {
-                respuesta = '¡Te veo clarito por tu cámara! Enfoca bien lo que me quieres mostrar frente a la lente.';
-            }
-
             if (!respuesta) {
-                respuesta = '¡Te escucho clarito! Cuéntame más o muéstrame algo con tu cámara.';
+                respuesta = 'Te escucho. Dime lo que quieras y te respondo directamente.';
             }
 
             // Reacción emocional automática del avatar al texto de respuesta
@@ -919,7 +708,7 @@
         iniciarAnimacionesIdle();
 
         // Saludo inicial de bienvenida
-        var saludo = '¡Hola! Ya estamos en modo llamada con voz en vivo. Puedes platicar conmigo o activar la cámara con el botón 📷.';
+        var saludo = '¡Hola! Ya estamos en modo llamada con voz en vivo. Puedes hablar conmigo con total naturalidad; solo necesitas el micrófono.';
         mostrarRespuestaTexto(saludo);
     }
 

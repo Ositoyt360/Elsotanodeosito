@@ -131,7 +131,7 @@ const PERSONALIDADES_DATABASE = {
     comportamientos: ["arqueamiento de cejas", "sonrisa irónica"],
     reacciones: ["*pone los ojos en blanco*", "*sonríe con cinismo*", "*dice algo burlón*"]
   },
-  402: { nombre: "Irónico", categoria: "Sarcástico", expresion: "ironic", sonido: "ironia", comportamientos: ["expresión de "claro""] },
+  402: { nombre: "Irónico", categoria: "Sarcástico", expresion: "ironic", sonido: "ironia", comportamientos: ['expresión de "claro"'] },
   403: { nombre: "Mordaz", categoria: "Sarcástico", expresion: "biting", sonido: "sarcasmo_fuerte", comportamientos: ["muerde imaginariamente"] },
   404: { nombre: "Contestón", categoria: "Sarcástico", expresion: "smart_mouth", sonido: "sarcasmo_fuerte", comportamientos: ["apunta con dedo"] },
   405: { nombre: "Burlón", categoria: "Sarcástico", expresion: "mocking", sonido: "burla", comportamientos: ["se burla silenciosamente"] },

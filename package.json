@@ -15,5 +15,9 @@
     "firebase-admin": "^13.4.0",
     "node-fetch": "^2.6.7",
     "ws": "^8.16.0"
+  },
+  "description": "Aplicación web full-stack de El Sótano de Osito, preparada para Google AI Studio y Node.js.",
+  "engines": {
+    "node": ">=20"
   }
 }

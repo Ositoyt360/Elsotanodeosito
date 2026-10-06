@@ -1,0 +1,56 @@
+/* V73 — arreglos: orillas del cubo, zzz, comida frente a la boca, círculo de llamada tipo ChatGPT */
+
+/* 1) Sin orillas que sobresalgan: cubo aplanado */
+html body .osito-face .of-cube-f,
+html body .osito-face .of-d{display:none!important}
+html body .osito-face .of-rig,
+html body .osito-face .of-card{transform-style:flat!important}
+html body .osito-face .of-card{border-radius:.3em}
+
+/* 2) Zzz y burbuja solo cuando duerme */
+html body .osito-face:not([data-expr="sleeping"]) .of-zzz,
+html body .osito-face:not([data-expr="sleeping"]) .of-bub{opacity:0!important;visibility:hidden!important;animation:none!important}
+html body .osito-face[data-expr="sleeping"] .of-zzz{visibility:visible;opacity:1;animation:ofZ 3.6s ease-out infinite!important}
+html body .osito-face[data-expr="sleeping"] .of-zzz.z2{animation-delay:1.2s!important}
+html body .osito-face[data-expr="sleeping"] .of-zzz.z3{animation-delay:2.4s!important}
+
+/* 3) Comida: el objeto queda al frente de la boca */
+.osito-face .of-boredom-prop[data-mode="pizza"]{top:.46em!important;z-index:60}
+.osito-face .of-boredom-prop[data-mode="manzana"]{top:.45em!important;z-index:60}
+.osito-face .of-boredom-prop[data-mode="chocolate"]{top:.46em!important;z-index:60}
+
+/* masticar: boca, mejillas y cabeza se mueven (sin depender de data-expr) */
+.osito-face[data-act="f-chew"] .of-smile,
+.osito-face[data-act="f-chew"] .of-mouth{opacity:1!important;animation:ofMouthChew .42s ease-in-out infinite!important}
+.osito-face[data-act="f-chew"] .of-cheek{opacity:1!important;animation:ofCheekPuff .42s ease-in-out infinite}
+.osito-face[data-act="f-chew"] .of-eyes{transform:translate(-50%,-50%) scaleY(.8)}
+@keyframes ofCheekPuff{0%,100%{transform:scale(1)}50%{transform:scale(1.35,1.15)}}
+@keyframes ofFoodChew{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(.012em) rotate(-2deg) scale(.985)}75%{transform:translateY(.01em) rotate(2deg) scale(.985)}}
+.osito-face .of-boredom-prop[data-beat="chew-half"] .of-pizza,
+.osito-face .of-boredom-prop[data-beat="chew-half"] .of-apple,
+.osito-face .of-boredom-prop[data-beat="chew-half"] .of-cup.chocolate{animation:ofFoodChew .42s ease-in-out infinite!important}
+
+/* se ve comida: mordiscos en el objeto */
+.osito-face .of-boredom-prop[data-food-stage="half"] .of-pizza,
+.osito-face .of-boredom-prop[data-food-stage="half"] .of-apple{
+  -webkit-mask-image:radial-gradient(circle at 82% 22%,transparent 0 .13em,#000 .135em),radial-gradient(circle at 18% 26%,transparent 0 .1em,#000 .105em);
+  -webkit-mask-composite:source-in;mask-image:radial-gradient(circle at 82% 22%,transparent 0 .13em,#000 .135em),radial-gradient(circle at 18% 26%,transparent 0 .1em,#000 .105em);mask-composite:intersect}
+.osito-face .of-boredom-prop[data-food-stage="eaten"] .of-pizza,
+.osito-face .of-boredom-prop[data-food-stage="eaten"] .of-apple{
+  -webkit-mask-image:radial-gradient(circle at 75% 25%,transparent 0 .24em,#000 .245em);mask-image:radial-gradient(circle at 75% 25%,transparent 0 .24em,#000 .245em)}
+
+/* 4) Modo llamada: círculo limpio (sin ojos ni boca) que late al hablar como ChatGPT */
+.call-avatar{--call-amp:0;position:relative}
+.call-avatar-body > .osito-face :is(.of-eyes,.of-happy,.of-mouth,.of-smile,.of-brow,.of-cheek,.of-tongue,.of-sweat,.of-tear,.of-spark,.of-zzz,.of-bub,.of-look){display:none!important}
+.call-avatar-body > .osito-face .of-card{border-radius:50%!important;box-shadow:inset 0 0 28px rgba(255,255,255,.25),0 0 30px rgba(0,242,254,.35)!important}
+.call-avatar-body > .osito-face{animation:none!important}
+.call-avatar[data-state="IDLE"] .call-avatar-body{animation:callBreath 4s ease-in-out infinite}
+.call-avatar[data-state="LISTENING"] .call-avatar-body{animation:callBreath 2.2s ease-in-out infinite}
+.call-avatar[data-state="THINKING"] .call-avatar-body{animation:callBreath 1.2s ease-in-out infinite}
+.call-avatar[data-state="SPEAKING"] .call-avatar-body{animation:none;transform:scale(calc(1 + var(--call-amp) * .24));transition:transform .09s linear}
+.call-avatar[data-state="SPEAKING"] .call-avatar-glow{transform:scale(calc(1.15 + var(--call-amp) * .55));opacity:.9;transition:transform .09s linear}
+.call-avatar::before,.call-avatar::after{content:"";position:absolute;inset:6%;border-radius:50%;border:2px solid rgba(0,242,254,.55);opacity:0;pointer-events:none}
+.call-avatar[data-state="SPEAKING"]::before{animation:callRipple 1.6s ease-out infinite}
+.call-avatar[data-state="SPEAKING"]::after{animation:callRipple 1.6s ease-out .8s infinite}
+@keyframes callBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes callRipple{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}

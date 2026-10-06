@@ -47,6 +47,11 @@
 .maintenance-overlay .maintenance-mascot .cf-top { background: linear-gradient(#7860c8,#5540a0) !important; }
 .maintenance-overlay .maintenance-mascot .cf-bottom { background:#120d29 !important; }
 </style>
+<style id="v76-mascot-edge-clean">
+.maintenance-overlay .maintenance-mascot .of-card{border:0!important;outline:0!important;box-shadow:none!important}
+.maintenance-overlay .maintenance-mascot .of-card::before,.maintenance-overlay .maintenance-mascot .of-card::after,.maintenance-overlay .maintenance-mascot .of-d{display:none!important}
+.maintenance-overlay .maintenance-mascot .of-cube-f{border:0!important;outline:0!important;box-shadow:none!important}
+</style>
 </head>
 <body class="ia-page" data-ia-page="true"><section id="maintenance-overlay" class="maintenance-overlay" hidden><div class="maintenance-card"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>El Sótanocito está en mantenimiento</h2><p>Estamos haciendo unos ajustes. Vuelve a entrar en un ratito. 🛠️</p></div></section>
     <audio id="maintenance-music" src="mantenimiento_suave.mp3" preload="metadata" loop></audio>
@@ -77,7 +82,6 @@
                         <span class="call-wave-bars" aria-hidden="true"><i></i><i></i><i></i></span>
                         <span class="call-btn-mic-glyph" aria-hidden="true">🎙️</span>
                     </button>
-                    <button class="ia-sound-btn ia-cube-hub-btn" id="ia-cube-hub-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" aria-label="Auto-entrenamiento y juegos del cubo" title="🧠 Auto-Entrenamiento y Juegos del Cubo">🧠</button>
                     <button class="ia-sound-btn ia-cfg-header-btn" id="ia-cfg-header-btn" type="button" aria-label="Configuración de voz e IA" title="Configuración de voz e IA">⚙️</button>
                     <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
                 </div>
@@ -174,7 +178,7 @@
                         </div>
                         <div class="ai-image-preview-bar" id="ai-image-preview-bar" hidden>
                             <img id="ai-image-preview-thumb" src="" alt="Vista previa de imagen para la IA" />
-                            <span class="ai-image-preview-label">📸 Imagen lista para que la IA la vea</span>
+                            <span class="ai-image-preview-label">🖼️ Imagen lista para que la IA la vea</span>
                             <button type="button" class="ai-image-preview-remove" id="ai-image-preview-remove" aria-label="Quitar imagen" title="Quitar imagen">✕</button>
                         </div>
                         <form class="ai-input-row ai-input" id="ai-form">
@@ -247,7 +251,7 @@
                             </div>
                         </form>
                         <div class="ai-voice-status" id="ai-voice-status" style="font-size: 11px; color: var(--text-muted, #888); margin-top: 4px; text-align: center;">
-                            🎙️ Pulsa el micrófono para hablar o 📸 envía una imagen
+                            🎙️ Pulsa el micrófono para hablar o 🖼️ envía una imagen
                         </div>
                     </div>
                     <div class="ia-call-view" id="ia-call-view" hidden aria-live="polite">
@@ -257,14 +261,6 @@
                     </div>
                     <div class="ia-call-state-badge" id="ia-call-state-badge">✨ Conectado con La Mascotita del Sótano...</div>
 
-                    <!-- Previsualización de Cámara Real HD (Frontal) -->
-                    <div class="call-camera-preview-box" id="call-camera-preview-box" hidden>
-                        <video id="call-camera-video" playsinline muted autoplay></video>
-                        <div class="call-camera-badge">
-                            <span class="call-camera-dot"></span> Cámara Frontal HD
-                        </div>
-                        <button type="button" class="call-camera-close-btn" id="call-camera-close-btn" aria-label="Apagar cámara" title="Apagar cámara">✕</button>
-                    </div>
 
                     <!-- Escenario del AVATAR CIRCULAR 2D (Cubo de la mascota en modo circular 2D) -->
                     <div class="call-avatar-stage" id="call-avatar-stage">
@@ -291,7 +287,7 @@
                         </div>
                         <div class="call-response" id="call-response">
                             <span class="call-speaker-tag">OSITO:</span>
-                            <span id="call-response-text">¡Hola! Ya estamos en modo llamada en esta pestaña. Háblame o activa tu cámara frontal 📷.</span>
+                            <span id="call-response-text">¡Hola! Ya estamos en modo llamada en esta pestaña. Háblame con tu voz.</span>
                         </div>
                     </div>
 
@@ -302,10 +298,6 @@
                             <span class="ia-call-mic-emoji" aria-hidden="true">🎙️</span>
                             <span class="ia-call-mic-waves" id="call-mic-waves" aria-hidden="true"><i></i><i></i><i></i></span>
                             <span id="ia-call-mic-label">Micrófono</span>
-                        </button>
-                        <button class="call-camera-button" id="ia-call-cam-btn" type="button" title="Activar / Apagar cámara frontal HD" aria-label="Alternar cámara">
-                            <span aria-hidden="true" style="font-size: 1.15em;">📷</span>
-                            <span id="ia-call-cam-label">Cámara</span>
                         </button>
                         <button class="ia-call-ctrl-btn ia-call-hangup" id="ia-call-hangup-btn" type="button" onclick="if(window.ositoEnLlamadaIA&&window.finalizarLlamadaIA)window.finalizarLlamadaIA(); else if(history.length>1)history.back(); else window.location.href='index.html'" title="Regresar al Sótano" aria-label="Regresar al Sótano">
                             <span aria-hidden="true" style="font-size: 1.15em;">🔴</span> Salir
@@ -319,10 +311,12 @@
     <!-- Scripts de la IA (mismo controlador de chat que el PC) -->
     <script>window.ositoEnIAPage=true;</script>
     <script src="performance-lite.js"></script>
+    <script src="guest-mode.js?v=78"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="firebase-compat-init.js"></script>
+    <script src="maintenance-guard.js?v=77"></script>
     <script>
     (function(){
         'use strict';
@@ -355,18 +349,18 @@
     <script src="base-conocimiento.js"></script>
     <script src="v49.js"></script>
     <script src="face-sound.js" defer></script>
-    <script src="ia-claude.js" defer></script>
+    <script src="ia-openrouter.js?v=70" defer></script>
     <script src="personalidades-animaciones-1000.js" defer></script>
     <script src="personalidades-1000.js" defer></script>
     <script src="face-extra.js" defer></script>
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
-    <script src="chat-ia-core.js"></script>
+    <script src="chat-ia-core.js?v=70"></script>
     <script>window.toggleIAPanel = function () { window.regresarAlSotano(); };</script>
     <script src="firebase-integration.js"></script>
     <script src="asistente-voz.js"></script>
     <script src="face-100.js" defer></script>
-    <script src="call-mode-engine.js"></script>
+    <script src="call-mode-engine.js?v=70"></script>
 </body>
 </html>

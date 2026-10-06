@@ -1,0 +1,11 @@
+V73 — mantenimiento, conversación y mascota
+
+- Mantenimiento global ahora usa mantenimiento.html para visitantes. La cuenta OsitoYT360 queda exenta.
+- Al activar mantenimiento, los visitantes salen de la página principal hacia la pantalla dedicada. Al desactivarlo, la pantalla dedicada vuelve automáticamente a index.html.
+- Nueva vista previa "Ver como usuario" en moderación.
+- Pantalla de mantenimiento: logo oficial arriba, mascota 3D cúbica, fondo de engranajes animados y loader de puntos conservado.
+- Zzz ocultos cuando la mascota está despierta.
+- Comida: mordisco, masticación y efecto de comida al frente de la boca; se conserva el sistema de objetos/manos.
+- Modo llamada: se mantiene el círculo, se ocultan ojos y boca; al hablar el círculo pulsa como orbe de voz.
+- IA: se reforzó la conversación de ida y vuelta y se corrigió una variable indefinida en la clave de caché del servidor.
+- Service Worker actualizado a V73.

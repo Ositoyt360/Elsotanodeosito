@@ -1,0 +1,2 @@
+V80
+- Música de mantenimiento: solo en mantenimiento.html (los demás modos conservan sus canciones). Volumen 16% -> 38%, en bucle. Botón 🔊/🔇 para silenciar.

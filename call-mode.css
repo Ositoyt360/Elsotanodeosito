@@ -909,3 +909,12 @@
 @media (hover:none), (pointer:coarse) {
   .call-avatar { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 }
+
+/* V73 — modo llamada: círculo limpio sin ojos ni boca; el habla se expresa con pulso del orbe. */
+.call-avatar-body > .osito-face .of-eyes,.call-avatar-body > .osito-face .of-happy,.call-avatar-body > .osito-face .of-mouth,.call-avatar-body > .osito-face .of-smile,.call-avatar-body > .osito-face .of-brow,.call-avatar-body > .osito-face .of-zzz,.call-avatar-body > .osito-face .of-spark{display:none!important;opacity:0!important;visibility:hidden!important}
+.call-avatar[data-state="SPEAKING"]{animation:callChatGPTSpeakV73 1.15s ease-in-out infinite!important}
+.call-avatar[data-state="SPEAKING"] .call-avatar-glow{animation:callChatGPTGlowV73 .72s ease-in-out infinite alternate!important;opacity:1!important}
+.call-avatar[data-state="THINKING"] .call-avatar-glow{animation:callChatGPTThinkV73 1.2s ease-in-out infinite alternate!important}
+@keyframes callChatGPTSpeakV73{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes callChatGPTGlowV73{from{transform:scale(.96);opacity:.5}to{transform:scale(1.14);opacity:1}}
+@keyframes callChatGPTThinkV73{from{transform:scale(.98);opacity:.55}to{transform:scale(1.08);opacity:.9}}

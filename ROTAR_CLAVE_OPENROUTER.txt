@@ -1,0 +1,7 @@
+IMPORTANTE: La API key incluida en este ZIP fue proporcionada directamente por el propietario,
+pero fue expuesta en una conversación. Antes de publicar el proyecto o subirlo a GitHub,
+REVÓCALA en OpenRouter y crea una nueva.
+
+La clave debe permanecer únicamente en .env o en las variables de entorno del servidor.
+Nunca la pongas en index.html, JavaScript del navegador, GitHub ni capturas de pantalla.
+El servidor bloquea la descarga de /.env.

@@ -204,7 +204,7 @@
         },
         // pensando: "bu-bup" suave
         thinking: function () { tono(300, 380, 0, 0.12, 'sine', 0.1); tono(380, 300, 0.14, 0.14, 'sine', 0.08); },
-        // escuchando: silencioso estilo ChatGPT/Gemini (sin pitidos molestos)
+        // escuchando: silencioso estilo asistente de IA (sin pitidos molestos)
         listening: function () {},
         // ---- V49.6 ----
         // ronquido: inhala (aire que sube) y exhala rasposo
@@ -317,7 +317,7 @@
         rebuscar: function () { [0, 0.18, 0.36].forEach(function (t) { ruido(t, 0.14, 0.09, 'bandpass', 1000 + Math.random() * 800, 2800, 1.2, 0.03); }); },
         cremallera: function () { ruido(0, 0.42, 0.09, 'bandpass', 1500, 4000, 3, 0.06); },
         varita: function () { tono(800, 1700, 0, 0.3, 'sine', 0.08, { vib: 9, vibd: 26 }); campana(1760, 0.28, 0.08, 0.6); },
-        // Sonidos del chat de IA y micrófono en vivo (silenciados para llamadas estilo ChatGPT/Gemini sin pitidos)
+        // Sonidos del chat de IA y micrófono en vivo (silenciados para llamadas estilo asistente de IA sin pitidos)
         mic_on: function () {},
         mic_off: function () {},
         msg_send: function () {

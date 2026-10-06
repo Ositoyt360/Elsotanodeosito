@@ -270,6 +270,7 @@
   $('refresh-messages').addEventListener('click',()=>loadMessages().catch(e=>toast(e.message,true)));
   document.querySelectorAll('[data-theme-mode]').forEach(b=>b.addEventListener('click',()=>saveTheme(b.dataset.themeMode).catch(e=>toast(e.message,true))));
   const maintenanceBtn=$('toggle-maintenance'); if(maintenanceBtn) maintenanceBtn.addEventListener('click',()=>toggleMaintenance().catch(e=>toast(e.message,true)));
+  const previewUserBtn=$('preview-user'); if(previewUserBtn) previewUserBtn.addEventListener('click',()=>{ window.open('mantenimiento.html?userPreview=1','_blank','noopener,noreferrer'); });
   if($('save-title')) $('save-title').addEventListener('click',()=>saveTitle().catch(e=>toast(e.message,true)));
   if($('add-countdown')) $('add-countdown').addEventListener('click',()=>addCountdown());
   document.addEventListener('click',async e=>{

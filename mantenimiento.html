@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050912">
+<meta name="robots" content="noindex,nofollow">
+<title>Mantenimiento · El Sótano de Osito</title>
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="styles.css?v=77">
+<link rel="stylesheet" href="osito-cara3d.css">
+<style>
+:root{color-scheme:dark;--g:#39ff6a;--c:#00f2fe;--v:#a78bfa;--p:#e39cff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;width:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#03070d;color:#f5f8ff}
+body{min-height:100svh;display:grid;place-items:center;overflow:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+
+/* ===== Fondo animado ===== */
+.mbg{position:fixed;inset:0;z-index:0;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#101c33 0,#070d18 48%,#02050a 100%)}
+.mbg .grid{position:absolute;inset:-60px;background-image:linear-gradient(rgba(125,211,252,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(125,211,252,.07) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 0,transparent 72%);mask-image:radial-gradient(ellipse at 50% 50%,#000 0,transparent 72%);animation:gridMove 14s linear infinite}
+@keyframes gridMove{to{transform:translate(56px,56px)}}
+.mbg .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;will-change:transform}
+.mbg .b1{width:46vmax;height:46vmax;left:-14vmax;top:-12vmax;background:radial-gradient(circle,rgba(57,255,106,.30),transparent 68%);animation:blobA 19s ease-in-out infinite alternate}
+.mbg .b2{width:50vmax;height:50vmax;right:-18vmax;top:6vmax;background:radial-gradient(circle,rgba(167,139,250,.34),transparent 68%);animation:blobB 23s ease-in-out infinite alternate}
+.mbg .b3{width:44vmax;height:44vmax;left:18vmax;bottom:-24vmax;background:radial-gradient(circle,rgba(0,242,254,.26),transparent 68%);animation:blobC 21s ease-in-out infinite alternate}
+@keyframes blobA{to{transform:translate(12vmax,9vmax) scale(1.18)}}
+@keyframes blobB{to{transform:translate(-10vmax,12vmax) scale(.9)}}
+@keyframes blobC{to{transform:translate(-8vmax,-10vmax) scale(1.22)}}
+.mbg canvas{position:absolute;inset:0;width:100%;height:100%}
+.gears{position:absolute;inset:0;pointer-events:none}
+.gear{position:absolute;line-height:1;color:#7dd3fc;opacity:.13;filter:drop-shadow(0 0 16px rgba(0,242,254,.25));animation:spin 20s linear infinite}
+.gear:before{content:"\2699"}
+.g1{left:2%;top:5%;font-size:clamp(80px,12vw,170px)}
+.g2{right:3%;top:14%;font-size:clamp(56px,8vw,120px);animation-duration:13s;animation-direction:reverse}
+.g3{left:9%;bottom:-3%;font-size:clamp(54px,8vw,116px);animation-duration:23s}
+.g4{right:9%;bottom:-2%;font-size:clamp(84px,12vw,170px);animation-duration:17s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.55) 100%);pointer-events:none}
+
+/* ===== Tarjeta ===== */
+.wrap{position:relative;z-index:2;width:min(500px,92vw);padding:14px}
+.card{position:relative;text-align:center;padding:26px 26px 22px;border-radius:28px;background:linear-gradient(160deg,rgba(14,22,40,.82),rgba(5,10,20,.9));border:1px solid rgba(255,255,255,.08);box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 60px rgba(0,242,254,.07),inset 0 1px 0 rgba(255,255,255,.07);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);animation:cardIn .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.97)}}
+.card:before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--a,0deg),transparent 0 62%,var(--c) 78%,var(--g) 88%,var(--v) 96%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;animation:borderSpin 6s linear infinite}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes borderSpin{to{--a:360deg}}
+.card:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.04) 50%,transparent 70%);transform:translateX(-120%);animation:shine 7s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
+.card>*{position:relative;z-index:1}
+
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#bffcd0;background:rgba(57,255,106,.09);border:1px solid rgba(57,255,106,.28);margin-bottom:14px}
+.badge i{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 10px var(--g);animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25;transform:scale(.7)}}
+
+.logo{display:flex;flex-direction:column;align-items:center;margin:0 auto 6px;font-weight:900;line-height:.88;letter-spacing:-.05em;text-transform:uppercase;animation:logoFloat 4s ease-in-out infinite}
+.logo span{font-size:clamp(1.8rem,6.4vw,2.5rem);background:linear-gradient(180deg,#a6ff8a,#22ff5e 55%,#00c93b);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px rgba(57,255,106,.35))}
+.logo b{font-size:clamp(1.2rem,4.4vw,1.7rem);color:#f4fff5;letter-spacing:.02em;text-shadow:0 0 16px rgba(255,255,255,.18)}
+@keyframes logoFloat{50%{transform:translateY(-3px)}}
+
+/* ===== Mascota (se conserva) ===== */
+.stage{position:relative;width:150px;height:140px;margin:6px auto 0;display:grid;place-items:center}
+.stage:before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(0,242,254,.28),rgba(167,139,250,.14) 45%,transparent 70%);filter:blur(10px);animation:halo 3.4s ease-in-out infinite}
+.stage:after{content:"";position:absolute;width:132px;height:132px;border-radius:50%;border:1.5px dashed rgba(125,211,252,.28);animation:spin 16s linear infinite}
+@keyframes halo{50%{transform:scale(1.14);opacity:.7}}
+.maintenance-mascot{position:relative;z-index:1;width:132px;height:130px;display:grid;place-items:center;perspective:900px;overflow:hidden;clip-path:inset(0 round 22px)}
+.maintenance-mascot .osito-face{--fs:108px;width:108px!important;height:108px!important;cursor:default!important;overflow:visible!important;animation:mascotFloat 3s ease-in-out infinite!important;transform-origin:50% 52%}
+.maintenance-mascot .osito-face:after{display:none!important}
+.maintenance-mascot .of-card{border:0!important;outline:0!important;box-shadow:none!important}
+.maintenance-mascot .of-card::before,.maintenance-mascot .of-card::after{display:none!important}
+.maintenance-mascot .of-d{display:none!important;border:0!important;outline:0!important;box-shadow:none!important}
+.maintenance-mascot .of-cube-f{border:0!important;outline:0!important;box-shadow:none!important}
+@keyframes mascotFloat{50%{transform:translateY(-5px)}}
+
+.title{margin:8px 0 6px;font-size:clamp(1.4rem,4.2vw,1.85rem);line-height:1.15;letter-spacing:-.02em;font-weight:800}
+.sub{margin:0 auto;color:#aebdd0;font-size:.97rem;line-height:1.5;max-width:400px}
+
+/* ===== Tareas en curso ===== */
+.tasks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:16px 0 0}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:.76rem;font-weight:600;color:#cfe3f5;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);animation:chip 3.6s ease-in-out infinite}
+.chip:nth-child(2){animation-delay:.6s}.chip:nth-child(3){animation-delay:1.2s}
+@keyframes chip{50%{border-color:rgba(0,242,254,.4);background:rgba(0,242,254,.07)}}
+.chip em{font-style:normal;display:inline-block;animation:spin 3s linear infinite}
+
+/* ===== Barra + puntos de carga ===== */
+.bar{position:relative;height:6px;border-radius:99px;margin:20px auto 0;max-width:340px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar:before{content:"";position:absolute;top:0;bottom:0;width:38%;border-radius:inherit;background:linear-gradient(90deg,transparent,var(--c),var(--g),transparent);animation:slide 1.9s ease-in-out infinite}
+@keyframes slide{from{left:-40%}to{left:102%}}
+.loader{position:relative;height:30px;margin:14px auto 0;display:flex;justify-content:center;align-items:flex-end;gap:8px}
+.loader:before{content:"";position:absolute;width:170px;height:30px;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(0,242,254,.22),transparent 70%);filter:blur(18px)}
+.loader__circle{position:relative;width:10px;height:10px;border-radius:50%;background:#b899ff;color:#b899ff;box-shadow:0 0 10px currentColor;animation:jump 1.5s ease-in-out infinite}
+.loader__circle:nth-child(2){animation-delay:.14s;background:#e39cff;color:#e39cff}
+.loader__circle:nth-child(3){animation-delay:.28s;background:#7dd3fc;color:#7dd3fc}
+.loader__circle:nth-child(4){animation-delay:.42s;background:#39ff6a;color:#39ff6a}
+.loader__circle:nth-child(5){animation-delay:.56s;background:#b899ff;color:#b899ff}
+@keyframes jump{0%,100%{transform:translateY(0) scale(1);opacity:.6}35%{transform:translateY(-13px) scale(.85);opacity:1}60%{transform:translateY(0) scale(1)}}
+.note{margin:12px 0 0;color:#7d8da3;font-size:.76rem;min-height:1.1em;transition:opacity .4s}
+
+.preview-tag{position:fixed;z-index:5;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-size:.74rem;font-weight:700;color:#fde68a;background:rgba(36,28,6,.85);border:1px solid rgba(250,204,21,.35);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);white-space:nowrap}
+.preview-tag button{cursor:pointer;border:0;border-radius:999px;padding:5px 11px;font:800 .72rem Inter,system-ui,sans-serif;color:#1a1300;background:#facc15}.preview-tag[hidden]{display:none}@media(max-width:520px){#preview-text{display:none}}
+
+.snd{position:fixed;z-index:6;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;cursor:pointer;display:grid;place-items:center;font-size:1.15rem;color:#e8f6ff;background:rgba(10,18,32,.78);border:1px solid rgba(125,211,252,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(0,0,0,.45);transition:transform .2s,border-color .2s}.snd:hover{transform:scale(1.08);border-color:rgba(57,255,106,.6)}.snd.playing:after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1.5px solid rgba(57,255,106,.45);animation:sndPulse 2s ease-out infinite}@keyframes sndPulse{from{transform:scale(.9);opacity:1}to{transform:scale(1.35);opacity:0}}
+@media(max-width:600px){.card{padding:22px 16px 18px;border-radius:24px}.stage{transform:scale(.92);margin-top:0}.tasks{gap:6px}.chip{font-size:.72rem}}
+@media(max-height:640px){.stage{transform:scale(.78);margin:-10px auto -12px}.tasks{display:none}}
+/* Con "reducir movimiento" solo se suavizan los efectos grandes; los puntos de carga siguen animados. */
+@media(prefers-reduced-motion:reduce){.gear,.mbg .grid,.mbg .blob,.card:after,.stage:after{animation-duration:60s!important}.card,.logo{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="mbg" aria-hidden="true">
+<div class="grid"></div><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="gears"><i class="gear g1"></i><i class="gear g2"></i><i class="gear g3"></i><i class="gear g4"></i></div>
+<canvas id="fx"></canvas><div class="vignette"></div>
+</div>
+<audio id="maintenance-music" src="mantenimiento_suave.mp3" preload="auto" loop></audio>
+<button class="snd" id="snd" type="button" aria-label="Activar o silenciar la música" title="Música">🔊</button>
+<div class="preview-tag" id="preview-tag" hidden><span>👁️</span><span id="preview-text">Vista de usuario · sin tu cuenta</span><button type="button" id="preview-exit">Salir y volver a mi cuenta</button></div>
+<main class="wrap">
+<section class="card" role="status" aria-live="polite">
+<span class="badge"><i></i>Mantenimiento en curso</span>
+<div class="logo" aria-label="El Sótano de Osito"><span>El Sótano</span><b>de Osito</b></div>
+<div class="stage">
+<div class="maintenance-mascot" aria-hidden="true">
+<span class="osito-face" data-estado="idle">
+<span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888 6.33728 11.1066 4.56771 13.1777 5.09858 15.7665 5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span>
+</div>
+</div>
+<h1 class="title">La página está en mantenimiento</h1>
+<p class="sub">Estamos haciendo unos ajustes para mejorar El Sótano de Osito. Vuelve en un momento.</p>
+<div class="tasks" aria-hidden="true"><span class="chip"><em>⚙️</em> Ajustes</span><span class="chip"><em>✨</em> Mejoras</span><span class="chip"><em>🛠️</em> Optimizando</span></div>
+<div class="bar" aria-hidden="true"></div>
+<div class="loader" aria-label="Cargando"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div>
+<p class="note" id="note">El servicio volverá automáticamente cuando el mantenimiento termine.</p>
+</section>
+</main>
+<script src="guest-mode.js?v=78"></script>
+<script>
+/* Vista de usuario: NO se carga Firebase Auth ni la sesión de la cuenta. */
+(function(){
+  var preview=!!(window.OsitoGuest&&window.OsitoGuest.active);
+  var base='https://www.gstatic.com/firebasejs/10.8.1/';
+  var libs=['firebase-app-compat.js'];
+  if(!preview) libs.push('firebase-auth-compat.js');
+  libs.push('firebase-firestore-compat.js');
+  libs.forEach(function(f){document.write('<script src="'+base+f+'"><\/script>');});
+  if(!preview) document.write('<script src="firebase-compat-init.js"><\/script>');
+})();
+</script>
+<script src="osito-cara3d.js"></script>
+<script src="maintenance-guard.js?v=78"></script>
+<script>
+/* Partículas flotantes + mensajes rotativos */
+(function(){
+  var cv=document.getElementById('fx'),ctx=cv.getContext('2d'),W,H,P=[],dpr=Math.min(window.devicePixelRatio||1,2);
+  var cols=['57,255,106','0,242,254','167,139,250','227,156,255'];
+  function size(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function mk(init){return{x:Math.random()*W,y:init?Math.random()*H:H+10,r:Math.random()*2.2+.6,s:Math.random()*.5+.2,d:Math.random()*Math.PI*2,c:cols[Math.random()*cols.length|0],a:Math.random()*.5+.25};}
+  function init(){size();var n=Math.max(26,Math.min(70,Math.round(W*H/22000)));P=[];for(var i=0;i<n;i++)P.push(mk(true));}
+  function tick(){ctx.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.y-=p.s;p.d+=.012;p.x+=Math.sin(p.d)*.35;if(p.y<-10)P[i]=mk(false);ctx.beginPath();ctx.fillStyle='rgba('+p.c+','+p.a+')';ctx.shadowColor='rgba('+p.c+',.9)';ctx.shadowBlur=8;ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();}requestAnimationFrame(tick);}
+  init();window.addEventListener('resize',init);tick();
+  var msgs=['El servicio volverá automáticamente cuando el mantenimiento termine.','Estamos puliendo detalles para ti. 🐻','No hace falta recargar: te avisaremos al volver.','Gracias por tu paciencia. 💚'],i=0,n=document.getElementById('note');
+  setInterval(function(){n.style.opacity=0;setTimeout(function(){i=(i+1)%msgs.length;n.textContent=msgs[i];n.style.opacity=1;},400);},5000);
+})();
+</script>
+<script>var _x=document.getElementById('preview-exit');if(_x)_x.addEventListener('click',function(){window.OsitoGuest?OsitoGuest.exit():(location.href='index.html')});</script>
+<script>
+/* Música suave SOLO en la página de mantenimiento. Los demás modos (Halloween, Navidad, etc.) conservan sus canciones. */
+(function(){
+  var a=document.getElementById('maintenance-music'),b=document.getElementById('snd');
+  if(!a||!b)return;
+  a.volume=.38;a.loop=true;a.addEventListener("ended",function(){try{a.currentTime=0;a.play();}catch(e){}});
+  var muted=false;try{muted=localStorage.getItem('osito_mant_muted')==='1';}catch(e){}
+  function ui(){var on=!a.paused&&!muted;b.textContent=on?'🔊':'🔇';b.classList.toggle('playing',on);}
+  function play(){if(muted)return ui();var p;try{p=a.play();}catch(e){}if(p&&p.then)p.then(ui).catch(function(){ui();});else ui();}
+  function unlock(){play();if(!a.paused){['pointerdown','keydown','touchstart'].forEach(function(t){document.removeEventListener(t,unlock,true);});}}
+  ['pointerdown','keydown','touchstart'].forEach(function(t){document.addEventListener(t,unlock,true);});
+  b.addEventListener('click',function(e){e.stopPropagation();muted=!muted;try{localStorage.setItem('osito_mant_muted',muted?'1':'0');}catch(x){}if(muted){a.pause();ui();}else play();});
+  a.addEventListener('play',ui);a.addEventListener('pause',ui);
+  play();
+})();
+</script>
+</body>
+</html>

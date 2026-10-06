@@ -478,7 +478,7 @@
         return (2 * interseccion) / total;
     }
 
-    // Detecta si el mensaje tiene múltiples preguntas distintas a la vez (para que Gemini las responda completas)
+    // Detecta si el mensaje tiene múltiples preguntas distintas a la vez (para que OpenRouter las responda completas)
     function esPreguntaCompuesta(norm) {
         const signos = (String(norm || '').match(/\b(que|como|cual|cuales|quien|por que|porque|cuando|cuantos|cuantas|donde)\b/g) || []);
         if (signos.length >= 2 && /\b(y|tambien|ademas)\b/.test(norm)) {
@@ -510,8 +510,8 @@
             return 'No genero imágenes, pero puedo responderte cualquier pregunta, ayudarte con tus tareas, explicarte cosas de videojuegos o platicar contigo de lo que quieras. 😊';
         }
 
-        // Si el usuario hace varias preguntas distintas en un mismo mensaje y Gemini está activo,
-        // dejamos que Gemini responda todas juntas con los datos oficiales.
+        // Si el usuario hace varias preguntas distintas en un mismo mensaje y OpenRouter está activo,
+        // dejamos que OpenRouter responda todas juntas con los datos oficiales.
         if (!opts.modoOffline && esPreguntaCompuesta(normUsuario)) {
             return null;
         }

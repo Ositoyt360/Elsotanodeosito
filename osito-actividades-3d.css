@@ -1245,3 +1245,10 @@ html.low-end-device .osito-face .of-camera{animation-duration:9s}
   45%{transform:rotateZ(-9deg) translateY(.025em) scale(1.03,.97)}
 }
 
+
+/* V73 — comida al frente de la boca durante el mordisco y la masticación. */
+.osito-face .of-boredom-prop[data-beat="eat-bite"] .of-pizza,.osito-face .of-boredom-prop[data-beat="eat-bite"] .of-apple,.osito-face .of-boredom-prop[data-beat="eat-bite"] .of-cup.chocolate{z-index:12!important;animation:ofBringFoodToMouthV73 1s cubic-bezier(.25,1.3,.55,1) 1 forwards!important}
+.osito-face .of-boredom-prop[data-food-stage="half"] .of-pizza,.osito-face .of-boredom-prop[data-food-stage="half"] .of-apple,.osito-face .of-boredom-prop[data-food-stage="half"] .of-cup.chocolate{z-index:12!important;transform:translate3d(0,-.24em,.25em) rotateX(22deg) scale(.96)!important}
+.osito-face .of-boredom-prop[data-beat="eat-finish"] .of-pizza,.osito-face .of-boredom-prop[data-beat="eat-finish"] .of-apple,.osito-face .of-boredom-prop[data-beat="eat-finish"] .of-cup.chocolate{z-index:12!important;animation:ofFinishFoodV73 1.15s cubic-bezier(.25,1.3,.55,1) 1 forwards!important}
+@keyframes ofBringFoodToMouthV73{0%{transform:translate3d(0,0,.05em) rotateX(6deg) scale(1)}45%{transform:translate3d(0,-.27em,.27em) rotateX(25deg) rotateZ(-3deg) scale(1.05)}100%{transform:translate3d(0,-.24em,.25em) rotateX(22deg) rotateZ(0) scale(.96)}}
+@keyframes ofFinishFoodV73{0%{transform:translate3d(0,-.24em,.25em) rotateX(22deg) scale(.96)}48%{transform:translate3d(0,-.28em,.28em) rotateX(25deg) scale(1.02)}70%{transform:translate3d(0,-.26em,.27em) rotateX(22deg) scale(.58);opacity:.92}100%{transform:translate3d(0,-.10em,.08em) rotateX(0) scale(.02);opacity:0}}

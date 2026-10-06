@@ -1,0 +1,115 @@
+/* =====================================================================
+ * V73 — Correcciones finales (se carga al final para ganar la cascada)
+ *  1) Mascota 3D limpia: sin adornos en las esquinas, cubo bien armado.
+ *  2) Zzz SOLO cuando duerme.
+ *  3) Comida: frente a la boca, boca masticando y comida que se va comiendo.
+ *  4) Modo llamada: orbe animado (sin ojos ni boca) estilo ChatGPT.
+ *  5) Mantenimiento: sin mascota de IA; modo "ver como usuario".
+ * ===================================================================== */
+
+/* ---------- 1) Mascota 3D: sin piezas que sobresalen ---------- */
+html body .osito-face .of-theme-decor { display: none !important; }
+html body .osito-face { --cd: .5em; }
+html body .osito-face .of-card { border-radius: .1em !important; }
+html body .osito-face .of-blob { border-radius: .1em !important; }
+html body .osito-face .of-cube-f { box-shadow: none !important; backface-visibility: hidden; }
+html body .osito-face .cf-back  { inset: 0 !important; border-radius: .1em !important; transform: translateZ(calc(var(--cd) * -1)) rotateY(180deg) !important; }
+html body .osito-face .cf-left  { inset: 0 auto 0 0 !important; width: var(--cd) !important; border-radius: .02em !important; transform-origin: 0 50% !important; transform: translateZ(calc(var(--cd) * -1)) rotateY(-90deg) !important; }
+html body .osito-face .cf-right { inset: 0 0 0 auto !important; width: var(--cd) !important; border-radius: .02em !important; transform-origin: 100% 50% !important; transform: translateZ(calc(var(--cd) * -1)) rotateY(90deg) !important; }
+html body .osito-face .cf-top   { inset: 0 0 auto 0 !important; height: var(--cd) !important; border-radius: .02em !important; transform-origin: 50% 0 !important; transform: translateZ(calc(var(--cd) * -1)) rotateX(90deg) !important; }
+html body .osito-face .cf-bottom{ inset: auto 0 0 0 !important; height: var(--cd) !important; border-radius: .02em !important; transform-origin: 50% 100% !important; transform: translateZ(calc(var(--cd) * -1)) rotateX(-90deg) !important; }
+/* Siempre 3D: nunca aplanar el cubo (salvo la llamada, que ahora usa orbe) */
+html body .osito-face, html body .osito-face .of-rig, html body .osito-face .of-card { transform-style: preserve-3d; }
+
+/* ---------- 2) Zzz solo al dormir ---------- */
+html body .osito-face:not([data-expr="sleeping"]) .of-zzz,
+html body .osito-face:not([data-expr="sleeping"]) .of-bub {
+  opacity: 0 !important; visibility: hidden !important; animation: none !important;
+}
+
+/* ---------- 3) Comida ---------- */
+/* El objeto queda justo al frente de la boca */
+html body .osito-face .of-boredom-prop[data-mode="pizza"]    { top: .40em !important; }
+html body .osito-face .of-boredom-prop[data-mode="manzana"]  { top: .38em !important; }
+html body .osito-face .of-boredom-prop[data-mode="chocolate"]{ top: .40em !important; }
+html body .osito-face .of-boredom-prop[data-food-stage] { z-index: 60; transition: translate .5s ease, scale .5s ease, opacity .5s ease; }
+/* Mientras mastica, la comida baja un poco para que se vea la boca trabajando */
+html body .osito-face .of-boredom-prop[data-food-stage="half"] { translate: 0 .16em; scale: .78; }
+html body .osito-face .of-boredom-prop[data-food-stage="eaten"] { translate: 0 .2em; scale: .2; opacity: 0; }
+/* Boca que mastica (sin importar la expresión activa) */
+html body .osito-face[data-act="f-bite"] .of-eyes, html body .osito-face[data-act="f-chew"] .of-eyes { display: block !important; }
+html body .osito-face[data-act="f-bite"] .of-happy, html body .osito-face[data-act="f-chew"] .of-happy,
+html body .osito-face[data-act="f-bite"] .of-smile, html body .osito-face[data-act="f-chew"] .of-smile { display: none !important; }
+html body .osito-face[data-act="f-bite"] .of-mouth,
+html body .osito-face[data-act="f-chew"] .of-mouth {
+  display: block !important; opacity: 1 !important; z-index: 3;
+  width: .2em !important; height: .1em !important; margin-left: -.1em !important;
+  background: #fff !important; border-radius: .02em .02em .1em .1em !important;
+  transform-origin: 50% 0 !important;
+}
+html body .osito-face[data-act="f-bite"] .of-mouth { animation: ofV73Bite .7s ease-in-out infinite !important; }
+html body .osito-face[data-act="f-chew"] .of-mouth { animation: ofV73Chew .38s ease-in-out infinite !important; }
+html body .osito-face[data-act="f-chew"] .of-cheek { animation: ofV73Cheek .38s ease-in-out infinite !important; opacity: 1 !important; }
+@keyframes ofV73Bite { 0%,100% { transform: scale(.9,1.5) } 55% { transform: scale(1.1,.2) } }
+@keyframes ofV73Chew { 0%,100% { transform: scale(.85,.2) } 50% { transform: scale(1.05,1) } }
+@keyframes ofV73Cheek { 0%,100% { scale: 1 } 50% { scale: 1.25 } }
+/* El objeto se "come": cada masticada lo sacude y suelta migajas */
+html body .osito-face[data-act="f-chew"] .of-boredom-prop .of-pizza,
+html body .osito-face[data-act="f-chew"] .of-boredom-prop .of-apple,
+html body .osito-face[data-act="f-chew"] .of-boredom-prop .of-cup.chocolate { animation: ofV73Nibble .38s ease-in-out infinite !important; }
+@keyframes ofV73Nibble { 0%,100% { transform: translateY(0) rotate(0) } 50% { transform: translateY(-.015em) rotate(-2deg) scale(.985) } }
+html body .osito-face[data-act="f-chew"] .of-boredom-prop .fd-crumb { animation: ofCrumb1 .76s ease-out infinite !important; }
+html body .osito-face[data-act="f-chew"] .of-boredom-prop .fd-crumb.c2 { animation-name: ofCrumb2 !important; animation-delay: .2s !important; }
+html body .osito-face[data-act="f-chew"] .of-boredom-prop .fd-crumb.c3 { animation-name: ofCrumb3 !important; animation-delay: .4s !important; }
+
+/* ---------- 4) Modo llamada: orbe tipo ChatGPT ---------- */
+html body .call-avatar-body > .osito-face { display: none !important; }
+html body .call-avatar { --orb-lvl: 0; width: 180px; height: 180px; }
+html body .call-avatar-body {
+  position: relative !important; border-radius: 50% !important; overflow: hidden !important;
+  background: radial-gradient(circle at 50% 50%, #1b1240, #0b0820) !important;
+  box-shadow: 0 0 40px rgba(145,71,255,.45), 0 0 90px rgba(5,224,245,.18) !important;
+  transform: scale(calc(1 + var(--orb-lvl) * .16)) !important;
+  transition: transform .09s linear !important;
+}
+html body .call-avatar-body::before {
+  content: ""; position: absolute; inset: -30%; border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, #9147ff 0 22%, transparent 52%),
+    radial-gradient(circle at 72% 32%, #05e0f5 0 22%, transparent 52%),
+    radial-gradient(circle at 66% 74%, #34d399 0 22%, transparent 52%),
+    radial-gradient(circle at 28% 70%, #ec4899 0 22%, transparent 52%);
+  filter: blur(14px); animation: ofV73OrbSpin 9s linear infinite;
+}
+html body .call-avatar-body::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 34% 24%, rgba(255,255,255,.55), rgba(255,255,255,0) 42%);
+}
+@keyframes ofV73OrbSpin { to { transform: rotate(360deg) } }
+html body .call-avatar-glow { animation: none !important; opacity: .6 !important; }
+html body .call-avatar::before, html body .call-avatar::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  border: 2px solid rgba(145,71,255,.55); opacity: 0;
+}
+html body .call-avatar[data-state="IDLE"] .call-avatar-body { animation: ofV73Breathe 4.5s ease-in-out infinite; }
+html body .call-avatar[data-state="LISTENING"]::before { animation: ofV73Ring 1.8s ease-out infinite; }
+html body .call-avatar[data-state="LISTENING"]::after  { animation: ofV73Ring 1.8s ease-out .9s infinite; }
+html body .call-avatar[data-state="THINKING"] .call-avatar-body::before { animation-duration: 2.4s; }
+html body .call-avatar[data-state="SPEAKING"] .call-avatar-body::before { animation-duration: 3.2s; filter: blur(10px) saturate(1.3); }
+html body .call-avatar[data-state="SPEAKING"]::before { animation: ofV73Ring 1.2s ease-out infinite; border-color: rgba(5,224,245,.6); }
+html body .call-avatar[data-state="SPEAKING"]::after  { animation: ofV73Ring 1.2s ease-out .6s infinite; border-color: rgba(52,211,153,.55); }
+@keyframes ofV73Ring { 0% { transform: scale(1); opacity: .75 } 100% { transform: scale(1.55); opacity: 0 } }
+@keyframes ofV73Breathe { 0%,100% { scale: 1 } 50% { scale: 1.04 } }
+@media (prefers-reduced-motion: reduce) { html body .call-avatar-body, html body .call-avatar-body::before, html body .call-avatar::before, html body .call-avatar::after { animation: none !important } }
+
+/* ---------- 5) Mantenimiento / ver como usuario ---------- */
+body.site-maintenance-active .ia-floating-container, body.site-maintenance-active .ia-toggle-bubble { display: none !important; }
+#osito-vista-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 2147483600; display: flex; gap: 12px; align-items: center; justify-content: center;
+  padding: 8px 12px; background: linear-gradient(90deg,#3b1d8f,#0e7490); color: #fff; font: 600 13px/1.3 system-ui, sans-serif; text-align: center;
+}
+#osito-vista-banner button, #osito-vista-btn {
+  cursor: pointer; border: 1px solid rgba(255,255,255,.5); background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; padding: 6px 12px; font: 600 12px system-ui, sans-serif;
+}
+#osito-vista-btn { position: fixed; left: 14px; bottom: 90px; z-index: 2147483000; background: rgba(8,12,24,.88); box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+#osito-mant-badge { position: fixed; right: 14px; top: 14px; z-index: 2147483000; background: rgba(8,12,24,.9); color: #ffd36b; border: 1px solid rgba(255,211,107,.5); border-radius: 999px; padding: 6px 12px; font: 600 12px system-ui, sans-serif; }

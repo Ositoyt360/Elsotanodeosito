@@ -1,0 +1,10 @@
+V75 — corrección de mantenimiento y vista de usuario
+
+- La cuenta OsitoYT360 no queda atrapada en mantenimiento: se espera a Firebase Auth antes de redirigir.
+- La vista ?userPreview=1 simula a un visitante mientras el mantenimiento está activo. Al desactivarlo, se elimina el parámetro y vuelve al index normal.
+- Nuevo botón “Ver como usuario” en moderación; abre la vista en otra pestaña mediante una acción del usuario.
+- Mantenimiento continúa siendo una página separada: mantenimiento.html.
+- Se eliminó la imagen del logo del mantenimiento; ahora el encabezado es texto “El Sótano de Osito”.
+- La mascota 3D de mantenimiento queda recortada dentro de su contenedor para evitar bordes/salientes visuales.
+- La animación de carga y los engranajes se conservan.
+- La IA no fue modificada en esta versión.

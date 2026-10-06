@@ -2,7 +2,7 @@
  *  - Envuelve la tarjeta de la cara en un "rig" 3D y le agrega capas de grosor.
  *  - Los emojis de la cara (los que salen arriba a la derecha) se dibujan con capas 3D.
  *  - Cada expresión muestra su emoji al ENTRAR y otro emoji distinto al SALIR (data-leave).
- * El estilo está en osito-cara3d.css; los cambios de expresión (data-fase) los pone ia-claude.js.
+ * El estilo está en osito-cara3d.css; los cambios de expresión (data-fase) los pone ia-openrouter.js.
  */
 (function () {
     'use strict';

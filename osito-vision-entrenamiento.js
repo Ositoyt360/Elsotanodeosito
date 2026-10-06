@@ -195,7 +195,7 @@
         }
     }
 
-    // Capturar foto actual para análisis Gemini Vision
+    // Capturar foto actual para análisis visual con OpenRouter
     function capturarFotogramaBase64() {
         if (!videoHeadless || !streamCamara || !streamCamara.active) return null;
         if (videoHeadless.readyState < 2) return null;
@@ -468,7 +468,7 @@
             var NUEVAS_HABILIDADES = [
                 'Reflejos Ópticos Ultra',
                 'Duelo de Miradas Maestro',
-                'Reconocimiento Facial Gemini',
+                'Reconocimiento facial con IA',
                 'Acrobacia Cúbica 360°',
                 'Simón Dice con la Cabeza',
                 'Lectura de Expresiones',
@@ -630,7 +630,7 @@
         }, 4200);
     }
 
-    // 4) Adivina el Objeto (Gemini Vision)
+    // 4) Adivina el Objeto (IA visual)
     async function jugarAdivinaObjeto() {
         var ok = await encenderVision(true);
         if (!ok) return;
@@ -665,7 +665,7 @@
         }, 3600);
     }
 
-    // 5) Reto de Muecas (Gemini Vision)
+    // 5) Reto de Muecas (IA visual)
     async function jugarRetoMuecas() {
         var ok = await encenderVision(true);
         if (!ok) return;
@@ -706,7 +706,7 @@
         }, 3800);
     }
 
-    // 6) ¿Qué estás viendo? (Gemini Vision)
+    // 6) ¿Qué estás viendo? (IA visual)
     async function queVesAhora() {
         var ok = await encenderVision(true);
         if (!ok) return;

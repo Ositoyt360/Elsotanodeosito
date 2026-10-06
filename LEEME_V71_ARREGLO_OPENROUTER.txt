@@ -1,0 +1,29 @@
+V71 - ARREGLO OPENROUTER
+
+POR QUE NO FUNCIONABA
+1) El .env tenia el texto de ejemplo "PEGA_AQUI_TU_NUEVA_CLAVE_DE_OPENROUTER" en lugar de una clave real.
+   Ahora el servidor lo detecta y lo avisa (ya no intenta llamar a OpenRouter con una clave falsa).
+2) Si abres el sitio con Live Server (127.0.0.1:5500) no existe /api/ia. Ahora el sitio prueba
+   automaticamente http://localhost:3000/api/ia (el servidor Node). El modo llamada tambien.
+3) Si ves el mensaje de "Gemini" es JavaScript viejo en cache. Subi la version del service worker (v71).
+
+PASOS
+1) Crea una clave nueva en https://openrouter.ai/keys (la anterior fue expuesta: revocala).
+2) Abre .env y pon:  OPENROUTER_API_KEY=sk-or-...   (sin comillas ni espacios)
+3) Ejecuta INICIAR_OPENROUTER.bat (o: npm install y luego npm start).
+4) Abre http://localhost:3000/api/ia/estado?probar=1  -> debe decir prueba ok:true
+5) Usa el sitio en http://localhost:3000 (no Live Server).
+6) Si sigue saliendo el texto viejo: F12 > Application > Service Workers > Unregister, y Clear site data. Recarga con Ctrl+Shift+R.
+
+CODIGOS QUE PUEDE DAR /api/ia/estado?probar=1
+401 = clave invalida | 402 = sin creditos | 429 = limite (los modelos gratis tienen limite diario) | 404/400 = modelo no disponible
+
+==== V72 (cambios extra) ====
+- La IA ya no llama "osita/osito" al usuario: usa el nombre que guardó en "Guardar mi nombre" (si no hay nombre, dice "amigo").
+- La IA no inventa temas (por ejemplo "tarea"). Si el mensaje no tiene sentido, pregunta qué quisiste decir.
+  (Si sale "tarea" es porque se tocó el botón rápido "Ayuda con tarea" de la parte de abajo del chat.)
+- El modo llamada de voz (botón de barras + micrófono arriba) ahora recuerda lo que se habló en la llamada.
+- Quitado el botón del cerebro (🧠).
+- Quitadas las menciones y botones de cámara (modo llamada y textos de la IA). Las imágenes que se adjuntan siguen funcionando.
+- Archivos tocados: server.js, chat-ia-core.js, ia-openrouter.js, call-mode-engine.js, index.html, ia.html, sw.js
+- Después de copiar: reinicia con "node server.js" y recarga con Ctrl+Shift+R.

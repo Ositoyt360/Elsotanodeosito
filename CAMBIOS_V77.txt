@@ -1,0 +1,8 @@
+V77
+- Mantenimiento: diseño nuevo (tarjeta con borde animado, insignia, chips, barra y puntos de carga), fondo animado (cuadrícula, auroras, partículas, engranajes). La mascota 3D se conserva.
+- Los puntos de carga ya no se apagan con "reducir movimiento" de Windows.
+- Ver como usuario: abre mantenimiento.html?userPreview=1 sin Firebase Auth (no usa ni toca tu cuenta). Muestra etiqueta de vista previa.
+- Fix: maintenance-guard perdía el estado si Firestore respondía antes que Auth.
+- IA: el servidor reintenta (hasta 4 veces) y usa modelos de respaldo (OPENROUTER_FALLBACK_MODELS opcional) antes de mostrar error. Mensaje de error más claro.
+- Chat de IA en PC: panel de 318px, altura limitada a la ventana, controles compactos; el campo de mensaje y los botones siempre visibles.
+- Cachés actualizados a V77.

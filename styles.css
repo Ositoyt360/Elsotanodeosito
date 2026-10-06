@@ -5459,7 +5459,7 @@ body.ultra-performance .modo-video-san-valentin .sv-bg,
 body.ultra-performance .modo-video-san-valentin .sv-glow { animation: none !important; }
 
 /* Bienvenida: mientras está abierta solo se ve el fondo + el panel. */
-body:has(#welcome-screen) > *:not(#welcome-screen):not(.modo-sitio-video):not(.modo-sitio-decoracion):not(.toast-notification):not(script):not(style):not(audio) {
+body:has(#welcome-screen) > *:not(#welcome-screen):not(.modo-sitio-video):not(.modo-sitio-decoracion):not(.toast-notification):not(#osito-guest-banner):not(script):not(style):not(audio) {
     opacity: 0 !important;
     pointer-events: none !important;
 }
@@ -5614,7 +5614,7 @@ html body.ultra-performance::before, html body.ultra-performance::after { animat
    1) CARA ANIMADA DE LA IA (reemplaza el logo 🤖): ojos que se mueven,
       parpadeo, boca al hablar, estados escuchando / pensando / hablando.
    2) NUEVO DISEÑO DEL PANEL DE LA IA (oscuro, chips que se deslizan,
-      entrada redonda) y conexión con Claude.
+      entrada redonda) y conexión con la IA.
    3) RENDIMIENTO de los modos especiales (Redmi 15c y similares):
       video 480p en bucle, menos emojis, sin filtros/blur animados.
    ========================================================= */
@@ -8460,4 +8460,59 @@ html.perf-lite .ia-section .ai-chat-shell {
 html.low-end-device .ia-section .ai-suggestions,
 html.perf-lite .ia-section .ai-suggestions {
   animation:none !important;
+}
+
+/* V74 — Zzz solo cuando la mascota realmente duerme. */
+.osito-face .of-zzz{opacity:0!important;animation:none!important;visibility:hidden!important;pointer-events:none!important;}
+.osito-face[data-expr="sleeping"] .of-zzz{opacity:1!important;visibility:visible!important;animation:ofZ 3.6s ease-out infinite!important;}
+.osito-face[data-expr="sleeping"] .of-zzz.z2{animation-delay:1.2s!important}.osito-face[data-expr="sleeping"] .of-zzz.z3{animation-delay:2.4s!important}
+
+/* ===== V77: chat de IA más pequeño en PC (que siempre se vean todos los botones) ===== */
+@media (min-width:1025px){
+  html body .ia-floating-container{bottom:16px!important;right:16px!important;top:auto!important}
+  html body .ia-floating-container .ia-section.active,
+  html body #ai-section.ia-section.active{
+    width:min(318px,calc(100vw - 32px))!important;max-width:318px!important;
+    height:min(500px,calc(100vh - 104px))!important;height:min(500px,calc(100dvh - 104px))!important;
+    max-height:calc(100vh - 104px)!important;max-height:calc(100dvh - 104px)!important;
+    display:flex!important;flex-direction:column!important;overflow:hidden!important;border-radius:16px!important}
+  html body #ai-section .ia-header{padding:7px 9px!important;gap:5px!important;flex:0 0 auto!important}
+  html body #ai-section .ia-header-title{gap:7px!important;min-width:0!important}
+  html body #ai-section .ia-header-text{min-width:0!important}
+  html body #ai-section .ia-header-text h3{font-size:.76rem!important;line-height:1.15!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  html body #ai-section .ia-header-text p{font-size:.62rem!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  html body #ai-section .ia-header .osito-face{--fs:30px!important;transform-origin:left center}
+  html body #ai-section .ia-header>button,
+  html body #ai-section .ia-header .ia-sound-btn,
+  html body #ai-section .ia-header .ia-close-btn{flex:0 0 auto!important;width:28px!important;height:28px!important;min-width:28px!important;padding:0!important;font-size:.8rem!important}
+  html body #ai-section .ia-header .ia-call-header-btn{width:44px!important;min-width:44px!important}
+  html body #ai-section .ia-setup{flex:1 1 auto!important;min-height:0!important;display:flex!important;flex-direction:column!important;padding:6px 8px 8px!important;gap:5px!important;overflow:hidden!important}
+  html body #ai-section .ai-chat-shell{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:100%!important;max-height:none!important;gap:5px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+  html body #ai-section .ai-sessions-bar{flex:0 0 auto!important;gap:4px!important;flex-wrap:nowrap!important;overflow:hidden!important}
+  html body #ai-section .ai-sessions-bar .ai-session-btn{padding:4px 7px!important;font-size:.64rem!important;min-height:0!important;flex:0 0 auto!important}
+  html body #ai-section .ai-sessions-bar .ai-session-btn span:not([aria-hidden]){display:none!important}
+  html body #ai-section .ai-current-chat-pill{flex:1 1 auto!important;min-width:0!important;font-size:.64rem!important;padding:4px 7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  html body #ai-section .ai-profile-row{flex:0 0 auto!important;padding:5px 6px!important;gap:5px!important;border-radius:10px!important}
+  html body #ai-section .ai-profile-actions{gap:4px!important}
+  html body #ai-section .ai-profile-actions .btn-action,
+  html body #ai-section .ai-name-row .btn-action{padding:4px 5px!important;font-size:.64rem!important;min-height:26px!important;border-radius:9px!important;gap:3px!important}
+  html body #ai-section .ai-name-row{gap:4px!important}
+  html body #ai-section .ai-name-row .input-gamer{padding:4px 8px!important;font-size:.7rem!important;min-height:26px!important;height:26px!important;min-width:0!important}
+  html body #ai-section .ai-name-save{white-space:nowrap!important;flex:0 0 auto!important}
+  html body #ai-section .ia-messages{flex:1 1 auto!important;min-height:90px!important;max-height:none!important;height:auto!important;overflow-y:auto!important;padding:7px!important;font-size:.76rem!important}
+  html body #ai-section .ia-messages .msg{font-size:.76rem!important;padding:6px 9px!important;max-width:92%!important}
+  html body #ai-section .ai-suggestions{flex:0 0 auto!important;max-height:34px!important;overflow:hidden!important}
+  html body #ai-section .ai-suggestions .ai-suggestion{padding:4px 8px!important;font-size:.64rem!important;min-height:0!important}
+  html body #ai-section .ai-input-row{flex:0 0 auto!important;display:block!important;width:100%!important;margin:0!important}
+  html body #ai-section .ai-input-row .container,
+  html body #ai-section .ai-input-container{width:100%!important;max-width:100%!important;gap:3px!important;transform:none!important}
+  html body #ai-section .ai-input-container>button{flex:0 0 auto!important;transform:scale(.82)!important;margin:0 -3px!important}
+  html body #ai-section .ai-input-field{min-width:0!important;flex:1 1 auto!important}
+  html body #ai-section .ai-input-field input{font-size:.74rem!important}
+  html body #ai-section .ai-input-field .floating-label{display:none!important}
+}
+/* Pantallas de PC muy bajitas: todavía más compacto */
+@media (min-width:1025px) and (max-height:620px){
+  html body .ia-floating-container .ia-section.active,html body #ai-section.ia-section.active{height:calc(100dvh - 92px)!important}
+  html body #ai-section .ai-profile-row{display:none!important}
 }

@@ -14,7 +14,7 @@
  *     CONFUSED, LAUGHING, EXCITED, TIRED, SLEEPING.
  *   - Boca con Lip-Sync REAL mediante Web Audio API AnalyserNode.
  *   - Sonidos y expresiones naturales ("ah", "mmm", suspiro, bostezo, risa).
- *   - Conversación en tiempo real con Gemini Live (Voz + Texto progresivo).
+ *   - Conversación en tiempo real con OpenRouter Live (Voz + Texto progresivo).
  *   - Modo llamada exclusivamente por micrófono; no usa cámara.
  *   - Mute real y finalización limpia con retorno al cubo del modo normal.
  * ============================================================================
@@ -52,6 +52,7 @@
     // Estado del Micrófono y Mute
     var isMicMuted = false;
     var recognitionInstance = null;
+    var historialLlamada = []; // memoria de la conversación por voz
 
     // Estado de la Cámara Real y Visión
     var cameraStream = null; // compatibilidad interna; nunca se solicita cámara
@@ -529,29 +530,31 @@
     }
 
     // ========================================================================
-    // 10. CONVERSACIÓN EN TIEMPO REAL CON GEMINI LIVE
+    // 10. CONVERSACIÓN POR VOZ CON OPENROUTER
     // ========================================================================
-    // La clave de Gemini NUNCA se expone en el navegador.
+    // La clave de OpenRouter NUNCA se expone en el navegador.
     // El modo llamada usa el mismo backend seguro /api/ia que el chat.
-    // Así funciona con la GEMINI_API_KEY guardada como secreto del servidor.
-    async function llamarGeminiLiveRest(pregunta, frameBase64) {
-        try {
-            var res = await fetch('/api/ia', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    pregunta: String(pregunta || '').trim(),
-                    imagen: frameBase64 || '',
-                    nombre: localStorage.getItem('osito_ai_nombre') || '',
-                    genero: localStorage.getItem('osito_ai_genero') || 'male'
-                })
-            });
-            if (!res.ok) return null;
-            var data = await res.json();
-            return data && data.texto ? String(data.texto).trim() : null;
-        } catch (_) {
-            return null;
+    // Así funciona con la OPENROUTER_API_KEY guardada como secreto del servidor.
+    async function llamarOpenRouterLiveRest(pregunta, frameBase64) {
+        var urls = (typeof window.OsitoIAEndpoints === 'function') ? window.OsitoIAEndpoints() : ['/api/ia'];
+        for (var i = 0; i < urls.length; i++) {
+            try {
+                var res = await fetch(urls[i], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pregunta: String(pregunta || '').trim(),
+                        imagen: frameBase64 || '',
+                        nombre: localStorage.getItem('osito_ai_nombre') || '',
+                        genero: localStorage.getItem('osito_ai_genero') || 'male'
+                    })
+                });
+                if (!res.ok) continue;
+                var data = await res.json();
+                if (data && data.texto) return String(data.texto).trim();
+            } catch (_) { /* prueba el siguiente endpoint */ }
         }
+        return null;
     }
 
     async function procesarEntradaUsuario(preguntaUsuario) {
@@ -576,11 +579,12 @@
                 return;
             }
 
-            // El modo llamada usa el mismo /api/ia que el chat normal. Así Gemini
+            // El modo llamada usa el mismo /api/ia que el chat normal. Así OpenRouter
             // recibe el mismo contexto, memoria y reglas de exactitud.
             if (!respuesta && window.OsitoIA && typeof window.OsitoIA.preguntar === 'function') {
                 try {
                     var resIA = await window.OsitoIA.preguntar(limpia, {
+                        historial: historialLlamada.slice(-14),
                         imagen: fotoAEnviar,
                         nombre: localStorage.getItem('osito_ai_nombre') || '',
                         genero: localStorage.getItem('osito_ai_genero') || 'male'
@@ -599,6 +603,11 @@
             if (!respuesta) {
                 respuesta = 'Te escucho. Dime lo que quieras y te respondo directamente.';
             }
+
+            // Guardar el turno para que la IA recuerde lo hablado en la llamada
+            historialLlamada.push({ role: 'user', text: limpia });
+            historialLlamada.push({ role: 'assistant', text: String(respuesta) });
+            if (historialLlamada.length > 20) historialLlamada = historialLlamada.slice(-20);
 
             // Reacción emocional automática del avatar al texto de respuesta
             determinarEmocionPorTexto(respuesta);

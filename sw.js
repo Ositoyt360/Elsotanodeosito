@@ -10,17 +10,21 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v68-auto';
-const OTA_CACHE_NAME = 'osito-ota-github-v68';
+const CACHE_NAME = 'osito-pwa-v80';
+const OTA_CACHE_NAME = 'osito-ota-github-v78';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
+const OTA_ENABLED = false;
 
 const CORE_ASSETS = [
   './',
   './index.html',
+  './mantenimiento.html',
   './perfil.html',
   './ia.html',
   './ia-page.css',
   './chat-ia-core.js',
+  './ia-openrouter.js',
+  './call-mode-engine.js',
   './firebase-compat-init.js',
   './moderador.html',
   './manifest.json',
@@ -91,7 +95,7 @@ self.addEventListener('message', (event) => {
   if (data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  if (data.type === 'OTA_SYNC_GITHUB' && data.sha) {
+  if (OTA_ENABLED && data.type === 'OTA_SYNC_GITHUB' && data.sha) {
     event.waitUntil(
       (async () => {
         const sha = String(data.sha);
@@ -201,9 +205,11 @@ self.addEventListener('fetch', (event) => {
           }
           return freshResponse;
         } catch (networkError) {
-          const otaCache = await caches.open(OTA_CACHE_NAME);
-          const otaMatch = await otaCache.match(req, { ignoreSearch: true });
-          if (otaMatch) return otaMatch;
+          if (OTA_ENABLED) {
+            const otaCache = await caches.open(OTA_CACHE_NAME);
+            const otaMatch = await otaCache.match(req, { ignoreSearch: true });
+            if (otaMatch) return otaMatch;
+          }
           const cached = await caches.match(req, { ignoreSearch: true });
           if (cached) return cached;
           if (req.mode === 'navigate') {

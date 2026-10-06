@@ -18,13 +18,26 @@ Ese mensaje aparece durante la importación de GitHub y no significa necesariame
 
 Configura como secretos/variables del servidor cuando corresponda:
 
-- `GEMINI_API_KEY`
+- `OPENROUTER_API_KEY`
+- `OPENROUTER_MODEL` (por defecto: `openrouter/free`)
 - `ANTHROPIC_API_KEY` (opcional, respaldo)
 - `FIREBASE_SERVICE_ACCOUNT_JSON` o credenciales de aplicación de Firebase Admin para las funciones administrativas que lo necesiten
 - `GITHUB_REPO` (opcional; por defecto `Ositoyt360/Elsotanodeosito`)
 
 No se incluye ninguna clave real en este paquete.
 
-## Configuración de Gemini
+## Configuración de OpenRouter
 
-La IA del sitio llama a la API REST de Gemini desde el servidor (sin SDK, así no depende de ninguna versión de paquete). Coloca tu clave como secreto/variable `GEMINI_API_KEY`; no la pegues en `index.html`, `call-mode-engine.js` ni en `localStorage`. El chat de texto, análisis de imágenes y el modo llamada pasan por `/api/ia`.
+La IA del sitio llama a OpenRouter desde `server.js`; la clave nunca se envía al navegador.
+Configura en el hosting Node estas variables:
+
+- `OPENROUTER_API_KEY` = tu clave de OpenRouter
+- `OPENROUTER_MODEL` = `openrouter/free`
+
+`openrouter/free` selecciona automáticamente un modelo gratuito compatible con la solicitud y admite texto e imágenes. El chat, el análisis de imágenes y el modo llamada pasan por `/api/ia`.
+
+**Importante:** no pongas `OPENROUTER_API_KEY` en `index.html`, ningún `.js`, `localStorage` ni GitHub.
+
+Para comprobar la conexión, abre:
+`https://TU-SERVIDOR/api/ia/estado?probar=1`
+y debe aparecer `prueba.ok: true`.

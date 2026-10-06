@@ -1,0 +1,5 @@
+V78 — Ver como usuario = invitado completo
+- "Ver como usuario" abre una sesión de INVITADO aislada (guest-mode.js), solo en esa pestaña. Firebase usa una app aparte sin tu cuenta.
+- Mantenimiento ACTIVO -> mantenimiento.html. Mantenimiento APAGADO -> index.html como invitado, con todas las funciones.
+- Botón "Salir y volver a mi cuenta" (barra amarilla arriba): desactiva la vista y te lleva al index normal con tu cuenta.
+- Funciona en index.html, ia.html y mantenimiento.html.

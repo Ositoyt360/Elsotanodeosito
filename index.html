@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=77">
     <link rel="stylesheet" href="v49.css">
     <link rel="stylesheet" href="call-mode.css">
     <script id="v62-inline">
@@ -621,6 +621,7 @@
     </script>
 
     <!-- Respaldo compatible para navegadores o servidores locales que bloqueen los modulos ES. -->
+    <script src="guest-mode.js?v=78"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -640,12 +641,14 @@
             };
 
             try {
-                const app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat);
-                const auth = window.firebase.auth();
-                const db = window.firebase.firestore();
+                // V78: en "Ver como usuario" se usa una app de invitado aislada (sin tu cuenta).
+                const guest = (window.OsitoGuest && window.OsitoGuest.active) ? window.OsitoGuest.services(configCompat) : null;
+                const app = guest ? guest.app : (window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat));
+                const auth = guest ? guest.auth : window.firebase.auth();
+                const db = guest ? guest.db : window.firebase.firestore();
                 let storage = null;
                 try {
-                    storage = window.firebase.storage();
+                    storage = guest ? guest.storage : window.firebase.storage();
                 } catch (storageError) {
                     console.warn('[FirebaseCompat] Storage no disponible.', storageError);
                 }
@@ -860,6 +863,10 @@ accent-color:#00ff88;
 .maintenance-overlay .maintenance-mascot .cf-right { background: linear-gradient(90deg,#29205d,#171238) !important; }
 .maintenance-overlay .maintenance-mascot .cf-top { background: linear-gradient(#7860c8,#5540a0) !important; }
 .maintenance-overlay .maintenance-mascot .cf-bottom { background:#120d29 !important; }
+</style>
+<style id="v76-no-maintenance-overlay">
+/* V76: mantenimiento independiente. Nunca mostrar el overlay antiguo en index. */
+#maintenance-overlay{display:none!important;visibility:hidden!important;pointer-events:none!important}
 </style>
 </head>
 <body>
@@ -1487,7 +1494,6 @@ accent-color:#00ff88;
                         <span class="call-wave-bars" aria-hidden="true"><i></i><i></i><i></i></span>
                         <span class="call-btn-mic-glyph" aria-hidden="true">🎙️</span>
                     </button>
-                    <button class="ia-sound-btn ia-cube-hub-btn" id="ia-cube-hub-btn" type="button" onclick="window.OsitoVision && window.OsitoVision.abrirMenuJuegos && window.OsitoVision.abrirMenuJuegos()" aria-label="Auto-entrenamiento y juegos del cubo" title="🧠 Auto-Entrenamiento y Juegos del Cubo">🧠</button>
                     <button class="ia-sound-btn ia-cfg-header-btn" id="ia-cfg-header-btn" type="button" aria-label="Configuración de voz e IA" title="Configuración de voz e IA">⚙️</button>
                     <button class="ia-sound-btn" id="ia-face-sound-btn" type="button" aria-pressed="true" aria-label="Sonidos de la cara" title="Sonidos de la cara">🔔</button>
                     <button class="ia-close-btn" type="button" onclick="toggleIAPanel()" aria-label="Cerrar La mascotita del Sotano">✕</button>
@@ -1635,7 +1641,7 @@ accent-color:#00ff88;
                         </div>
                         <div class="ai-image-preview-bar" id="ai-image-preview-bar" hidden>
                             <img id="ai-image-preview-thumb" src="" alt="Vista previa de imagen para la IA" />
-                            <span class="ai-image-preview-label">📸 Imagen lista para que la IA la vea</span>
+                            <span class="ai-image-preview-label">🖼️ Imagen lista para que la IA la vea</span>
                             <button type="button" class="ai-image-preview-remove" id="ai-image-preview-remove" aria-label="Quitar imagen" title="Quitar imagen">✕</button>
                         </div>
                         <form class="ai-input-row ai-input" id="ai-form">
@@ -1708,7 +1714,7 @@ accent-color:#00ff88;
                             </div>
                         </form>
                         <div class="ai-voice-status" id="ai-voice-status" style="font-size: 11px; color: var(--text-muted, #888); margin-top: 4px; text-align: center;">
-                            🎙️ Pulsa el micrófono para hablar o 📸 envía una imagen
+                            🎙️ Pulsa el micrófono para hablar o 🖼️ envía una imagen
                         </div>
                     </div>
                 </div>
@@ -3994,7 +4000,7 @@ accent-color:#00ff88;
     <script src="base-conocimiento.js"></script>
     <script src="v49.js"></script>
     <script src="face-sound.js" defer></script>
-    <script src="ia-claude.js" defer></script>
+    <script src="ia-openrouter.js?v=70" defer></script>
     <link rel="stylesheet" href="personalidades-animaciones-1000.css">
     <link rel="stylesheet" href="osito-cara3d.css">
     <link rel="stylesheet" href="osito-actividades-3d.css">
@@ -4266,7 +4272,8 @@ accent-color:#00ff88;
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
-    <script src="chat-ia-core.js"></script>
+    <script src="maintenance-guard.js?v=77"></script>
+    <script src="chat-ia-core.js?v=70"></script>
 
         <section id="maintenance-overlay" class="maintenance-overlay" aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>La Página está en mantenimiento</h2><p>Vuelve más tarde</p><div class="loader"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div></div></section>
 

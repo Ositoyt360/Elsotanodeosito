@@ -83,3 +83,8 @@ body.limited-moderator .moderator-messages-panel::before {
 @media(max-width:600px){
   .maintenance-main-btn { width:100%; min-height:50px; }
 }
+
+/* V75 — la vista previa usa la misma mascota 3D, pero recortada para evitar salientes. */
+.maintenance-preview-mascot{overflow:hidden!important;clip-path:inset(2px round 16px)!important;}
+.maintenance-preview-mascot .osito-face{overflow:visible!important;}
+@media(max-width:600px){.maintenance-control-row{grid-template-columns:1fr 1fr}.maintenance-control-row .small-card{grid-column:1/-1}}

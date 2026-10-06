@@ -13,12 +13,13 @@
     };
 
     try {
-        const app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat);
-        const auth = window.firebase.auth();
-        const db = window.firebase.firestore();
+        const guest = (window.OsitoGuest && window.OsitoGuest.active) ? window.OsitoGuest.services(configCompat) : null;
+        const app = guest ? guest.app : (window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat));
+        const auth = guest ? guest.auth : window.firebase.auth();
+        const db = guest ? guest.db : window.firebase.firestore();
         let storage = null;
         try {
-            storage = window.firebase.storage();
+            storage = guest ? guest.storage : window.firebase.storage();
         } catch (storageError) {
             console.warn('[FirebaseCompat] Storage no disponible.', storageError);
         }

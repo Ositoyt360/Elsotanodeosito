@@ -165,7 +165,7 @@ try { app.use(require('compression')()); } catch (e) { /* opcional */ }
 // V49: permite que un sitio estático (GitHub Pages) use este servidor para la IA.
 // IA_ALLOWED_ORIGINS="https://tuusuario.github.io,https://otro.com"  (vacío = cualquier origen, solo para /api/ia)
 const IA_ORIGENES = String(process.env.IA_ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
-app.use(['/api/ia', '/api/gemini/generate'], (req, res, next) => {
+app.use('/api/ia', (req, res, next) => {
   const origen = req.headers.origin;
   if (origen && (!IA_ORIGENES.length || IA_ORIGENES.includes(origen))) {
     res.setHeader('Access-Control-Allow-Origin', origen);
@@ -1068,33 +1068,30 @@ if (wss) {
 
 
 // ============================================================
-// IA CON GEMINI API (REST, sin SDK) + BASE DE CONOCIMIENTO OFICIAL
-// La llave vive en process.env.GEMINI_API_KEY en el servidor.
-// El navegador conversa mediante /api/ia (y /api/gemini/generate).
+// IA CON OPENROUTER API (REST, sin SDK) + BASE DE CONOCIMIENTO OFICIAL
+// La llave vive en process.env.OPENROUTER_API_KEY en el servidor.
+// El navegador conversa mediante /api/ia.
 // ============================================================
-// Llamamos a la API REST de Gemini directamente con fetch (Node >= 18):
+// Llamamos a la API REST de OpenRouter directamente con fetch (Node >= 18):
 // no depende de ninguna versión del SDK, así que no puede romperse al instalar.
-const GEMINI_API_KEY = String(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
-const GEMINI_API_BASE = String(process.env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com/v1beta/models').replace(/\/+$/, '');
-// Modelos vigentes (verificado en la documentación oficial, oct 2026).
-// Se prueban en orden; si uno falla se pasa al siguiente.
-const MODELOS_GEMINI_ORDEN = [
-  'gemini-3.8-flash',
-  'gemini-3.7-flash',
-  'gemini-3.6-flash',
-  'gemini-3.5-flash',
-  'gemini-3.5-flash-lite',
-  'gemini-3.1-flash-lite'
-];
-const GEMINI_MODEL_PRINCIPAL = process.env.GEMINI_MODEL || MODELOS_GEMINI_ORDEN[0];
-const ai = GEMINI_API_KEY ? true : null; // compatibilidad con el resto del archivo
+const OPENROUTER_API_KEY_RAW = String(process.env.OPENROUTER_API_KEY || '').trim().replace(/^["']|["']$/g, '');
+// Si el .env aún tiene el texto de ejemplo (PEGA_AQUI...) o algo que no es una clave de OpenRouter, se trata como "sin clave".
+const OPENROUTER_KEY_VALIDA = /^sk-or-[A-Za-z0-9_\-]{20,}$/.test(OPENROUTER_API_KEY_RAW);
+const OPENROUTER_API_KEY = OPENROUTER_KEY_VALIDA ? OPENROUTER_API_KEY_RAW : '';
+if (OPENROUTER_API_KEY_RAW && !OPENROUTER_KEY_VALIDA) {
+  console.warn('[IA] OPENROUTER_API_KEY en .env no parece una clave real (debe empezar con sk-or-). Pega tu clave nueva de https://openrouter.ai/keys');
+}
+const OPENROUTER_API_BASE = String(process.env.OPENROUTER_API_BASE || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
+const OPENROUTER_MODEL = String(process.env.OPENROUTER_MODEL || 'openrouter/free').trim();
+const OPENROUTER_HTTP_REFERER = String(process.env.OPENROUTER_HTTP_REFERER || '').trim();
+const OPENROUTER_X_TITLE = String(process.env.OPENROUTER_X_TITLE || 'El Sótano de Osito').trim();
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const MODELO_IA_RESPALDO = 'claude-haiku-4-5-20251001';
-const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || MODELO_IA_RESPALDO;
-const IA_MAX_POR_MINUTO = Number(process.env.IA_MAX_POR_MINUTO || 60);
-const IA_MAX_POR_DIA_IP = Number(process.env.IA_MAX_POR_DIA_IP || 1500);
-const IA_MAX_POR_DIA_TOTAL = Number(process.env.IA_MAX_POR_DIA_TOTAL || 30000);
+
+// El nivel gratuito de OpenRouter tiene actualmente 50 solicitudes/día.
+// Se puede sobrescribir desde el hosting si la cuenta tiene otro límite.
+const IA_MAX_POR_MINUTO = Number(process.env.IA_MAX_POR_MINUTO || 20);
+const IA_MAX_POR_DIA_IP = Number(process.env.IA_MAX_POR_DIA_IP || 50);
+const IA_MAX_POR_DIA_TOTAL = Number(process.env.IA_MAX_POR_DIA_TOTAL || 50);
 
 // Caché rápida en memoria para responder al instante preguntas frecuentes o repetidas
 const iaCacheRespuestas = new Map();
@@ -1144,6 +1141,10 @@ function construirInstruccionIA() {
   return `Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoYT360 / Osito Gamer 360 YouTube).
 
 CÓMO CONVERSAS (NATURAL, FLUIDO Y COMO UNA IA MODERNA)
+- NOMBRE DEL USUARIO: si el CONTEXTO trae su nombre, úsalo para dirigirte a él. NUNCA llames al usuario \"osito\" ni \"osita\" (Osito es el creador del sitio, no el usuario). Si no sabes su nombre, no uses apodos.
+- NO ASUMAS TEMAS: nunca inventes que el usuario quiere ayuda con tareas, escuela o deberes si no lo dijo. Si el mensaje es corto, confuso o sin sentido (por ejemplo \"estem\" o \"a\"), responde breve y natural pidiéndole que te cuente qué quiso decir.
+- Conversa de ida y vuelta: responde a lo que dijo el usuario en su último mensaje, recuerda lo anterior y no cambies de tema.
+- NUNCA menciones cámara, video en vivo ni ver en tiempo real. Solo puedes leer imágenes que el usuario adjunte.
 - JAMÁS menciones el nombre del proveedor o modelo que te genera. Eres únicamente La mascotita del Sótano. Eres únicamente La mascotita del Sótano.
 - Habla como una IA conversacional moderna: natural, clara, fluida, inteligente y amigable. No fuerces palabras rebuscadas ni frases artificiales.
 - Conversa de verdad con el usuario como un amigo inteligente, carismático y atento.
@@ -1157,15 +1158,15 @@ CÓMO CONVERSAS (NATURAL, FLUIDO Y COMO UNA IA MODERNA)
 - HUMANIDAD: habla natural, pero no uses respuestas de plantilla repetidas. Si ya conoces el contexto de la conversación, úsalo para que la respuesta parezca una continuación real.
 - APRENDIZAJE DE CONVERSACIÓN: puedes usar la MEMORIA APRENDIDA que te entregue el sistema para recordar preferencias y datos no sensibles del usuario. No digas que estás entrenando el modelo ni que cambias tus pesos; simplemente utiliza esos recuerdos de forma natural.
 - Tus respuestas se leen en el chat y en voz alta: usa texto fluido y natural (sin bloques markdown ni listas largas con asteriscos), de 1 a 3 oraciones ágiles en charla normal, o hasta 6 oraciones claras si explicas una tarea, código, historia o imagen.
-- PUEDES VER Y LEER CUALQUIER IMAGEN: cuando el usuario adjunte una foto, captura, meme, dibujo o tarea, analízala a fondo, lee cualquier texto que aparezca en ella, descríbela con precisión y ayúdale en lo que necesite.
+- PUEDES VER Y LEER CUALQUIER IMAGEN: cuando el usuario adjunte una foto, captura, meme, dibujo o documento, analízala a fondo, lee cualquier texto que aparezca en ella, descríbela con precisión y ayúdale en lo que necesite.
 - CAPACIDADES DE LA IA:
-  * Eres una IA conversacional general dentro de El Sótano de Osito. Puedes responder preguntas de cultura general, ciencia, programación, matemáticas, videojuegos, tareas, escritura, consejos y conversación casual.
+  * Eres una IA conversacional general dentro de El Sótano de Osito. Puedes responder preguntas de cultura general, ciencia, programación, matemáticas, videojuegos, escritura, consejos y conversación casual.
   * Responde primero la pregunta concreta. Si falta información, dilo y explica qué sí puedes afirmar. No cambies de tema sin motivo.
-  * Si el usuario adjunta una imagen, puedes analizarla; no supongas que existe una cámara en vivo.
+  * Si el usuario adjunta una imagen, puedes analizarla; 
 
 REGLA IMPORTANTE SOBRE PRIVACIDAD (NO REPETIR EN PREGUNTAS NORMALES)
 - JAMÁS menciones la palabra "privacidad" ni "vida privada" en preguntas normales, saludos, juegos o conversación cotidiana.
-- Responde y conversa sobre CUALQUIER pregunta o tema que te pida el usuario (cultura general, ciencia, programación, chistes, historias, consejos, tareas, matemáticas, videojuegos, charla casual, etc.).
+- Responde y conversa sobre CUALQUIER pregunta o tema que te pida el usuario (cultura general, ciencia, programación, chistes, historias, consejos, matemáticas, videojuegos, charla casual, etc.).
 - SOLO si el usuario pregunta explícitamente un dato privado personal de la vida real de Osito (su dirección exacta, ciudad/barrio donde vive, número de teléfono/WhatsApp, nombre o apellido real, nombres de su familia/pareja o escuela donde estudia), di que por privacidad esos datos personales de Osito son privados, pero sigue conversando amablemente de cualquier otro tema.
 
 DATOS OFICIALES DE OSITO Y DEL CANAL (ÚSALOS SOLO CUANDO PREGUNTEN POR ELLOS)
@@ -1257,79 +1258,132 @@ function extraerImagenBase64(rawImagen) {
   return null;
 }
 
-function construirContentsGemini(historial, pregunta, imagenInfo) {
+function construirMensajesOpenRouter(historial, pregunta, imagenInfo) {
   const mensajes = limpiarHistorialIA(historial, pregunta);
   return mensajes.map((m, idx) => {
     const esUltimoUsuario = idx === mensajes.length - 1 && m.role === 'user';
-    const parts = [];
+    let content = textoSeguroIA(m.content) || '¿Qué ves en esta imagen?';
     if (esUltimoUsuario && imagenInfo && imagenInfo.data) {
-      parts.push({
-        inlineData: {
-          mimeType: imagenInfo.mimeType || 'image/jpeg',
-          data: imagenInfo.data
+      content = [
+        { type: 'text', text: content },
+        {
+          type: 'image_url',
+          image_url: {
+            url: `data:${imagenInfo.mimeType || 'image/jpeg'};base64,${imagenInfo.data}`
+          }
         }
-      });
+      ];
     }
-    parts.push({ text: textoSeguroIA(m.content) || '¿Qué ves en esta imagen?' });
-    return {
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts
-    };
+    return { role: m.role, content };
   });
 }
 
-
-function extraerTextoGemini(data) {
-  const cand = data && Array.isArray(data.candidates) ? data.candidates[0] : null;
-  const partes = cand && cand.content && Array.isArray(cand.content.parts) ? cand.content.parts : [];
-  // Ignora las partes de "pensamiento" y quédate solo con el texto de la respuesta.
-  const texto = partes.filter((p) => p && typeof p.text === 'string' && !p.thought).map((p) => p.text).join(' ').trim();
-  return { texto, finishReason: cand && cand.finishReason || '', bloqueo: data && data.promptFeedback && data.promptFeedback.blockReason || '' };
-}
-
-async function llamarGemini(modelo, contents, sistema, conImagen) {
-  const url = `${GEMINI_API_BASE}/${encodeURIComponent(modelo)}:generateContent`;
-  const generationConfig = {
-    temperature: 0.72,
-    // El razonamiento interno cuenta dentro de este límite. Con 700 la respuesta
-    // salía vacía; por eso se sube y además se baja el nivel de razonamiento.
-    maxOutputTokens: conImagen ? 2048 : 1536,
-    thinkingConfig: { thinkingLevel: 'low' }
+function extraerTextoOpenRouter(data) {
+  const choice = data && Array.isArray(data.choices) ? data.choices[0] : null;
+  const message = choice && choice.message ? choice.message : null;
+  let texto = '';
+  if (typeof message?.content === 'string') {
+    texto = message.content;
+  } else if (Array.isArray(message?.content)) {
+    texto = message.content
+      .filter((p) => p && typeof p.text === 'string')
+      .map((p) => p.text)
+      .join(' ');
+  }
+  return {
+    texto: String(texto || '').trim(),
+    finishReason: choice?.finish_reason || ''
   };
-  const armar = (cfg) => JSON.stringify({
-    systemInstruction: { parts: [{ text: sistema }] },
-    contents,
-    generationConfig: cfg
-  });
-  const ejecutar = async (cuerpo) => {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), conImagen ? 30000 : 20000);
+}
+
+async function llamarOpenRouter(mensajes, sistema, conImagen, modeloForzado) {
+  const url = `${OPENROUTER_API_BASE}/chat/completions`;
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${OPENROUTER_API_KEY}`
+  };
+  if (OPENROUTER_HTTP_REFERER) headers['HTTP-Referer'] = OPENROUTER_HTTP_REFERER;
+  if (OPENROUTER_X_TITLE) headers['X-Title'] = OPENROUTER_X_TITLE;
+
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 45000 : 30000);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      signal: controlador.signal,
+      headers,
+      body: JSON.stringify({
+        model: modeloForzado || OPENROUTER_MODEL,
+        messages: [
+          { role: 'system', content: sistema },
+          ...mensajes
+        ],
+        temperature: 0.72,
+        max_tokens: conImagen ? 1200 : 1000
+      })
+    });
+
+    if (!response.ok) {
+      const detalle = await response.text().catch(() => '');
+      const err = new Error(detalle.slice(0, 500) || `HTTP ${response.status}`);
+      err.status = response.status;
+      throw err;
+    }
+    return extraerTextoOpenRouter(await response.json());
+  } finally {
+    clearTimeout(temporizador);
+  }
+}
+
+// V77: el modelo gratuito de OpenRouter falla de forma intermitente (429, 5xx, respuesta vacía o tiempo agotado).
+// Antes un solo fallo producía "No pude conectar con la IA". Ahora se reintenta y se prueban modelos de respaldo.
+// Opcional en .env: OPENROUTER_FALLBACK_MODELS="modelo1,modelo2"
+const OPENROUTER_MODELOS = Array.from(new Set([
+  OPENROUTER_MODEL,
+  ...String(process.env.OPENROUTER_FALLBACK_MODELS || '').split(',').map((m) => m.trim()).filter(Boolean),
+  'openrouter/free'
+]));
+const esperarMs = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// V79: algunos modelos del router gratuito son clasificadores de seguridad (Llama Guard, etc.) y solo
+// responden cosas como "User Safety: safe Response Safety: safe" o "safe". Eso NO es una respuesta de chat.
+function esSalidaClasificador(texto) {
+  const t = String(texto || '').trim();
+  if (!t) return false;
+  const sinEtiquetas = t.replace(/\b(user|response|prompt|assistant)\s*safety\s*[:=-]?\s*/gi, ' ')
+    .replace(/\b(safe|unsafe|true|false|yes|no)\b/gi, ' ')
+    .replace(/\bS\d{1,2}\b/g, ' ')
+    .replace(/[\s,;:.\-|*_#>\[\]()\/]+/g, '');
+  if (/safety\s*[:=]/i.test(t) && sinEtiquetas.length < 25) return true;
+  if (/^\s*(safe|unsafe)\s*([\n,;:.-]+\s*(S\d{1,2}(\s*,\s*S\d{1,2})*)?)?\s*$/i.test(t)) return true;
+  if (/^\s*(content\s*)?(safety|moderation)\s*(result|label|category)?\s*[:=]\s*\w+\s*$/i.test(t)) return true;
+  return false;
+}
+
+async function llamarOpenRouterConReintentos(mensajes, sistema, conImagen) {
+  let ultimoError = null;
+  const maxIntentos = conImagen ? 3 : 5;
+  for (let intento = 0; intento < maxIntentos; intento++) {
+    const modelo = OPENROUTER_MODELOS[intento % OPENROUTER_MODELOS.length];
     try {
-      return await fetch(url, {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
-        body: cuerpo
-      });
-    } finally { clearTimeout(t); }
-  };
-
-  let resp = await ejecutar(armar(generationConfig));
-  // Si el modelo no acepta thinkingConfig, reintenta sin él.
-  if (resp.status === 400) {
-    const detalle = await resp.clone().text().catch(() => '');
-    if (/thinking/i.test(detalle)) {
-      const { thinkingConfig, ...sinPensar } = generationConfig;
-      resp = await ejecutar(armar(sinPensar));
+      const r = await llamarOpenRouter(mensajes, sistema, conImagen, modelo);
+      const limpio = r && textoPlanoIA(r.texto);
+      if (limpio && esSalidaClasificador(limpio)) {
+        ultimoError = Object.assign(new Error('Modelo clasificador (no conversacional): ' + limpio.slice(0, 80)), { status: 200 });
+        console.warn('[IA OpenRouter] Respuesta descartada (clasificador de seguridad):', limpio.slice(0, 80));
+      } else if (limpio) {
+        return r;
+      } else {
+        ultimoError = Object.assign(new Error('Respuesta vacía: ' + ((r && r.finishReason) || 'respuesta_vacia')), { status: 200 });
+      }
+    } catch (err) {
+      ultimoError = err;
+      // Clave inválida / sin permiso / sin créditos: reintentar no sirve.
+      if ([401, 402, 403].includes(err && err.status)) break;
     }
+    if (intento < maxIntentos - 1) await esperarMs(500 + intento * 600);
   }
-  if (!resp.ok) {
-    const detalle = await resp.text().catch(() => '');
-    const err = new Error(detalle.slice(0, 300) || ('HTTP ' + resp.status));
-    err.status = resp.status;
-    throw err;
-  }
-  return extraerTextoGemini(await resp.json());
+  throw ultimoError || new Error('ia_no_disponible');
 }
 
 function textoPlanoIA(texto) {
@@ -1344,27 +1398,47 @@ function textoPlanoIA(texto) {
 
 app.get('/api/ia/estado', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const tieneGemini = Boolean(GEMINI_API_KEY);
-  const tieneClaude = Boolean(ANTHROPIC_API_KEY);
+  const tieneOpenRouter = Boolean(OPENROUTER_API_KEY);
   const estado = {
-    activa: tieneGemini || tieneClaude,
-    configurada: tieneGemini || tieneClaude,
-    proveedor: tieneGemini ? 'gemini' : (tieneClaude ? 'anthropic' : 'local'),
-    modelo: tieneGemini ? GEMINI_MODEL_PRINCIPAL : (tieneClaude ? ANTHROPIC_MODEL : null),
+    activa: tieneOpenRouter,
+    configurada: tieneOpenRouter,
+    proveedor: tieneOpenRouter ? 'openrouter' : 'local',
+    modelo: tieneOpenRouter ? OPENROUTER_MODEL : null,
     endpoint: '/api/ia',
     ultimoError: iaUltimoError
   };
-  // Diagnóstico real: /api/ia/estado?probar=1 hace una llamada mínima a Gemini.
-  if (req.query && req.query.probar && tieneGemini) {
-    try {
-      const r = await llamarGemini(GEMINI_MODEL_PRINCIPAL, [{ role: 'user', parts: [{ text: 'Responde solo: ok' }] }], 'Responde en una palabra.', false);
-      estado.prueba = { ok: Boolean(r.texto), respuesta: r.texto.slice(0, 40), finishReason: r.finishReason };
-    } catch (err) {
-      estado.prueba = { ok: false, status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 200) };
+
+  if (req.query && req.query.probar) {
+    if (!tieneOpenRouter) {
+      estado.prueba = {
+        ok: false,
+        status: 503,
+        mensaje: 'Falta OPENROUTER_API_KEY válida en .env (debe empezar con sk-or-). Pega tu clave de https://openrouter.ai/keys y reinicia el servidor.'
+      };
+    } else {
+      try {
+        const r = await llamarOpenRouter(
+          [{ role: 'user', content: 'Responde solo: ok' }],
+          'Responde en una sola palabra.',
+          false
+        );
+        estado.prueba = {
+          ok: Boolean(r.texto),
+          respuesta: String(r.texto || '').slice(0, 40),
+          finishReason: r.finishReason
+        };
+      } catch (err) {
+        estado.prueba = {
+          ok: false,
+          status: err?.status || 500,
+          mensaje: String(err?.message || '').slice(0, 300)
+        };
+      }
     }
   }
   res.json(estado);
 });
+
 
 function calcularOperacionIAExacta(texto) {
   const t = String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿?¡!]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -1392,7 +1466,6 @@ async function manejarConsultaIA(req, res) {
   }
 
   const nombre = String(req.body?.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
-  const apodo = req.body?.genero === 'female' ? 'osita' : (req.body?.genero === 'male' ? 'osito' : '');
   const memoriaGlobal = textoSeguroIA(String(req.body?.memoriaGlobal || '').replace(/\s+/g, ' ').trim().slice(0, 700));
   const memoriaAprendida = textoSeguroIA(String(req.body?.memoriaAprendida || '').replace(/\s+/g, ' ').trim().slice(0, 900));
   const tituloChat = textoSeguroIA(String(req.body?.tituloChat || '').replace(/\s+/g, ' ').trim().slice(0, 80));
@@ -1424,7 +1497,7 @@ async function manejarConsultaIA(req, res) {
     : '';
   const enCache = claveCache ? obtenerCacheIA(claveCache) : null;
   if (enCache) {
-    return res.json({ ok: true, texto: textoSeguroIA(enCache), proveedor: 'gemini-cache' });
+    return res.json({ ok: true, texto: textoSeguroIA(enCache), proveedor: 'openrouter-cache' });
   }
 
   const bloqueo = iaPermitida(ipDelCliente(req));
@@ -1440,8 +1513,8 @@ async function manejarConsultaIA(req, res) {
   }
 
   const contexto = [];
-  if (nombre) contexto.push(`El usuario se llama ${nombre}.`);
-  if (apodo) contexto.push(`Puedes llamarle cariñosamente "${apodo}" de vez en cuando.`);
+  if (nombre) contexto.push(`El usuario se llama ${nombre}. Llámalo por su nombre (${nombre}) de forma natural, sin apodos.`);
+  else contexto.push('Aún no sabes el nombre del usuario: no uses apodos ni lo llames "osito" ni "osita".');
   if (tituloChat) contexto.push(`Título de la conversación actual: "${tituloChat}".`);
   if (memoriaGlobal) contexto.push(`MEMORIA DE CONVERSACIONES ANTERIORES DEL USUARIO (recuérdalo si viene al caso): ${memoriaGlobal}`);
   if (memoriaAprendida) contexto.push(`MEMORIA APRENDIDA NO SENSIBLE (úsala solo cuando sea útil): ${memoriaAprendida}`);
@@ -1457,87 +1530,47 @@ async function manejarConsultaIA(req, res) {
     : instruccionBase;
   const sistemaSeguro = textoSeguroIA(sistema);
 
-  // 1) Google Gemini (REST). Texto, imágenes y modo voz usan este mismo camino.
-  if (GEMINI_API_KEY) {
-    const contentsGemini = construirContentsGemini(req.body?.historial, pregunta, imagenInfo);
-    const ordenModelos = [GEMINI_MODEL_PRINCIPAL, ...MODELOS_GEMINI_ORDEN.filter((m) => m !== GEMINI_MODEL_PRINCIPAL)];
-    let ultimoErrGemini = null;
-    let ultimoMotivoVacio = '';
+  // 1) OpenRouter. Texto, imágenes y el modo llamada usan el mismo backend seguro.
+  if (OPENROUTER_API_KEY) {
+    try {
+      const mensajes = construirMensajesOpenRouter(req.body?.historial, pregunta, imagenInfo);
+      const r = await llamarOpenRouterConReintentos(mensajes, sistemaSeguro, Boolean(imagenInfo));
+      const texto = textoPlanoIA(r.texto);
 
-    for (const modeloGemini of ordenModelos) {
-      try {
-        const r = await llamarGemini(modeloGemini, contentsGemini, sistemaSeguro, Boolean(imagenInfo));
-        const texto = textoPlanoIA(r.texto);
-        if (texto) {
-          iaUltimoError = null;
-          const seguro = textoSeguroIA(texto);
-          if (claveCache) guardarCacheIA(claveCache, seguro);
-          return res.json({ ok: true, texto: seguro, modelo: modeloGemini, proveedor: 'gemini' });
-        }
-        ultimoMotivoVacio = r.bloqueo || r.finishReason || 'respuesta_vacia';
-        console.warn(`[IA Gemini] ${modeloGemini} devolvió respuesta vacía (${ultimoMotivoVacio}).`);
-        if (r.bloqueo) break; // bloqueada por seguridad: otro modelo dará lo mismo
-      } catch (err) {
-        ultimoErrGemini = err;
-        console.warn(`[IA Gemini] Falló ${modeloGemini}:`, err?.status || err?.name || '', String(err?.message || '').slice(0, 220));
-        if (err?.status === 401 || err?.status === 403 || /API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(String(err?.message || ''))) {
-          break; // la llave no sirve: no tiene caso probar más modelos
-        }
+      if (texto) {
+        iaUltimoError = null;
+        const seguro = textoSeguroIA(texto);
+        if (claveCache) guardarCacheIA(claveCache, seguro);
+        return res.json({
+          ok: true,
+          texto: seguro,
+          modelo: OPENROUTER_MODEL,
+          proveedor: 'openrouter'
+        });
       }
-    }
 
-    if (ultimoErrGemini) {
       iaUltimoError = {
-        proveedor: 'gemini',
-        status: ultimoErrGemini?.status || 500,
-        mensaje: String(ultimoErrGemini?.message || '').slice(0, 200),
+        proveedor: 'openrouter',
+        status: 200,
+        mensaje: 'Respuesta vacía: ' + (r.finishReason || 'respuesta_vacia'),
         cuando: new Date().toISOString()
       };
-    } else if (ultimoMotivoVacio) {
-      iaUltimoError = { proveedor: 'gemini', status: 200, mensaje: 'Respuesta vacía: ' + ultimoMotivoVacio, cuando: new Date().toISOString() };
+    } catch (err) {
+      iaUltimoError = {
+        proveedor: 'openrouter',
+        status: err?.status || 500,
+        mensaje: String(err?.message || '').slice(0, 300),
+        cuando: new Date().toISOString()
+      };
+      console.warn(
+        '[IA OpenRouter] Error:',
+        err?.status || err?.name || '',
+        String(err?.message || '').slice(0, 300)
+      );
     }
   }
 
-  // 2) Respaldo con Anthropic si estuviera configurado
-  if (ANTHROPIC_API_KEY) {
-    const controlador = new AbortController();
-    const temporizador = setTimeout(() => controlador.abort(), 15000);
-    try {
-      const peticion = global.fetch || require('node-fetch');
-      const mensajes = limpiarHistorialIA(req.body?.historial, pregunta).map((m) => ({ role: m.role, content: textoSeguroIA(m.content) || '.' }));
-      const respuesta = await peticion('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        signal: controlador.signal,
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: ANTHROPIC_MODEL,
-          max_tokens: 400,
-          system: sistemaSeguro,
-          messages: mensajes
-        })
-      });
-      if (respuesta.ok) {
-        const data = await respuesta.json();
-        const texto = textoPlanoIA((data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join(' '));
-        if (texto) {
-          iaUltimoError = null;
-          const seguro = textoSeguroIA(texto);
-          guardarCacheIA(claveCache, seguro);
-          return res.json({ ok: true, texto: seguro, proveedor: 'anthropic' });
-        }
-      }
-    } catch (e) {
-      console.warn('[IA Anthropic Fallback]', e.message);
-    } finally {
-      clearTimeout(temporizador);
-    }
-  }
-
-  // 3) Respaldo final con la base de conocimiento local del servidor para nunca dar error
+  // 2) Respaldo final con la base de conocimiento local del servidor para nunca dar error
   if (conocimientoOsito && typeof conocimientoOsito.buscarEnBaseConocimiento === 'function') {
     const respuestaLocal = conocimientoOsito.buscarEnBaseConocimiento(pregunta, { modoOffline: true });
     if (respuestaLocal) {
@@ -1547,13 +1580,12 @@ async function manejarConsultaIA(req, res) {
 
   return res.json({
     ok: true,
-    texto: GEMINI_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta GEMINI_API_KEY).',
+    texto: OPENROUTER_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta OPENROUTER_API_KEY).',
     proveedor: 'error-conexion'
   });
 }
 
 app.post('/api/ia', manejarConsultaIA);
-app.post('/api/gemini/generate', manejarConsultaIA);
 
 // ============================================================
 // SINCRONIZACIÓN AUTOMÁTICA CON GITHUB (Ositoyt360/Elsotanodeosito)
@@ -1858,9 +1890,6 @@ app.get('/descargar-apk', (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor iniciado en http://0.0.0.0:${PORT}`);
-  console.log(GEMINI_API_KEY
-    ? `[IA] Gemini activo (modelo ${GEMINI_MODEL_PRINCIPAL}).`
-    : '[IA] Falta GEMINI_API_KEY: la IA responderá solo con su base de conocimiento local.');
-  if (ANTHROPIC_API_KEY) console.log(`[IA] Respaldo Anthropic disponible (${ANTHROPIC_MODEL}).`);
+  console.log(OPENROUTER_API_KEY ? `[IA] OpenRouter activo (modelo ${OPENROUTER_MODEL}).` : '[IA] Falta OPENROUTER_API_KEY: la IA responderá solo con su base de conocimiento local.');
   consultarGitHubUltimoCommit(true).catch(() => {});
 });

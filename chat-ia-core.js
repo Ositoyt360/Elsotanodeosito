@@ -722,7 +722,7 @@
             }
 
             function prefijoIA() {
-                return aiNombre || (aiGenero ? apodoIA() : 'crack');
+                return aiNombre || 'amigo';
             }
 
             function setGeneroIA(genero) {
@@ -740,7 +740,7 @@
                 actualizarBloqueoIA();
                 const apodo = apodoIA();
                 agregarMensajeIA(`¡Qué onda, ${apodo}! Todo bien. Ahora sí, ¿con qué te ayudo hoy?`, 'bot');
-                if (typeof showToast === 'function') showToast(`¡Voz cambiada a ${genero === 'female' ? 'Femenina (Osita)' : 'Masculina (Osito)'}! 🔊✨`);
+                if (typeof showToast === 'function') showToast(`¡Voz cambiada a ${genero === 'female' ? 'Femenina ' : 'Masculina '}! 🔊✨`);
             }
 
             function msParaProximoCambioNombre() {
@@ -953,7 +953,7 @@
                     localStorage.setItem('osito_ai_genero', aiGenero);
                     aiGenderBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.gender === aiGenero));
                     actualizarBloqueoIA();
-                    return '¡Qué onda, osita! Todo bien. Ya te llamaré osita desde ahora. ¿Con qué te ayudo?';
+                    return `¡Qué onda, ${prefijoIA()}! Todo bien. ¿Con qué te ayudo?`;
                 }
 
                 // 1.1 Saludos naturales y amigables
@@ -1056,12 +1056,16 @@
                     return `El canal ${infoCanal.canal} tiene ${anos} años en YouTube. Su aniversario es el 2 de junio (empezó el 2 de junio de 2022). 🎉`;
                 }
 
-                // 9. Para todo lo demás (conversación, saludos, preguntas abiertas, "vale", "cómo", cultura general, juegos, etc.) responde Gemini API con memoria completa
+                // 9. Para todo lo demás (conversación, saludos, preguntas abiertas, "vale", "cómo", cultura general, juegos, etc.) responde mediante OpenRouter con memoria completa
                 return null;
             }
 
             function mensajeNoDisponibleLocal() {
-                return 'No pude conectar con la IA en este momento. Revisa la conexión del servidor y la configuración de Gemini.';
+                const puerto = String((window.location && window.location.port) || '');
+                if (window.location && (window.location.protocol === 'file:' || (puerto && puerto !== '3000' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)))) {
+                    return 'No encuentro el servidor de la IA. Inicia el servidor con INICIAR_OPENROUTER.bat y abre http://localhost:3000 (no uses Live Server). Puedes revisar el estado en http://localhost:3000/api/ia/estado?probar=1';
+                }
+                return 'La IA tardó en responder. Inténtalo de nuevo en unos segundos 🙏 (si sigue pasando, revisa http://localhost:3000/api/ia/estado?probar=1).';
             }
 
             let imagenPendienteIA = '';
@@ -1110,7 +1114,7 @@
                 if (!file) return;
                 const imgsLeidas = parseInt(localStorage.getItem('osito_images_read_count') || '0', 10);
                 if (imgsLeidas >= 15) {
-                    if (typeof showToast === 'function') showToast('Has alcanzado el límite máximo de 15 imágenes leídas permitidas 📷✨');
+                    if (typeof showToast === 'function') showToast('Has alcanzado el límite máximo de 15 imágenes leídas permitidas 🖼️✨');
                     agregarMensajeIA('Has alcanzado el límite máximo de 15 imágenes leídas en esta sesión. Puedes seguir charlando mediante texto o voz. 😊', 'bot');
                     return;
                 }
@@ -1202,7 +1206,7 @@
                         ];
                         const indice = (conteo - 6) % mensajesInvitacion.length;
                         const msgLimite = mensajesInvitacion[indice];
-                        agregarMensajeIA(limpia || '📷 Imagen enviada', 'user', imagenEnviada);
+                        agregarMensajeIA(limpia || '🖼️ Imagen enviada', 'user', imagenEnviada);
                         if (aiInput) aiInput.value = '';
                         setTimeout(() => mostrarLimiteInvitadoConBoton(msgLimite), 180);
                         return;
@@ -1227,19 +1231,19 @@
                     }
                 }
 
-                // 3) Conversación inteligente y análisis de imágenes con la API de Gemini (/api/ia) + Memoria de chats estilo ChatGPT
+                // 3) Conversación inteligente y análisis de imágenes con la API de OpenRouter (/api/ia) + Memoria de chats estilo ChatGPT
                 if (window.OsitoIA && typeof window.OsitoIA.preguntar === 'function') {
                     const sesionActual = typeof obtenerSesionActiva === 'function' ? obtenerSesionActiva() : null;
                     const memoriaChats = typeof construirMemoriaGlobalChats === 'function' ? construirMemoriaGlobalChats() : '';
-                    const resultadoGemini = await window.OsitoIA.preguntar(limpia || 'Describe qué ves en esta imagen y comenta al respecto.', {
+                    const resultadoIA = await window.OsitoIA.preguntar(limpia || 'Describe qué ves en esta imagen y comenta al respecto.', {
                         nombre: aiNombre,
                         genero: aiGenero,
                         imagen: imagenEnviada,
                         memoriaGlobal: memoriaChats,
                         tituloChat: sesionActual ? sesionActual.title : ''
                     });
-                    if (resultadoGemini && resultadoGemini.texto) {
-                        agregarMensajeIA(resultadoGemini.texto, 'bot');
+                    if (resultadoIA && resultadoIA.texto) {
+                        agregarMensajeIA(resultadoIA.texto, 'bot');
                         return;
                     }
                 }
@@ -1426,7 +1430,7 @@
                     if (callTimerEl) callTimerEl.textContent = formatearTiempoLlamada(callSeconds);
                 }, 1000);
 
-                const saludoLlamada = `¡Hola, ${prefijoIA()}! Ya estamos en modo llamada de voz en vivo. Puedes platicar conmigo o activar la cámara con el botón 📷. ¿De qué quieres platicar?`;
+                const saludoLlamada = `¡Hola, ${prefijoIA()}! Ya estamos en modo llamada de voz en vivo. Puedes platicar conmigo con tu voz. ¿De qué quieres platicar?`;
                 if (callSubEl) callSubEl.textContent = saludoLlamada;
                 if (window.CallModeEngine && typeof window.CallModeEngine.mostrarRespuestaTexto === 'function') {
                     window.CallModeEngine.mostrarRespuestaTexto(saludoLlamada);
@@ -1627,7 +1631,7 @@
                 const mainAudio=document.getElementById('bg-music');
                 if(!maintenanceAudio) return;
                 maintenanceAudio.loop=true;
-                maintenanceAudio.volume=0.16; /* suave, no fuerte */
+                maintenanceAudio.volume=0.38; /* se escucha un poco más */
                 if(activo){
                     if(mainAudio){ window.__ositoMaintenanceMusicWasPlaying=!mainAudio.paused; mainAudio.pause(); }
                     try { const p=maintenanceAudio.play(); if(p&&p.catch)p.catch(()=>{}); } catch(_){}
@@ -1640,9 +1644,15 @@
                     window.__ositoMaintenanceMusicWasPlaying=false;
                 }
             }
-            function pintar(activo){ const o=document.getElementById('maintenance-overlay'); if(!o)return; o.hidden=!activo; document.body.classList.toggle('site-maintenance-active',!!activo); controlarMusicaMantenimiento(!!activo); }
+            // V76: el mantenimiento ya NO es un overlay dentro de la página principal.
+            // maintenance-guard.js se encarga de llevar al visitante a mantenimiento.html.
+            // Dejamos la API para compatibilidad, pero nunca pintamos el overlay.
+            function pintar(activo){
+                const o=document.getElementById('maintenance-overlay');
+                if(o) o.hidden=true;
+                document.body.classList.remove('site-maintenance-active');
+                controlarMusicaMantenimiento(false);
+            }
             window.__ositoMaintenancePaint=pintar;
-            document.addEventListener('DOMContentLoaded',function(){ try{
-                if(window.dbFirebase && window.dbFirebase.doc) window.dbFirebase.doc('siteSettings/public').onSnapshot(function(s){ pintar(!!(s.exists && s.data() && s.data().maintenance)); },function(){});
-            }catch(_){} });
+            document.addEventListener('DOMContentLoaded',function(){ try{ pintar(false); }catch(_){} });
         })();

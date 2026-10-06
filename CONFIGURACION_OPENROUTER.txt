@@ -1,0 +1,7 @@
+# CONFIGURACION OPENROUTER
+1. Abre .env.
+2. Reemplaza PEGA_AQUI_TU_NUEVA_CLAVE_DE_OPENROUTER por tu nueva clave.
+3. Ejecuta CONFIGURAR_OPENROUTER.bat o npm start.
+4. Prueba http://localhost:3000/api/ia/estado?probar=1
+
+IMPORTANTE: no publiques .env ni tu API key en GitHub.

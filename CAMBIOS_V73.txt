@@ -1,0 +1,8 @@
+V73
+- IA: modelos de respaldo en OpenRouter (OPENROUTER_FALLBACK_MODELS en .env, opcional); sin mensajes tecnicos; charla mas conversacional.
+- Mantenimiento: pagina aparte mantenimiento.html (logo, mascota 3D, tuercas animadas, animacion de carga).
+  Todos van a esa pagina menos OsitoYT360; al desactivarlo vuelven solos a index.html. Sin mascota de IA en ese modo.
+- Ver como usuario: boton en el panel de moderacion y boton flotante en el sitio (solo creador). ?vista=usuario / ?vista=creador.
+- Mascota: sin adornos en las esquinas, cubo 3D bien armado, Zzz solo al dormir, comida frente a la boca con masticado y migajas.
+- Llamada: orbe animado sin ojos ni boca; pulsa al hablar y anillos al escuchar.
+- Optimizacion: index.html de 4.5 MB a 313 KB (MP3 en base64 pegado en un comentario).

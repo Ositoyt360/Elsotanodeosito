@@ -1,0 +1,10 @@
+V74 — corrección después de V73
+
+1. IA RESTAURADA: chat-ia-core.js y server.js vuelven a la versión V72 que funcionaba antes. Se revierte el cambio de caché que podía mezclar respuestas y se mantiene la lógica conversacional que ya existía.
+2. MANTENIMIENTO SEPARADO: la lógica de mantenimiento ya NO está metida dentro de chat-ia-core.js.
+3. MANTENIMIENTO GLOBAL: visitantes normales van a mantenimiento.html cuando maintenance=true; OsitoYT360 queda exento.
+4. VER COMO USUARIO: el botón del moderador abre index.html?userPreview=1 y refleja el estado REAL. Si mantenimiento está apagado, se ve la página normal; si está encendido, se ve mantenimiento. Ignora la cuenta creadora solo para esa simulación.
+5. MANTENIMIENTO: nuevo diseño compacto, logo arriba, mascota 3D cúbica real, engranajes animados y loader conservado.
+6. Se elimina el borde/orilla externa de la mascota únicamente en mantenimiento, sin quitar el cubo 3D.
+7. Se conservan las mejoras V73 de comida, modo llamada y ZZZ.
+8. Service Worker actualizado a V74 para evitar caché vieja.

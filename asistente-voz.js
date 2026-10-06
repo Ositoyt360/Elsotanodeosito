@@ -1150,7 +1150,7 @@
             let command = detectIntent(rawText);
             let response = '';
 
-            // La IA ahora responde cualquier pregunta y conversa con Gemini. Si lo dicho es una pregunta
+            // La IA ahora responde cualquier pregunta y conversa con OpenRouter. Si lo dicho es una pregunta
             // o una frase conversacional, no se confunde con una orden del sitio y se envía al panel de IA.
             const normRaw = normalize(rawText);
             if (/\b(cuelga( la llamada)?|colgar( la llamada)?|termina(r)?( la)? llamada|finaliza(r)?( la)? llamada|corta(r)?( la)? llamada|cierra( la)? llamada|salir de( la)? llamada)\b/.test(normRaw)) {

@@ -9,3 +9,4 @@ V89
 - Moderador: quitado el texto de "IA beta (solo local)" del panel y de la vista previa.
 - Cache: sw.js osito-pwa-v89 y versiones de scripts actualizadas.
 NOTA: la IA solo responde si el backend (server.js con OPENAI_API_KEY) esta publicado y accesible. Si el sitio esta en hosting estatico, pon la URL del backend en <meta name="osito-ia-url"> de index.html e ia.html.
+- GitHub Pages + Render: <meta name="osito-ia-url"> ahora apunta a https://el-sotano-de-osito.onrender.com (index.html e ia.html). Antes estaba vacio y la pagina buscaba /api/ia en github.io, donde no existe. Si tu URL de Render es otra, cambiala en esos dos archivos.

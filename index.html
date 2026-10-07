@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- URL de tu servidor de IA (Render). Ej: https://el-sotano-de-osito.onrender.com  — déjalo vacío si el sitio y el servidor están en la misma URL -->
+    <meta name="osito-ia-url" content="">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>El Sótano de Osito</title>
@@ -599,7 +601,7 @@
 }());
 
     </script>
-    <!-- Si tu página está en hosting estático (GitHub Pages), pon aquí la URL de tu servidor con server.js, ej: https://mi-servidor.onrender.com -->
+    <!-- Si tu página está en hosting estático (GitHub Pages), pon aquí la URL de tu servidor con server.js, ej: http://localhost:3000 -->
     <script>
         /* Detección temprana: se ejecuta antes de pintar la bienvenida para que un
            celular de gama de entrada no llegue a renderizar los efectos pesados. */
@@ -4000,7 +4002,7 @@ accent-color:#00ff88;
     <script src="base-conocimiento.js"></script>
     <script src="v49.js"></script>
     <script src="face-sound.js" defer></script>
-    <script src="ia-openrouter.js?v=70" defer></script>
+    <script src="ia-openai.js?v=70" defer></script>
     <link rel="stylesheet" href="personalidades-animaciones-1000.css">
     <link rel="stylesheet" href="osito-cara3d.css">
     <link rel="stylesheet" href="osito-actividades-3d.css">

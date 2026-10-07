@@ -23,7 +23,7 @@ const CORE_ASSETS = [
   './ia.html',
   './ia-page.css',
   './chat-ia-core.js',
-  './ia-openrouter.js',
+  './ia-openai.js',
   './call-mode-engine.js',
   './firebase-compat-init.js',
   './moderador.html',

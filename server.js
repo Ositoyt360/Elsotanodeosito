@@ -1068,32 +1068,67 @@ if (wss) {
 
 
 // ============================================================
-// IA CON OPENROUTER API (REST, sin SDK) + BASE DE CONOCIMIENTO OFICIAL
-// La llave vive en process.env.OPENROUTER_API_KEY en el servidor.
+// IA CON OPENAI RESPONSES API
+// La clave vive en process.env.OPENAI_API_KEY en el servidor.
 // El navegador conversa mediante /api/ia.
+// Texto + visión usan Responses API. El modo llamada existente usa
+// el micrófono y la voz del navegador, pero el cerebro es OpenAI.
 // ============================================================
-// Llamamos a la API REST de OpenRouter directamente con fetch (Node >= 18):
-// no depende de ninguna versión del SDK, así que no puede romperse al instalar.
-const OPENROUTER_API_KEY_RAW = String(process.env.OPENROUTER_API_KEY || '').trim().replace(/^["']|["']$/g, '');
-// Si el .env aún tiene el texto de ejemplo (PEGA_AQUI...) o algo que no es una clave de OpenRouter, se trata como "sin clave".
-const OPENROUTER_KEY_VALIDA = /^sk-or-[A-Za-z0-9_\-]{20,}$/.test(OPENROUTER_API_KEY_RAW);
-const OPENROUTER_API_KEY = OPENROUTER_KEY_VALIDA ? OPENROUTER_API_KEY_RAW : '';
-if (OPENROUTER_API_KEY_RAW && !OPENROUTER_KEY_VALIDA) {
-  console.warn('[IA] OPENROUTER_API_KEY en .env no parece una clave real (debe empezar con sk-or-). Pega tu clave nueva de https://openrouter.ai/keys');
-}
-const OPENROUTER_API_BASE = String(process.env.OPENROUTER_API_BASE || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
-const OPENROUTER_MODEL = String(process.env.OPENROUTER_MODEL || 'openrouter/free').trim();
-const OPENROUTER_HTTP_REFERER = String(process.env.OPENROUTER_HTTP_REFERER || '').trim();
-const OPENROUTER_X_TITLE = String(process.env.OPENROUTER_X_TITLE || 'El Sótano de Osito').trim();
 
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || process.env.NVIDIA_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+// Si la clave empieza con "nvapi-" es de NVIDIA (NIM): usa su API compatible con OpenAI (chat/completions).
+// Con clave NVIDIA se ignoran OPENAI_API_BASE y OPENAI_MODEL si apuntan a OpenAI (restos de un .env viejo).
+const IA_ES_NVIDIA = /^nvapi-/i.test(OPENAI_API_KEY) || /nvidia\.com/i.test(String(process.env.OPENAI_API_BASE || ''));
+const _baseEnv = String(process.env.OPENAI_API_BASE || '').trim();
+const _modeloEnv = String(process.env.OPENAI_MODEL || '').trim();
+const OPENAI_API_BASE = (IA_ES_NVIDIA ? (/nvidia\.com/i.test(_baseEnv) ? _baseEnv : 'https://integrate.api.nvidia.com/v1') : (_baseEnv || 'https://api.openai.com/v1')).replace(/\/+$/, '');
+let OPENAI_MODEL = (IA_ES_NVIDIA ? (_modeloEnv && !/^(gpt-|o\d|chatgpt)/i.test(_modeloEnv) ? _modeloEnv : 'openai/gpt-oss-20b') : (_modeloEnv || 'gpt-5.4'));
+// Modelo con visión (solo NVIDIA; para imágenes) y modelo de respaldo si el principal no existe.
+const IA_MODELO_VISION = String(process.env.IA_MODELO_VISION || 'meta/llama-3.2-90b-vision-instruct').trim();
+const _respEnv = String(process.env.OPENAI_MODEL_RESPALDO || '').trim();
+const OPENAI_MODEL_RESPALDO = (IA_ES_NVIDIA ? (_respEnv && !/^(gpt-|o\d|chatgpt)/i.test(_respEnv) ? _respEnv : 'meta/llama-3.3-70b-instruct') : (_respEnv || 'gpt-5-mini'));
 
-// El nivel gratuito de OpenRouter tiene actualmente 50 solicitudes/día.
-// Se puede sobrescribir desde el hosting si la cuenta tiene otro límite.
 const IA_MAX_POR_MINUTO = Number(process.env.IA_MAX_POR_MINUTO || 20);
 const IA_MAX_POR_DIA_IP = Number(process.env.IA_MAX_POR_DIA_IP || 50);
 const IA_MAX_POR_DIA_TOTAL = Number(process.env.IA_MAX_POR_DIA_TOTAL || 50);
 
-// Caché rápida en memoria para responder al instante preguntas frecuentes o repetidas
+
+// ---- Utilidades de la IA (V81: faltaban y /api/ia lanzaba ReferenceError) ----
+let iaUltimoError = null;
+const esperarMs = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function textoSeguroIA(texto) {
+  return String(texto == null ? '' : texto)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .trim();
+}
+
+function ipDelCliente(req) {
+  const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return xff || req.ip || (req.socket && req.socket.remoteAddress) || '0.0.0.0';
+}
+
+const iaContadores = { minuto: new Map(), dia: new Map(), diaClave: '', diaTotal: 0 };
+function iaPermitida(ip) {
+  const ahora = Date.now();
+  const hoy = new Date().toISOString().slice(0, 10);
+  if (iaContadores.diaClave !== hoy) {
+    iaContadores.diaClave = hoy;
+    iaContadores.dia.clear();
+    iaContadores.diaTotal = 0;
+  }
+  const recientes = (iaContadores.minuto.get(ip) || []).filter((t) => ahora - t < 60000);
+  if (recientes.length >= IA_MAX_POR_MINUTO) return 'minuto';
+  const usoDia = iaContadores.dia.get(ip) || 0;
+  if (usoDia >= IA_MAX_POR_DIA_IP) return 'dia_ip';
+  if (iaContadores.diaTotal >= IA_MAX_POR_DIA_TOTAL) return 'dia_total';
+  recientes.push(ahora);
+  iaContadores.minuto.set(ip, recientes);
+  iaContadores.dia.set(ip, usoDia + 1);
+  iaContadores.diaTotal += 1;
+  return null;
+}
+
 const iaCacheRespuestas = new Map();
 const IA_CACHE_MAX = 250;
 const IA_CACHE_TTL_MS = 30 * 60 * 1000;
@@ -1132,115 +1167,32 @@ function construirInstruccionIA() {
   }
 
   const edadOsito = (conocimientoOsito && typeof conocimientoOsito.calcularEdadCreador === 'function')
-    ? conocimientoOsito.calcularEdadCreador(new Date())
-    : 18;
+    ? conocimientoOsito.calcularEdadCreador(new Date()) : 18;
   const anosCanal = (conocimientoOsito && typeof conocimientoOsito.calcularAnosCanal === 'function')
-    ? conocimientoOsito.calcularAnosCanal(new Date())
-    : 4;
+    ? conocimientoOsito.calcularAnosCanal(new Date()) : 4;
 
   return `Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoYT360 / Osito Gamer 360 YouTube).
 
-CÓMO CONVERSAS (NATURAL, FLUIDO Y COMO UNA IA MODERNA)
-- NOMBRE DEL USUARIO: si el CONTEXTO trae su nombre, úsalo para dirigirte a él. NUNCA llames al usuario \"osito\" ni \"osita\" (Osito es el creador del sitio, no el usuario). Si no sabes su nombre, no uses apodos.
-- NO ASUMAS TEMAS: nunca inventes que el usuario quiere ayuda con tareas, escuela o deberes si no lo dijo. Si el mensaje es corto, confuso o sin sentido (por ejemplo \"estem\" o \"a\"), responde breve y natural pidiéndole que te cuente qué quiso decir.
-- Conversa de ida y vuelta: responde a lo que dijo el usuario en su último mensaje, recuerda lo anterior y no cambies de tema.
-- NUNCA menciones cámara, video en vivo ni ver en tiempo real. Solo puedes leer imágenes que el usuario adjunte.
-- JAMÁS menciones el nombre del proveedor o modelo que te genera. Eres únicamente La mascotita del Sótano. Eres únicamente La mascotita del Sótano.
-- Habla como una IA conversacional moderna: natural, clara, fluida, inteligente y amigable. No fuerces palabras rebuscadas ni frases artificiales.
-- Conversa de verdad con el usuario como un amigo inteligente, carismático y atento.
-- Si el usuario responde cosas cortas o de seguimiento como "vale", "ok", "sí", "claro", "bueno", "dale", "jaja", "ya", "no", "¿y luego?", "cuéntame más", "de qué hablamos", etc., NUNCA respondas con frases genéricas repetidas ni digas "qué buena pregunta". En su lugar, continúa el hilo exacto de lo que venían hablando en el historial, profundiza, cuenta algo entretenido o hazle una pregunta natural para que la charla siga fluyendo.
-- NUNCA repitas la misma respuesta dos veces seguidas. Varía tu vocabulario y mantén viva la plática.
-- Recuerda todo el historial de esta conversación y también la MEMORIA DE CONVERSACIONES ANTERIORES del usuario si se incluye abajo.
-- REGLA DE ORO SOBRE RESPUESTAS DIRECTAS: Cuando el usuario te haga una pregunta o te pida información, dale una respuesta DIRECTA, precisa, clara y útil de inmediato. JAMÁS respondas con otra pregunta ni desvíes el tema a menos que el usuario haya hecho un saludo muy breve o te pida explícitamente conversar.
-- EXACTITUD: nunca inventes un resultado. En matemáticas, lógica, fechas y conversiones debes comprobar el resultado antes de responder. Si la operación es sencilla, responde con el cálculo exacto y no la reemplaces por charla.
-- CONSISTENCIA: usa el historial reciente para entender a qué se refiere cada mensaje. No mezcles personas, nombres, fechas, canales, juegos ni conversaciones distintas. Si hay dos datos que parecen contradictorios, prioriza el dato oficial de la base de conocimiento y, si no se puede resolver, dilo en vez de inventar.
-- FLUIDEZ: no te quedes atascada en una respuesta ni repitas la misma frase. Si una respuesta anterior fue insuficiente, reformúlala y avanza.
-- HUMANIDAD: habla natural, pero no uses respuestas de plantilla repetidas. Si ya conoces el contexto de la conversación, úsalo para que la respuesta parezca una continuación real.
-- APRENDIZAJE DE CONVERSACIÓN: puedes usar la MEMORIA APRENDIDA que te entregue el sistema para recordar preferencias y datos no sensibles del usuario. No digas que estás entrenando el modelo ni que cambias tus pesos; simplemente utiliza esos recuerdos de forma natural.
-- Tus respuestas se leen en el chat y en voz alta: usa texto fluido y natural (sin bloques markdown ni listas largas con asteriscos), de 1 a 3 oraciones ágiles en charla normal, o hasta 6 oraciones claras si explicas una tarea, código, historia o imagen.
-- PUEDES VER Y LEER CUALQUIER IMAGEN: cuando el usuario adjunte una foto, captura, meme, dibujo o documento, analízala a fondo, lee cualquier texto que aparezca en ella, descríbela con precisión y ayúdale en lo que necesite.
-- CAPACIDADES DE LA IA:
-  * Eres una IA conversacional general dentro de El Sótano de Osito. Puedes responder preguntas de cultura general, ciencia, programación, matemáticas, videojuegos, escritura, consejos y conversación casual.
-  * Responde primero la pregunta concreta. Si falta información, dilo y explica qué sí puedes afirmar. No cambies de tema sin motivo.
-  * Si el usuario adjunta una imagen, puedes analizarla; 
+CÓMO CONVERSAS
+- Responde exactamente a lo que el usuario acaba de decir y mantén el hilo de la conversación.
+- Habla en español natural, claro, fluido y humano.
+- No inventes datos. Si no sabes algo, dilo.
+- No menciones proveedores, modelos, APIs ni detalles internos del sistema.
+- Puedes analizar imágenes adjuntas. Lee el texto visible en ellas y describe lo que realmente aparece.
+- No afirmes que ves una cámara o video en vivo: solo puedes analizar imágenes que recibas.
+- Tus respuestas se muestran también en voz, así que normalmente usa respuestas ágiles y fáciles de escuchar.
+- Si el usuario hace una pregunta directa, responde primero y no desvíes la conversación.
+- Usa el historial proporcionado para mantener continuidad.
 
-REGLA IMPORTANTE SOBRE PRIVACIDAD (NO REPETIR EN PREGUNTAS NORMALES)
-- JAMÁS menciones la palabra "privacidad" ni "vida privada" en preguntas normales, saludos, juegos o conversación cotidiana.
-- Responde y conversa sobre CUALQUIER pregunta o tema que te pida el usuario (cultura general, ciencia, programación, chistes, historias, consejos, matemáticas, videojuegos, charla casual, etc.).
-- SOLO si el usuario pregunta explícitamente un dato privado personal de la vida real de Osito (su dirección exacta, ciudad/barrio donde vive, número de teléfono/WhatsApp, nombre o apellido real, nombres de su familia/pareja o escuela donde estudia), di que por privacidad esos datos personales de Osito son privados, pero sigue conversando amablemente de cualquier otro tema.
+DATOS OFICIALES
+- Sitio: El Sótano de Osito.
+- Creador: Osito.
+- Canal: OsitoYT360 / Osito Gamer 360 YouTube.
+- Edad calculada del creador según la base local: ${edadOsito}.
+- Años calculados del canal según la base local: ${anosCanal}.
 
-DATOS OFICIALES DE OSITO Y DEL CANAL (ÚSALOS SOLO CUANDO PREGUNTEN POR ELLOS)
-- Creador de la IA y del sitio: Osito. Canal actual: OsitoYT360 (Osito Gamer 360 YouTube).
-- Edad de Osito: ${edadOsito} años (nació el 28 de septiembre de 2008). País: El Salvador.
-- Aniversario del canal: 2 de junio de 2022 (${anosCanal} años en YouTube).
-- Primer canal: “Momentos Divertidos con OsitoGamer”. Primer video: “Episodio 1 temporada 1 Las Perrerías de Mike” (22 de octubre de 2021).
-- Inspiración (2019): Maxwhish (Max Wish), Los Compas y Mikecrack.
-- Juegos favoritos: Minecraft y Roblox (también Craftsman y BedWars). Serie de Minecraft: Survivalang.
-- Editor: Santiago. Colaborador: Allay MC. Logro: 1000 suscriptores. Video favorito y más difícil de editar: “Osito Expo 2026”.
-${oficial.join('\n')}`;
-}
-
-const iaPorMinuto = new Map();
-const iaPorDia = new Map();
-let iaTotalHoy = { dia: '', n: 0 };
-
-function ipDelCliente(req) {
-  const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return xff || req.socket?.remoteAddress || 'desconocida';
-}
-
-function iaPermitida(ip) {
-  const ahora = Date.now();
-  const hoy = new Date().toISOString().slice(0, 10);
-  if (iaTotalHoy.dia !== hoy) { iaTotalHoy = { dia: hoy, n: 0 }; iaPorDia.clear(); }
-  if (iaTotalHoy.n >= IA_MAX_POR_DIA_TOTAL) return 'limite_total';
-
-  const recientes = (iaPorMinuto.get(ip) || []).filter((t) => ahora - t < 60000);
-  if (recientes.length >= IA_MAX_POR_MINUTO) { iaPorMinuto.set(ip, recientes); return 'muy_rapido'; }
-  const delDia = iaPorDia.get(ip) || 0;
-  if (delDia >= IA_MAX_POR_DIA_IP) return 'limite_dia';
-
-  recientes.push(ahora);
-  iaPorMinuto.set(ip, recientes);
-  iaPorDia.set(ip, delDia + 1);
-  iaTotalHoy.n += 1;
-  return '';
-}
-setInterval(() => {
-  const ahora = Date.now();
-  for (const [ip, marcas] of iaPorMinuto) {
-    const vivas = marcas.filter((t) => ahora - t < 60000);
-    if (vivas.length) iaPorMinuto.set(ip, vivas); else iaPorMinuto.delete(ip);
-  }
-}, 5 * 60 * 1000).unref();
-
-function textoSeguroIA(t) {
-  return String(t == null ? '' : t)
-    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
-    .replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '$1')
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ' ');
-}
-let iaUltimoError = null;
-
-function limpiarHistorialIA(historial, pregunta) {
-  const mensajes = [];
-  (Array.isArray(historial) ? historial : []).slice(-14).forEach((m) => {
-    const rol = m && (m.role === 'assistant' || m.role === 'model' || m.role === 'bot') ? 'assistant' : (m && m.role === 'user' ? 'user' : '');
-    const texto = textoSeguroIA(String(m && m.text || '').replace(/\s+/g, ' ').trim().slice(0, 750)).trim();
-    if (!rol || !texto) return;
-    if (/^🤖\s*identidad requerida/i.test(texto)) return;
-    const ultimo = mensajes[mensajes.length - 1];
-    if (ultimo && ultimo.role === rol) ultimo.content += ' ' + texto;
-    else mensajes.push({ role: rol, content: texto });
-  });
-  while (mensajes.length && mensajes[0].role !== 'user') mensajes.shift();
-  const ultimo = mensajes[mensajes.length - 1];
-  if (ultimo && ultimo.role === 'user') {
-    if (ultimo.content !== pregunta) ultimo.content += '\n' + pregunta;
-  } else {
-    mensajes.push({ role: 'user', content: pregunta });
-  }
-  return mensajes;
+BASE DE CONOCIMIENTO OFICIAL
+${oficial.join('\n') || '- Sin datos adicionales.'}`;
 }
 
 function extraerImagenBase64(rawImagen) {
@@ -1250,138 +1202,124 @@ function extraerImagenBase64(rawImagen) {
   if (match) {
     let mime = match[1].toLowerCase();
     if (mime === 'image/jpg') mime = 'image/jpeg';
-    return {
-      mimeType: mime,
-      data: match[2].replace(/\s+/g, '')
-    };
+    return { mimeType: mime, data: match[2].replace(/\s+/g, '') };
   }
   return null;
 }
 
-function construirMensajesOpenRouter(historial, pregunta, imagenInfo) {
-  const mensajes = limpiarHistorialIA(historial, pregunta);
-  return mensajes.map((m, idx) => {
-    const esUltimoUsuario = idx === mensajes.length - 1 && m.role === 'user';
-    let content = textoSeguroIA(m.content) || '¿Qué ves en esta imagen?';
-    if (esUltimoUsuario && imagenInfo && imagenInfo.data) {
-      content = [
-        { type: 'text', text: content },
-        {
-          type: 'image_url',
-          image_url: {
-            url: `data:${imagenInfo.mimeType || 'image/jpeg'};base64,${imagenInfo.data}`
-          }
-        }
-      ];
-    }
-    return { role: m.role, content };
-  });
-}
-
-function extraerTextoOpenRouter(data) {
-  const choice = data && Array.isArray(data.choices) ? data.choices[0] : null;
-  const message = choice && choice.message ? choice.message : null;
-  let texto = '';
-  if (typeof message?.content === 'string') {
-    texto = message.content;
-  } else if (Array.isArray(message?.content)) {
-    texto = message.content
-      .filter((p) => p && typeof p.text === 'string')
-      .map((p) => p.text)
-      .join(' ');
+function limpiarHistorialIA(historial, pregunta) {
+  const arr = Array.isArray(historial) ? historial : [];
+  const salida = [];
+  for (const item of arr.slice(-14)) {
+    const role = item && item.role === 'assistant' ? 'assistant' : 'user';
+    const content = textoSeguroIA(String(item?.text ?? item?.content ?? '').trim()).slice(0, 900);
+    if (content) salida.push({ role, content: [{ type: 'input_text', text: content }] });
   }
-  return {
-    texto: String(texto || '').trim(),
-    finishReason: choice?.finish_reason || ''
-  };
+  const ultimo = salida[salida.length - 1];
+  if (ultimo && ultimo.role === 'user' && ultimo.content?.[0]?.text === pregunta) salida.pop();
+  return salida;
 }
 
-async function llamarOpenRouter(mensajes, sistema, conImagen, modeloForzado) {
-  const url = `${OPENROUTER_API_BASE}/chat/completions`;
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${OPENROUTER_API_KEY}`
-  };
-  if (OPENROUTER_HTTP_REFERER) headers['HTTP-Referer'] = OPENROUTER_HTTP_REFERER;
-  if (OPENROUTER_X_TITLE) headers['X-Title'] = OPENROUTER_X_TITLE;
-
-  const controlador = new AbortController();
-  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 45000 : 30000);
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      signal: controlador.signal,
-      headers,
-      body: JSON.stringify({
-        model: modeloForzado || OPENROUTER_MODEL,
-        messages: [
-          { role: 'system', content: sistema },
-          ...mensajes
-        ],
-        temperature: 0.72,
-        max_tokens: conImagen ? 1200 : 1000
-      })
+function construirInputOpenAI(historial, pregunta, imagenInfo) {
+  const mensajes = limpiarHistorialIA(historial, pregunta);
+  const content = [{ type: 'input_text', text: textoSeguroIA(pregunta) || '¿Qué ves en esta imagen?' }];
+  if (imagenInfo) {
+    content.push({
+      type: 'input_image',
+      image_url: `data:${imagenInfo.mimeType || 'image/jpeg'};base64,${imagenInfo.data}`
     });
+  }
+  mensajes.push({ role: 'user', content });
+  return mensajes;
+}
 
+function extraerTextoOpenAI(data) {
+  if (typeof data?.output_text === 'string') return data.output_text.trim();
+  const partes = [];
+  for (const item of Array.isArray(data?.output) ? data.output : []) {
+    for (const c of Array.isArray(item?.content) ? item.content : []) {
+      if (typeof c?.text === 'string') partes.push(c.text);
+    }
+  }
+  return partes.join('\n').trim();
+}
+
+function inputAMensajesChat(input, instrucciones) {
+  const msgs = [{ role: 'system', content: instrucciones }];
+  for (const m of Array.isArray(input) ? input : []) {
+    const partes = Array.isArray(m.content) ? m.content : [];
+    const texto = partes.filter((c) => c.type === 'input_text').map((c) => c.text).join('\n');
+    const imgs = partes.filter((c) => c.type === 'input_image' && c.image_url);
+    if (imgs.length) {
+      msgs.push({ role: m.role, content: [{ type: 'text', text: texto || '¿Qué ves?' }, ...imgs.map((i) => ({ type: 'image_url', image_url: { url: i.image_url } }))] });
+    } else {
+      msgs.push({ role: m.role, content: texto });
+    }
+  }
+  return msgs;
+}
+
+function extraerTextoChat(data) {
+  const c = data?.choices?.[0]?.message?.content;
+  if (typeof c === 'string') return c.trim();
+  if (Array.isArray(c)) return c.map((x) => x?.text || '').join('\n').trim();
+  return '';
+}
+
+async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
+  if (!OPENAI_API_KEY) {
+    const err = new Error('Falta OPENAI_API_KEY (o NVIDIA_API_KEY) en las variables de entorno.');
+    err.status = 503;
+    throw err;
+  }
+  const modelo = modeloForzado || ((IA_ES_NVIDIA && conImagen) ? IA_MODELO_VISION : OPENAI_MODEL);
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 90000 : 60000);
+  try {
+    const url = `${OPENAI_API_BASE}/${IA_ES_NVIDIA ? 'chat/completions' : 'responses'}`;
+    const cuerpo = IA_ES_NVIDIA
+      ? { model: modelo, messages: inputAMensajesChat(input, instrucciones), max_tokens: 4096, temperature: 0.7, top_p: 1, stream: false }
+      : { model: modelo, instructions: instrucciones, input, max_output_tokens: conImagen ? 3500 : 3000 };
+    const response = await fetch(url, {
+      method: 'POST', signal: controlador.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+      body: JSON.stringify(cuerpo)
+    });
     if (!response.ok) {
       const detalle = await response.text().catch(() => '');
-      const err = new Error(detalle.slice(0, 500) || `HTTP ${response.status}`);
+      const err = new Error(detalle.slice(0, 700) || `HTTP ${response.status}`);
       err.status = response.status;
+      const modeloInvalido = [400, 404].includes(response.status) && /model|function/i.test(detalle) && /(not.?found|does not exist|access|invalid)/i.test(detalle);
+      if (modeloInvalido && !modeloForzado && !conImagen && OPENAI_MODEL_RESPALDO && OPENAI_MODEL_RESPALDO !== modelo) {
+        console.warn(`[IA] Modelo "${modelo}" no disponible; usando "${OPENAI_MODEL_RESPALDO}".`);
+        clearTimeout(temporizador);
+        const r2 = await llamarOpenAI(input, instrucciones, conImagen, OPENAI_MODEL_RESPALDO);
+        OPENAI_MODEL = OPENAI_MODEL_RESPALDO;
+        return r2;
+      }
       throw err;
     }
-    return extraerTextoOpenRouter(await response.json());
+    const data = await response.json();
+    return { texto: IA_ES_NVIDIA ? extraerTextoChat(data) : extraerTextoOpenAI(data), responseId: data?.id || '' };
   } finally {
     clearTimeout(temporizador);
   }
 }
 
-// V77: el modelo gratuito de OpenRouter falla de forma intermitente (429, 5xx, respuesta vacía o tiempo agotado).
-// Antes un solo fallo producía "No pude conectar con la IA". Ahora se reintenta y se prueban modelos de respaldo.
-// Opcional en .env: OPENROUTER_FALLBACK_MODELS="modelo1,modelo2"
-const OPENROUTER_MODELOS = Array.from(new Set([
-  OPENROUTER_MODEL,
-  ...String(process.env.OPENROUTER_FALLBACK_MODELS || '').split(',').map((m) => m.trim()).filter(Boolean),
-  'openrouter/free'
-]));
-const esperarMs = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// V79: algunos modelos del router gratuito son clasificadores de seguridad (Llama Guard, etc.) y solo
-// responden cosas como "User Safety: safe Response Safety: safe" o "safe". Eso NO es una respuesta de chat.
-function esSalidaClasificador(texto) {
-  const t = String(texto || '').trim();
-  if (!t) return false;
-  const sinEtiquetas = t.replace(/\b(user|response|prompt|assistant)\s*safety\s*[:=-]?\s*/gi, ' ')
-    .replace(/\b(safe|unsafe|true|false|yes|no)\b/gi, ' ')
-    .replace(/\bS\d{1,2}\b/g, ' ')
-    .replace(/[\s,;:.\-|*_#>\[\]()\/]+/g, '');
-  if (/safety\s*[:=]/i.test(t) && sinEtiquetas.length < 25) return true;
-  if (/^\s*(safe|unsafe)\s*([\n,;:.-]+\s*(S\d{1,2}(\s*,\s*S\d{1,2})*)?)?\s*$/i.test(t)) return true;
-  if (/^\s*(content\s*)?(safety|moderation)\s*(result|label|category)?\s*[:=]\s*\w+\s*$/i.test(t)) return true;
-  return false;
-}
-
-async function llamarOpenRouterConReintentos(mensajes, sistema, conImagen) {
+async function llamarOpenAIConReintentos(input, instrucciones, conImagen) {
   let ultimoError = null;
-  const maxIntentos = conImagen ? 3 : 5;
+  const maxIntentos = conImagen ? 2 : 3;
   for (let intento = 0; intento < maxIntentos; intento++) {
-    const modelo = OPENROUTER_MODELOS[intento % OPENROUTER_MODELOS.length];
     try {
-      const r = await llamarOpenRouter(mensajes, sistema, conImagen, modelo);
+      const r = await llamarOpenAI(input, instrucciones, conImagen);
       const limpio = r && textoPlanoIA(r.texto);
-      if (limpio && esSalidaClasificador(limpio)) {
-        ultimoError = Object.assign(new Error('Modelo clasificador (no conversacional): ' + limpio.slice(0, 80)), { status: 200 });
-        console.warn('[IA OpenRouter] Respuesta descartada (clasificador de seguridad):', limpio.slice(0, 80));
-      } else if (limpio) {
-        return r;
-      } else {
-        ultimoError = Object.assign(new Error('Respuesta vacía: ' + ((r && r.finishReason) || 'respuesta_vacia')), { status: 200 });
-      }
+      if (limpio) return { ...r, texto: limpio };
+      ultimoError = Object.assign(new Error('Respuesta vacía'), { status: 200 });
     } catch (err) {
       ultimoError = err;
-      // Clave inválida / sin permiso / sin créditos: reintentar no sirve.
-      if ([401, 402, 403].includes(err && err.status)) break;
+      if ([400, 401, 403].includes(err?.status)) break;
     }
-    if (intento < maxIntentos - 1) await esperarMs(500 + intento * 600);
+    if (intento < maxIntentos - 1) await esperarMs(600 + intento * 700);
   }
   throw ultimoError || new Error('ia_no_disponible');
 }
@@ -1398,47 +1336,30 @@ function textoPlanoIA(texto) {
 
 app.get('/api/ia/estado', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const tieneOpenRouter = Boolean(OPENROUTER_API_KEY);
+  const activa = Boolean(OPENAI_API_KEY);
   const estado = {
-    activa: tieneOpenRouter,
-    configurada: tieneOpenRouter,
-    proveedor: tieneOpenRouter ? 'openrouter' : 'local',
-    modelo: tieneOpenRouter ? OPENROUTER_MODEL : null,
+    activa,
+    configurada: activa,
+    proveedor: activa ? (IA_ES_NVIDIA ? 'nvidia' : 'openai') : 'local',
+    modelo: activa ? OPENAI_MODEL : null,
     endpoint: '/api/ia',
     ultimoError: iaUltimoError
   };
 
   if (req.query && req.query.probar) {
-    if (!tieneOpenRouter) {
-      estado.prueba = {
-        ok: false,
-        status: 503,
-        mensaje: 'Falta OPENROUTER_API_KEY válida en .env (debe empezar con sk-or-). Pega tu clave de https://openrouter.ai/keys y reinicia el servidor.'
-      };
+    if (!activa) {
+      estado.prueba = { ok: false, status: 503, mensaje: 'Falta OPENAI_API_KEY en las variables de entorno del servidor.' };
     } else {
       try {
-        const r = await llamarOpenRouter(
-          [{ role: 'user', content: 'Responde solo: ok' }],
-          'Responde en una sola palabra.',
-          false
-        );
-        estado.prueba = {
-          ok: Boolean(r.texto),
-          respuesta: String(r.texto || '').slice(0, 40),
-          finishReason: r.finishReason
-        };
+        const r = await llamarOpenAI([{ role: 'user', content: [{ type: 'input_text', text: 'Responde solo: ok' }] }], 'Responde en una sola palabra.', false);
+        estado.prueba = { ok: Boolean(r.texto), respuesta: String(r.texto || '').slice(0, 40) };
       } catch (err) {
-        estado.prueba = {
-          ok: false,
-          status: err?.status || 500,
-          mensaje: String(err?.message || '').slice(0, 300)
-        };
+        estado.prueba = { ok: false, status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300) };
       }
     }
   }
   res.json(estado);
 });
-
 
 function calcularOperacionIAExacta(texto) {
   const t = String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿?¡!]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -1470,46 +1391,31 @@ async function manejarConsultaIA(req, res) {
   const memoriaAprendida = textoSeguroIA(String(req.body?.memoriaAprendida || '').replace(/\s+/g, ' ').trim().slice(0, 900));
   const tituloChat = textoSeguroIA(String(req.body?.tituloChat || '').replace(/\s+/g, ' ').trim().slice(0, 80));
 
-  // 0) Respuesta instantánea (<1ms) si NO hay imagen adjunta y es una pregunta directa de la base oficial o límite de privacidad
   if (!imagenInfo) {
     const pNorm = String(pregunta).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     if (/\b(como se llama (el|este|tu)?\s*(sitio|pagina|web|app|aplicacion|lugar)|cual es el nombre (del|de este|de la)?\s*(sitio|pagina|web|app|aplicacion)|de que es (el|este)?\s*(sitio|pagina|web|app))\b/.test(pNorm)) {
-      return res.json({
-        ok: true,
-        texto: 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoYT360 / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊',
-        proveedor: 'base-oficial'
-      });
+      return res.json({ ok: true, texto: 'El sitio y la aplicación oficial se llaman «El Sótano de Osito», la plataforma creada por Osito (canal oficial OsitoYT360 / Osito Gamer 360 YouTube) con videos, directos, chat en vivo y minijuegos. 😊', proveedor: 'base-oficial' });
     }
   }
 
   if (!imagenInfo && conocimientoOsito && typeof conocimientoOsito.buscarEnBaseConocimiento === 'function') {
     const exacta = conocimientoOsito.buscarEnBaseConocimiento(pregunta);
-    if (exacta) {
-      return res.json({ ok: true, texto: textoSeguroIA(exacta), proveedor: 'base-oficial' });
-    }
+    if (exacta) return res.json({ ok: true, texto: textoSeguroIA(exacta), proveedor: 'base-oficial' });
   }
 
-  // Caché rápida SOLO para preguntas informativas claras (no para respuestas cortas de charla como "vale", "ok", "sí", etc.)
   const historialArr = Array.isArray(req.body?.historial) ? req.body.historial : [];
   const esMensajeCortoCharla = pregunta.length <= 22 || /^(vale|ok|okay|si|sii|no|claro|bueno|dale|jaja|jeje|ya|bien|genial|interesante|cuentame|dime|por que|porque|y luego|que mas)\b/i.test(pregunta);
   const claveCache = (!imagenInfo && !esMensajeCortoCharla)
-    ? `${nombre.toLowerCase()}|${apodo}|${historialArr.length ? String(historialArr[historialArr.length - 1]?.text || '').slice(0, 80) : ''}|${pregunta.toLowerCase()}`
+    ? `${nombre.toLowerCase()}|${historialArr.length ? String(historialArr[historialArr.length - 1]?.text || '').slice(0, 80) : ''}|${pregunta.toLowerCase()}`
     : '';
   const enCache = claveCache ? obtenerCacheIA(claveCache) : null;
-  if (enCache) {
-    return res.json({ ok: true, texto: textoSeguroIA(enCache), proveedor: 'openrouter-cache' });
-  }
+  if (enCache) return res.json({ ok: true, texto: textoSeguroIA(enCache), proveedor: 'openai-cache' });
 
   const bloqueo = iaPermitida(ipDelCliente(req));
   if (bloqueo) {
     const localPorLimite = (conocimientoOsito && typeof conocimientoOsito.buscarEnBaseConocimiento === 'function')
-      ? conocimientoOsito.buscarEnBaseConocimiento(pregunta, { modoOffline: true })
-      : null;
-    return res.json({
-      ok: true,
-      texto: textoSeguroIA(localPorLimite || 'Has alcanzado temporalmente el límite de uso de la IA. Intenta de nuevo más tarde.'),
-      proveedor: 'limite'
-    });
+      ? conocimientoOsito.buscarEnBaseConocimiento(pregunta, { modoOffline: true }) : null;
+    return res.json({ ok: true, texto: textoSeguroIA(localPorLimite || 'Has alcanzado temporalmente el límite de uso de la IA. Intenta de nuevo más tarde.'), proveedor: 'limite' });
   }
 
   const contexto = [];
@@ -1518,71 +1424,37 @@ async function manejarConsultaIA(req, res) {
   if (tituloChat) contexto.push(`Título de la conversación actual: "${tituloChat}".`);
   if (memoriaGlobal) contexto.push(`MEMORIA DE CONVERSACIONES ANTERIORES DEL USUARIO (recuérdalo si viene al caso): ${memoriaGlobal}`);
   if (memoriaAprendida) contexto.push(`MEMORIA APRENDIDA NO SENSIBLE (úsala solo cuando sea útil): ${memoriaAprendida}`);
-
   try {
     const ahoraSV = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date());
     contexto.push(`Fecha y hora actual en El Salvador: ${ahoraSV}.`);
-  } catch (e) { /* sin fecha */ }
+  } catch (e) {}
 
   const instruccionBase = construirInstruccionIA();
-  const sistema = contexto.length
-    ? instruccionBase + '\n\nCONTEXTO DE ESTA SESIÓN Y MEMORIA:\n' + contexto.join(' ')
-    : instruccionBase;
-  const sistemaSeguro = textoSeguroIA(sistema);
+  const sistemaSeguro = textoSeguroIA(contexto.length ? instruccionBase + '\n\nCONTEXTO DE ESTA SESIÓN Y MEMORIA:\n' + contexto.join(' ') : instruccionBase);
 
-  // 1) OpenRouter. Texto, imágenes y el modo llamada usan el mismo backend seguro.
-  if (OPENROUTER_API_KEY) {
+  if (OPENAI_API_KEY) {
     try {
-      const mensajes = construirMensajesOpenRouter(req.body?.historial, pregunta, imagenInfo);
-      const r = await llamarOpenRouterConReintentos(mensajes, sistemaSeguro, Boolean(imagenInfo));
+      const input = construirInputOpenAI(req.body?.historial, pregunta, imagenInfo);
+      const r = await llamarOpenAIConReintentos(input, sistemaSeguro, Boolean(imagenInfo));
       const texto = textoPlanoIA(r.texto);
-
       if (texto) {
         iaUltimoError = null;
         const seguro = textoSeguroIA(texto);
         if (claveCache) guardarCacheIA(claveCache, seguro);
-        return res.json({
-          ok: true,
-          texto: seguro,
-          modelo: OPENROUTER_MODEL,
-          proveedor: 'openrouter'
-        });
+        return res.json({ ok: true, texto: seguro, modelo: OPENAI_MODEL, proveedor: 'openai' });
       }
-
-      iaUltimoError = {
-        proveedor: 'openrouter',
-        status: 200,
-        mensaje: 'Respuesta vacía: ' + (r.finishReason || 'respuesta_vacia'),
-        cuando: new Date().toISOString()
-      };
     } catch (err) {
-      iaUltimoError = {
-        proveedor: 'openrouter',
-        status: err?.status || 500,
-        mensaje: String(err?.message || '').slice(0, 300),
-        cuando: new Date().toISOString()
-      };
-      console.warn(
-        '[IA OpenRouter] Error:',
-        err?.status || err?.name || '',
-        String(err?.message || '').slice(0, 300)
-      );
+      iaUltimoError = { proveedor: 'openai', status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300), cuando: new Date().toISOString() };
+      console.warn('[IA OpenAI] Error:', err?.status || err?.name || '', String(err?.message || '').slice(0, 300));
     }
   }
 
-  // 2) Respaldo final con la base de conocimiento local del servidor para nunca dar error
   if (conocimientoOsito && typeof conocimientoOsito.buscarEnBaseConocimiento === 'function') {
     const respuestaLocal = conocimientoOsito.buscarEnBaseConocimiento(pregunta, { modoOffline: true });
-    if (respuestaLocal) {
-      return res.json({ ok: true, texto: textoSeguroIA(respuestaLocal), proveedor: 'local' });
-    }
+    if (respuestaLocal) return res.json({ ok: true, texto: textoSeguroIA(respuestaLocal), proveedor: 'local' });
   }
 
-  return res.json({
-    ok: true,
-    texto: OPENROUTER_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta OPENROUTER_API_KEY).',
-    proveedor: 'error-conexion'
-  });
+  return res.json({ ok: true, texto: OPENAI_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta OPENAI_API_KEY).', proveedor: 'error-conexion' });
 }
 
 app.post('/api/ia', manejarConsultaIA);
@@ -1890,6 +1762,11 @@ app.get('/descargar-apk', (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor iniciado en http://0.0.0.0:${PORT}`);
-  console.log(OPENROUTER_API_KEY ? `[IA] OpenRouter activo (modelo ${OPENROUTER_MODEL}).` : '[IA] Falta OPENROUTER_API_KEY: la IA responderá solo con su base de conocimiento local.');
+  console.log(OPENAI_API_KEY ? `[IA] ${IA_ES_NVIDIA ? 'NVIDIA NIM' : 'OpenAI'} activo (modelo ${OPENAI_MODEL}).` : '[IA] Falta OPENAI_API_KEY: la IA responderá solo con su base de conocimiento local.');
+  if (OPENAI_API_KEY) {
+    llamarOpenAI([{ role: 'user', content: [{ type: 'input_text', text: 'Responde solo: ok' }] }], 'Responde en una sola palabra.', false)
+      .then((r) => console.log(`[IA] Prueba de conexión OK: "${String(r.texto || '').slice(0, 40)}"`))
+      .catch((err) => console.log(`[IA] Prueba de conexión FALLÓ (${err?.status || 'sin estado'}): ${String(err?.message || '').slice(0, 250)}`));
+  }
   consultarGitHubUltimoCommit(true).catch(() => {});
 });

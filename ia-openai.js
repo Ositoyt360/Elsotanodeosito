@@ -944,7 +944,7 @@
     var ultimaReaccionTexto = 0;
     function expresionParaTexto(t) {
         t = String(t || '').toLowerCase();
-        if (/no (encuentro|est[aá]) (el )?servidor|todav[ií]a no lo s[eé]|no est[aá] (conectado|disponible)|tard[oó] demasiado|llave|anthropic|sin conexi[oó]n|conexi[oó]n a internet|no pudo aceptar/.test(t)) return 'confused';
+        if (/no (encuentro|est[aá]) (el )?servidor|todav[ií]a no lo s[eé]|no est[aá] (conectado|disponible)|tard[oó] demasiado|llave|openai|sin conexi[oó]n|conexi[oó]n a internet|no pudo aceptar/.test(t)) return 'confused';
         if (/lo siento|disculp|perd[oó]n|lamento|desafortunad|no puedo (dar|compartir|ayudar)|por seguridad|necesito descansar|😢|😔|🙏/.test(t)) return 'sad';
         if (/no (estoy seguro|lo s[eé]|s[eé])\b|no entiendo|no tengo (ese )?dato|todav[ií]a no est[aá] (registrad|disponible)/.test(t)) return 'confused';
         if (/ja(ja)+|je(je)+|chiste|😂|🤣|colmo|zum-ba|tokofondo/.test(t)) return 'laugh';

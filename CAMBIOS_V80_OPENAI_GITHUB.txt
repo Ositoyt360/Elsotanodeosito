@@ -1,0 +1,10 @@
+V80 — OpenAI + GitHub
+
+- Se reemplazó NVIDIA NIM por OpenAI Responses API en /api/ia.
+- Se eliminó OpenRouter, Gemini y Anthropic/Claude como proveedores activos.
+- Se eliminó la dependencia de Render para la IA.
+- Chat de texto y análisis de imágenes pasan por OpenAI.
+- El modo llamada mantiene el flujo de micrófono + voz del navegador y usa /api/ia para generar las respuestas.
+- La clave se lee desde OPENAI_API_KEY y nunca se incluye en el frontend.
+- .gitignore bloquea .env para evitar subir la clave a GitHub.
+- GitHub queda como repositorio del proyecto; server.js debe ejecutarse en un backend Node que controles.

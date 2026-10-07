@@ -14,7 +14,7 @@
  *     CONFUSED, LAUGHING, EXCITED, TIRED, SLEEPING.
  *   - Boca con Lip-Sync REAL mediante Web Audio API AnalyserNode.
  *   - Sonidos y expresiones naturales ("ah", "mmm", suspiro, bostezo, risa).
- *   - Conversación en tiempo real con OpenRouter Live (Voz + Texto progresivo).
+ *   - Conversación en tiempo real con OpenAI Live (Voz + Texto progresivo).
  *   - Modo llamada exclusivamente por micrófono; no usa cámara.
  *   - Mute real y finalización limpia con retorno al cubo del modo normal.
  * ============================================================================
@@ -530,33 +530,11 @@
     }
 
     // ========================================================================
-    // 10. CONVERSACIÓN POR VOZ CON OPENROUTER
+    // 10. CONVERSACIÓN POR VOZ CON OpenAI
     // ========================================================================
-    // La clave de OpenRouter NUNCA se expone en el navegador.
+    // La clave de OpenAI NUNCA se expone en el navegador.
     // El modo llamada usa el mismo backend seguro /api/ia que el chat.
-    // Así funciona con la OPENROUTER_API_KEY guardada como secreto del servidor.
-    async function llamarOpenRouterLiveRest(pregunta, frameBase64) {
-        var urls = (typeof window.OsitoIAEndpoints === 'function') ? window.OsitoIAEndpoints() : ['/api/ia'];
-        for (var i = 0; i < urls.length; i++) {
-            try {
-                var res = await fetch(urls[i], {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        pregunta: String(pregunta || '').trim(),
-                        imagen: frameBase64 || '',
-                        nombre: localStorage.getItem('osito_ai_nombre') || '',
-                        genero: localStorage.getItem('osito_ai_genero') || 'male'
-                    })
-                });
-                if (!res.ok) continue;
-                var data = await res.json();
-                if (data && data.texto) return String(data.texto).trim();
-            } catch (_) { /* prueba el siguiente endpoint */ }
-        }
-        return null;
-    }
-
+    // Así funciona con la OpenAI_API_KEY guardada como secreto del servidor.
     async function procesarEntradaUsuario(preguntaUsuario) {
         var limpia = String(preguntaUsuario || '').trim();
         if (!limpia) return;
@@ -579,7 +557,7 @@
                 return;
             }
 
-            // El modo llamada usa el mismo /api/ia que el chat normal. Así OpenRouter
+            // El modo llamada usa el mismo /api/ia que el chat normal. Así OpenAI
             // recibe el mismo contexto, memoria y reglas de exactitud.
             if (!respuesta && window.OsitoIA && typeof window.OsitoIA.preguntar === 'function') {
                 try {

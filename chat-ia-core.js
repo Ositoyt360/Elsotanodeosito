@@ -1056,14 +1056,14 @@
                     return `El canal ${infoCanal.canal} tiene ${anos} años en YouTube. Su aniversario es el 2 de junio (empezó el 2 de junio de 2022). 🎉`;
                 }
 
-                // 9. Para todo lo demás (conversación, saludos, preguntas abiertas, "vale", "cómo", cultura general, juegos, etc.) responde mediante OpenRouter con memoria completa
+                // 9. Para todo lo demás (conversación, saludos, preguntas abiertas, "vale", "cómo", cultura general, juegos, etc.) responde mediante OpenAI con memoria completa
                 return null;
             }
 
             function mensajeNoDisponibleLocal() {
                 const puerto = String((window.location && window.location.port) || '');
                 if (window.location && (window.location.protocol === 'file:' || (puerto && puerto !== '3000' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)))) {
-                    return 'No encuentro el servidor de la IA. Inicia el servidor con INICIAR_OPENROUTER.bat y abre http://localhost:3000 (no uses Live Server). Puedes revisar el estado en http://localhost:3000/api/ia/estado?probar=1';
+                    return 'No encuentro el servidor de la IA. Inicia el servidor con npm start y abre http://localhost:3000 (no uses Live Server). Puedes revisar el estado en http://localhost:3000/api/ia/estado?probar=1';
                 }
                 return 'La IA tardó en responder. Inténtalo de nuevo en unos segundos 🙏 (si sigue pasando, revisa http://localhost:3000/api/ia/estado?probar=1).';
             }
@@ -1231,7 +1231,7 @@
                     }
                 }
 
-                // 3) Conversación inteligente y análisis de imágenes con la API de OpenRouter (/api/ia) + Memoria de chats estilo ChatGPT
+                // 3) Conversación inteligente y análisis de imágenes con la API de OpenAI (/api/ia) + Memoria de chats estilo ChatGPT
                 if (window.OsitoIA && typeof window.OsitoIA.preguntar === 'function') {
                     const sesionActual = typeof obtenerSesionActiva === 'function' ? obtenerSesionActiva() : null;
                     const memoriaChats = typeof construirMemoriaGlobalChats === 'function' ? construirMemoriaGlobalChats() : '';

@@ -1,0 +1,5 @@
+V82 — IA con la clave de NVIDIA (nvapi-)
+- Si OPENAI_API_KEY empieza con nvapi-, el servidor usa https://integrate.api.nvidia.com/v1/chat/completions.
+- Texto: meta/llama-3.3-70b-instruct. Imagenes: meta/llama-3.2-90b-vision-instruct. Respaldo: meta/llama-3.1-70b-instruct.
+- Con una clave sk- sigue usando OpenAI Responses API.
+- Se puede cambiar todo con OPENAI_MODEL, IA_MODELO_VISION, OPENAI_MODEL_RESPALDO, OPENAI_API_BASE.

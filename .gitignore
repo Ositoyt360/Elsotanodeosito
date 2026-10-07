@@ -1,44 +1,10 @@
-# Environment & Secrets
 .env
-.env.local
-
-# Gradle cache and build outputs
-.gradle/
-build/
-app/build/
-**/build/
-.build-outputs/
-
-# Package Files / Android Binaries
-*.apk
-*.aab
-*.ap_
-*.dex
-*.class
-
-# Keystores / Binary cache
-*.bin
-*.keystore
-debug.keystore.base64
-
-# Local and OS files
-local.properties
-.DS_Store
-Thumbs.db
-*.log
-
-# IDE & Editor files
-.idea/
-.vscode/
-*.iml
-.navigation/
-
-# Node
+.env.*
+!.env.example
 node_modules/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Server local data
 chat-data.json
 admin-settings.json
+site-settings.json
+*.log
+.DS_Store

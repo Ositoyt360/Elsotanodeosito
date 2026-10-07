@@ -1,0 +1,8 @@
+V81 — Fix IA OpenAI
+- server.js: faltaban textoSeguroIA, iaPermitida, ipDelCliente, esperarMs e iaUltimoError, y se usaba la variable inexistente 'apodo'. Cada llamada a /api/ia lanzaba ReferenceError (la IA nunca respondia con OpenAI). Ya estan definidas.
+- server.js: el modelo por defecto 'gpt-6-luna' no se pudo verificar; ahora es gpt-5.4 con respaldo automatico gpt-5-mini (OPENAI_MODEL / OPENAI_MODEL_RESPALDO).
+- server.js: max_output_tokens subido (los modelos con razonamiento gastaban todo en pensar y devolvian vacio).
+- sw.js: se cargaba ./ia-nvidia.js (no existe) y rompia la instalacion del service worker; ahora apunta a ia-openai.js.
+- call-mode-engine.js: eliminada llamarNvidiaLiveRest (codigo muerto de NVIDIA).
+- Quitadas menciones a NVIDIA NIM en comentarios y metadata.json.
+- No quedan referencias a NVIDIA, OpenRouter, Gemini ni Anthropic en el codigo.

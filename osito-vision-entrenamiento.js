@@ -195,7 +195,7 @@
         }
     }
 
-    // Capturar foto actual para análisis visual con OpenRouter
+    // Capturar foto actual para análisis visual con OpenAI
     function capturarFotogramaBase64() {
         if (!videoHeadless || !streamCamara || !streamCamara.active) return null;
         if (videoHeadless.readyState < 2) return null;

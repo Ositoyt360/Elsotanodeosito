@@ -1,0 +1,6 @@
+Proveedor de IA: OpenAI
+- Texto: OpenAI Responses API
+- Análisis de imágenes: OpenAI Responses API con entrada de imagen
+- Modo llamada: voz del navegador + respuestas generadas por OpenAI mediante /api/ia
+- No se usa NVIDIA, OpenRouter, Gemini, Anthropic/Claude ni Render como proveedor o backend de IA.
+- La clave OPENAI_API_KEY debe mantenerse fuera del código público.

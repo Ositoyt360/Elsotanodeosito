@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: el-sotano-de-osito
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/ia/estado
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false          # la pones tú en el panel de Render (tu clave nvapi-...)
+      - key: OPENAI_MODEL
+        value: openai/gpt-oss-20b
+      - key: IA_MAX_POR_DIA_TOTAL
+        value: "500"
+      - key: IA_ALLOWED_ORIGINS
+        sync: false          # opcional: https://TUUSUARIO.github.io

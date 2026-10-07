@@ -1,5 +1,5 @@
 V79 — IA: "User Safety: safe Response Safety: safe"
-- Causa: el router gratuito de OpenRouter a veces enruta a un modelo clasificador de seguridad (tipo Llama Guard) que no conversa, solo devuelve "safe/unsafe".
+- Causa: el router gratuito de NVIDIA NIM a veces enruta a un modelo clasificador de seguridad (tipo Llama Guard) que no conversa, solo devuelve "safe/unsafe".
 - server.js: esSalidaClasificador() descarta esas salidas y reintenta con otro modelo (hasta 5 intentos). Nunca se guardan en caché.
-- ia-openrouter.js: filtro de respaldo en el cliente.
-- Si quieres evitarlo del todo, fija un modelo de chat en .env: OPENROUTER_MODEL=<modelo conversacional>
+- ia-nvidia.js: filtro de respaldo en el cliente.
+- Si quieres evitarlo del todo, fija un modelo de chat en .env: =<modelo conversacional>

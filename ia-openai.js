@@ -362,6 +362,18 @@
         return urls.filter(function (u, i) { return urls.indexOf(u) === i; });
     }
 
+    // V89: Render (plan gratis) se duerme y tarda ~50 s en despertar. Se le avisa al abrir la página
+    // para que ya esté listo cuando la persona escriba. No gasta IA (no usa ?probar=1).
+    function despertarServidorIA() {
+        try {
+            var meta = document.querySelector('meta[name="osito-ia-url"]');
+            var base = meta && meta.content ? String(meta.content).trim().replace(/\/+$/, '') : '';
+            if (!base || typeof fetch !== 'function') return;
+            fetch(base + '/api/ia/estado', { method: 'GET', cache: 'no-store' }).catch(function () {});
+        } catch (_) {}
+    }
+    setTimeout(despertarServidorIA, 1200);
+
     /**
      * Pregunta a la IA OpenAI en el servidor (/api/ia) enviando historial de conversación y memoria de chats.
      * Devuelve { texto } o { error }.
@@ -398,7 +410,7 @@
             for (var i = 0; i < endpoints.length; i++) {
                 var url = endpoints[i];
                 var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 60000 : 55000) : 0;
+                var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, imagen ? 100000 : 90000) : 0;
                 try {
                     var payload = {
                         pregunta: textoPregunta,

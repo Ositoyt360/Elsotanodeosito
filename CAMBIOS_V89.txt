@@ -10,3 +10,5 @@ V89
 - Cache: sw.js osito-pwa-v89 y versiones de scripts actualizadas.
 NOTA: la IA solo responde si el backend (server.js con OPENAI_API_KEY) esta publicado y accesible. Si el sitio esta en hosting estatico, pon la URL del backend en <meta name="osito-ia-url"> de index.html e ia.html.
 - GitHub Pages + Render: <meta name="osito-ia-url"> ahora apunta a https://el-sotano-de-osito.onrender.com (index.html e ia.html). Antes estaba vacio y la pagina buscaba /api/ia en github.io, donde no existe. Si tu URL de Render es otra, cambiala en esos dos archivos.
+- ia-openai.js: al abrir la pagina se "despierta" el servidor de Render (GET /api/ia/estado) para que ya este listo cuando escribas, y el tiempo de espera de la IA sube de 55 s a 90 s (100 s con imagen). Render gratis tarda ~50 s en despertar y antes la pagina se rendia justo antes.
+- Verificado: server.js ya llama a NVIDIA igual que el ejemplo oficial (integrate.api.nvidia.com/v1, chat/completions, openai/gpt-oss-20b, max_tokens 4096).

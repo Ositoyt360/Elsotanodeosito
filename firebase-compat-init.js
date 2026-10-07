@@ -17,6 +17,7 @@
         const app = guest ? guest.app : (window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat));
         const auth = guest ? guest.auth : window.firebase.auth();
         const db = guest ? guest.db : window.firebase.firestore();
+        try { if (!guest) db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) { /* ya inicializado */ }
         let storage = null;
         try {
             storage = guest ? guest.storage : window.firebase.storage();

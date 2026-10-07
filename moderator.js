@@ -55,7 +55,7 @@
     try {
       const snap=await siteSettingsRef.get();
       const settings=snap.exists ? (snap.data()||{}) : {};
-      setThemeUI(settings.theme||'normal'); setMaintenanceUI(settings.maintenance===true);
+      setThemeUI(settings.theme||'normal'); setMaintenanceUI(settings.maintenance===true); setIaMaintenanceUI(settings.iaMaintenance===true);
       const titleInput=$('site-title');
       if(titleInput && settings.title) titleInput.value=settings.title;
       // Si el creador guardó una lista vacía, debe permanecer vacía: no
@@ -80,6 +80,8 @@
     }
   }
   function setMaintenanceUI(active){const on=!!active,b=$('toggle-maintenance'),l=$('maintenance-current');if(b){b.textContent=on?'🛠️ Desactivar modo mantenimiento':'🛠️ Modo mantenimiento';b.classList.toggle('danger',on);}if(l)l.textContent='Estado: '+(on?'Activo':'Desactivado');}
+  function setIaMaintenanceUI(active){const on=!!active,b=$('toggle-ia-maintenance'),l=$('ia-maintenance-current');if(b){b.textContent=on?'🤖 Desactivar mantenimiento de la IA':'🤖 Mantenimiento de la IA';b.classList.toggle('danger',on);}if(l)l.textContent='IA: '+(on?'En mantenimiento':'Normal');}
+  async function toggleIaMaintenance(){const snap=await siteSettingsRef.get();const on=!!(snap.exists&&snap.data()&&snap.data().iaMaintenance);await saveSiteSettings({iaMaintenance:!on});setIaMaintenanceUI(!on);toast(!on?'La IA quedó en mantenimiento (solo afecta a la IA).':'La IA volvió a funcionar para todos.');}
   async function toggleMaintenance(){const snap=await siteSettingsRef.get();const on=!!(snap.exists&&snap.data()&&snap.data().maintenance);await saveSiteSettings({maintenance:!on});setMaintenanceUI(!on);toast(!on?'Mantenimiento activado para todos.':'Mantenimiento desactivado para todos.');}
   function setThemeUI(theme){ const t=THEME_LABELS[theme]?theme:'normal'; document.querySelectorAll('[data-theme-mode]').forEach(b=>b.classList.toggle('active',b.dataset.themeMode===t)); const label=$('theme-current-label'); if(label) label.textContent='Modo actual: '+THEME_LABELS[t]; }
   async function saveTheme(theme){
@@ -270,6 +272,8 @@
   $('refresh-messages').addEventListener('click',()=>loadMessages().catch(e=>toast(e.message,true)));
   document.querySelectorAll('[data-theme-mode]').forEach(b=>b.addEventListener('click',()=>saveTheme(b.dataset.themeMode).catch(e=>toast(e.message,true))));
   const maintenanceBtn=$('toggle-maintenance'); if(maintenanceBtn) maintenanceBtn.addEventListener('click',()=>toggleMaintenance().catch(e=>toast(e.message,true)));
+  const iaMaintBtn=$('toggle-ia-maintenance'); if(iaMaintBtn) iaMaintBtn.addEventListener('click',()=>toggleIaMaintenance().catch(e=>toast(e.message,true)));
+  const previewIaBtn=$('preview-ia-user'); if(previewIaBtn) previewIaBtn.addEventListener('click',()=>{ const box=$('ia-preview-box'); if(!box) return; box.hidden=!box.hidden; previewIaBtn.textContent=box.hidden?'👁️ Ver IA como usuario':'🙈 Ocultar vista previa'; });
   const previewUserBtn=$('preview-user'); if(previewUserBtn) previewUserBtn.addEventListener('click',()=>{ window.open('mantenimiento.html?userPreview=1','_blank','noopener,noreferrer'); });
   if($('save-title')) $('save-title').addEventListener('click',()=>saveTitle().catch(e=>toast(e.message,true)));
   if($('add-countdown')) $('add-countdown').addEventListener('click',()=>addCountdown());

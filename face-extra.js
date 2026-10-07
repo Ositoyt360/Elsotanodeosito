@@ -79,7 +79,7 @@
         if (ev && ev.type === 'scroll' && ev.target !== document && ev.target !== document.documentElement && ev.target !== document.body) return;
         ultimaActividad = Date.now();
         ultimaConCara = ultimaActividad;
-        if (durmiendo && !esNoche()) tocar(true);
+        if (durmiendo) tocar(true); // V86: si la persona está usando la página, la mascota NO sigue dormida
     }
 
     // CINTURÓN PRINCIPAL: cualquier llamada externa a OsitoFace.poner('sleeping'/'sleepy')
@@ -99,6 +99,19 @@
     function ocupada() {
         return caras.some(function (c) { var e = c.dataset.estado; return e && e !== 'idle'; });
     }
+    var INACTIVIDAD_PARA_DORMIR = 60000; // V86: 60 s sin tocar nada
+    function enUsoIA() { // panel de IA, llamada o chat en vivo abiertos = la persona está presente
+        try {
+            if (window.ositoEnLlamadaIA) return true;
+            var p = document.getElementById('ai-section');
+            if (p && p.classList.contains('active')) return true;
+            var c = document.getElementById('livechat-section');
+            if (c && (c.classList.contains('open') || c.classList.contains('active') || c.classList.contains('show'))) return true;
+            var a = document.activeElement;
+            if (a && (a.id === 'ai-input' || a.id === 'livechat-input')) return true;
+        } catch (e) {}
+        return false;
+    }
     function exprAjena() { // alguna cara visible con otra emoción (que no sea dormir)
         return caras.some(function (c) { var e = c.getAttribute('data-expr'); return visible(c) && e && e !== 'sleeping' && e !== 'sleepy'; });
     }
@@ -110,14 +123,16 @@
         if (noche) {
             if (enSiesta) { limpiarTimerSiesta(); enSiesta = false; }
             if (ocupada()) { if (durmiendo) tocar(true); ultimaConCara = ahora; return; }
+            // V86: la persona está activa (tocó, escribió, movió el mouse o usa el chat/IA) -> despierta y NO se vuelve a dormir.
+            if (durmiendo && (ahora - ultimaActividad) < 4000) { tocar(true); return; }
             if (durmiendo) {
                 if (exprAjena()) { tocar(true); return; }
                 caras.forEach(function (c) { if (c.getAttribute('data-expr') !== 'sleeping') F.poner(c, 'sleeping', 0); });
                 return;
             }
-            // Sueño nocturno: no depende de inactividad. Si son las 00:30–05:30, duerme;
-            // antes de las 00:30 jamás debe entrar en sleeping por ningún temporizador.
-            if (!durmiendo && !exprAjena()) dormir(false);
+            // Sueño nocturno SOLO tras 60 s sin actividad real y con el panel de IA / chat cerrados.
+            if (enUsoIA()) { ultimaActividad = ahora; return; }
+            if (!durmiendo && !exprAjena() && (ahora - ultimaActividad) > INACTIVIDAD_PARA_DORMIR) dormir(false);
             return;
         }
 

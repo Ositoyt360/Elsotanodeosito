@@ -1,0 +1,6 @@
+V87
+- "Ver IA como usuario" ahora abre ia.html?userPreview=1&only=ia: muestra SOLO la pantalla de mantenimiento de la IA y ya no salta al mantenimiento global aunque este activo.
+- El mantenimiento global (maintenance) y el de la IA (iaMaintenance) siguen siendo banderas independientes en siteSettings/public.
+- Versiones de cache actualizadas (moderator.js, maintenance-guard.js, sw.js).
+- Mantenimiento de la IA: ya NO es pantalla completa. Ahora cubre solo la zona de la IA (#ai-section); el boton "Regresar al Sotano", la mascota y el resto del sitio quedan visibles en celular y PC. No se bloquea el scroll de la pagina.
+- En el index (PC) el aviso aparece dentro del panel de la IA; "Cerrar" cierra ese panel.

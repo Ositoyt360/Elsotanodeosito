@@ -50,6 +50,18 @@
     </section>
 
     <section class="panel maintenance-panel" data-creator-only><div class="panel-head responsive"><div><span class="kicker">CONTROL GLOBAL</span><h2>Mantenimiento del Sótano</h2></div><strong id="maintenance-current" class="theme-current">Estado: Desactivado</strong></div><p class="muted">Muestra en toda la página “El Sótanocito está en mantenimiento” con la mascota. La mascota es decorativa y no abre la IA.</p><button id="toggle-maintenance" class="btn" type="button">🛠️ Activar mantenimiento</button></section>
+      <section class="panel maintenance-panel" data-creator-only>
+        <div class="panel-head responsive">
+          <div><span class="kicker">SOLO LA IA</span><h2>Mantenimiento de la IA</h2></div>
+          <span class="live-pill">● EN VIVO</span>
+        </div>
+        <p class="muted">Solo afecta a la IA: muestra una pantalla animada con la mascota en el centro y la opción de IA beta (solo funciona en local). El resto del sitio sigue normal y tu cuenta creadora no la ve.</p>
+        <div class="maintenance-control-row">
+          <button id="toggle-ia-maintenance" class="btn maintenance-main-btn" type="button">🤖 Mantenimiento de la IA</button>
+          <button id="preview-ia-user" class="btn secondary" type="button">👁️ Ver IA como usuario</button>
+          <div id="ia-maintenance-current" class="small-card">IA: Normal</div>
+        </div>
+      </section>
 
     <section class="stats" aria-label="Resumen">
       <article data-creator-only><span>Cuentas</span><strong id="stat-users">0</strong></article>
@@ -99,6 +111,6 @@
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="moderator.js?v=20260924-1"></script>
+  <script src="moderator.js?v=20261007-86"></script>
 </body>
 </html>

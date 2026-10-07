@@ -15,6 +15,8 @@
   var params = new URLSearchParams(location.search);
   var userPreview = params.get('userPreview') === '1' || !!(window.OsitoGuest && window.OsitoGuest.active);
   var isMaintenancePage = /(?:^|\/)mantenimiento\.html$/i.test(location.pathname);
+  // V87: "Ver IA como usuario" (?only=ia) solo prueba la pantalla de mantenimiento de la IA: no salta al mantenimiento global.
+  var iaOnlyPreview = userPreview && params.get('only') === 'ia';
   var currentUser = null;
   var authReady = userPreview; // en vista previa no se espera ninguna sesión
   var lastActive = null;       // último estado recibido de Firestore (aunque auth aún no esté listo)
@@ -51,6 +53,7 @@
 
   function apply(active) {
     lastActive = !!active;
+    if (iaOnlyPreview && !isMaintenancePage) return;
     if (userPreview) {
       // Vista de usuario = invitado. Mantenimiento ON -> pantalla de mantenimiento.
       // Mantenimiento OFF -> página principal como invitado (sin tu cuenta).

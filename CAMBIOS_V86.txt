@@ -1,0 +1,6 @@
+V86
+- Chat en vivo: escucha siempre (con o sin sesion), ultimos 150 mensajes, reintentos automaticos, long-polling automatico, pintado incremental, avisos de mensajes nuevos.
+- Sesion: setPersistence con try/catch, marca osito_session_hint, espera a que Firebase restaure la sesion antes de mostrar login.
+- Mascota: de noche solo duerme tras 60 s sin actividad y con IA/chat cerrados; cualquier actividad la despierta.
+- Nuevo modo mantenimiento SOLO de la IA (ia-maintenance.js, siteSettings/public.iaMaintenance) con boton en moderador; mascota al centro, animada, mensaje de IA beta (solo local).
+- Pendiente conocido (no tocado): call-mode-engine.js linea 787 usa capturarFrameActual inexistente.

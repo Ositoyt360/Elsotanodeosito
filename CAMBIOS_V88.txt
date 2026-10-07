@@ -1,0 +1,3 @@
+V88
+- "Ver IA como usuario" ya NO abre otra pestana ni pantalla completa: muestra la vista previa dentro del panel de moderacion, al tamano del panel flotante de la IA en PC.
+- En el sitio real (PC) el aviso de mantenimiento de la IA queda dentro del panel de la IA (no a pantalla completa).

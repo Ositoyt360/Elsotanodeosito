@@ -10,7 +10,7 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v80';
+const CACHE_NAME = 'osito-pwa-v88';
 const OTA_CACHE_NAME = 'osito-ota-github-v78';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
 const OTA_ENABLED = false;
@@ -26,6 +26,7 @@ const CORE_ASSETS = [
   './ia-openai.js',
   './call-mode-engine.js',
   './firebase-compat-init.js',
+  './ia-maintenance.js',
   './moderador.html',
   './manifest.json',
   './styles.css',

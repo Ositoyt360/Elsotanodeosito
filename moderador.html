@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="Osito">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="moderator.css?v=20260921-1">
+  <link rel="stylesheet" href="moderator.css?v=20261007-88">
   <script src="actualizaciones-helper.js?v=pwa-v63" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
@@ -80,6 +80,30 @@
         </div>
       </section>
 
+      <section class="panel maintenance-panel" data-creator-only>
+        <div class="panel-head responsive">
+          <div><span class="kicker">SOLO LA IA</span><h2>Mantenimiento de la IA</h2></div>
+          <span class="live-pill">● EN VIVO</span>
+        </div>
+        <p class="muted">Solo afecta a la IA: muestra una pantalla animada con la mascota en el centro y la opción de IA beta (solo funciona en local). El resto del sitio sigue normal y tu cuenta creadora no la ve.</p>
+        <div class="maintenance-control-row">
+          <button id="toggle-ia-maintenance" class="btn maintenance-main-btn" type="button">🤖 Mantenimiento de la IA</button>
+          <button id="preview-ia-user" class="btn secondary" type="button">👁️ Ver IA como usuario</button>
+          <div id="ia-maintenance-current" class="small-card">IA: Normal</div>
+        </div>
+        <div id="ia-preview-box" class="ia-preview-box" hidden aria-label="Vista previa del mantenimiento de la IA">
+          <div class="ia-preview-head"><span>La mascotita del Sótano</span><small>Vista previa · tamaño del panel de la IA en PC</small></div>
+          <div class="ia-preview-body">
+            <div class="ia-preview-mascot"><span class="ia-pf"><i class="ia-pf-eye"></i><i class="ia-pf-eye"></i><b class="ia-pf-mouth"></b></span><span class="ia-pf-gear g1">⚙️</span><span class="ia-pf-gear g2">⚙️</span></div>
+            <h3>La IA está en mantenimiento</h3>
+            <p>Estamos mejorando a la Mascotita del Sótano. Vuelve en un ratito. 🛠️</p>
+            <div class="ia-preview-bar"></div>
+            <div class="ia-preview-beta"><strong>¿Quieres tener por el momento la IA beta?</strong><small>La IA beta solo funciona en local.</small></div>
+            <div class="ia-preview-actions"><span>🧪 Sí, usar IA beta</span><span class="sec">✕ Cerrar</span></div>
+          </div>
+        </div>
+      </section>
+
       <section class="panel theme-panel" data-creator-only>
         <div class="panel-head"><div><span class="kicker">APARIENCIA DEL SITIO</span><h2>Modos especiales</h2></div><span class="live-pill">● EN VIVO</span></div>
         <p class="muted">Elige un modo para toda la página. El fondo y la decoración cambian para todos los visitantes.</p>
@@ -127,6 +151,6 @@
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="moderator.js?v=20261006-77"></script>
+  <script src="moderator.js?v=20261007-88"></script>
 </body>
 </html>

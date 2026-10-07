@@ -648,6 +648,8 @@
                 const app = guest ? guest.app : (window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(configCompat));
                 const auth = guest ? guest.auth : window.firebase.auth();
                 const db = guest ? guest.db : window.firebase.firestore();
+                // V86: detecta solo si la red bloquea WebChannel y usa long-polling: el chat llega a todos.
+                try { if (!guest) db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) { /* ya inicializado */ }
                 let storage = null;
                 try {
                     storage = guest ? guest.storage : window.firebase.storage();
@@ -1134,7 +1136,7 @@ accent-color:#00ff88;
                 try {
                     if (sessionStorage.getItem('osito_open_register') === '1') return;
                     if (localStorage.getItem('osito_guest_mode') === 'true') return;
-                    var guardada = Boolean(localStorage.getItem('osito_user_profile'));
+                    var guardada = Boolean(localStorage.getItem('osito_user_profile')) || localStorage.getItem('osito_session_hint') === '1';
                     if (!guardada) {
                         for (var i = 0; i < localStorage.length; i++) {
                             if ((localStorage.key(i) || '').indexOf('firebase:authUser:') === 0) { guardada = true; break; }
@@ -4270,11 +4272,11 @@ accent-color:#00ff88;
     </style>
     <script src="personalidades-animaciones-1000.js" defer></script>
     <script src="personalidades-1000.js" defer></script>
-    <script src="face-extra.js" defer></script>
+    <script src="face-extra.js?v=86" defer></script>
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
-    <script src="maintenance-guard.js?v=77"></script>
+    <script src="maintenance-guard.js?v=87"></script>
     <script src="chat-ia-core.js?v=70"></script>
 
         <section id="maintenance-overlay" class="maintenance-overlay" aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>La Página está en mantenimiento</h2><p>Vuelve más tarde</p><div class="loader"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div></div></section>
@@ -4380,6 +4382,7 @@ accent-color:#00ff88;
             const BAD_WORDS = ['puta', 'puto', 'mierda', 'cabron', 'cabrona', 'imbecil', 'idiota', 'pendejo', 'culero', 'maricon', 'gonorrea', 'cono', 'joder', 'huevon', 'baboso'];
 
             const messageStore = new Map();
+            const pendingSends = new Map(); // id temporal -> texto (mensajes enviados aún sin confirmar)
             const revealedDeletedMessages = new Set();
 
             function getUserName() {
@@ -4828,7 +4831,7 @@ accent-color:#00ff88;
             function renderMessage(message, options) {
                 options = options || {};
                 if (!message || !message.id) return;
-                if (!message.isSystem && normalize(message.user) === 'invitado') return;
+                if (!message.isSystem && !message.uid && !message.email && normalize(message.user) === 'invitado') return;
                 if (!message.isSystem && !isDeletedMessage(message) && hasBadWords(message.text || '')) return;
 
                 const container = document.getElementById('livechat-messages');
@@ -4853,7 +4856,7 @@ accent-color:#00ff88;
 
                 if (!options.preserveScroll) ensureScrollBottom();
 
-                if (!chatOpen && !message.isSystem && !mine && !options.history) {
+                if (!existing && !chatOpen && !message.isSystem && !mine && !options.history) {
                     unreadCount++;
                     updateBadge();
                     playPing();
@@ -4955,17 +4958,77 @@ accent-color:#00ff88;
                 }
             }
 
+            function messageChanged(prev, next) {
+                return prev.text !== next.text
+                    || prev.user !== next.user
+                    || (prev.editedAt || 0) !== (next.editedAt || 0)
+                    || (prev.updatedAt || 0) !== (next.updatedAt || 0)
+                    || isDeletedMessage(prev) !== isDeletedMessage(next)
+                    || (prev.photoURL || '') !== (next.photoURL || '')
+                    || (prev.rankLabel || '') !== (next.rankLabel || '')
+                    || (prev.rankColor || '') !== (next.rankColor || '')
+                    || (Array.isArray(prev.seenBy) ? prev.seenBy.length : 0) !== (Array.isArray(next.seenBy) ? next.seenBy.length : 0);
+            }
+
+            let firstFirebaseSnapshot = true;
             function renderFirebaseSnapshot(messages) {
                 firebaseSnapshotReceived = true;
                 if (firebaseFallbackTimer) {
                     clearTimeout(firebaseFallbackTimer);
                     firebaseFallbackTimer = null;
                 }
-                clearMessages();
-                (Array.isArray(messages) ? messages : []).forEach((message) => {
-                    renderMessage(message, { history: true, preserveScroll: true });
-                });
-                ensureScrollBottom();
+                const container = document.getElementById('livechat-messages');
+                if (!container) return;
+                const list = Array.isArray(messages) ? messages : [];
+                const incoming = new Set(list.map((m) => m.id));
+                const isFirst = firstFirebaseSnapshot;
+                firstFirebaseSnapshot = false;
+
+                // ¿Hay que reordenar? (llegó un mensaje más antiguo que el último pintado)
+                let lastRendered = 0;
+                messageStore.forEach((m, id) => { if (!String(id).startsWith('pending_')) lastRendered = Math.max(lastRendered, Number(m.timestamp) || 0); });
+                const needsFullRebuild = isFirst || list.some((m) => !messageStore.has(m.id) && (Number(m.timestamp) || 0) < lastRendered);
+
+                const nearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 120;
+                let addedOwn = false;
+
+                if (needsFullRebuild) {
+                    clearMessages();
+                    const frag = document.createDocumentFragment();
+                    list.forEach((message) => {
+                        renderMessage(message, { history: true, preserveScroll: true });
+                    });
+                    void frag;
+                } else {
+                    // quitar los que ya no existen (borrados por el creador / limpieza del chat)
+                    Array.from(messageStore.keys()).forEach((id) => {
+                        if (String(id).startsWith('pending_') || incoming.has(id)) return;
+                        const el = document.getElementById(id);
+                        if (el) el.remove();
+                        messageStore.delete(id);
+                    });
+                    list.forEach((message) => {
+                        const prev = messageStore.get(message.id);
+                        if (prev && !messageChanged(prev, message)) return;
+                        if (!prev && isOwnMessage(message)) addedOwn = true;
+                        renderMessage(message, { history: false, preserveScroll: true });
+                    });
+                }
+
+                // El mensaje "pendiente" que pintamos al enviar se reemplaza por el real del servidor
+                if (addedOwn || needsFullRebuild) {
+                    pendingSends.forEach((text, tempId) => {
+                        const el = document.getElementById(tempId);
+                        const dup = list.some((m) => isOwnMessage(m) && String(m.text || '') === text && Math.abs(Date.now() - (Number(m.timestamp) || 0)) < 20000);
+                        if (dup) {
+                            if (el) el.remove();
+                            messageStore.delete(tempId);
+                            pendingSends.delete(tempId);
+                        }
+                    });
+                }
+
+                if (nearBottom || addedOwn || needsFullRebuild) ensureScrollBottom();
                 setConnectionState(true, '<span id="livechat-online-count">1</span> en línea');
             }
 
@@ -4977,15 +5040,17 @@ accent-color:#00ff88;
             }
 
             window.addEventListener('osito:firebase-auth-ready', useFirebaseChat);
+            if (window.dbFirebase) useFirebaseChat();
             window.addEventListener('osito:livechat-snapshot', (event) => {
                 if (!firebaseChatReady) useFirebaseChat();
                 renderFirebaseSnapshot(event.detail);
             });
 
             window.addEventListener('osito:livechat-error', () => {
-                firebaseChatReady = false;
-                setConnectionState(false, 'Sin conexión');
+                setConnectionState(false, navigator.onLine === false ? 'Sin conexión' : 'Reconectando…');
             });
+            window.addEventListener('offline', () => setConnectionState(false, 'Sin conexión'));
+            window.addEventListener('online', () => setConnectionState(false, 'Reconectando…'));
 
             function connectSocket() {
                 if (!('WebSocket' in window)) {
@@ -5101,19 +5166,23 @@ accent-color:#00ff88;
                     seenBy: []
                 };
                 const temporaryId = `pending_${CLIENT_ID}_${Date.now()}`;
+                pendingSends.set(temporaryId, messageData.text);
                 renderMessage({ ...messageData, id: temporaryId }, { history: false });
                 try {
                     const ref = await window.addDocFirebase(window.collectionFirebase(window.dbFirebase, 'livechat'), messageData);
+                    // Si el snapshot en vivo aún no trajo el mensaje, se pinta el real; si ya llegó, no se duplica.
                     const temporaryElement = document.getElementById(temporaryId);
                     if (temporaryElement) temporaryElement.remove();
                     messageStore.delete(temporaryId);
+                    pendingSends.delete(temporaryId);
                     const savedMessage = { ...messageData, id: ref.id };
-                    renderMessage(savedMessage, { history: false });
+                    if (!messageStore.has(ref.id)) renderMessage(savedMessage, { history: false });
                     return savedMessage;
                 } catch (error) {
                     const temporaryElement = document.getElementById(temporaryId);
                     if (temporaryElement) temporaryElement.remove();
                     messageStore.delete(temporaryId);
+                    pendingSends.delete(temporaryId);
                     throw error;
                 }
             }
@@ -5180,6 +5249,7 @@ accent-color:#00ff88;
                         : '#00f2fe'
                 };
 
+                if (!firebaseChatReady && window.dbFirebase && window.addDocFirebase) useFirebaseChat();
                 if (firebaseChatReady) {
                     return sendFirebaseMessage(cleanText, payload.user, options);
                 }
@@ -5456,8 +5526,9 @@ accent-color:#00ff88;
             });
         })();
     </script>
-    <script src="firebase-integration.js"></script>
+    <script src="firebase-integration.js?v=86"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>
-    <script src='call-mode-engine.js'></script></body>
+    <script src='call-mode-engine.js'></script>
+    <script src="ia-maintenance.js?v=87"></script></body>
 </html>

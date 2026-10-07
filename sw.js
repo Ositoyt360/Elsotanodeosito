@@ -10,7 +10,7 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v88';
+const CACHE_NAME = 'osito-pwa-v89';
 const OTA_CACHE_NAME = 'osito-ota-github-v78';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
 const OTA_ENABLED = false;

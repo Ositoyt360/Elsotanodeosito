@@ -101,8 +101,6 @@ body.limited-moderator .moderator-messages-panel::before {
 .ia-preview-body p{margin:0;color:#c9d6f2;font-size:.9rem;line-height:1.45}
 .ia-preview-bar{position:relative;width:70%;height:7px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
 .ia-preview-bar::after{content:"";position:absolute;inset:0;width:45%;border-radius:99px;background:linear-gradient(90deg,#00f2fe,#7c5cff);animation:iaPrevBar 1.6s ease-in-out infinite}
-.ia-preview-beta{width:100%;padding:12px;border-radius:16px;background:rgba(124,92,255,.14);border:1px dashed rgba(196,181,253,.55)}
-.ia-preview-beta strong{display:block;font-size:.92rem;color:#fff;margin-bottom:2px}.ia-preview-beta small{color:#b9c6e6;font-size:.8rem}
 .ia-preview-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .ia-preview-actions span{padding:10px 16px;border-radius:999px;font-weight:800;font-size:.85rem;color:#06101c;background:linear-gradient(135deg,#00f2fe,#7df9ff)}
 .ia-preview-actions span.sec{color:#eaf2ff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}

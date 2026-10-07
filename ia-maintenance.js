@@ -2,9 +2,9 @@
  * - Se activa/desactiva desde el panel de moderación (siteSettings/public.iaMaintenance) y se ve en vivo.
  * - Afecta ÚNICAMENTE a la IA: en ia.html muestra la pantalla; en index.html solo aparece al intentar abrir la IA.
  *   El resto del sitio (chat en vivo, videos, cuenta, etc.) sigue funcionando normal.
- * - La mascota queda en el centro en PC, tablet y celular, con animación ligera (solo transform/opacity).
- * - Pregunta si quieres la IA beta por ahora: la IA beta solo funciona en local (localhost / red local).
+ * - La mascota queda en el centro en PC, tablet y celular, con animación ligera (solo transform/opacity) que NO se apaga en celular.
  * - La cuenta creadora (OsitoYT360) no ve la pantalla. "Ver IA como usuario" (?userPreview=1) sí la ve.
+ * - V89: se quitó el modo local / "IA beta". La IA vuelve a funcionar como antes; el mantenimiento solo muestra la pantalla.
  * No modifica nada más de la IA.
  */
 (function () {
@@ -14,7 +14,6 @@
 
   var CREATOR_EMAIL = 'ositoyt360@elsotanodeosito.com';
   var CACHE_KEY = 'osito_ia_maint';
-  var BETA_KEY = 'osito_ia_beta';
   var ON_IA_PAGE = !!window.ositoEnIAPage || /(?:^|\/)ia\.html$/i.test(location.pathname);
   var preview = /[?&]userPreview=1(?:&|$)/.test(location.search) || !!(window.OsitoGuest && window.OsitoGuest.active);
 
@@ -29,14 +28,8 @@
 
   function norm(v) { return String(v || '').trim().toLowerCase(); }
   function isCreator() { return !!user && (norm(user.email) === CREATOR_EMAIL || norm(user.displayName) === 'ositoyt360'); }
-  function betaOn() { try { return sessionStorage.getItem(BETA_KEY) === '1'; } catch (e) { return false; } }
   function hasStoredSession() {
     try { return !preview && (localStorage.getItem('osito_session_hint') === '1' || !!localStorage.getItem('osito_user_profile')); } catch (e) { return false; }
-  }
-  function isLocalHost() {
-    var h = location.hostname || '';
-    return location.protocol === 'file:' || h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1' ||
-      /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h) || /\.local$/i.test(h);
   }
 
   /* ---------------------------------------------------------------- estilos */
@@ -70,11 +63,6 @@
     '.ia-maint p{margin:0;font-size:clamp(.88rem,2.4vw,1rem);line-height:1.5;color:#c9d6f2;overflow-wrap:anywhere}',
     '.ia-maint-bar{position:relative;width:min(280px,80%);height:7px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:2px 0}',
     '.ia-maint-bar::after{content:"";position:absolute;inset:0;width:45%;border-radius:99px;background:linear-gradient(90deg,#00f2fe,#7c5cff);animation:iaMBar 1.6s ease-in-out infinite;will-change:transform}',
-    '.ia-maint-beta{width:100%;margin-top:6px;padding:14px;border-radius:18px;background:rgba(124,92,255,.14);border:1px dashed rgba(196,181,253,.55)}',
-    '.ia-maint-beta strong{display:block;font-size:clamp(.95rem,2.6vw,1.05rem);margin-bottom:2px;color:#fff}',
-    '.ia-maint-beta small{display:block;color:#b9c6e6;font-size:.82rem;line-height:1.4}',
-    '.ia-maint-note{display:none;margin-top:8px;padding:9px 11px;border-radius:12px;background:rgba(255,170,60,.14);border:1px solid rgba(255,190,90,.5);color:#ffe2b0;font-size:.84rem;line-height:1.4}',
-    '.ia-maint-note.show{display:block;animation:iaMShake .45s ease}',
     '.ia-maint-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px}',
     '.ia-maint button{font:800 .92rem/1 Inter,system-ui,sans-serif;cursor:pointer;border:0;border-radius:999px;padding:12px 18px;min-height:44px;color:#06101c;',
     'background:linear-gradient(135deg,#00f2fe,#7df9ff);box-shadow:0 8px 22px rgba(0,242,254,.28);transition:transform .15s ease}',
@@ -86,11 +74,18 @@
     '@keyframes iaMSpin{to{transform:rotate(360deg)}}',
     '@keyframes iaMTwinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.95;transform:scale(1.3)}}',
     '@keyframes iaMBar{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}',
-    '@keyframes iaMShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}',
     '@media (max-height:560px){.ia-maint-stage{width:clamp(100px,26vmin,150px);height:clamp(100px,26vmin,150px)}.ia-maint-card{padding:14px 16px;gap:6px}}',
     '@media (min-width:700px) and (max-width:1100px){.ia-maint-card{width:min(620px,86%)}}',
-    '@media (prefers-reduced-motion:reduce){.ia-maint *{animation-duration:.01ms!important;animation-iteration-count:1!important}}',
-    'html.low-end-device .ia-maint-spark,html.low-end-device .ia-maint-glow{display:none}',
+    /* V89: la animación de mantenimiento se mantiene SIEMPRE (también en celular, modo ahorro, "quitar animaciones" de Android
+       o Modo Ultra): son solo transform/opacity, muy baratas. Se fuerza por encima de body.no-animations * y similares. */
+    'html body #ia-maint-overlay .ia-maint-glow{animation:iaMGlow 3.2s ease-in-out infinite!important}',
+    'html body #ia-maint-overlay .ia-maint-mascot{animation:iaMFloat 3.4s ease-in-out infinite!important}',
+    'html body #ia-maint-overlay .ia-maint-gear.g1{animation:iaMSpin 5s linear infinite!important}',
+    'html body #ia-maint-overlay .ia-maint-gear.g2{animation:iaMSpin 7s linear infinite reverse!important}',
+    'html body #ia-maint-overlay .ia-maint-spark{animation:iaMTwinkle 2.8s ease-in-out infinite!important}',
+    'html body #ia-maint-overlay .ia-maint-spark.s2{animation-delay:.9s!important}html body #ia-maint-overlay .ia-maint-spark.s3{animation-delay:1.7s!important}',
+    'html body #ia-maint-overlay .ia-maint-bar::after{animation:iaMBar 1.6s ease-in-out infinite!important}',
+    'html body #ia-maint-overlay .ia-maint-glow,html body #ia-maint-overlay .ia-maint-spark{display:block!important}',
     '.ia-maint-host>.ia-maint{pointer-events:auto}'
   ].join('');
 
@@ -144,17 +139,10 @@
         '<h2>La IA está en mantenimiento</h2>' +
         '<p>Estamos mejorando a la Mascotita del Sótano. Vuelve en un ratito. 🛠️</p>' +
         '<div class="ia-maint-bar" aria-hidden="true"></div>' +
-        '<div class="ia-maint-beta">' +
-          '<strong>¿Quieres tener por el momento la IA beta?</strong>' +
-          '<small>La IA beta solo funciona en local.</small>' +
-          '<div class="ia-maint-note" id="ia-maint-note" role="status"></div>' +
-        '</div>' +
         '<div class="ia-maint-actions">' +
-          '<button type="button" id="ia-maint-beta-btn">🧪 Sí, usar IA beta</button>' +
-          '<button type="button" class="sec" id="ia-maint-back-btn">' + (ON_IA_PAGE ? '↩ Volver al Sótano' : '✕ Cerrar') + '</button>' +
+          '<button type="button" id="ia-maint-back-btn">' + (ON_IA_PAGE ? '↩ Volver al Sótano' : '✕ Cerrar') + '</button>' +
         '</div>' +
       '</div>';
-    el.querySelector('#ia-maint-beta-btn').addEventListener('click', onBeta);
     el.querySelector('#ia-maint-back-btn').addEventListener('click', onBack);
     return el;
   }
@@ -176,21 +164,6 @@
     if (host && host.classList) host.classList.remove('ia-maint-host');
   }
 
-  function onBeta() {
-    if (isLocalHost()) {
-      try { sessionStorage.setItem(BETA_KEY, '1'); } catch (e) {}
-      hide();
-      if (typeof window.showToast === 'function') window.showToast('IA beta activada (solo en local).');
-      return;
-    }
-    var note = document.getElementById('ia-maint-note');
-    if (!note) return;
-    note.textContent = '🧪 La IA beta solo funciona en local: ábrela desde tu servidor local (localhost). Aquí no está disponible.';
-    note.classList.remove('show');
-    void note.offsetWidth;
-    note.classList.add('show');
-  }
-
   function onBack() {
     if (ON_IA_PAGE) {
       if (typeof window.regresarAlSotano === 'function') window.regresarAlSotano();
@@ -205,7 +178,7 @@
   /* ---------------------------------------------------------------- decisión */
   function evaluate() {
     var needAuth = !authReady && !authWaitExpired && hasStoredSession();
-    if (!flag || betaOn() || isCreator() || !wantOpen) { hide(); return; }
+    if (!flag || isCreator() || !wantOpen) { hide(); return; }
     if (needAuth) return; // espera a Firebase para no mostrarle la pantalla a la cuenta creadora
     show();
   }
@@ -244,7 +217,7 @@
     var orig = window.toggleIAPanel;
     if (typeof orig !== 'function' || orig.__iaMaintWrapped) return;
     var wrapped = function () {
-      if (flag && !betaOn() && !isCreator()) { wantOpen = true; evaluate(); return; }
+      if (flag && !isCreator()) { wantOpen = true; evaluate(); return; }
       return orig.apply(this, arguments);
     };
     wrapped.__iaMaintWrapped = true;

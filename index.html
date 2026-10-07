@@ -1773,7 +1773,10 @@ accent-color:#00ff88;
         window.osEsInvitado = function osEsInvitado() {
             const tienePerfil = localStorage.getItem('osito_user_profile');
             const authUser = window.firebaseAuth?.currentUser || window.currentUser;
-            return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser);
+            // V89: mientras Firebase restaura la sesión guardada NO se trata como invitado (marca osito_session_hint).
+            let sesionGuardada = false;
+            try { sesionGuardada = localStorage.getItem('osito_session_hint') === '1'; } catch (e) {}
+            return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser && !sesionGuardada);
         };
 
         window.actualizarVisibilidadSeccionesCuenta = function actualizarVisibilidadSeccionesCuenta() {
@@ -4277,7 +4280,7 @@ accent-color:#00ff88;
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
     <script src="maintenance-guard.js?v=87"></script>
-    <script src="chat-ia-core.js?v=70"></script>
+    <script src="chat-ia-core.js?v=89"></script>
 
         <section id="maintenance-overlay" class="maintenance-overlay" aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>La Página está en mantenimiento</h2><p>Vuelve más tarde</p><div class="loader"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div></div></section>
 
@@ -4394,6 +4397,56 @@ accent-color:#00ff88;
                 if (authenticatedName) return authenticatedName.slice(0, 24);
                 const emailName = String(currentUser?.email || profile.email || '').split('@')[0].trim();
                 return emailName ? emailName.slice(0, 24) : 'Usuario';
+            }
+
+            // V89: el banner "Conectado como" del chat en vivo se calcula siempre desde la cuenta real.
+            // Antes arrancaba en "Invitado" y podía quedarse así si el perfil tardaba en cargar.
+            function hasSavedSession() {
+                try { return localStorage.getItem('osito_session_hint') === '1' || !!localStorage.getItem('osito_user_profile'); } catch (e) { return false; }
+            }
+            function readCachedProfile() {
+                try { return JSON.parse(localStorage.getItem('osito_user_profile') || 'null') || null; } catch (e) { return null; }
+            }
+            function refreshLiveChatIdentity() {
+                const userEl = document.getElementById('livechat-current-user');
+                if (!userEl) return;
+                const avatarEl = document.getElementById('livechat-current-avatar');
+                const realGuest = Boolean(window.ositoGuestMode) || Boolean(window.OsitoGuest && window.OsitoGuest.active);
+                const fbUser = window.firebaseAuth?.currentUser || null;
+                const cached = readCachedProfile() || {};
+                const profile = window.ositoCurrentUserProfile || {};
+                let name = '';
+                if (!realGuest) {
+                    name = String(profile.displayName || '').trim();
+                    if (!name || normalize(name) === 'invitado') name = String(fbUser?.displayName || cached.displayName || '').trim();
+                    if (!name) {
+                        const mail = String(fbUser?.email || cached.email || '').trim();
+                        if (mail && mail.indexOf('@') > 0) name = mail.split('@')[0];
+                    }
+                    if (!name && (fbUser || hasSavedSession())) name = 'Conectando tu cuenta…';
+                }
+                if (!name) name = 'Invitado';
+                name = name.slice(0, 24);
+                if (userEl.textContent !== name) userEl.textContent = name;
+                if (!realGuest && avatarEl && !avatarEl.getAttribute('src')) {
+                    const photo = profile.photoURL || cached.photoURL || fbUser?.photoURL || '';
+                    if (photo) avatarEl.src = photo;
+                }
+            }
+            window.refrescarIdentidadChatVivo = refreshLiveChatIdentity;
+            document.addEventListener('osito:auth-ready', refreshLiveChatIdentity);
+            window.addEventListener('osito:firebase-auth-ready', refreshLiveChatIdentity);
+            setInterval(refreshLiveChatIdentity, 1500);
+
+            function esperarSesionChat(maxMs) {
+                return new Promise((resolve) => {
+                    const t0 = Date.now();
+                    (function check() {
+                        if (window.firebaseAuth?.currentUser) return resolve(true);
+                        if (Date.now() - t0 >= maxMs) return resolve(false);
+                        setTimeout(check, 200);
+                    })();
+                });
             }
 
             function normalize(value) {
@@ -5219,7 +5272,14 @@ accent-color:#00ff88;
                 const cleanText = String(text || '').trim();
                 if (!cleanText) return Promise.resolve(null);
                 if (!window.firebaseAuth?.currentUser) {
-                    return Promise.reject(new Error('Inicia sesion para enviar mensajes.'));
+                    const previewGuest = Boolean(window.ositoGuestMode) || Boolean(window.OsitoGuest && window.OsitoGuest.active);
+                    if (previewGuest || !hasSavedSession()) {
+                        return Promise.reject(new Error('Inicia sesion para enviar mensajes.'));
+                    }
+                    // V89: hay una cuenta guardada y Firebase aún la está restaurando: se espera un momento en vez de decir "invitado".
+                    return esperarSesionChat(8000).then((ok) => ok
+                        ? sendMessage(text, user, options)
+                        : Promise.reject(new Error('Tu cuenta sigue conectándose. Inténtalo de nuevo en unos segundos.')));
                 }
                 if (mutedUntil > Date.now()) {
                     showMuteNote();
@@ -5498,7 +5558,7 @@ accent-color:#00ff88;
                 syncCreatorPanel();
                 window.addEventListener('osito:firebase-auth-ready', syncCreatorPanel);
 
-                if (userEl) userEl.textContent = getUserName();
+                refreshLiveChatIdentity();
                 showMuteNote();
                 if (form && input) {
                     form.addEventListener('submit', (event) => {
@@ -5526,9 +5586,9 @@ accent-color:#00ff88;
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=86"></script>
+    <script src="firebase-integration.js?v=89"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>
     <script src='call-mode-engine.js'></script>
-    <script src="ia-maintenance.js?v=87"></script></body>
+    <script src="ia-maintenance.js?v=89"></script></body>
 </html>

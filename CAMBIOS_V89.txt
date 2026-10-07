@@ -1,0 +1,11 @@
+V89
+- IA: se quito por completo el modo local / "IA beta" (boton, aviso "solo funciona en local" y logica isLocalHost/sessionStorage). La IA vuelve a funcionar como antes. El MANTENIMIENTO DE LA IA se conserva igual (siteSettings/public.iaMaintenance).
+- IA: el mensaje de error ya no manda a revisar http://localhost:3000 cuando estas en el sitio real; solo muestra "La IA tardo en responder..." (el aviso de localhost queda unicamente si abres el proyecto en local con el puerto equivocado).
+- Mantenimiento de la IA en celular: la animacion (mascota flotando, brillo, engranes, chispas, barra) ya NO se apaga en movil. Antes la apagaban prefers-reduced-motion ("quitar animaciones" de Android/ahorro de bateria) y la clase low-end-device (que ocultaba brillo y chispas). Ahora se fuerza por encima de body.no-animations / ultra-performance (solo transform/opacity, muy ligero).
+- Chat en vivo: el banner "Conectado como" ya no se queda en "Invitado" con cuenta iniciada. Se calcula desde la cuenta real (Firebase, perfil guardado o marca de sesion) y muestra "Conectando tu cuenta..." mientras Firebase restaura la sesion.
+- Chat en vivo: enviar un mensaje mientras la sesion aun se restaura espera hasta 8 s en vez de decir "Inicia sesion".
+- Invitado falso: osEsInvitado(), el saludo de la IA y ia.html ya no consideran invitado a quien tiene sesion guardada (osito_session_hint) mientras Firebase termina de cargar.
+- firebase-integration.js: showUnauthenticatedView ya no borra el perfil guardado si todavia hay una sesion marcada (un fallo temporal de Firebase ya no convierte la cuenta en invitado).
+- Moderador: quitado el texto de "IA beta (solo local)" del panel y de la vista previa.
+- Cache: sw.js osito-pwa-v89 y versiones de scripts actualizadas.
+NOTA: la IA solo responde si el backend (server.js con OPENAI_API_KEY) esta publicado y accesible. Si el sitio esta en hosting estatico, pon la URL del backend en <meta name="osito-ia-url"> de index.html e ia.html.

@@ -289,7 +289,9 @@
     function showUnauthenticatedView() {
         const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
         setGuestMode(false);
-        try { localStorage.removeItem('osito_user_profile'); } catch (e) {}
+        // V89: no se borra el perfil guardado si aún hay una sesión marcada (p. ej. Firebase tardó o falló al iniciar):
+        // así no se convierte la cuenta en "invitado" por un fallo temporal. Al cerrar sesión de verdad la marca ya se borró.
+        try { if (!sessionHint()) localStorage.removeItem('osito_user_profile'); } catch (e) {}
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
         if (guest) guest.style.display = 'inline-flex';

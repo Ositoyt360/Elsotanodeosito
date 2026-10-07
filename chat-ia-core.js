@@ -878,7 +878,9 @@
 
                 const tienePerfil = localStorage.getItem('osito_user_profile');
                 const authUser = window.firebaseAuth?.currentUser || window.currentUser;
-                const esInvitadoActual = Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser);
+                let sesionGuardada = false;
+                try { sesionGuardada = localStorage.getItem('osito_session_hint') === '1'; } catch (e) {}
+                const esInvitadoActual = Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser && !sesionGuardada);
                 if (esInvitadoActual) {
                     bienvenida += ' Estás en modo invitado: por ahora solo puedes ver la pestaña de Videos y tienes 5 preguntas para la inteligencia artificial. Si inicias sesión o te registras, desbloqueas Directos, Canciones, Videos populares, Animaciones, Series, guardar tus Favoritos, personalizar los colores y temas del sitio, y preguntas ilimitadas a la inteligencia artificial.';
                 }
@@ -1065,7 +1067,7 @@
                 if (window.location && (window.location.protocol === 'file:' || (puerto && puerto !== '3000' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)))) {
                     return 'No encuentro el servidor de la IA. Inicia el servidor con npm start y abre http://localhost:3000 (no uses Live Server). Puedes revisar el estado en http://localhost:3000/api/ia/estado?probar=1';
                 }
-                return 'La IA tardó en responder. Inténtalo de nuevo en unos segundos 🙏 (si sigue pasando, revisa http://localhost:3000/api/ia/estado?probar=1).';
+                return 'La IA tardó en responder. Inténtalo de nuevo en unos segundos 🙏';
             }
 
             let imagenPendienteIA = '';

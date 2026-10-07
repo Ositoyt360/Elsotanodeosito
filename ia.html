@@ -325,7 +325,9 @@
         window.osEsInvitado = function osEsInvitado() {
             var tienePerfil = localStorage.getItem('osito_user_profile');
             var authUser = (window.firebaseAuth && window.firebaseAuth.currentUser) || window.currentUser;
-            return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser);
+            var sesionGuardada = false;
+            try { sesionGuardada = localStorage.getItem('osito_session_hint') === '1'; } catch (e) {}
+            return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser && !sesionGuardada);
         };
         window.actualizarVisibilidadSeccionesCuenta = function () {
             document.body.classList.toggle('solo-invitado', window.osEsInvitado());
@@ -358,12 +360,12 @@
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
-    <script src="chat-ia-core.js?v=70"></script>
+    <script src="chat-ia-core.js?v=89"></script>
     <script>window.toggleIAPanel = function () { window.regresarAlSotano(); };</script>
     <script src="firebase-integration.js?v=86"></script>
     <script src="asistente-voz.js"></script>
     <script src="face-100.js" defer></script>
     <script src="call-mode-engine.js?v=70"></script>
-    <script src="ia-maintenance.js?v=87"></script>
+    <script src="ia-maintenance.js?v=89"></script>
 </body>
 </html>

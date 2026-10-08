@@ -327,6 +327,7 @@
             var authUser = (window.firebaseAuth && window.firebaseAuth.currentUser) || window.currentUser;
             var sesionGuardada = false;
             try { sesionGuardada = localStorage.getItem('osito_session_hint') === '1'; } catch (e) {}
+            if (authUser && !(window.OsitoGuest && window.OsitoGuest.active)) return false;
             return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser && !sesionGuardada);
         };
         window.actualizarVisibilidadSeccionesCuenta = function () {
@@ -360,7 +361,7 @@
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
-    <script src="chat-ia-core.js?v=89"></script>
+    <script src="chat-ia-core.js?v=92"></script>
     <script>window.toggleIAPanel = function () { window.regresarAlSotano(); };</script>
     <script src="firebase-integration.js?v=91"></script>
     <script src="asistente-voz.js"></script>

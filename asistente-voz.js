@@ -812,7 +812,7 @@
 
     function esModoInvitado() {
         if (typeof window.osEsInvitado === 'function') return window.osEsInvitado();
-        if (window.ositoGuestMode) return true;
+        if (window.ositoGuestMode && !(window.firebaseAuth?.currentUser && !(window.OsitoGuest && window.OsitoGuest.active))) return true;
         return document.body.classList.contains('solo-invitado');
     }
 

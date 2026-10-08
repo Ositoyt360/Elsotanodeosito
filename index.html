@@ -938,7 +938,7 @@ accent-color:#00ff88;
 
                         <label class="auth-field">
                             <span>Correo electrónico</span>
-                            <input id="auth-email" type="email" autocomplete="email" required placeholder="Usuario@Elsotanodeosito.com" aria-describedby="auth-email-example">
+                            <input id="auth-email" type="email" autocomplete="username" required placeholder="Usuario@Elsotanodeosito.com" aria-describedby="auth-email-example">
                             <small id="auth-email-example">Ejemplo: Usuario@Elsotanodeosito.com</small>
                         </label>
 
@@ -1136,7 +1136,7 @@ accent-color:#00ff88;
                NO muestra "Cargando tu sesión…" ni "Cuenta reconocida": entra directo al Sótano en 0ms. */
             (function cuentaRapida() {
                 try {
-                    if (sessionStorage.getItem('osito_open_register') === '1') return;
+                    if (sessionStorage.getItem('osito_open_register') === '1' || sessionStorage.getItem('osito_open_login') === '1') return;
                     if (localStorage.getItem('osito_guest_mode') === 'true') return;
                     var guardada = Boolean(localStorage.getItem('osito_user_profile')) || localStorage.getItem('osito_session_hint') === '1';
                     if (!guardada) {
@@ -1203,9 +1203,21 @@ accent-color:#00ff88;
 
             // V90: la entrada normal SIEMPRE va directo al Sótano.
             // El login queda disponible desde el menú de cuenta y solo se abre si el usuario lo pide.
-            var __osAbrirRegistro = false;
-            try { __osAbrirRegistro = sessionStorage.getItem('osito_open_register') === '1'; } catch (e) {}
-            if (!__osAbrirRegistro) {
+            var __osAbrirRegistro = false, __osAbrirLogin = false;
+            try {
+                __osAbrirRegistro = sessionStorage.getItem('osito_open_register') === '1';
+                __osAbrirLogin = sessionStorage.getItem('osito_open_login') === '1';
+                if (__osAbrirLogin) sessionStorage.removeItem('osito_open_login');
+            } catch (e) {}
+            // V91: botón "Iniciar sesión" del menú (invitados / sesión vencida): recarga y abre el formulario de login.
+            window.abrirLoginDesdeMenu = function abrirLoginDesdeMenu() {
+                try { sessionStorage.setItem('osito_open_login', '1'); } catch (e) {}
+                location.reload();
+            };
+            if (__osAbrirLogin) {
+                var abrirLogin = function () { window.__osAuthBootHandled = true; window.mostrarFormularioLogin(); };
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', abrirLogin, { once: true }); else abrirLogin();
+            } else if (!__osAbrirRegistro) {
                 var arranque = function () { window.entrarAlSitioInstantaneo(); };
                 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arranque, { once: true }); else arranque();
             } else if (window.__osCuentaRapida) {
@@ -1247,6 +1259,7 @@ accent-color:#00ff88;
                     <button class="btn-action moderator-entry-button" id="moderator-entry-button" type="button" style="display:none;" onclick="window.open('moderador.html','_blank','noopener,noreferrer')">
                         <span aria-hidden="true">🛡️</span> Panel de moderación
                     </button>
+                    <button class="btn-action auth-main-login" id="main-login" type="button" style="display:none;" onclick="abrirLoginDesdeMenu()">Iniciar sesión</button>
                     <button class="btn-action auth-main-logout" id="main-logout" type="button" style="display:none;">Cerrar sesión</button>
                     <button class="btn-action profile-open-button" id="profile-open-button" type="button" style="display:none;" onclick="abrirMiPerfil()">Mi perfil</button>
                     <img class="header-profile-avatar" id="header-profile-avatar" src="" alt="Foto de perfil" style="display:none;">
@@ -1783,6 +1796,8 @@ accent-color:#00ff88;
             // V89: mientras Firebase restaura la sesión guardada NO se trata como invitado (marca osito_session_hint).
             let sesionGuardada = false;
             try { sesionGuardada = localStorage.getItem('osito_session_hint') === '1'; } catch (e) {}
+            // V92: con cuenta activa en Firebase nunca es invitado (salvo la "vista de usuario" del moderador).
+            if (authUser && !(window.OsitoGuest && window.OsitoGuest.active)) return false;
             return Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser && !sesionGuardada);
         };
 
@@ -4287,7 +4302,7 @@ accent-color:#00ff88;
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
     <script src="maintenance-guard.js?v=87"></script>
-    <script src="chat-ia-core.js?v=89"></script>
+    <script src="chat-ia-core.js?v=92"></script>
 
         <section id="maintenance-overlay" class="maintenance-overlay" aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>La Página está en mantenimiento</h2><p>Vuelve más tarde</p><div class="loader"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div></div></section>
 
@@ -5286,7 +5301,7 @@ accent-color:#00ff88;
                     // V89: hay una cuenta guardada y Firebase aún la está restaurando: se espera un momento en vez de decir "invitado".
                     return esperarSesionChat(15000).then((ok) => ok
                         ? sendMessage(text, user, options)
-                        : Promise.reject(new Error('Tu cuenta todavía se está conectando. Espera un momento y vuelve a enviarlo.')));
+                        : Promise.reject(new Error('No se pudo recuperar tu sesión. Pulsa "Cerrar sesión", vuelve a iniciar sesión y envía de nuevo.')));
                 }
                 if (mutedUntil > Date.now()) {
                     showMuteNote();
@@ -5593,7 +5608,7 @@ accent-color:#00ff88;
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=90"></script>
+    <script src="firebase-integration.js?v=92"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>
     <script src='call-mode-engine.js'></script>

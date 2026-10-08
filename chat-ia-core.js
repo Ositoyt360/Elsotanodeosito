@@ -880,7 +880,7 @@
                 const authUser = window.firebaseAuth?.currentUser || window.currentUser;
                 let sesionGuardada = false;
                 try { sesionGuardada = localStorage.getItem('osito_session_hint') === '1'; } catch (e) {}
-                const esInvitadoActual = Boolean(window.ositoGuestMode) || (!tienePerfil && !authUser && !sesionGuardada);
+                const esInvitadoActual = (window.firebaseAuth?.currentUser && !(window.OsitoGuest && window.OsitoGuest.active) ? false : Boolean(window.ositoGuestMode)) || (!tienePerfil && !authUser && !sesionGuardada);
                 if (esInvitadoActual) {
                     bienvenida += ' Estás en modo invitado: por ahora solo puedes ver la pestaña de Videos y tienes 5 preguntas para la inteligencia artificial. Si inicias sesión o te registras, desbloqueas Directos, Canciones, Videos populares, Animaciones, Series, guardar tus Favoritos, personalizar los colores y temas del sitio, y preguntas ilimitadas a la inteligencia artificial.';
                 }
@@ -1175,7 +1175,7 @@
                 limpiarImagenPendienteIA();
 
                 function esInvitado() {
-                    if (window.ositoGuestMode) return true;
+                    if (window.ositoGuestMode && !(window.firebaseAuth?.currentUser && !(window.OsitoGuest && window.OsitoGuest.active))) return true;
                     const tienePerfil = localStorage.getItem('osito_user_profile');
                     const authUser = window.firebaseAuth?.currentUser || window.currentUser;
                     if (!tienePerfil && !authUser) return true;

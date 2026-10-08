@@ -1,0 +1,15 @@
+V92 - Cuentas "estancadas" como invitado + boton Cerrar sesion en el menu
+
+firebase-integration.js
+- setGuestMode: si Firebase ya tiene una cuenta activa NUNCA se marca invitado (antes quedaba con
+  funciones bloqueadas: solo "Videos", sin chat, sin perfil).
+- Boton "Cerrar sesion" del menu SIEMPRE visible. En modo invitado te manda a Iniciar sesion / Registrarte.
+  (antes showUnauthenticatedView lo ocultaba, por eso no salia nada en el menu).
+- Al cerrar sesion se abre directo el formulario de Iniciar sesion / Registrarse.
+- Watchdog recuperarSesionSiExiste(): si la pagina quedo como invitado pero Firebase tiene cuenta,
+  restaura la cuenta completa (al volver a la pestana, pageshow, online y cada 4 s).
+- Si Firebase tarda en cargar (red lenta) se reintenta en segundo plano en vez de quedarse invitado.
+
+index.html / ia.html / chat-ia-core.js / asistente-voz.js
+- osEsInvitado() y demas chequeos: con cuenta activa en Firebase no cuentan como invitado.
+- Cache bust v92 (sw.js osito-pwa-v92). Si no ves el cambio: recarga forzada o borra datos del sitio una vez.

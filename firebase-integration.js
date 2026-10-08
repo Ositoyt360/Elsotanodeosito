@@ -155,14 +155,26 @@
         status.dataset.tone = tone;
     }
 
+    function esVistaPreviaInvitado() { return Boolean(window.OsitoGuest && window.OsitoGuest.active); }
+
     function setGuestMode(isGuest) {
+        // V92: si Firebase YA tiene una cuenta activa, nunca se marca como invitado (era lo que dejaba
+        // las cuentas "estancadas" en modo invitado con todas las funciones bloqueadas).
+        try {
+            const realUser = (auth || window.firebaseAuth)?.currentUser;
+            if (isGuest && realUser && !esVistaPreviaInvitado() && !state.realSignOut) isGuest = false;
+        } catch (e) {}
         window.ositoGuestMode = Boolean(isGuest);
         document.body.classList.toggle('guest-mode', Boolean(isGuest));
+        // V92: el botón "Cerrar sesión" del menú SIEMPRE está visible. En invitado te manda a Iniciar sesión / Registrarte.
         const mainLogout = el('main-logout');
-        if (mainLogout) mainLogout.style.display = isGuest ? 'inline-flex' : 'none';
-        // V91: invitados y sesiones vencidas ven "Iniciar sesión" en el menú (antes no había forma de entrar).
+        if (mainLogout) {
+            mainLogout.style.display = 'inline-flex';
+            mainLogout.textContent = 'Cerrar sesión';
+            mainLogout.title = isGuest ? 'Ir a iniciar sesión o registrarte' : 'Cerrar tu sesión';
+        }
         const mainLogin = el('main-login');
-        if (mainLogin) mainLogin.style.display = (isGuest && !(window.OsitoGuest && window.OsitoGuest.active)) ? 'inline-flex' : 'none';
+        if (mainLogin) mainLogin.style.display = 'none';
         const chatInput = el('livechat-input');
         if (chatInput) {
             chatInput.disabled = Boolean(isGuest);
@@ -300,7 +312,7 @@
         if (form) form.style.display = 'grid';
         if (logout) logout.style.display = 'none';
         if (guest) guest.style.display = 'inline-flex';
-        if (mainLogout) mainLogout.style.display = 'none';
+        if (mainLogout) mainLogout.style.display = 'inline-flex'; // V92: visible también para invitados
         if (profilePhotoButton) profilePhotoButton.style.display = 'none';
         const profileOpenButton = el('profile-open-button');
         if (profileOpenButton) profileOpenButton.style.display = 'none';
@@ -974,6 +986,8 @@
         }
         await borrarSesionFirebaseLocal();
         state.selectedPhotoFile = null;
+        // V92: tras cerrar sesión (o desde invitado) se abre la parte de Iniciar sesión / Registrarse.
+        try { sessionStorage.setItem('osito_open_login', '1'); } catch (e) {}
         window.location.reload();
     }
 
@@ -1191,6 +1205,9 @@
                 window.entrarAlSitioInstantaneo?.();
             }
             setStatus('Conectando tu cuenta…', 'neutral');
+            // V92: Firebase tardó (red lenta): se reintenta en segundo plano en vez de quedarse como invitado para siempre.
+            state.initRetries = (state.initRetries || 0) + 1;
+            if (state.initRetries <= 6) setTimeout(() => { initAuth().catch(() => {}); }, 3000);
             return;
         }
 
@@ -1526,6 +1543,30 @@
         return messageRef;
     };
     }
+
+    // V92: red de seguridad. Si la página quedó marcada como invitado pero Firebase SÍ tiene cuenta activa
+    // (carrera al iniciar, volver desde otra pestaña, bfcache del navegador), se restaura la cuenta completa.
+    async function recuperarSesionSiExiste() {
+        try {
+            if (esVistaPreviaInvitado() || state.realSignOut || state.recuperando) return;
+            const user = (auth || window.firebaseAuth)?.currentUser;
+            if (!user || (!window.ositoGuestMode && state.currentUser)) return;
+            state.recuperando = true;
+            state.currentUser = user;
+            state.authReady = true;
+            await loadProfileAndAttach(user);
+            startProfileListener(user);
+            startModerationListener(user);
+            startLiveChatListener();
+            window.dispatchEvent(new CustomEvent('osito:firebase-auth-ready'));
+        } catch (e) { console.warn('[FirebaseAuth] recuperarSesionSiExiste', e); }
+        finally { state.recuperando = false; }
+    }
+    window.recuperarSesionSiExiste = recuperarSesionSiExiste;
+    window.addEventListener('pageshow', recuperarSesionSiExiste);
+    window.addEventListener('online', recuperarSesionSiExiste);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) recuperarSesionSiExiste(); });
+    setInterval(() => { if (window.ositoGuestMode) recuperarSesionSiExiste(); }, 4000);
 
     window.addEventListener('DOMContentLoaded', () => {
         bindUi();

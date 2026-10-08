@@ -25,13 +25,21 @@
     var INICIO = 0.5, FIN = 5.5; // duerme de 12:30 am a 5:30 am (hora de El Salvador)
 
     function esNoche() {
-        // El Salvador es UTC-6 y no usa horario de verano.
-        // Usamos UTC directamente para evitar doble conversión con la zona del navegador.
-        var d = new Date();
-        var utc = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600;
-        var h = utc - 6;
-        if (h < 0) h += 24;
-        return h >= INICIO && h < FIN;
+        // V90: hora explícita de El Salvador para que ZZZ nunca aparezca despierto.
+        try {
+            var partes = new Intl.DateTimeFormat('en-US', { timeZone: 'America/El_Salvador', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date());
+            var h = Number((partes.find(function(p){return p.type==='hour';})||{}).value || 0);
+            var m = Number((partes.find(function(p){return p.type==='minute';})||{}).value || 0);
+            var sec = Number((partes.find(function(p){return p.type==='second';})||{}).value || 0);
+            if (h === 24) h = 0;
+            var total = h + m/60 + sec/3600;
+            return total >= INICIO && total < FIN;
+        } catch (e) {
+            var d = new Date();
+            var utc = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
+            var local = utc - 6; if (local < 0) local += 24;
+            return local >= INICIO && local < FIN;
+        }
     }
     if (esNoche()) ultimaConCara = 0; // si abren la página entre 00:30 y 05:30, ya está dormida
     function visible(c) { return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }

@@ -1,0 +1,20 @@
+V91 - Arreglo de la IA (NVIDIA gpt-oss-20b)
+
+server.js
+- Se envia reasoning_effort:"low" a openai/gpt-oss-20b (es un modelo de razonamiento: con esfuerzo
+  medio/alto gastaba los tokens pensando y devolvia content vacio -> "Respuesta vacia" -> la web
+  caia a respuestas locales).
+- Reintentos: ahora 2 intentos (antes 3 x 60 s = mas de lo que el navegador espera, 90 s).
+  Timeout por intento 40 s (80 s con imagen). El 2o intento usa meta/llama-3.3-70b-instruct.
+- Limite diario total por defecto 50 -> 500 (con 50 la IA dejaba de responder a todos tras 50 mensajes).
+- Extraccion de la respuesta mas robusta (content null / lista de partes).
+
+Clave
+- La clave NVIDIA va SOLO en variables de entorno (.env local o Render -> Environment -> OPENAI_API_KEY).
+- .env esta en .gitignore. Nunca la pongas en index.html / ia.html / ia-openai.js.
+- Si la clave se publico en algun sitio, genera otra en build.nvidia.com y reemplazala.
+
+Como comprobar
+1) Abre  https://TU-RENDER.onrender.com/api/ia/estado?probar=1
+   -> prueba.ok debe ser true. Si no, "prueba.mensaje" dice el motivo (401 = clave mala, 404 = modelo).
+2) Render gratis duerme: la primera respuesta puede tardar ~50 s.

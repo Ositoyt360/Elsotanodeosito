@@ -1,0 +1,27 @@
+V90 — Correcciones solicitadas
+
+1. Entrada rápida
+- La página principal ya no muestra la pantalla de "Iniciar sesión" al entrar.
+- La entrada normal va directamente al Sótano.
+- El formulario de acceso sigue disponible cuando el usuario lo abre desde la cuenta.
+- Se eliminó el parpadeo inicial de la pantalla de bienvenida.
+
+2. Sesión y chat en vivo
+- Se evita convertir temporalmente una sesión restaurándose en "Invitado".
+- El nombre del chat se toma de la sesión/perfil guardado mientras Firebase termina de restaurar la cuenta.
+- El envío espera más tiempo a que Firebase Auth recupere la sesión en móviles.
+- El listener de Firestore tiene un respaldo sin orderBy/limit si la consulta rápida falla, para que el chat no quede bloqueado por una consulta/índice.
+
+3. Mascota / ZZZ
+- ZZZ queda oculto por completo mientras la mascota está despierta.
+- ZZZ solo aparece cuando la expresión real es "sleeping".
+- El horario se calcula explícitamente con America/El_Salvador.
+- Fuera del horario de sueño la mascota se fuerza a estar despierta.
+
+4. Mantenimiento de IA
+- Se quitaron bordes, sombras y capas 3D de profundidad que podían dejar líneas alrededor de la mascota en el panel de mantenimiento.
+- La mascota de mantenimiento queda limpia y sin ZZZ.
+
+5. Caché / PWA
+- Se subió la versión del service worker a v90.
+- Se actualizaron los query strings de CSS/JS a v90 para forzar la carga de los archivos corregidos.

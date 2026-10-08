@@ -288,7 +288,9 @@
 
     function showUnauthenticatedView() {
         const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
-        setGuestMode(false);
+        // V90: sin cuenta activa se permanece en la página principal como invitado.
+        // El formulario solo se abre cuando la persona pulsa "Iniciar sesión".
+        setGuestMode(true);
         // V89: no se borra el perfil guardado si aún hay una sesión marcada (p. ej. Firebase tardó o falló al iniciar):
         // así no se convierte la cuenta en "invitado" por un fallo temporal. Al cerrar sesión de verdad la marca ya se borró.
         try { if (!sessionHint()) localStorage.removeItem('osito_user_profile'); } catch (e) {}
@@ -311,7 +313,9 @@
         state.aiSeededFromDom = false;
         state.selectedPhotoFile = null;
         window.actualizarVisibilidadSeccionesCuenta?.();
-        window.osMostrarEleccionLanding?.();
+        if (!window.__osFormularioAbierto) {
+            window.entrarAlSitioInstantaneo?.();
+        }
     }
 
     // V86: marca de "tengo sesión" para entrar directo al Sótano al recargar (se borra solo al cerrar sesión).
@@ -749,47 +753,53 @@
 
     function startLiveChatListener(force) {
         if (!db || !window.collectionFirebase || !window.onSnapshotFirebase) return;
-        if (window.ositoEnIAPage) return; // la página de IA no tiene chat en vivo: ahorra lecturas y batería
-        if (!force && typeof state.livechatUnsubscribe === 'function') return; // ya está escuchando
+        if (window.ositoEnIAPage) return;
+        if (!force && typeof state.livechatUnsubscribe === 'function') return;
 
         if (typeof state.livechatUnsubscribe === 'function') {
             try { state.livechatUnsubscribe(); } catch (e) {}
             state.livechatUnsubscribe = null;
         }
 
-        let target = window.collectionFirebase(db, 'livechat');
-        if (window.queryFirebase && window.orderByFirebase && window.limitFirebase) {
-            target = window.queryFirebase(target, window.orderByFirebase('timestamp', 'desc'), window.limitFirebase(150));
-        }
+        const base = window.collectionFirebase(db, 'livechat');
+        const fastTarget = (window.queryFirebase && window.orderByFirebase && window.limitFirebase)
+            ? window.queryFirebase(base, window.orderByFirebase('timestamp', 'desc'), window.limitFirebase(150))
+            : base;
+        let fallbackUsed = false;
 
-        state.livechatUnsubscribe = window.onSnapshotFirebase(
-            target,
-            (snapshot) => {
-                liveChatRetryCount = 0;
-                const messages = [];
-                snapshot.forEach((docSnap) => {
-                    const message = mapLiveChatDoc(docSnap);
-                    if (message) messages.push(message);
-                });
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                window.ositoLastLivechatSnapshot = messages.slice(-100);
-                window.ositoLivechatTransport = 'firestore';
-                window.dispatchEvent(new CustomEvent('osito:livechat-snapshot', {
-                    detail: messages.slice(-100)
-                }));
-            },
-            (error) => {
-                console.error('[FirebaseLiveChat]', error);
-                if (typeof state.livechatUnsubscribe === 'function') {
-                    try { state.livechatUnsubscribe(); } catch (e) {}
+        const attach = (target, isFallback) => {
+            state.livechatUnsubscribe = window.onSnapshotFirebase(
+                target,
+                (snapshot) => {
+                    liveChatRetryCount = 0;
+                    const messages = [];
+                    snapshot.forEach((docSnap) => {
+                        const message = mapLiveChatDoc(docSnap);
+                        if (message) messages.push(message);
+                    });
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    const visible = messages.slice(-100);
+                    window.ositoLastLivechatSnapshot = visible;
+                    window.ositoLivechatTransport = 'firestore';
+                    window.dispatchEvent(new CustomEvent('osito:livechat-snapshot', { detail: visible }));
+                },
+                (error) => {
+                    console.error('[FirebaseLiveChat]', error);
+                    if (!isFallback && !fallbackUsed) {
+                        fallbackUsed = true;
+                        try { if (typeof state.livechatUnsubscribe === 'function') state.livechatUnsubscribe(); } catch (e) {}
+                        state.livechatUnsubscribe = null;
+                        attach(base, true);
+                        return;
+                    }
+                    try { if (typeof state.livechatUnsubscribe === 'function') state.livechatUnsubscribe(); } catch (e) {}
+                    state.livechatUnsubscribe = null;
+                    window.dispatchEvent(new CustomEvent('osito:livechat-error', { detail: error }));
+                    scheduleLiveChatRetry();
                 }
-                state.livechatUnsubscribe = null;
-                window.dispatchEvent(new CustomEvent('osito:livechat-error', {
-                    detail: error
-                }));
-                scheduleLiveChatRetry();
-            }
-        );
+            );
+        };
+        attach(fastTarget, false);
     }
 
     // Si el teléfono recupera internet o vuelves a la pestaña, el chat se reengancha al instante.
@@ -1104,6 +1114,23 @@
         );
     }
 
+    function refreshCachedIdentity() {
+        try {
+            const raw = localStorage.getItem('osito_user_profile');
+            if (!raw) return;
+            const cached = JSON.parse(raw);
+            if (!cached || !cached.uid) return;
+            window.ositoCurrentUserProfile = cached;
+            window.aiNombreActual = cached.displayName || cached.email?.split('@')[0] || 'Usuario';
+            window.ositoGuestMode = false;
+            document.body.classList.remove('guest-mode');
+            const liveUser = document.getElementById('livechat-current-user');
+            if (liveUser) liveUser.textContent = String(cached.displayName || cached.email || 'Conectando tu cuenta…').slice(0, 24);
+            const avatar = document.getElementById('livechat-current-avatar');
+            if (avatar && cached.photoURL) avatar.src = cached.photoURL;
+        } catch (e) {}
+    }
+
     async function initAuth() {
         const firebaseReady = await waitForFirebaseServices();
         db = window.dbFirebase || null;
@@ -1115,8 +1142,11 @@
         if (typeof window.conectarModoSitio === 'function') window.conectarModoSitio();
 
         if (!firebaseReady || !auth || !window.setPersistenceFirebase || !window.authPersistenceLocalFirebase || !window.onAuthStateChangedFirebase) {
-            showUnauthenticatedView();
-            setStatus('Firebase no esta disponible en este navegador.', 'error');
+            // La página sigue funcionando como invitado; si había una cuenta cacheada,
+            // se conserva su vista mientras Firebase termina de recuperarla.
+            if (!sessionHint() && !localStorage.getItem('osito_user_profile')) showUnauthenticatedView();
+            else window.entrarAlSitioInstantaneo?.();
+            setStatus('Conectando tu cuenta…', 'neutral');
             return;
         }
 
@@ -1149,6 +1179,13 @@
             state.authReady = true;
             state.currentUser = user || null;
             if (!user) {
+                // V90: un null durante el arranque puede ser transitorio. Si existe
+                // una sesión cacheada, no la convertimos en invitado ni mostramos login.
+                if (sessionHint() && !state.realSignOut) {
+                    refreshCachedIdentity();
+                    window.entrarAlSitioInstantaneo?.();
+                    return;
+                }
                 clearSessionHint();
                 state.profile = null;
                 if (window.ositoCurrentUser) {

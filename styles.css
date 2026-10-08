@@ -79,8 +79,9 @@ body {
 
 /* --- PANTALLA DE BIENVENIDA --- */
 #welcome-screen {
+    display: none;
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #03050a;
-    display: flex; justify-content: center; align-items: center; z-index: 9999;
+    justify-content: center; align-items: center; z-index: 9999;
     transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     perspective: 500px;
     perspective-origin: 50% 30%;
@@ -8516,3 +8517,11 @@ html.perf-lite .ia-section .ai-suggestions {
   html body .ia-floating-container .ia-section.active,html body #ai-section.ia-section.active{height:calc(100dvh - 92px)!important}
   html body #ai-section .ai-profile-row{display:none!important}
 }
+
+
+/* V90 — ZZZ solo cuando la mascota realmente está dormida. */
+.osito-face .of-zzz{opacity:0!important;visibility:hidden!important;animation:none!important;pointer-events:none!important;}
+.osito-face[data-expr="sleeping"] .of-zzz{opacity:1!important;visibility:visible!important;animation:ofZ 3.6s ease-out infinite!important;}
+.osito-face[data-expr="sleeping"] .of-zzz.z2{animation-delay:1.2s!important;}
+.osito-face[data-expr="sleeping"] .of-zzz.z3{animation-delay:2.4s!important;}
+.ia-maint .of-zzz,.maintenance-mascot .of-zzz{opacity:0!important;visibility:hidden!important;animation:none!important;}

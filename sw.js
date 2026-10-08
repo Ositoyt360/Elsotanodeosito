@@ -10,8 +10,8 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v89';
-const OTA_CACHE_NAME = 'osito-ota-github-v78';
+const CACHE_NAME = 'osito-pwa-v90';
+const OTA_CACHE_NAME = 'osito-ota-github-v90';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
 const OTA_ENABLED = false;
 
@@ -38,6 +38,7 @@ const CORE_ASSETS = [
   './v49.js',
   './firebase-integration.js',
   './asistente-voz.js',
+  './face-extra.js',
   './favicon.png',
   './favicon-48.png',
   './pwa-192x192.png',

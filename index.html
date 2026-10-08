@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=77">
+    <link rel="stylesheet" href="styles.css?v=90">
     <link rel="stylesheet" href="v49.css">
     <link rel="stylesheet" href="call-mode.css">
     <script id="v62-inline">
@@ -1075,6 +1075,8 @@ accent-color:#00ff88;
                 detenerVozLanding();
                 var gate = document.getElementById('landing-gate');
                 var panel = document.getElementById('auth-panel');
+                var ws = document.getElementById('welcome-screen');
+                if (ws) ws.style.display = 'flex';
                 if (gate) {
                     gate.classList.add('landing-gate-hide');
                     setTimeout(function () { gate.style.display = 'none'; }, 300);
@@ -1199,11 +1201,16 @@ accent-color:#00ff88;
                 }
             })();
 
-            if (window.__osCuentaRapida) {
+            // V90: la entrada normal SIEMPRE va directo al Sótano.
+            // El login queda disponible desde el menú de cuenta y solo se abre si el usuario lo pide.
+            var __osAbrirRegistro = false;
+            try { __osAbrirRegistro = sessionStorage.getItem('osito_open_register') === '1'; } catch (e) {}
+            if (!__osAbrirRegistro) {
                 var arranque = function () { window.entrarAlSitioInstantaneo(); };
                 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arranque, { once: true }); else arranque();
+            } else if (window.__osCuentaRapida) {
+                window.entrarAlSitioInstantaneo();
             } else {
-                // Sin sesión previa: mostrar de inmediato los botones de acceso sin pantalla de "Cargando..."
                 window.osMostrarEleccionLanding();
             }
 
@@ -4275,7 +4282,7 @@ accent-color:#00ff88;
     </style>
     <script src="personalidades-animaciones-1000.js" defer></script>
     <script src="personalidades-1000.js" defer></script>
-    <script src="face-extra.js?v=86" defer></script>
+    <script src="face-extra.js?v=90" defer></script>
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
@@ -5277,9 +5284,9 @@ accent-color:#00ff88;
                         return Promise.reject(new Error('Inicia sesion para enviar mensajes.'));
                     }
                     // V89: hay una cuenta guardada y Firebase aún la está restaurando: se espera un momento en vez de decir "invitado".
-                    return esperarSesionChat(8000).then((ok) => ok
+                    return esperarSesionChat(15000).then((ok) => ok
                         ? sendMessage(text, user, options)
-                        : Promise.reject(new Error('Tu cuenta sigue conectándose. Inténtalo de nuevo en unos segundos.')));
+                        : Promise.reject(new Error('Tu cuenta todavía se está conectando. Espera un momento y vuelve a enviarlo.')));
                 }
                 if (mutedUntil > Date.now()) {
                     showMuteNote();
@@ -5586,9 +5593,9 @@ accent-color:#00ff88;
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=89"></script>
+    <script src="firebase-integration.js?v=90"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>
     <script src='call-mode-engine.js'></script>
-    <script src="ia-maintenance.js?v=89"></script></body>
+    <script src="ia-maintenance.js?v=90"></script></body>
 </html>

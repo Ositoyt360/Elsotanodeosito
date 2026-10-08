@@ -1090,7 +1090,7 @@ const OPENAI_MODEL_RESPALDO = (IA_ES_NVIDIA ? (_respEnv && !/^(gpt-|o\d|chatgpt)
 
 const IA_MAX_POR_MINUTO = Number(process.env.IA_MAX_POR_MINUTO || 20);
 const IA_MAX_POR_DIA_IP = Number(process.env.IA_MAX_POR_DIA_IP || 50);
-const IA_MAX_POR_DIA_TOTAL = Number(process.env.IA_MAX_POR_DIA_TOTAL || 50);
+const IA_MAX_POR_DIA_TOTAL = Number(process.env.IA_MAX_POR_DIA_TOTAL || 500);
 
 
 // ---- Utilidades de la IA (V81: faltaban y /api/ia lanzaba ReferenceError) ----
@@ -1260,9 +1260,11 @@ function inputAMensajesChat(input, instrucciones) {
 }
 
 function extraerTextoChat(data) {
-  const c = data?.choices?.[0]?.message?.content;
+  const msg = data?.choices?.[0]?.message || {};
+  const c = msg.content;
   if (typeof c === 'string') return c.trim();
-  if (Array.isArray(c)) return c.map((x) => x?.text || '').join('\n').trim();
+  if (Array.isArray(c)) return c.map((x) => (typeof x === 'string' ? x : (x?.text || ''))).join('\n').trim();
+  // content null = el modelo agotó los tokens razonando (reasoning_content no se muestra al usuario).
   return '';
 }
 
@@ -1274,11 +1276,15 @@ async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
   }
   const modelo = modeloForzado || ((IA_ES_NVIDIA && conImagen) ? IA_MODELO_VISION : OPENAI_MODEL);
   const controlador = new AbortController();
-  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 90000 : 60000);
+  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 80000 : 40000);
   try {
     const url = `${OPENAI_API_BASE}/${IA_ES_NVIDIA ? 'chat/completions' : 'responses'}`;
     const cuerpo = IA_ES_NVIDIA
-      ? { model: modelo, messages: inputAMensajesChat(input, instrucciones), max_tokens: 4096, temperature: 0.7, top_p: 1, stream: false }
+      ? Object.assign(
+          { model: modelo, messages: inputAMensajesChat(input, instrucciones), max_tokens: 4096, temperature: 0.7, top_p: 1, stream: false },
+          // gpt-oss es un modelo de razonamiento: con esfuerzo bajo responde rápido y no gasta los tokens "pensando".
+          /gpt-oss/i.test(modelo) ? { reasoning_effort: 'low' } : {}
+        )
       : { model: modelo, instructions: instrucciones, input, max_output_tokens: conImagen ? 3500 : 3000 };
     const response = await fetch(url, {
       method: 'POST', signal: controlador.signal,
@@ -1308,10 +1314,12 @@ async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
 
 async function llamarOpenAIConReintentos(input, instrucciones, conImagen) {
   let ultimoError = null;
-  const maxIntentos = conImagen ? 2 : 3;
+  const maxIntentos = 2;
   for (let intento = 0; intento < maxIntentos; intento++) {
     try {
-      const r = await llamarOpenAI(input, instrucciones, conImagen);
+      // 2º intento: otro modelo (solo texto) por si el principal está saturado o devuelve vacío.
+      const forzado = (intento > 0 && !conImagen && IA_ES_NVIDIA && OPENAI_MODEL_RESPALDO !== OPENAI_MODEL) ? OPENAI_MODEL_RESPALDO : undefined;
+      const r = await llamarOpenAI(input, instrucciones, conImagen, forzado);
       const limpio = r && textoPlanoIA(r.texto);
       if (limpio) return { ...r, texto: limpio };
       ultimoError = Object.assign(new Error('Respuesta vacía'), { status: 200 });
@@ -1319,7 +1327,7 @@ async function llamarOpenAIConReintentos(input, instrucciones, conImagen) {
       ultimoError = err;
       if ([400, 401, 403].includes(err?.status)) break;
     }
-    if (intento < maxIntentos - 1) await esperarMs(600 + intento * 700);
+    if (intento < maxIntentos - 1) await esperarMs(500);
   }
   throw ultimoError || new Error('ia_no_disponible');
 }

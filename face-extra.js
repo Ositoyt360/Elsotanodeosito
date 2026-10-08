@@ -1,6 +1,6 @@
 /**
  * V51.2 — La cara de LAIA solo duerme dentro del horario nocturno configurado.
- *  - De 12:30 am a 5:30 am (hora de El Salvador) la cara duerme normalmente.
+ *  - De 12:30 am a 6:00 am (hora local de cada país) la cara duerme normalmente.
  *  - Fuera de ese horario NO hay siesta automática ni apagado por inactividad.
  *  - La entrada al sueño nocturno se comprueba al llegar a las 00:30.
  *  - Los ronquidos los pone face-sound.js.
@@ -22,26 +22,17 @@
     // que podía quedarse guardada y hacer que la cara creyera que siempre era de noche.
     try { localStorage.removeItem('osito_forzar_noche'); } catch (e) {}
 
-    var INICIO = 0.5, FIN = 5.5; // duerme de 12:30 am a 5:30 am (hora de El Salvador)
+    var INICIO = 0.5, FIN = 6; // V92: duerme de 12:30 am a 6:00 am, hora LOCAL del país/dispositivo de cada cuenta
 
     function esNoche() {
-        // V90: hora explícita de El Salvador para que ZZZ nunca aparezca despierto.
+        // V92: se usa la hora local de quien abre la página (cada país tiene su 12:30 am y su 6:00 am).
         try {
-            var partes = new Intl.DateTimeFormat('en-US', { timeZone: 'America/El_Salvador', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date());
-            var h = Number((partes.find(function(p){return p.type==='hour';})||{}).value || 0);
-            var m = Number((partes.find(function(p){return p.type==='minute';})||{}).value || 0);
-            var sec = Number((partes.find(function(p){return p.type==='second';})||{}).value || 0);
-            if (h === 24) h = 0;
-            var total = h + m/60 + sec/3600;
-            return total >= INICIO && total < FIN;
-        } catch (e) {
             var d = new Date();
-            var utc = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
-            var local = utc - 6; if (local < 0) local += 24;
-            return local >= INICIO && local < FIN;
-        }
+            var total = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
+            return total >= INICIO && total < FIN;
+        } catch (e) { return false; }
     }
-    if (esNoche()) ultimaConCara = 0; // si abren la página entre 00:30 y 05:30, ya está dormida
+    if (esNoche()) ultimaConCara = 0; // si abren la página entre 00:30 y 06:00, ya está dormida
     function visible(c) { return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }
 
     // Zzz y burbujita de ronquido
@@ -54,7 +45,7 @@
         if (timerSiesta) { clearTimeout(timerSiesta); timerSiesta = null; }
     }
     function dormir(esSiesta) {
-        // BLOQUEO ABSOLUTO: si no son las 00:30–05:30, jamás entrar en sleeping.
+        // BLOQUEO ABSOLUTO: si no son las 00:30–06:00, jamás entrar en sleeping.
         if (!esNoche()) {
             durmiendo = false; enSiesta = false; limpiarTimerSiesta();
             caras.forEach(function (c) {
@@ -144,12 +135,12 @@
             return;
         }
 
-        // A las 05:30 termina el sueño nocturno y la cara vuelve a estar activa.
+        // A las 06:00 termina el sueño nocturno y la cara vuelve a estar activa.
         if (durmiendo && !enSiesta) {
             tocar(true);
         }
         // De día: NUNCA se duerme automáticamente por inactividad.
-        // El único sueño automático es el nocturno de 00:30 a 05:30.
+        // El único sueño automático es el nocturno de 00:30 a 06:00.
         if (durmiendo) {
             tocar(true);
         }
@@ -177,7 +168,7 @@
         if (ahora - ultimaActividad > 900) registrarActividad();
     }, { passive: true, capture: true });
 
-    // CINTURÓN DE SEGURIDAD: fuera de 00:30–05:30 ninguna otra rutina puede dejar
+    // CINTURÓN DE SEGURIDAD: fuera de 00:30–06:00 ninguna otra rutina puede dejar
     // la cara en 'sleeping'/'sleepy'. Esto también protege contra código antiguo en caché
     // o una personalidad que intente lanzar una expresión de sueño durante el día.
     function corregirSuenoFueraDeHorario() {

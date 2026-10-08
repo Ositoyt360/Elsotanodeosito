@@ -10,7 +10,7 @@
  *  - Activación inmediata con skipWaiting() y clients.claim().
  * ===================================================================== */
 
-const CACHE_NAME = 'osito-pwa-v92';
+const CACHE_NAME = 'osito-pwa-v95';
 const OTA_CACHE_NAME = 'osito-ota-github-v90';
 const GITHUB_REPO = 'Ositoyt360/Elsotanodeosito';
 const OTA_ENABLED = false;
@@ -32,6 +32,7 @@ const CORE_ASSETS = [
   './styles.css',
   './v49.css',
   './v61.css',
+  './v92.css',
   './actualizaciones-helper.js',
   './performance-lite.js',
   './base-conocimiento.js',
@@ -103,7 +104,7 @@ self.addEventListener('message', (event) => {
         const sha = String(data.sha);
         const files = Array.isArray(data.files) && data.files.length > 0
           ? data.files
-          : ['index.html', 'styles.css', 'v49.css', 'v61.css', 'v49.js', 'firebase-integration.js', 'asistente-voz.js', 'base-conocimiento.js', 'performance-lite.js', 'actualizaciones-helper.js', 'perfil.html', 'profile.js', 'moderador.html', 'moderator.js'];
+          : ['index.html', 'styles.css', 'v49.css', 'v61.css', 'v92.css', 'v49.js', 'firebase-integration.js', 'asistente-voz.js', 'base-conocimiento.js', 'performance-lite.js', 'actualizaciones-helper.js', 'perfil.html', 'profile.js', 'moderador.html', 'moderator.js'];
         const otaCache = await caches.open(OTA_CACHE_NAME);
         for (const filename of files) {
           if (!filename || filename.startsWith('.') || filename.includes('..')) continue;

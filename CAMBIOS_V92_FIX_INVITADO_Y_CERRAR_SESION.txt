@@ -13,3 +13,12 @@ firebase-integration.js
 index.html / ia.html / chat-ia-core.js / asistente-voz.js
 - osEsInvitado() y demas chequeos: con cuenta activa en Firebase no cuentan como invitado.
 - Cache bust v92 (sw.js osito-pwa-v92). Si no ves el cambio: recarga forzada o borra datos del sitio una vez.
+
+V92 (parte 2)
+- v92.css (nuevo, cargado al final en index.html e ia.html):
+  * El numero rojo del chat en vivo ahora sobresale fuera del circulo (esquina superior derecha).
+  * La mascota de la IA (ia.html, burbuja y panel de la IA; el modo llamada NO se toca) mira al frente; el resto de caras del sitio conserva su pose.
+  * Zzz ordenadas: pequenas, arriba a la derecha de la cabeza, subiendo una tras otra.
+- face-extra.js: la mascota duerme de 12:30 am a 6:00 am en la HORA LOCAL de cada cuenta/pais
+  (antes 12:30-5:30 hora de El Salvador).
+- Cache v93.

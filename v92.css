@@ -1,0 +1,43 @@
+/* V92 — (1) número del chat sobresale del círculo, (2) mascota de frente, (3) Zzz ordenadas */
+
+/* 1) Contador rojo del chat en vivo: fuera del círculo (esquina superior derecha) */
+html body .livechat-floating-container,
+html body .livechat-toggle-bubble { overflow: visible !important; }
+html body .livechat-toggle-bubble .livechat-unread-badge {
+  top: -9px !important; right: -9px !important; left: auto !important;
+  z-index: 6 !important; min-width: 22px !important; height: 22px !important;
+}
+
+/* 2) SOLO la mascota de la IA (página ia.html, burbuja y panel de la IA; el modo llamada NO se toca) mira al frente.
+      Las demás caras del sitio conservan su pose original. */
+html body .ia-m-mascot .osito-face,
+html body #ai-section .osito-face,
+html body .ia-bubble-icon .osito-face { --px: 0deg; --py: 0deg; }
+html body .ia-m-mascot .osito-face .of-rig,
+html body #ai-section .osito-face .of-rig,
+html body .ia-bubble-icon .osito-face .of-rig { rotate: none; }
+html body:not(.no-animations):not(.ultra-performance) .ia-m-mascot .osito-face .of-rig,
+html body:not(.no-animations):not(.ultra-performance) #ai-section .osito-face .of-rig,
+html body:not(.no-animations):not(.ultra-performance) .ia-bubble-icon .osito-face .of-rig {
+  animation: v92Flota 4.8s ease-in-out infinite alternate !important;
+}
+@keyframes v92Flota {
+  0%   { rotate: none; translate: 0 0 0; }
+  100% { rotate: none; translate: 0 -.035em 0; }
+}
+
+/* 3) Zzz: pequeñas, a la derecha-arriba de la cabeza, subiendo una tras otra */
+html body :not(.call-avatar-body) > .osito-face[data-expr="sleeping"] .of-zzz {
+  left: auto !important; right: -.10em !important; top: .06em !important;
+  font-size: .20em !important; line-height: 1 !important; font-weight: 900 !important;
+  opacity: 0; visibility: visible !important; pointer-events: none !important;
+  animation: v92Z 3.6s ease-out infinite !important;
+}
+html body :not(.call-avatar-body) > .osito-face[data-expr="sleeping"] .of-zzz.z2 { right: -.22em !important; top: -.06em !important; font-size: .26em !important; animation-delay: 1.2s !important; }
+html body :not(.call-avatar-body) > .osito-face[data-expr="sleeping"] .of-zzz.z3 { right: -.34em !important; top: -.20em !important; font-size: .32em !important; animation-delay: 2.4s !important; }
+@keyframes v92Z {
+  0%   { opacity: 0; transform: translate(0, .06em) scale(.7); }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(.08em, -.12em) scale(1); }
+}

@@ -35,3 +35,20 @@ V91 - Cuentas / "Invitado" / cerrar sesion / chat en vivo
 - firestore.rules: isBanned usa data.get('bannedUntil', 0) (un documento de moderacion sin ese campo
   bloqueaba el chat). HAY QUE PUBLICAR las reglas: Firebase Console -> Firestore -> Reglas -> pegar -> Publicar.
 - sw.js osito-pwa-v91 y firebase-integration.js?v=91 para forzar la carga del codigo nuevo.
+
+V91 - Boton "Iniciar sesion" en el menu
+- index.html: nuevo boton #main-login ("Iniciar sesion") en el menu. Recarga y abre directamente el formulario
+  de login (flag sessionStorage osito_open_login). Antes, quien estaba como invitado o con la sesion vencida
+  no tenia NINGUNA forma de iniciar sesion desde el menu (V90 lo daba por hecho pero el boton no existia).
+- firebase-integration.js (setGuestMode): #main-login se muestra solo a invitados (y se oculta con cuenta iniciada
+  o en "Ver como usuario"); #main-logout sigue mostrandose solo con cuenta / sesion guardada.
+
+V91 - Que la sesion no se pierda
+- Firebase no vence la sesion por tiempo; se pierde si el navegador borra los datos del sitio.
+- Al iniciar sesion / registrarse, la cuenta se guarda en el gestor de contraseñas del navegador
+  (PasswordCredential; la contraseña la guarda el navegador, no la pagina).
+- Si la sesion se pierde, la pagina vuelve a entrar sola con esa credencial (reingresoAutomatico).
+  Solo funciona en navegadores con esa API (Chrome/Edge/Android) y con la contraseña guardada.
+- Cerrar sesion a proposito llama preventSilentAccess(): el navegador NO vuelve a entrar solo.
+- Espera de restauracion de sesion al arrancar: 10 s.
+- Campo de correo con autocomplete="username" para que el gestor de contraseñas lo reconozca.

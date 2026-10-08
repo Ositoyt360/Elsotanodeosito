@@ -160,6 +160,9 @@
         document.body.classList.toggle('guest-mode', Boolean(isGuest));
         const mainLogout = el('main-logout');
         if (mainLogout) mainLogout.style.display = isGuest ? 'inline-flex' : 'none';
+        // V91: invitados y sesiones vencidas ven "Iniciar sesión" en el menú (antes no había forma de entrar).
+        const mainLogin = el('main-login');
+        if (mainLogin) mainLogin.style.display = (isGuest && !(window.OsitoGuest && window.OsitoGuest.active)) ? 'inline-flex' : 'none';
         const chatInput = el('livechat-input');
         if (chatInput) {
             chatInput.disabled = Boolean(isGuest);
@@ -322,6 +325,26 @@
     function sessionHint() { try { return localStorage.getItem('osito_session_hint') === '1'; } catch (e) { return false; } }
     function setSessionHint() { try { localStorage.setItem('osito_session_hint', '1'); } catch (e) {} }
     function clearSessionHint() { try { localStorage.removeItem('osito_session_hint'); } catch (e) {} }
+
+    // V91: la sesión no vence por tiempo; solo se pierde si el navegador borra los datos del sitio.
+    // Para recuperarla sola se usa el gestor de contraseñas del navegador (API Credential Management);
+    // la contraseña la guarda el navegador, nunca esta página.
+    function guardarCredencialNavegador(email, password, name) {
+        try {
+            if (!navigator.credentials || !window.PasswordCredential || !email || !password) return;
+            navigator.credentials.store(new window.PasswordCredential({ id: email, password: password, name: name || email })).catch(() => {});
+        } catch (e) {}
+    }
+    async function reingresoAutomatico() {
+        try {
+            if (window.OsitoGuest && window.OsitoGuest.active) return false;
+            if (!navigator.credentials || !window.PasswordCredential || !auth || !window.signInWithEmailAndPasswordFirebase) return false;
+            const cred = await navigator.credentials.get({ password: true, mediation: 'silent' });
+            if (!cred || !cred.id || !cred.password) return false;
+            await window.signInWithEmailAndPasswordFirebase(auth, String(cred.id).trim().toLowerCase(), cred.password);
+            return true;
+        } catch (e) { return false; }
+    }
 
     function showAuthenticatedView(profile, user) {
         setSessionHint();
@@ -881,9 +904,11 @@
                 state.profile = registeredProfile;
                 setPreview(registeredProfile, credential.user);
                 state.selectedPhotoFile = null;
+                guardarCredencialNavegador(cleanEmail, cleanPassword, registeredProfile?.displayName);
                 setStatus('Cuenta creada. Ya puedes entrar a la pagina principal.', 'success');
             } else {
                 await window.signInWithEmailAndPasswordFirebase(auth, cleanEmail, cleanPassword);
+                guardarCredencialNavegador(cleanEmail, cleanPassword);
                 setStatus('Sesion iniciada. Ya puedes continuar.', 'success');
             }
         } catch (error) {
@@ -926,6 +951,7 @@
 
     async function handleSignOut() {
         state.realSignOut = true;
+        try { if (navigator.credentials && navigator.credentials.preventSilentAccess) await navigator.credentials.preventSilentAccess(); } catch (e) {}
         try {
             localStorage.removeItem('osito_user_profile');
             localStorage.removeItem('osito_guest_mode');
@@ -1188,7 +1214,7 @@
             // un momento a que Firebase termine de restaurarla antes de mostrar el inicio de sesión.
             if (!user && sessionHint() && !state.nullGraceDone) {
                 state.nullGraceDone = true;
-                for (let i = 0; i < 60 && !auth.currentUser; i++) {
+                for (let i = 0; i < 100 && !auth.currentUser; i++) {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 }
                 if (auth.currentUser) return; // Firebase volverá a llamar este callback con el usuario
@@ -1202,6 +1228,11 @@
                 // almacenamiento limpiado, navegador integrado...). Antes (V90) se ignoraba y la persona quedaba
                 // "con cuenta" pero sin poder escribir en el chat ni cerrar sesión.
                 const eraSesionVieja = sessionHint() && !state.realSignOut;
+                if (eraSesionVieja && !state.autoReloginTried) {
+                    state.autoReloginTried = true;
+                    // Si el navegador tiene la contraseña guardada, se vuelve a entrar sin que la persona haga nada.
+                    if (await reingresoAutomatico()) return; // Firebase volverá a llamar este callback con el usuario
+                }
                 clearSessionHint();
                 state.profile = null;
                 if (window.ositoCurrentUser) {

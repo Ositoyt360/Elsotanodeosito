@@ -11,7 +11,7 @@ service cloud.firestore {
     }
     function isBanned(uid) {
       return exists(/databases/$(database)/documents/moderation/$(uid)) &&
-        get(/databases/$(database)/documents/moderation/$(uid)).data.bannedUntil > request.time.toMillis();
+        get(/databases/$(database)/documents/moderation/$(uid)).data.get('bannedUntil', 0) > request.time.toMillis();
     }
 
 

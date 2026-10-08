@@ -910,7 +910,22 @@
         }
     }
 
+    // V91: borra la sesión que Firebase guarda en IndexedDB (respaldo si signOut no pudo ejecutarse).
+    function borrarSesionFirebaseLocal() {
+        return new Promise((resolve) => {
+            let listo = false;
+            const fin = () => { if (!listo) { listo = true; resolve(); } };
+            try {
+                if (!window.indexedDB) return fin();
+                const req = indexedDB.deleteDatabase('firebaseLocalStorageDb');
+                req.onsuccess = fin; req.onerror = fin; req.onblocked = fin;
+                setTimeout(fin, 1500);
+            } catch (e) { fin(); }
+        });
+    }
+
     async function handleSignOut() {
+        state.realSignOut = true;
         try {
             localStorage.removeItem('osito_user_profile');
             localStorage.removeItem('osito_guest_mode');
@@ -920,22 +935,20 @@
                 if (k.indexOf('firebase:authUser:') === 0) localStorage.removeItem(k);
             }
         } catch (e) {}
-        if (window.ositoGuestMode) {
-            window.location.reload();
-            return;
-        }
-        if (!auth || !window.signOutFirebase) {
-            window.location.reload();
-            return;
-        }
+        // V91: siempre se intenta cerrar la sesión real de Firebase (aunque la página crea que eres invitado
+        // o Firebase aún no haya terminado de cargar); si no, al recargar la sesión "revive".
         try {
-            await window.signOutFirebase(auth);
-            state.selectedPhotoFile = null;
-            window.location.reload();
+            const authActual = auth || window.firebaseAuth;
+            if (authActual) {
+                if (window.signOutFirebase) await window.signOutFirebase(authActual);
+                else if (typeof authActual.signOut === 'function') await authActual.signOut();
+            }
         } catch (error) {
             console.error('[FirebaseAuth]', error);
-            setStatus('No se pudo cerrar la sesion.', 'error');
         }
+        await borrarSesionFirebaseLocal();
+        state.selectedPhotoFile = null;
+        window.location.reload();
     }
 
     async function updateProfilePhoto(file) {
@@ -1145,7 +1158,12 @@
             // La página sigue funcionando como invitado; si había una cuenta cacheada,
             // se conserva su vista mientras Firebase termina de recuperarla.
             if (!sessionHint() && !localStorage.getItem('osito_user_profile')) showUnauthenticatedView();
-            else window.entrarAlSitioInstantaneo?.();
+            else {
+                refreshCachedIdentity();
+                const mainLogoutFb = el('main-logout');
+                if (mainLogoutFb) mainLogoutFb.style.display = 'inline-flex'; // V91: siempre se puede cerrar sesión
+                window.entrarAlSitioInstantaneo?.();
+            }
             setStatus('Conectando tu cuenta…', 'neutral');
             return;
         }
@@ -1170,7 +1188,7 @@
             // un momento a que Firebase termine de restaurarla antes de mostrar el inicio de sesión.
             if (!user && sessionHint() && !state.nullGraceDone) {
                 state.nullGraceDone = true;
-                for (let i = 0; i < 40 && !auth.currentUser; i++) {
+                for (let i = 0; i < 60 && !auth.currentUser; i++) {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 }
                 if (auth.currentUser) return; // Firebase volverá a llamar este callback con el usuario
@@ -1179,13 +1197,11 @@
             state.authReady = true;
             state.currentUser = user || null;
             if (!user) {
-                // V90: un null durante el arranque puede ser transitorio. Si existe
-                // una sesión cacheada, no la convertimos en invitado ni mostramos login.
-                if (sessionHint() && !state.realSignOut) {
-                    refreshCachedIdentity();
-                    window.entrarAlSitioInstantaneo?.();
-                    return;
-                }
+                // V91: Firebase ya terminó de restaurar la sesión y NO hay usuario. Si quedaba una marca vieja
+                // (osito_session_hint / perfil guardado) significa que la sesión real se perdió (token vencido,
+                // almacenamiento limpiado, navegador integrado...). Antes (V90) se ignoraba y la persona quedaba
+                // "con cuenta" pero sin poder escribir en el chat ni cerrar sesión.
+                const eraSesionVieja = sessionHint() && !state.realSignOut;
                 clearSessionHint();
                 state.profile = null;
                 if (window.ositoCurrentUser) {
@@ -1212,7 +1228,12 @@
                     state.moderationUnsubscribe();
                     state.moderationUnsubscribe = null;
                 }
+                try { localStorage.removeItem('osito_user_profile'); } catch (e) {}
                 showUnauthenticatedView();
+                if (eraSesionVieja) {
+                    setStatus('Tu sesión venció. Inicia sesión de nuevo para escribir en el chat.', 'error');
+                    try { window.mostrarNotificacion?.('Tu sesión venció. Inicia sesión de nuevo.'); } catch (e) {}
+                }
                 return;
             }
 

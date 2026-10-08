@@ -21,3 +21,17 @@ Como comprobar
 
 - index.html e ia.html: <meta name="osito-ia-url"> ahora apunta a https://elsotanodeosito.onrender.com
   (antes apuntaba a el-sotano-de-osito.onrender.com, que no es tu servidor).
+
+V91 - Cuentas / "Invitado" / cerrar sesion / chat en vivo
+- firebase-integration.js: la rama "sin usuario" de onAuthStateChanged ya no se queda atascada por
+  la marca osito_session_hint (V90 usaba state.realSignOut, que nunca se asignaba). Si Firebase ya
+  restauro y no hay sesion real, se limpia la marca vieja, se muestra el aviso "Tu sesion vencio" y
+  la persona puede iniciar sesion de nuevo (antes: nombre de cuenta visible, chat bloqueado, sin boton).
+- handleSignOut: siempre cierra la sesion real de Firebase (aunque la pagina crea que es invitado o
+  Firebase no haya cargado) y borra IndexedDB firebaseLocalStorageDb; antes la sesion "revivia" al recargar.
+- Si Firebase no carga y hay sesion guardada, el boton "Cerrar sesion" siempre aparece.
+- Espera de restauracion de sesion: 4 s -> 6 s (moviles lentos).
+- index.html: mensaje claro cuando no se puede recuperar la sesion al enviar al chat.
+- firestore.rules: isBanned usa data.get('bannedUntil', 0) (un documento de moderacion sin ese campo
+  bloqueaba el chat). HAY QUE PUBLICAR las reglas: Firebase Console -> Firestore -> Reglas -> pegar -> Publicar.
+- sw.js osito-pwa-v91 y firebase-integration.js?v=91 para forzar la carga del codigo nuevo.

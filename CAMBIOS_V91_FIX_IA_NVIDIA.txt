@@ -18,3 +18,6 @@ Como comprobar
 1) Abre  https://TU-RENDER.onrender.com/api/ia/estado?probar=1
    -> prueba.ok debe ser true. Si no, "prueba.mensaje" dice el motivo (401 = clave mala, 404 = modelo).
 2) Render gratis duerme: la primera respuesta puede tardar ~50 s.
+
+- index.html e ia.html: <meta name="osito-ia-url"> ahora apunta a https://elsotanodeosito.onrender.com
+  (antes apuntaba a el-sotano-de-osito.onrender.com, que no es tu servidor).

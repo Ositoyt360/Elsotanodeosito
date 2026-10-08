@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=90">
+    <link rel="stylesheet" href="styles.css?v=97">
     <link rel="stylesheet" href="v49.css">
     <link rel="stylesheet" href="call-mode.css">
     <script id="v62-inline">
@@ -1164,6 +1164,8 @@ accent-color:#00ff88;
                     if (window.__osFormularioAbierto) return;
                 }
                 ocultarCargandoLanding();
+                var ws = document.getElementById('welcome-screen');
+                if (ws) ws.style.display = 'flex'; /* V97: en styles.css la pantalla está oculta por defecto; hay que mostrarla */
                 var gate = document.getElementById('landing-gate');
                 var panel = document.getElementById('auth-panel');
                 var accountWelcome = document.getElementById('account-welcome');
@@ -1201,8 +1203,7 @@ accent-color:#00ff88;
                 }
             })();
 
-            // V90: la entrada normal SIEMPRE va directo al Sótano.
-            // El login queda disponible desde el menú de cuenta y solo se abre si el usuario lo pide.
+            // V97: con cuenta -> directo al Sótano. Sin cuenta / sesión cerrada -> pantalla de elección (Iniciar sesión / Modo invitado).
             var __osAbrirRegistro = false, __osAbrirLogin = false;
             try {
                 __osAbrirRegistro = sessionStorage.getItem('osito_open_register') === '1';
@@ -1217,12 +1218,11 @@ accent-color:#00ff88;
             if (__osAbrirLogin) {
                 var abrirLogin = function () { window.__osAuthBootHandled = true; window.mostrarFormularioLogin(); };
                 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', abrirLogin, { once: true }); else abrirLogin();
-            } else if (!__osAbrirRegistro) {
-                var arranque = function () { window.entrarAlSitioInstantaneo(); };
-                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arranque, { once: true }); else arranque();
             } else if (window.__osCuentaRapida) {
+                // V97: cuenta ya iniciada en este navegador -> directo al Sótano, sin pantalla de elección.
                 window.entrarAlSitioInstantaneo();
             } else {
+                // V97: sin cuenta, invitado o sesión cerrada -> pantalla "Iniciar sesión / Modo invitado".
                 window.osMostrarEleccionLanding();
             }
 
@@ -4034,7 +4034,7 @@ accent-color:#00ff88;
     <link rel="stylesheet" href="osito-cara3d.css">
     <link rel="stylesheet" href="osito-actividades-3d.css">
     <link rel="stylesheet" href="v61.css">
-    <link rel="stylesheet" href="v92.css?v=92">
+    <link rel="stylesheet" href="v92.css?v=96">
     <style id="v66-chat-buttons-style">
         .ai-sessions-bar {
             display: flex !important;
@@ -4298,7 +4298,7 @@ accent-color:#00ff88;
     </style>
     <script src="personalidades-animaciones-1000.js" defer></script>
     <script src="personalidades-1000.js" defer></script>
-    <script src="face-extra.js?v=92" defer></script>
+    <script src="face-extra.js?v=96" defer></script>
     <script src="osito-aburrimiento.js" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
@@ -5609,7 +5609,7 @@ accent-color:#00ff88;
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=92"></script>
+    <script src="firebase-integration.js?v=97"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>
     <script src='call-mode-engine.js'></script>

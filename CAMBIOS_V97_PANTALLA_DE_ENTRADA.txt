@@ -1,0 +1,37 @@
+V97 - Pantalla de entrada (Iniciar sesion / Modo invitado)
+
+Comportamiento:
+- CON cuenta iniciada (PC, movil, tablet): entra directo al Sotano. La pantalla de entrada se quita al instante, sin parpadeo.
+- SIN cuenta, en modo invitado o con la sesion cerrada: aparece "EL SOTANO DE OSITO - Elige como quieres entrar" con los botones
+  INICIAR SESION y MODO INVITADO.
+- Al cerrar sesion desde el menu se vuelve a esa pantalla de eleccion (antes abria directo el formulario).
+- Si una sesion guardada ya no existe (vencio / se borraron datos), la pagina se recarga UNA sola vez y muestra la pantalla de eleccion.
+
+Causa del problema (V90-V96):
+- index.html mandaba a TODOS directo al Sotano (la pantalla nunca se mostraba).
+- styles.css deja #welcome-screen con display:none y osMostrarEleccionLanding() no lo volvia a mostrar.
+- firebase-integration.js (showUnauthenticatedView) entraba solo al sitio aunque la persona no hubiera elegido.
+
+Archivos: index.html, firebase-integration.js, sw.js (cache osito-pwa-v97).
+Si no ves el cambio: recarga forzada o borra datos del sitio una vez.
+
+------------------------------------------------------------------
+V97 (parte 2) - Objetos 3D de la mascota: manitas y animaciones
+------------------------------------------------------------------
+Revision de los 21 objetos (libro, periodico, mando/juego, telefono, chocolate/cafe, audifonos, cubo, peluche, pizza,
+manzana, microfono, laptop, mochila, balon, varita, regalo, consola, vaso, camara):
+
+Problema 1 - MANITAS: solo libro, telefono, periodico, taza y cubo tenian la regla que pone las manos sobre el objeto.
+  En mando, peluche, pizza, manzana, microfono, laptop, mochila, balon, varita, regalo, consola, vaso y camara las manos
+  salian como bolitas sueltas a los lados de la cara (sin dedos ni pulgar, sin agarrar el objeto).
+  -> osito-actividades-3d.css: ".of-boredom-prop .of-mitt{position:absolute;display:block}" (todas las manitas se ven bien).
+Problema 2 - AUDIFONOS no tenian manos.
+  -> osito-aburrimiento.js: ahora llevan MITT_L + MITT_R; osito-actividades-3d.css les da posicion.
+Problema 3 - ANIMACIONES: en celulares de gama baja (modo automatico "no-animations" / low-end) varias reglas globales
+  apagaban TODAS las animaciones y sombras, tambien las de los objetos y manitas (se veian quietos).
+  -> styles.css y osito-actividades-3d.css: los objetos 3D conservan animaciones y sombras en modo automatico.
+     Se apagan solo si la persona pulsa "Quitar animaciones" (clase nueva body.anim-off-usuario), en Modo ultra,
+     o si el sistema tiene activado "reducir movimiento".
+  -> index.html: toggleAnimaciones() agrega/quita anim-off-usuario.
+
+Prueba hecha (navegador real, movil de gama baja): 21/21 objetos con 2 manitas visibles y animaciones activas.

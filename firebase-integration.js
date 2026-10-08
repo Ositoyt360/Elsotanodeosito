@@ -328,7 +328,9 @@
         state.aiSeededFromDom = false;
         state.selectedPhotoFile = null;
         window.actualizarVisibilidadSeccionesCuenta?.();
-        if (!window.__osFormularioAbierto) {
+        // V97: si la pantalla de elección (Iniciar sesión / Modo invitado) sigue en pantalla NO se entra sola:
+        // la persona sin cuenta debe elegir. Solo se entra directo si esa pantalla ya no existe.
+        if (!window.__osFormularioAbierto && !document.getElementById('welcome-screen')) {
             window.entrarAlSitioInstantaneo?.();
         }
     }
@@ -360,6 +362,7 @@
 
     function showAuthenticatedView(profile, user) {
         setSessionHint();
+        try { sessionStorage.removeItem('osito_gate_reload'); } catch (e) {}
         const { form, logout, guest, mainLogout, profilePhotoButton, previewPhotoButton, readyButton, accountTools } = getAuthElements();
         const accountWelcome = el('account-welcome');
         setGuestMode(false);
@@ -962,6 +965,7 @@
     }
 
     async function handleSignOut() {
+        const eraInvitado = Boolean(window.ositoGuestMode);
         state.realSignOut = true;
         try { if (navigator.credentials && navigator.credentials.preventSilentAccess) await navigator.credentials.preventSilentAccess(); } catch (e) {}
         try {
@@ -986,8 +990,9 @@
         }
         await borrarSesionFirebaseLocal();
         state.selectedPhotoFile = null;
-        // V92: tras cerrar sesión (o desde invitado) se abre la parte de Iniciar sesión / Registrarse.
-        try { sessionStorage.setItem('osito_open_login', '1'); } catch (e) {}
+        // V97: al cerrar una cuenta se vuelve a la pantalla de elección (Iniciar sesión / Modo invitado).
+        // Si quien pulsa es un invitado, va directo al formulario de Iniciar sesión / Registrarse.
+        try { if (eraInvitado) sessionStorage.setItem('osito_open_login', '1'); else sessionStorage.removeItem('osito_open_login'); } catch (e) {}
         window.location.reload();
     }
 
@@ -1251,6 +1256,24 @@
                     if (await reingresoAutomatico()) return; // Firebase volverá a llamar este callback con el usuario
                 }
                 clearSessionHint();
+                // V97: la sesión guardada ya no existe (se cerró o venció). Si la página entró directo por "cuenta
+                // reconocida", se recarga UNA vez para mostrar la pantalla de Iniciar sesión / Modo invitado.
+                if (eraSesionVieja && window.__osCuentaRapida && !state.realSignOut) {
+                    let yaRecargo = false;
+                    try { yaRecargo = sessionStorage.getItem('osito_gate_reload') === '1'; } catch (e) {}
+                    if (!yaRecargo) {
+                        try {
+                            sessionStorage.setItem('osito_gate_reload', '1');
+                            localStorage.removeItem('osito_user_profile');
+                            for (let i = localStorage.length - 1; i >= 0; i--) {
+                                const k = localStorage.key(i) || '';
+                                if (k.indexOf('firebase:authUser:') === 0) localStorage.removeItem(k);
+                            }
+                        } catch (e) {}
+                        window.location.reload();
+                        return;
+                    }
+                }
                 state.profile = null;
                 if (window.ositoCurrentUser) {
                     window.ositoCurrentUser = null;

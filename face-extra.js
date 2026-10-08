@@ -22,6 +22,7 @@
     // que podía quedarse guardada y hacer que la cara creyera que siempre era de noche.
     try { localStorage.removeItem('osito_forzar_noche'); } catch (e) {}
 
+    var INACT_INICIAL = 11000;
     var INICIO = 0.5, FIN = 6; // V92: duerme de 12:30 am a 6:00 am, hora LOCAL del país/dispositivo de cada cuenta
 
     function esNoche() {
@@ -32,7 +33,7 @@
             return total >= INICIO && total < FIN;
         } catch (e) { return false; }
     }
-    if (esNoche()) ultimaConCara = 0; // si abren la página entre 00:30 y 06:00, ya está dormida
+    if (esNoche()) { ultimaConCara = 0; ultimaActividad = Date.now() - INACT_INICIAL; } // si abren la página entre 00:30 y 06:00, se duerme a los pocos segundos
     function visible(c) { return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }
 
     // Zzz y burbujita de ronquido
@@ -90,6 +91,8 @@
                 expr = 'smile';
                 ms = ms || 900;
             }
+            // V96: dormida de noche, ninguna animación automática (personalidades, entrenamiento...) la despierta.
+            if (esNoche() && durmiendo && expr && expr !== 'sleeping' && expr !== 'sleepy') return;
             return ponerOriginal.call(F, cara, expr, ms);
         };
         F.__ositoSleepGuard = true;
@@ -98,12 +101,13 @@
     function ocupada() {
         return caras.some(function (c) { var e = c.dataset.estado; return e && e !== 'idle'; });
     }
-    var INACTIVIDAD_PARA_DORMIR = 60000; // V86: 60 s sin tocar nada
+    var INACTIVIDAD_PARA_DORMIR = 15000; // V96: de noche se duerme tras 15 s sin tocar nada (antes 60 s y otras animaciones lo impedían)
     function enUsoIA() { // panel de IA, llamada o chat en vivo abiertos = la persona está presente
         try {
             if (window.ositoEnLlamadaIA) return true;
             var p = document.getElementById('ai-section');
-            if (p && p.classList.contains('active')) return true;
+            // V96: en la página de la IA (ia.html) el panel SIEMPRE está 'active': eso impedía que se durmiera nunca.
+            if (p && p.classList.contains('active') && !document.body.classList.contains('ia-page')) return true;
             var c = document.getElementById('livechat-section');
             if (c && (c.classList.contains('open') || c.classList.contains('active') || c.classList.contains('show'))) return true;
             var a = document.activeElement;
@@ -125,13 +129,13 @@
             // V86: la persona está activa (tocó, escribió, movió el mouse o usa el chat/IA) -> despierta y NO se vuelve a dormir.
             if (durmiendo && (ahora - ultimaActividad) < 4000) { tocar(true); return; }
             if (durmiendo) {
-                if (exprAjena()) { tocar(true); return; }
+                // V96: de noche las animaciones automáticas ya no despiertan a la mascota; solo la persona.
                 caras.forEach(function (c) { if (c.getAttribute('data-expr') !== 'sleeping') F.poner(c, 'sleeping', 0); });
                 return;
             }
             // Sueño nocturno SOLO tras 60 s sin actividad real y con el panel de IA / chat cerrados.
             if (enUsoIA()) { ultimaActividad = ahora; return; }
-            if (!durmiendo && !exprAjena() && (ahora - ultimaActividad) > INACTIVIDAD_PARA_DORMIR) dormir(false);
+            if (!durmiendo && (ahora - ultimaActividad) > INACTIVIDAD_PARA_DORMIR) dormir(false);
             return;
         }
 

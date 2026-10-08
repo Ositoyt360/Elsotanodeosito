@@ -16,9 +16,9 @@ html body .ia-bubble-icon .osito-face { --px: 0deg; --py: 0deg; }
 html body .ia-m-mascot .osito-face .of-rig,
 html body #ai-section .osito-face .of-rig,
 html body .ia-bubble-icon .osito-face .of-rig { rotate: none; }
-html body:not(.no-animations):not(.ultra-performance) .ia-m-mascot .osito-face .of-rig,
-html body:not(.no-animations):not(.ultra-performance) #ai-section .osito-face .of-rig,
-html body:not(.no-animations):not(.ultra-performance) .ia-bubble-icon .osito-face .of-rig {
+html body:not(.no-animations):not(.ultra-performance) .ia-m-mascot .osito-face:not([data-boredom]) .of-rig,
+html body:not(.no-animations):not(.ultra-performance) #ai-section .osito-face:not([data-boredom]) .of-rig,
+html body:not(.no-animations):not(.ultra-performance) .ia-bubble-icon .osito-face:not([data-boredom]) .of-rig {
   animation: v92Flota 4.8s ease-in-out infinite alternate !important;
 }
 @keyframes v92Flota {
@@ -41,3 +41,12 @@ html body :not(.call-avatar-body) > .osito-face[data-expr="sleeping"] .of-zzz.z3
   80%  { opacity: 1; }
   100% { opacity: 0; transform: translate(.08em, -.12em) scale(1); }
 }
+
+/* 4) Zzz SOLO mientras duerme. En equipos de gama baja / modo rendimiento v49.css las dejaba siempre visibles. */
+html body .osito-face:not([data-expr="sleeping"]) .of-zzz {
+  opacity: 0 !important; visibility: hidden !important; animation: none !important;
+}
+/* En modo rendimiento (sin animaciones) las Zzz se quedan quietas pero ordenadas */
+html body.no-animations .osito-face[data-expr="sleeping"] .of-zzz,
+html body.ultra-performance .osito-face[data-expr="sleeping"] .of-zzz,
+html.low-end-device body .osito-face[data-expr="sleeping"] .of-zzz { animation: none !important; opacity: .9 !important; }

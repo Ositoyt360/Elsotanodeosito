@@ -302,7 +302,7 @@
 
   var HTML_AUDIFONOS=
     '<span class="of-hp"><i class="hp-band"></i><i class="hp-pad"></i><span class="hp-cup l"></span><span class="hp-cup r"></span>'+
-      '<i class="hp-n n1">♪</i><i class="hp-n n2">♫</i><i class="hp-n n3">♪</i>'+
+      '<i class="hp-n n1">♪</i><i class="hp-n n2">♫</i><i class="hp-n n3">♪</i>'+MITT_L+MITT_R+
     '</span><i class="of-poof"></i>';
 
   function stickers(a){ var h=''; for(var i=0;i<a.length;i++) h+='<i class="k'+a[i]+'"></i>'; return h; }

@@ -22,3 +22,13 @@ V92 (parte 2)
 - face-extra.js: la mascota duerme de 12:30 am a 6:00 am en la HORA LOCAL de cada cuenta/pais
   (antes 12:30-5:30 hora de El Salvador).
 - Cache v93.
+
+V96
+- Zzz: en equipos de gama baja / modo rendimiento (v49.css) se quedaban SIEMPRE visibles aunque estuviera despierta
+  (se veian junto al libro/mando). Ahora solo aparecen mientras duerme (v92.css).
+- Objetos 3D y manitas: la animacion de flotar que puse en v92.css ya no se aplica mientras usa libro/mando.
+- Sueno nocturno (face-extra.js): en ia.html el panel siempre estaba "active" y nunca se dormia; corregido.
+  Se duerme tras 15 s sin tocar (antes 60 s), las animaciones automaticas ya no la despiertan de noche,
+  y si abren la pagina de noche se duerme a los pocos segundos. Solo la persona la despierta.
+  Horario: 12:30 am a 6:00 am hora local.
+- Los objetos 3D no salen de noche (12:30-6:00) porque la mascota duerme; de dia vuelven a salir.

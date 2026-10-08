@@ -1813,7 +1813,11 @@ button:active .btn-icon {
     }
 }
 
-body.no-animations * { animation: none !important; transition: none !important; box-shadow: none !important; }
+/* V97: los objetos 3D de la mascota (y sus manitas) conservan sus animaciones y sombras en equipos de gama baja
+   (modo automático). Solo se apagan si la persona pulsa "Quitar animaciones" (clase anim-off-usuario). */
+body.no-animations *:not(.of-boredom-prop):not(.of-boredom-prop *) { animation: none !important; transition: none !important; box-shadow: none !important; }
+body.no-animations.anim-off-usuario .of-boredom-prop,
+body.no-animations.anim-off-usuario .of-boredom-prop * { animation: none !important; transition: none !important; box-shadow: none !important; }
 
 /* Efecto escalonado de entrada para grupos de botones */
 .tabs-container .tab-btn:nth-child(1) { animation-delay: 0s; }
@@ -2189,7 +2193,7 @@ body.guest-mode .fav-badge {
     max-height: calc(100vh - 140px);
 }
 
-body.no-animations * {
+body.no-animations *:not(.of-boredom-prop):not(.of-boredom-prop *) {
     transition: none !important;
 }
 
@@ -5587,9 +5591,14 @@ body.ultra-performance .ia-bubble-wrap .ia-bubble-spinner1 {
 
 /* 3) MODO RENDIMIENTO Y MODO ULTRA: se detiene absolutamente todo ----- */
 /* El truco :not(#_o) sube la especificidad para ganarle a cualquier regla suelta. */
-html body.no-animations :not(#_o),
-html body.no-animations :not(#_o)::before,
-html body.no-animations :not(#_o)::after,
+html body.no-animations :not(#_o):not(.of-boredom-prop):not(.of-boredom-prop *),
+html body.no-animations :not(#_o):not(.of-boredom-prop):not(.of-boredom-prop *)::before,
+html body.no-animations :not(#_o):not(.of-boredom-prop):not(.of-boredom-prop *)::after,
+/* V97: objetos 3D de la mascota: solo se detienen si la persona quitó las animaciones (o en Modo ultra) */
+html body.anim-off-usuario .of-boredom-prop:not(#_o),
+html body.anim-off-usuario .of-boredom-prop :not(#_o),
+html body.anim-off-usuario .of-boredom-prop :not(#_o)::before,
+html body.anim-off-usuario .of-boredom-prop :not(#_o)::after,
 html body.ultra-performance :not(#_o),
 html body.ultra-performance :not(#_o)::before,
 html body.ultra-performance :not(#_o)::after {

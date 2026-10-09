@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="styles.css?v=97">
+    <link rel="stylesheet" href="styles.css?v=97b">
     <link rel="stylesheet" href="v49.css">
     <link rel="stylesheet" href="call-mode.css">
     <script id="v62-inline">
@@ -1690,7 +1690,7 @@ accent-color:#00ff88;
                                         </div>
                                         <div class="flare"></div>
                                         <div class="floating-label">Tu mensaje</div>
-                                        <input placeholder="Escribe cualquier pregunta..." id="ai-input" type="text" maxlength="500" autocomplete="off" aria-label="Pregunta para la IA" />
+                                        <input placeholder="Escribe cualquier pregunta..." id="ai-input" type="text" maxlength="500" autocomplete="off" autocapitalize="sentences" autocorrect="on" spellcheck="true" inputmode="text" enterkeyhint="send" aria-label="Pregunta para la IA" />
                                         <div class="animation-container">
                                             <div class="pulse-animation"></div>
                                             <div class="wave-animation">
@@ -2390,7 +2390,7 @@ accent-color:#00ff88;
             const btn = document.getElementById('btn-toggle-anim');
             
             if (!animacionesActivas) {
-                document.body.classList.add('no-animations');
+                document.body.classList.add('no-animations', 'anim-off-usuario');
                 if (btn) {
                     btn.classList.add('active');
                     btn.innerHTML = "<span>✨</span> Activar Animaciones";
@@ -2400,7 +2400,7 @@ accent-color:#00ff88;
                 if(intervaloPromo) clearInterval(intervaloPromo);
                 sincronizarVideoModo(document.documentElement.dataset.siteTheme || 'normal');
             } else {
-                document.body.classList.remove('no-animations');
+                document.body.classList.remove('no-animations', 'anim-off-usuario');
                 if (btn) {
                     btn.classList.remove('active'); 
                     btn.innerHTML = "<span>🚫</span> Quitar Animaciones";
@@ -4026,15 +4026,16 @@ accent-color:#00ff88;
     </script> 
 
     <script src="performance-lite.js"></script>
+    <script src="v98-teclado.js"></script>
     <script src="base-conocimiento.js"></script>
     <script src="v49.js"></script>
     <script src="face-sound.js" defer></script>
     <script src="ia-openai.js?v=89" defer></script>
     <link rel="stylesheet" href="personalidades-animaciones-1000.css">
     <link rel="stylesheet" href="osito-cara3d.css">
-    <link rel="stylesheet" href="osito-actividades-3d.css">
+    <link rel="stylesheet" href="osito-actividades-3d.css?v=97">
     <link rel="stylesheet" href="v61.css">
-    <link rel="stylesheet" href="v92.css?v=96">
+    <link rel="stylesheet" href="v92.css?v=98">
     <style id="v66-chat-buttons-style">
         .ai-sessions-bar {
             display: flex !important;
@@ -4299,13 +4300,13 @@ accent-color:#00ff88;
     <script src="personalidades-animaciones-1000.js" defer></script>
     <script src="personalidades-1000.js" defer></script>
     <script src="face-extra.js?v=96" defer></script>
-    <script src="osito-aburrimiento.js" defer></script>
+    <script src="osito-aburrimiento.js?v=97" defer></script>
     <script src="osito-cara3d.js" defer></script>
     <script src="osito-vision-entrenamiento.js" defer></script>
     <script src="maintenance-guard.js?v=87"></script>
     <script src="chat-ia-core.js?v=92"></script>
 
-        <section id="maintenance-overlay" class="maintenance-overlay" aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>La Página está en mantenimiento</h2><p>Vuelve más tarde</p><div class="loader"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div></div></section>
+        <section id="maintenance-overlay" class="maintenance-overlay" aria-live="polite"><div class="maintenance-card" role="status"><div class="maintenance-mascot" aria-hidden="true"><span class="osito-face" data-estado="idle" aria-hidden="true"><span class="of-card"><span class="of-blob"></span><span class="of-eyes"><span class="of-look"><i class="of-eye"></i><i class="of-eye"></i></span></span><span class="of-happy"><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg><svg fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"></path></svg></span><span class="of-mouth"></span></span></span></div><h2>La Página y App está en mantenimiento</h2><p>Vuelve más tarde</p><div class="loader"><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div><div class="loader__circle"></div></div></div></section>
 
     <!-- CHAT EN VIVO REHECHO DESDE CERO -->
     <div class="livechat-floating-container">
@@ -4371,7 +4372,7 @@ accent-color:#00ff88;
             </div>
 
             <form class="livechat-input-area" id="livechat-form">
-                <input id="livechat-input" class="input-gamer" autocomplete="off" maxlength="400" placeholder="Escribe un mensaje..." aria-label="Mensaje para el chat">
+                <input id="livechat-input" class="input-gamer" autocomplete="off" autocapitalize="sentences" autocorrect="on" spellcheck="true" inputmode="text" enterkeyhint="send" maxlength="400" placeholder="Escribe un mensaje..." aria-label="Mensaje para el chat">
                 <button class="btn-send-lc" type="submit" aria-label="Enviar mensaje">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>

@@ -50,3 +50,18 @@ html body .osito-face:not([data-expr="sleeping"]) .of-zzz {
 html body.no-animations .osito-face[data-expr="sleeping"] .of-zzz,
 html body.ultra-performance .osito-face[data-expr="sleeping"] .of-zzz,
 html.low-end-device body .osito-face[data-expr="sleeping"] .of-zzz { animation: none !important; opacity: .9 !important; }
+
+/* V98 — Botón del Chat en Vivo un poco más arriba en celular.
+   Antes quedaba pegado abajo, encima de los botones de navegación de Android.
+   El panel del chat sube la misma distancia para no tapar el botón. */
+@media (max-width: 640px) {
+  html body .livechat-floating-container {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
+    left: 12px !important;
+  }
+  html body #livechat-section.livechat-section {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 120px) !important;
+    height: min(64dvh, 470px) !important;
+    max-height: calc(100dvh - 136px) !important;
+  }
+}

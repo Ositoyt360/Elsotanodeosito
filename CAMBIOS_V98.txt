@@ -1,0 +1,9 @@
+V98
+1) Chat en vivo (celular): el boton ahora queda mas arriba (64px sobre el borde inferior, ya no pegado a los botones de Android).
+   El panel del chat sube lo mismo para no tapar el boton. -> v92.css (bloque V98 al final)
+2) Teclado del celular / mayusculas: los campos de escribir (chat en vivo, pregunta a la IA, nombre, etc.) llevan ahora
+   autocapitalize="sentences", autocorrect="on", spellcheck="true", inputmode="text". Tambien se aplica a campos creados despues.
+   -> v98-teclado.js (nuevo), index.html, ia.html. Correo/contrasena/numeros/fechas no se tocan.
+3) Mantenimiento general: ahora dice "La Página y App está en mantenimiento" (mantenimiento.html y el aviso interno de index.html).
+   El mantenimiento de la IA ("La IA está en mantenimiento") NO se cambio.
+sw.js: cache osito-pwa-v98 y v98-teclado.js agregado. Si no ves el cambio: recarga forzada o borra datos del sitio una vez.

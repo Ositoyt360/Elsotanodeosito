@@ -206,7 +206,7 @@
                                         </div>
                                         <div class="flare"></div>
                                         <div class="floating-label">Tu mensaje</div>
-                                        <input placeholder="Escribe cualquier pregunta..." id="ai-input" type="text" maxlength="500" autocomplete="off" aria-label="Pregunta para la IA" />
+                                        <input placeholder="Escribe cualquier pregunta..." id="ai-input" type="text" maxlength="500" autocomplete="off" autocapitalize="sentences" autocorrect="on" spellcheck="true" inputmode="text" enterkeyhint="send" aria-label="Pregunta para la IA" />
                                         <div class="animation-container">
                                             <div class="pulse-animation"></div>
                                             <div class="wave-animation">
@@ -314,6 +314,7 @@
     <!-- Scripts de la IA (mismo controlador de chat que el PC) -->
     <script>window.ositoEnIAPage=true;</script>
     <script src="performance-lite.js"></script>
+<script src="v98-teclado.js"></script>
     <script src="guest-mode.js?v=78"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>

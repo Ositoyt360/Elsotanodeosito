@@ -7,3 +7,9 @@ V98
 3) Mantenimiento general: ahora dice "La Página y App está en mantenimiento" (mantenimiento.html y el aviso interno de index.html).
    El mantenimiento de la IA ("La IA está en mantenimiento") NO se cambio.
 sw.js: cache osito-pwa-v98 y v98-teclado.js agregado. Si no ves el cambio: recarga forzada o borra datos del sitio una vez.
+
+V98b - Mayusculas (todos los teclados)
+- v98-teclado.js reescrito: ademas de los atributos de teclado, la pagina pone SOLA la mayuscula al empezar el mensaje y despues de . ! ? (y ¿ ¡).
+- Boton ⇧ junto al campo (chat en vivo, pregunta a la IA, nombre de la IA): 1 toque = proxima letra en MAYUSCULA, 2 toques = bloqueo, 3 = apagar.
+  No cierra el teclado al tocarlo. Funciona aunque el teclado del celular no mande la mayuscula.
+- sw.js: cache osito-pwa-v98b.

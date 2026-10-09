@@ -13,3 +13,11 @@ V98b - Mayusculas (todos los teclados)
 - Boton ⇧ junto al campo (chat en vivo, pregunta a la IA, nombre de la IA): 1 toque = proxima letra en MAYUSCULA, 2 toques = bloqueo, 3 = apagar.
   No cierra el teclado al tocarlo. Funciona aunque el teclado del celular no mande la mayuscula.
 - sw.js: cache osito-pwa-v98b.
+
+V98c - Fix mayusculas en celular
+- v98-teclado.js: ya NO cambia el texto mientras el teclado del celular (Gboard/Samsung) esta "componiendo" la palabra;
+  eso reiniciaba el teclado y se perdian las mayusculas. Ahora espera a que la palabra termine (compositionend)
+  y usa setRangeText para no mover el cursor.
+- Al ENVIAR (chat en vivo, pregunta a la IA, nombre) la primera letra sale siempre en mayuscula.
+- Campo "nombre para la IA": autocapitalize="words" en el HTML.
+- sw.js: cache osito-pwa-v98c. Si no ves el cambio: recarga forzada o borra datos del sitio una vez.

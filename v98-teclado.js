@@ -1,4 +1,4 @@
-/* V98b — MAYUSCULAS en los campos de escribir, con CUALQUIER teclado del celular.
+/* V98c (fix: ya no toca el texto mientras el teclado del celular esta componiendo la palabra) — V98b — MAYUSCULAS en los campos de escribir, con CUALQUIER teclado del celular.
  * 1) Atributos de teclado (autocapitalize, autocorrect, spellcheck, inputmode) en todos los campos de texto.
  * 2) Si el teclado no manda la mayuscula, la pagina la pone sola:
  *      - primera letra del mensaje y la que sigue a  . ! ?  (y despues de ¿ ¡)
@@ -102,15 +102,14 @@
     return /^[\s¿¡"'(]*$/.test(antes) || /[.!?…]["')]*\s+[¿¡"'(]*$/.test(antes) || /\n\s*[¿¡"'(]*$/.test(antes);
   }
 
-  function alEscribir(e) {
-    var el = e.target;
+  function procesar(el, tipo, posForzada) {
     try {
-      if (e.inputType && e.inputType.indexOf('insert') !== 0) { // borrar, deshacer, etc.
+      if (tipo && tipo.indexOf('insert') !== 0) { // borrar, deshacer, etc.
         var p0 = el.selectionStart;
         if (p0 == null || inicioDePalabra(el.value, p0) === p0) el.__v98visto = -1;
         return;
       }
-      var v = el.value, pos = el.selectionStart;
+      var v = el.value, pos = (posForzada != null) ? posForzada : el.selectionStart;
       if (!v) { el.__v98visto = -1; return; }
       if (pos == null || pos < 1) return;
       var ini = inicioDePalabra(v, pos);
@@ -131,9 +130,48 @@
     } catch (x) {}
   }
 
+  function alEscribir(e) {
+    var el = e.target;
+    // Teclados de celular (Gboard, Samsung, etc.) escriben "componiendo" la palabra:
+    // cambiar el texto en ese momento reinicia el teclado. Se espera a que la palabra termine.
+    if (e.isComposing || (e.inputType && e.inputType.indexOf('Composition') > -1)) return;
+    procesar(el, e.inputType);
+  }
+
+  function alTerminarComposicion(e) {
+    var el = e.target;
+    setTimeout(function () {
+      // el teclado suele confirmar "palabra + espacio" junto: se mira la ultima palabra terminada
+      var v = el.value, p = el.selectionStart;
+      if (p == null) p = v.length;
+      while (p > 0 && !LETRA.test(v.charAt(p - 1))) p--;
+      if (p < 1) return;
+      procesar(el, 'insertText', p);
+    }, 0);
+  }
+
+  // Al enviar: la primera letra del mensaje siempre sale en mayuscula, aunque el teclado no haya ayudado.
+  function alEnviar(e) {
+    try {
+      var form = e.target;
+      if (!form || !form.querySelectorAll) return;
+      var campos = form.querySelectorAll('input, textarea');
+      for (var i = 0; i < campos.length; i++) {
+        var c = campos[i];
+        if (!CHAT_IDS[c.id] || !c.value) continue;
+        var m = c.value.match(/^[\s¿¡"'(]*/)[0].length;
+        var ch = c.value.charAt(m);
+        if (ch && LETRA.test(ch) && ch === ch.toLowerCase()) {
+          c.value = c.value.slice(0, m) + ch.toUpperCase() + c.value.slice(m + 1);
+        }
+      }
+    } catch (x) {}
+  }
+
   function enganchar(el) {
     ponerBoton(el);
     el.addEventListener('input', alEscribir);
+    el.addEventListener('compositionend', alTerminarComposicion);
     el.addEventListener('blur', function () { el.__v98visto = -1; });
   }
 
@@ -165,6 +203,7 @@
       }).observe(document.documentElement, { childList: true, subtree: true });
     } catch (e) {}
     document.addEventListener('focusin', function (e) { arreglar(e.target); }, true);
+    document.addEventListener('submit', alEnviar, true);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });

@@ -1,0 +1,8 @@
+CAMBIOS V99 — FIX DE CARGA DEL TEMA
+====================================
+- Evita que la página muestre primero el tema normal y luego cambie a Halloween u otro modo especial.
+- Guarda en el navegador el último tema global confirmado y lo aplica durante el arranque.
+- En una primera visita, mantiene el contenido oculto brevemente hasta aplicar el tema recibido del servidor/Firebase, para que fondo y decoración aparezcan juntos.
+- Si la configuración remota no responde, una protección muestra la página después de 8 segundos.
+- Actualiza la versión de caché del service worker para que los navegadores instalados detecten este cambio.
+- No modifica el sistema de voz ni las animaciones de la mascota.

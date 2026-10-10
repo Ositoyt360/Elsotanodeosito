@@ -1,0 +1,12 @@
+CORRECCIÓN DE VOZ NATURAL — V100
+
+Cambios aplicados:
+- El modo llamada ahora usa OsitoVozHumana.hablar(), motor natural que ya existía en asistente-voz.js.
+- Se conserva la voz de respaldo del navegador si el motor natural no está disponible o falla.
+- Se ajustaron las instrucciones del servidor para respuestas habladas más conversacionales y emocionalmente coherentes.
+- No se modificaron HTML, CSS, avatar, cubo, mascota, círculo de llamada ni animaciones visuales.
+- La naturalidad final depende también de las voces disponibles en el navegador/dispositivo; Web Speech no puede garantizar calidad equivalente a voz neuronal de alta calidad.
+
+Archivos modificados:
+- call-mode-engine.js
+- server.js

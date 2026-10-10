@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- V100: evita mostrar el tema normal durante el primer fotograma. La preferencia guardada se aplica antes de revelar la página. -->
+    <style id="osito-theme-bootstrap-style">html.osito-theme-bootstrap body{visibility:hidden!important}</style>
+    <script id="osito-theme-bootstrap">(function(){try{var t=localStorage.getItem('osito_site_theme_cache');if(/^(halloween|navidad|san-valentin|cumpleanos)$/.test(t)){document.documentElement.dataset.siteTheme=t;document.documentElement.classList.add('osito-theme-bootstrap');}}catch(e){}})();</script>
     <!-- URL de tu servidor de IA (Render). Ej: https://elsotanodeosito.onrender.com  — déjalo vacío si el sitio y el servidor están en la misma URL -->
     <meta name="osito-ia-url" content="https://elsotanodeosito.onrender.com">
     <meta charset="UTF-8">
@@ -26,6 +29,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    <script src="osito-continuidad.js?v=99"></script>
     <link rel="stylesheet" href="styles.css?v=97b">
     <link rel="stylesheet" href="v49.css">
     <link rel="stylesheet" href="call-mode.css">
@@ -874,6 +878,8 @@ accent-color:#00ff88;
 </style>
 </head>
 <body>
+    <script>/* V99: usa el ultimo modo conocido para que la decoracion salga desde el primer cuadro (sin pasar por "normal") */
+    (function(){try{var t=localStorage.getItem("osito_site_theme_cache");if(/^(halloween|navidad|san-valentin|cumpleanos)$/.test(t)){document.documentElement.dataset.siteTheme=t;document.body.classList.add("modo-"+t);}}catch(e){}})();</script>
     <canvas id="space-canvas"></canvas>
     <div class="ambient-glow" id="glow-1"></div>
     <div class="ambient-glow" id="glow-2"></div>
@@ -2034,6 +2040,7 @@ accent-color:#00ff88;
 
         function aplicarModoSitio(theme) {
             const t = SITE_THEME_LABELS[theme] ? theme : 'normal';
+            try { localStorage.setItem('osito_site_theme_cache', t); } catch (e) {} // V99: recuerda el modo para el proximo arranque
             // V46: Firestore dispara este método cada vez que cambia CUALQUIER dato público
             // (conteos, título...). Si el modo es el mismo no se reconstruye nada; antes
             // el video se destruía y volvía a empezar en el cuadro 0 cada vez.
@@ -2075,6 +2082,24 @@ accent-color:#00ff88;
             aplicarActualizacionesSitio(data.updates);
             aplicarTituloSitio(data.title);
         }
+
+        // V99: aplica YA el ultimo modo conocido (video, emojis, musica). Firestore lo confirma despues;
+        // si no cambio, no se reconstruye nada (ver guarda en aplicarModoSitio).
+        // (se hace en DOMContentLoaded: ya cargaron v49.js/performance-lite.js y eligen el video ligero en celulares lentos,
+        //  pero sigue siendo ANTES de que Firestore responda; el fondo/colores ya salen desde el primer cuadro por la clase del <body>)
+        const aplicarModoGuardado = () => {
+            try {
+                const modoGuardado = localStorage.getItem('osito_site_theme_cache');
+                if (modoGuardado && modoGuardado !== 'normal' && SITE_THEME_LABELS[modoGuardado]) aplicarModoSitio(modoGuardado);
+            } catch (e) { console.warn('[SiteSettings] No se pudo aplicar el modo guardado.', e); }
+        };
+        const aplicarModoGuardadoYRevelar = () => {
+            aplicarModoGuardado();
+            // Revelar solo después de aplicar el tema guardado y crear su decoración inicial.
+            document.documentElement.classList.remove('osito-theme-bootstrap');
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicarModoGuardadoYRevelar, { once: true });
+        else aplicarModoGuardadoYRevelar();
 
         async function actualizarModoSitioDesdeFirestore() {
             try {
@@ -3483,6 +3508,9 @@ accent-color:#00ff88;
                     audio.loop = true;
                 }
             }
+
+            // V99: si venimos de la IA (celular), seguimos en el mismo segundo de la cancion
+            try { window.OsitoContinuidad && window.OsitoContinuidad.aplicarEnIndex(audio); } catch (e) {}
 
             // Intentar reproducir
             try {

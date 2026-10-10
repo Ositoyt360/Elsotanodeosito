@@ -1,0 +1,9 @@
+VERSION V100 — AJUSTES DE CONVERSACION Y CARGA DE TEMA
+
+1. index.html: se oculta la página durante el brevísimo arranque y se revela después de aplicar el último tema guardado y generar su decoración. Esto evita el destello inicial del tema Normal antes de Halloween (o el tema elegido).
+2. server.js: instrucciones conversacionales más naturales, con expresiones contextuales no repetitivas y respuestas mejor adaptadas a la voz.
+3. sw.js: se incrementó el nombre de caché a v100 para que el navegador instale los cambios nuevos.
+
+LIMITACION DE VOZ: la llamada actual reproduce voz mediante SpeechSynthesis del navegador. Las instrucciones pueden mejorar el texto que se dice, pero no convierten ese sintetizador en una voz neuronal realista. Para un salto notable de calidad hace falta integrar un servicio TTS neuronal/tiempo real compatible con la cuenta y sus credenciales.
+
+El diseño del cubo, el HTML/CSS del avatar circular de llamada y las animaciones no se han rediseñado en esta versión.

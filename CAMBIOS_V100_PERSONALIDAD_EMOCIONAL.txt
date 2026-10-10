@@ -1,0 +1,18 @@
+# CAMBIOS V100 — PERSONALIDAD Y EMOCIONES CONVERSACIONALES
+
+Se actualizó únicamente el bloque de instrucciones de la IA en `server.js`, que es utilizado por el chat y por el modo llamada a través de `/api/ia`.
+
+Qué cambia:
+- Personalidad conversacional más coherente a lo largo del historial.
+- Tono adaptado al contexto: alegría, curiosidad, calma, empatía, sorpresa y humor cuando corresponda.
+- Iniciativa conversacional moderada: puede compartir opiniones razonadas, mostrar curiosidad y proponer ideas relacionadas.
+- Expresiones naturales como «ah», «ajá» y «mmm» solo cuando tienen sentido, evitando repeticiones mecánicas.
+- Respuestas pensadas para escucharse en voz alta, con longitud y ritmo conversacional.
+- Límites claros: no afirmar conciencia, sentimientos biológicos, deseos secretos o autonomía real.
+- Honestidad y límites de seguridad, sin fomentar dependencia emocional.
+- Se mantiene el proveedor/modelo configurado, las variables de entorno, las rutas, las claves del servidor y el diseño de la página.
+
+IMPORTANTE:
+Esto mejora el comportamiento del modelo mediante instrucciones. No convierte la IA en un ser consciente ni crea por sí solo susurros, prosodia acústica, streaming o interrupciones reales; esas funciones dependen del motor de voz y de su configuración.
+
+Validación realizada: cambio localizado dentro de `construirInstruccionIA()`; se conserva el resto del servidor sin modificaciones intencionales.

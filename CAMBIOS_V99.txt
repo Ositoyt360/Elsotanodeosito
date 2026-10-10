@@ -1,0 +1,13 @@
+V99
+1) Voz de la IA en celular (asistente-voz.js, OsitoVozHumana.hablar):
+   - Si el navegador bloquea la voz por no haber un toque previo ("not-allowed"), el mensaje queda pendiente y se dice en el primer toque.
+   - El primer toque "desbloquea" la voz del navegador.
+   - Android da el idioma como es_MX: se normaliza a es-MX. Si la voz elegida falla o no arranca en 3 s, se reintenta con la voz por defecto del telefono.
+   - Pausa corta tras cancel() (Android la perdia), espera a que carguen las voces y se guardan referencias a los objetos de voz.
+2) Musica de fondo al entrar a la IA en celular (nuevo osito-continuidad.js, cargado en index.html e ia.html):
+   - index guarda cancion y segundo al abrir la IA; ia.html sigue la misma cancion desde ese punto a 25 % de volumen (nunca mas fuerte que el volumen del usuario).
+   - Si la musica estaba pausada no se enciende. Al volver al Sotano retoma donde quedo.
+   - Constante VOLUMEN_EN_IA en osito-continuidad.js (0.25) para cambiar el porcentaje.
+3) Modo del sitio (Halloween, Navidad...) desde el primer cuadro (index.html):
+   - Se recuerda el ultimo modo (localStorage osito_site_theme_cache). Se aplica clase del body al abrir y video/emojis/musica en DOMContentLoaded, sin esperar a Firestore. Firestore solo corrige si cambio.
+sw.js: cache osito-pwa-v99 + osito-continuidad.js. Si no ves el cambio: recarga forzada o borra datos del sitio una vez.

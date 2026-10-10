@@ -8534,3 +8534,79 @@ html.perf-lite .ia-section .ai-suggestions {
 .osito-face[data-expr="sleeping"] .of-zzz.z2{animation-delay:1.2s!important;}
 .osito-face[data-expr="sleeping"] .of-zzz.z3{animation-delay:2.4s!important;}
 .ia-maint .of-zzz,.maintenance-mascot .of-zzz{opacity:0!important;visibility:hidden!important;animation:none!important;}
+
+/* V100: modo Normal con movimiento visible y suave, incluso en pantallas pequeñas */
+html[data-site-theme="normal"] body::before,
+body.modo-normal::before {
+  content:""; position:fixed; inset:-25%; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 20% 30%,rgba(0,255,145,.22),transparent 35%),
+    radial-gradient(ellipse at 75% 35%,rgba(0,190,255,.20),transparent 38%),
+    radial-gradient(ellipse at 55% 80%,rgba(155,55,255,.19),transparent 40%),
+    linear-gradient(135deg,#04140d,#06101c 48%,#100720);
+  background-size:160% 160%; animation:ositoNormalFondoMovimiento 12s ease-in-out infinite alternate !important;
+}
+@keyframes ositoNormalFondoMovimiento {
+  0% { transform:translate3d(-3%, -1%, 0) scale(1); background-position:0% 30%; }
+  50% { transform:translate3d(2%, 2%, 0) scale(1.04); background-position:70% 60%; }
+  100% { transform:translate3d(3%, -2%, 0) scale(1.02); background-position:100% 80%; }
+}
+
+
+/* V101 — Fondo 3D visible del modo Normal: órbitas, esferas luminosas y rejilla en perspectiva. */
+html[data-site-theme="normal"] body::before, body.modo-normal::before {
+  content:""; position:fixed; inset:-12%; z-index:-1; pointer-events:none; overflow:hidden;
+  background:
+    radial-gradient(ellipse at 18% 28%,rgba(0,255,135,.30),transparent 23%),
+    radial-gradient(ellipse at 78% 25%,rgba(0,190,255,.29),transparent 25%),
+    radial-gradient(ellipse at 58% 76%,rgba(160,65,255,.27),transparent 28%),
+    radial-gradient(circle at 30% 68%,rgba(50,255,190,.19),transparent 12%),
+    linear-gradient(135deg,#03130c 0%,#061323 48%,#10071e 100%);
+  background-size:150% 150%;
+  animation:osito3DFondoColor 13s ease-in-out infinite alternate !important;
+}
+html[data-site-theme="normal"] body::after, body.modo-normal::after {
+  content:""; position:fixed; inset:-18% -10% -8%; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 20% 35%,transparent 0 9%,rgba(53,255,164,.50) 9.2%,transparent 9.7% 15%,rgba(0,220,255,.28) 15.2%,transparent 15.7%),
+    radial-gradient(ellipse at 78% 56%,transparent 0 8%,rgba(0,210,255,.48) 8.2%,transparent 8.8% 14%,rgba(163,82,255,.32) 14.2%,transparent 14.8%),
+    repeating-linear-gradient(0deg,rgba(60,255,190,.08) 0 1px,transparent 1px 54px),
+    repeating-linear-gradient(90deg,rgba(50,200,255,.07) 0 1px,transparent 1px 54px);
+  transform:perspective(850px) rotateX(58deg) scale(1.5);
+  transform-origin:center 70%; opacity:.78;
+  mask-image:linear-gradient(to bottom,transparent 0%,black 25%,black 85%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 25%,black 85%,transparent 100%);
+  animation:osito3DGrid 18s linear infinite !important;
+}
+@keyframes osito3DFondoColor {
+  0% {background-position:0% 25%; filter:hue-rotate(0deg); transform:translate3d(-1.5%,0,0) scale(1);}
+  50% {background-position:65% 70%; filter:hue-rotate(12deg); transform:translate3d(1%,1%,0) scale(1.04);}
+  100% {background-position:100% 20%; filter:hue-rotate(-10deg); transform:translate3d(2%,-1%,0) scale(1.07);}
+}
+@keyframes osito3DGrid {
+  0% {background-position:0 0,0 0,0 0,0 0; transform:perspective(850px) rotateX(58deg) translateY(-2%) scale(1.5);}
+  100% {background-position:0 0,0 0,0 108px,108px 0; transform:perspective(850px) rotateX(58deg) translateY(2%) scale(1.5);}
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-site-theme="normal"] body::before, html[data-site-theme="normal"] body::after { animation-duration:40s !important; }
+}
+
+/* V102 FIX: fondo visible aunque el navegador no pinte pseudo-elementos con z-index negativo. */
+html[data-site-theme="normal"] body {
+  background-color:#030b12 !important;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(35,255,175,.12) 48px 49px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(20,190,255,.10) 48px 49px),
+    radial-gradient(ellipse at 15% 25%,rgba(0,255,130,.35),transparent 35%),
+    radial-gradient(ellipse at 80% 35%,rgba(0,180,255,.32),transparent 38%),
+    radial-gradient(ellipse at 55% 85%,rgba(160,40,255,.30),transparent 40%),
+    linear-gradient(135deg,#03140c,#061323 52%,#100720) !important;
+  background-size: 100% 100%,100% 100%,180% 180%,180% 180%,180% 180%,100% 100% !important;
+  background-attachment:fixed !important;
+  animation:ositoV102FondoVisible 16s ease-in-out infinite alternate !important;
+}
+@keyframes ositoV102FondoVisible {
+  0% {background-position:0 0,0 0,0% 20%,100% 30%,40% 100%,0 0;}
+  50% {background-position:0 0,0 0,65% 80%,20% 70%,80% 10%,0 0;}
+  100% {background-position:0 0,0 0,100% 30%,0% 20%,20% 90%,0 0;}
+}

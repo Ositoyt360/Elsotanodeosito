@@ -1,0 +1,7 @@
+V99.5
+1) Política y privacidad: ahora es UN solo botón (en el registro, en el pie y en el menú del celular). Al abrirlo salen las dos pestañas (Términos y Privacidad).
+   En el registro hay una sola casilla: se activa cuando lees los dos documentos (si falta uno, se abre solo).
+2) En PC ya no aparece en el menú: solo abajo, en el pie de la página. En celular sigue también en el menú.
+3) Fondo del modo normal: vuelve la cuadrícula gamer, animada (rejilla neón que se desplaza, líneas maestras cian, pulsos de energía que recorren las líneas,
+   barrido de escaneo, auroras, haces de luz, partículas y anillos). Se pausa con "Quitar animaciones", modo ultra o reducir movimiento.
+Modificados: index.html, legal-gate.js, legal-gate.css, gamer-fx.js, gamer-fx.css, sw.js (cache v99-5)

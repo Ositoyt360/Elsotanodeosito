@@ -1,0 +1,5 @@
+V99.6
+- Modo normal: se quitó la cuadrícula. Nuevo fondo animado 3D de partículas de neón con perspectiva (vuelas hacia adelante entre luces, giro suave, estelas cortas).
+- Optimizado para gama baja: sprites pre-dibujados, pocas partículas (menos de la mitad en equipos de gama baja), resolución 1x, límite de 30 FPS (50 en equipos normales), sin estelas en gama baja.
+- Se pausa con "Quitar animaciones", modo ultra, reducir movimiento o pestaña oculta.
+Modificados: gamer-fx.js, gamer-fx.css, index.html (versión de archivos), sw.js (cache v99-6)

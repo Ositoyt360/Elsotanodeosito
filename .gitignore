@@ -8,3 +8,8 @@ admin-settings.json
 site-settings.json
 *.log
 .DS_Store
+
+# V99.8: nunca subir paquetes comprimidos (GitHub rechaza archivos de mas de 100 MB)
+*.zip
+*.rar
+*.7z

@@ -1,10 +1,16 @@
 /**
- * V51.2 — La cara de LAIA solo duerme dentro del horario nocturno configurado.
- *  - De 12:30 am a 6:00 am (hora local de cada país) la cara duerme normalmente.
- *  - Fuera de ese horario NO hay siesta automática ni apagado por inactividad.
- *  - La entrada al sueño nocturno se comprueba al llegar a las 00:30.
- *  - Los ronquidos los pone face-sound.js.
- *  - El horario es estricto: ninguna bandera de localStorage puede adelantar el sueño.
+ * V99 — SUEÑO NATURAL de la mascota (ya no es un horario rígido).
+ *
+ *  - A partir de las 2:30 a. m. (hora LOCAL de cada persona) puede empezar a tener sueño. El momento exacto
+ *    cambia cada día (unos minutos de diferencia) y el sueño sube poco a poco hasta la madrugada y baja por la mañana.
+ *  - Con sueño y SIN interacción durante ~30 s puede quedarse dormida (no siempre al instante: depende de cuánto sueño tenga).
+ *  - Dormida: respira, ronca, sueña (face-sound.js) y puede DESPERTAR POR SU CUENTA (se estira, bosteza, mira alrededor).
+ *  - Si la persona la TOCA (clic / toque sobre la mascota) o usa la IA (escribe, llama), despierta y reacciona
+ *    (susto → bostezo → sonrisa) y avisa a la mente (osito-mente.js) para que diga algo acorde.
+ *  - Unos ~30 s después de la última interacción, si todavía tiene sueño, puede volver a dormirse.
+ *  - Pasar el cursor por encima o mover la página YA NO la despierta: solo tocarla o hablarle.
+ *  - Fuera de la ventana de sueño NUNCA se duerme (cinturón de seguridad intacto).
+ *  - Los ronquidos y sueños los pone face-sound.js.
  */
 (function () {
     'use strict';
@@ -12,29 +18,49 @@
     if (!F || !F.caras || !F.caras.length) return;
     var caras = F.caras;
     var durmiendo = false;
-    var enSiesta = false;
-    var timerSiesta = null;
+    var despertoSola = false;      // se despertó por iniciativa propia (no por la persona)
     var ULTIMO_GUARDADO = 0;
-    var ultimaConCara = Date.now();
-    var ultimaActividad = Date.now();
-    // IMPORTANTE: el sueño NO puede ser forzado por localStorage ni por otra rutina.
-    // Versiones anteriores de Claude dejaron una bandera `osito_forzar_noche=1`
-    // que podía quedarse guardada y hacer que la cara creyera que siempre era de noche.
+    var ahora0 = Date.now();
+    var ultimaInteraccion = ahora0; // última vez que la persona interactuó CON ELLA (tocarla, escribirle, llamarla)
+    var durmioDesde = 0;
+    var proximoDespertar = 0;       // si duerme: cuándo se despertará sola
+    var seguiraDespiertaHasta = 0;  // tras despertar sola o por un toque: ratito mínimo despierta
+    // IMPORTANTE: el sueño NO se puede forzar desde localStorage.
     try { localStorage.removeItem('osito_forzar_noche'); } catch (e) {}
 
-    var INACT_INICIAL = 11000;
-    var INICIO = 0.5, FIN = 6; // V92: duerme de 12:30 am a 6:00 am, hora LOCAL del país/dispositivo de cada cuenta
+    var INACTIVIDAD_PARA_DORMIR = 30000; // ~30 s sin interacción
+    var INICIO_H = 2.5;                  // 2:30 a. m. = primera hora a la que puede tener sueño
+    var FIN_H = 7.25;                    // hacia las 7 de la mañana se le va el sueño
 
-    function esNoche() {
-        // V92: se usa la hora local de quien abre la página (cada país tiene su 12:30 am y su 6:00 am).
-        try {
-            var d = new Date();
-            var total = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
-            return total >= INICIO && total < FIN;
-        } catch (e) { return false; }
+    /* ---------- Sueño variable (sin horario rígido) ---------- */
+    function semilla(fecha) { // número estable 0..1 por día (para que el sueño de hoy no cambie cada minuto)
+        var s = fecha.getFullYear() * 400 + (fecha.getMonth() + 1) * 31 + fecha.getDate();
+        var x = Math.sin(s * 12.9898) * 43758.5453;
+        return x - Math.floor(x);
     }
-    if (esNoche()) { ultimaConCara = 0; ultimaActividad = Date.now() - INACT_INICIAL; } // si abren la página entre 00:30 y 06:00, se duerme a los pocos segundos
+    function ventanaDeHoy(d) {
+        // Si son las 00:00–02:29 pertenece a la "noche" que empezó el día anterior: la ventana es la de hoy igualmente.
+        var r1 = semilla(d), r2 = semilla(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 97));
+        var ini = INICIO_H + r1 * 0.75;       // entre 2:30 y 3:15
+        var fin = FIN_H - 0.5 + r2 * 1.0;     // entre ~6:45 y ~7:45
+        return { ini: ini, fin: fin, pico: ini + (fin - ini) * 0.42 };
+    }
+    function horaDecimal(d) { return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600; }
+    function nivelSueno(fecha) {
+        try {
+            var d = fecha || new Date();
+            var h = horaDecimal(d), v = ventanaDeHoy(d);
+            if (h < v.ini || h >= v.fin) return 0;
+            if (h <= v.pico) return 0.38 + 0.62 * ((h - v.ini) / Math.max(0.01, v.pico - v.ini));
+            return 1 - 0.6 * ((h - v.pico) / Math.max(0.01, v.fin - v.pico));
+        } catch (e) { return 0; }
+    }
+    function esNoche() { return nivelSueno() > 0; }
+
     function visible(c) { return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }
+    function mente() { return window.OsitoMente || null; }
+    function aviso(evento, datos) { try { var M = mente(); if (M && M.alEventoSueno) M.alEventoSueno(evento, datos || {}); } catch (e) {} }
+    function azar(a, b) { return a + Math.random() * (b - a); }
 
     // Zzz y burbujita de ronquido
     caras.forEach(function (c) {
@@ -42,48 +68,56 @@
         c.insertAdjacentHTML('beforeend', '<i class="of-zzz z1">z</i><i class="of-zzz z2">Z</i><i class="of-zzz z3">Z</i><i class="of-bub"></i>');
     });
 
-    function limpiarTimerSiesta() {
-        if (timerSiesta) { clearTimeout(timerSiesta); timerSiesta = null; }
-    }
-    function dormir(esSiesta) {
-        // BLOQUEO ABSOLUTO: si no son las 00:30–06:00, jamás entrar en sleeping.
+    function dormir(forzado) {
+        // BLOQUEO ABSOLUTO: fuera de la ventana de sueño jamás se entra en sleeping.
         if (!esNoche()) {
-            durmiendo = false; enSiesta = false; limpiarTimerSiesta();
+            durmiendo = false; despertoSola = false;
             caras.forEach(function (c) {
                 if (c.getAttribute('data-expr') === 'sleeping' || c.getAttribute('data-expr') === 'sleepy') F.poner(c, 'smile', 900);
             });
             return false;
         }
-        limpiarTimerSiesta();
         durmiendo = true;
-        enSiesta = !!esSiesta;
+        despertoSola = false;
+        durmioDesde = Date.now();
+        // entre ~5 y ~22 min de sueño antes de que pueda despertarse sola (más sueño = más tiempo dormida)
+        proximoDespertar = durmioDesde + azar(5, 22) * 60000 * (0.6 + 0.6 * nivelSueno());
         caras.forEach(function (c) { F.poner(c, 'sleeping', 0); });
+        aviso('dormida', { forzado: !!forzado });
+        return true;
     }
-    // sinBostezo = true cuando otra reacción toma el control enseguida.
-    function tocar(sinBostezo) {
-        ultimaConCara = Date.now();
-        ultimaActividad = Date.now();
-        if (!durmiendo) { enSiesta = false; limpiarTimerSiesta(); return; }
-        var eraSiesta = enSiesta;
+
+    /* Despertar. porPersona = la tocaron / le hablaron. sinBostezo = otra reacción toma el control enseguida. */
+    function tocar(sinBostezo, porPersona) {
+        var ahora = Date.now();
+        if (porPersona !== false) ultimaInteraccion = ahora;
+        if (!durmiendo) return false;
         durmiendo = false;
-        enSiesta = false;
-        limpiarTimerSiesta();
+        despertoSola = false;
+        seguiraDespiertaHasta = ahora + 8000;
         caras.forEach(function (c) { if (c.getAttribute('data-expr') === 'sleeping') F.poner(c, null, 0); });
-        if (!sinBostezo) F.paraTodas('yawn', 2300);
-        return eraSiesta;
+        if (!sinBostezo) {
+            // susto suave → bostezo → sonrisa (la mente puede añadir palabras y gestos)
+            F.paraTodas('wow', 650);
+            caras.forEach(function (c) { if (visible(c)) { c.classList.remove('of-boing'); void c.offsetWidth; c.classList.add('of-boing'); setTimeout(function () { c.classList.remove('of-boing'); }, 600); } });
+            setTimeout(function () { F.paraTodas('yawn', 2300); }, 700);
+        }
+        aviso('despierta-por-persona', { toque: !sinBostezo });
+        return true;
     }
 
-    function registrarActividad(ev) {
-        // Ignora eventos falsos de scripts y el scroll automático de carruseles/chat: solo cuenta la persona.
-        if (ev && ev.isTrusted === false) return;
-        if (ev && ev.type === 'scroll' && ev.target !== document && ev.target !== document.documentElement && ev.target !== document.body) return;
-        ultimaActividad = Date.now();
-        ultimaConCara = ultimaActividad;
-        if (durmiendo) tocar(true); // V86: si la persona está usando la página, la mascota NO sigue dormida
+    function despertarSola() {
+        if (!durmiendo) return;
+        var ahora = Date.now();
+        durmiendo = false;
+        despertoSola = true;
+        seguiraDespiertaHasta = ahora + azar(40, 150) * 1000;
+        caras.forEach(function (c) { if (c.getAttribute('data-expr') === 'sleeping') F.poner(c, null, 0); });
+        F.paraTodas('yawn', 2300);
+        aviso('despierta-sola', {});
     }
 
-    // CINTURÓN PRINCIPAL: cualquier llamada externa a OsitoFace.poner('sleeping'/'sleepy')
-    // queda bloqueada durante el día. Esto incluye personalidades, Claude y código antiguo.
+    // CINTURÓN PRINCIPAL: cualquier llamada externa a OsitoFace.poner('sleeping'/'sleepy') queda bloqueada fuera de la ventana de sueño.
     var ponerOriginal = F.poner;
     if (typeof ponerOriginal === 'function' && !F.__ositoSleepGuard) {
         F.poner = function (cara, expr, ms) {
@@ -91,8 +125,8 @@
                 expr = 'smile';
                 ms = ms || 900;
             }
-            // V96: dormida de noche, ninguna animación automática (personalidades, entrenamiento...) la despierta.
-            if (esNoche() && durmiendo && expr && expr !== 'sleeping' && expr !== 'sleepy') return;
+            // Dormida, ninguna animación automática (personalidades, entrenamiento...) la despierta: solo la persona o ella misma.
+            if (durmiendo && expr && expr !== 'sleeping' && expr !== 'sleepy') return;
             return ponerOriginal.call(F, cara, expr, ms);
         };
         F.__ositoSleepGuard = true;
@@ -101,80 +135,103 @@
     function ocupada() {
         return caras.some(function (c) { var e = c.dataset.estado; return e && e !== 'idle'; });
     }
-    var INACTIVIDAD_PARA_DORMIR = 15000; // V96: de noche se duerme tras 15 s sin tocar nada (antes 60 s y otras animaciones lo impedían)
-    function enUsoIA() { // panel de IA, llamada o chat en vivo abiertos = la persona está presente
+    function enUsoIA() { // panel de IA, llamada o chat en vivo abiertos = la persona está interactuando con ella
         try {
             if (window.ositoEnLlamadaIA) return true;
+            var a = document.activeElement;
+            if (a && (a.id === 'ai-input' || a.id === 'livechat-input')) return true;
             var p = document.getElementById('ai-section');
-            // V96: en la página de la IA (ia.html) el panel SIEMPRE está 'active': eso impedía que se durmiera nunca.
+            // En ia.html el panel SIEMPRE está 'active': no cuenta como presencia por sí solo.
             if (p && p.classList.contains('active') && !document.body.classList.contains('ia-page')) return true;
             var c = document.getElementById('livechat-section');
             if (c && (c.classList.contains('open') || c.classList.contains('active') || c.classList.contains('show'))) return true;
-            var a = document.activeElement;
-            if (a && (a.id === 'ai-input' || a.id === 'livechat-input')) return true;
         } catch (e) {}
         return false;
-    }
-    function exprAjena() { // alguna cara visible con otra emoción (que no sea dormir)
-        return caras.some(function (c) { var e = c.getAttribute('data-expr'); return visible(c) && e && e !== 'sleeping' && e !== 'sleepy'; });
     }
 
     setInterval(function () {
         if (document.hidden) return;
         var ahora = Date.now();
-        var noche = esNoche();
-        if (noche) {
-            if (enSiesta) { limpiarTimerSiesta(); enSiesta = false; }
-            if (ocupada()) { if (durmiendo) tocar(true); ultimaConCara = ahora; return; }
-            // V86: la persona está activa (tocó, escribió, movió el mouse o usa el chat/IA) -> despierta y NO se vuelve a dormir.
-            if (durmiendo && (ahora - ultimaActividad) < 4000) { tocar(true); return; }
-            if (durmiendo) {
-                // V96: de noche las animaciones automáticas ya no despiertan a la mascota; solo la persona.
-                caras.forEach(function (c) { if (c.getAttribute('data-expr') !== 'sleeping') F.poner(c, 'sleeping', 0); });
-                return;
-            }
-            // Sueño nocturno SOLO tras 60 s sin actividad real y con el panel de IA / chat cerrados.
-            if (enUsoIA()) { ultimaActividad = ahora; return; }
-            if (!durmiendo && (ahora - ultimaActividad) > INACTIVIDAD_PARA_DORMIR) dormir(false);
+        var nivel = nivelSueno();
+
+        if (nivel <= 0) {
+            // Terminó la madrugada: si dormía, despierta por la mañana (estirándose).
+            if (durmiendo) { despertarSola(); }
             return;
         }
 
-        // A las 06:00 termina el sueño nocturno y la cara vuelve a estar activa.
-        if (durmiendo && !enSiesta) {
-            tocar(true);
+        // ---- Dentro de la ventana de sueño ----
+        if (enUsoIA()) {
+            // La persona está usando la IA (panel / llamada / escribiendo): despierta y no se duerme.
+            ultimaInteraccion = ahora;
+            if (durmiendo) tocar(true, true);
+            return;
         }
-        // De día: NUNCA se duerme automáticamente por inactividad.
-        // El único sueño automático es el nocturno de 00:30 a 06:00.
+        if (ocupada()) { // pensando / hablando / escuchando
+            ultimaInteraccion = ahora;
+            if (durmiendo) tocar(true, true);
+            return;
+        }
+
         if (durmiendo) {
-            tocar(true);
+            // Despertar por iniciativa propia (ratos de sueño ligero).
+            if (ahora >= proximoDespertar) despertarSola();
+            else caras.forEach(function (c) { if (visible(c) && c.getAttribute('data-expr') !== 'sleeping') ponerOriginal.call(F, c, 'sleeping', 0); });
+            return;
         }
+
+        // Despierta: ¿le da sueño? (~30 s sin interacción, sin objetos en uso intensivo, y según el nivel de sueño)
+        if (ahora < seguiraDespiertaHasta) return;
+        if (ahora - ultimaInteraccion < INACTIVIDAD_PARA_DORMIR) return;
+        var M = mente();
+        if (M && M.enEscena && M.enEscena()) return;           // está en medio de algo (hablando, reaccionando)
+        var p = 0.10 + 0.38 * nivel;                              // probabilidad por revisión (1.5 s)
+        if (despertoSola) p *= 0.6;
+        if (Math.random() < p) dormir(false);
     }, 1500);
 
-    // Todo lo que la persona hace con la cara la despierta
+    /* Lo que SÍ la despierta: tocarla (clic/toque), doble clic, tocar la burbuja, escribirle. */
+    function alToque(ev) {
+        if (ev && ev.isTrusted === false) return;
+        ultimaInteraccion = Date.now();
+        if (durmiendo) tocar(false, true);
+    }
     caras.forEach(function (c) {
-        c.addEventListener('pointerenter', function (e) { if (e.pointerType !== 'touch') tocar(false); });
-        c.addEventListener('click', function () { tocar(false); });
+        c.addEventListener('pointerdown', alToque, { passive: true });
+        c.addEventListener('click', alToque);
+        // Pasar el cursor por encima ya NO la despierta: solo se mueve un poquito en sueños.
+        c.addEventListener('pointerenter', function (e) {
+            if (e.pointerType === 'touch') return;
+            if (durmiendo) aviso('roce', {});
+        });
     });
     var burbuja = document.querySelector('.ia-toggle-bubble');
-    if (burbuja) burbuja.addEventListener('click', function () { tocar(true); });
+    if (burbuja) {
+        burbuja.addEventListener('pointerdown', alToque, { passive: true });
+        burbuja.addEventListener('click', function () { ultimaInteraccion = Date.now(); if (durmiendo) tocar(true, true); });
+    }
     var campo = document.getElementById('ai-input');
-    if (campo) { campo.addEventListener('input', function () { tocar(true); }, { passive: true }); campo.addEventListener('focus', function () { tocar(true); }); }
-    var panel = document.getElementById('ai-section');
-    if (panel) panel.addEventListener('pointerdown', registrarActividad, { passive: true });
-
-    // Actividad real de la página: cualquier toque/clic/tecla/scroll despierta la siesta.
-    ['pointerdown','keydown','touchstart','wheel','scroll','click'].forEach(function (evento) {
-        document.addEventListener(evento, registrarActividad, { passive: true, capture: true });
+    if (campo) {
+        campo.addEventListener('input', function () { ultimaInteraccion = Date.now(); if (durmiendo) tocar(true, true); }, { passive: true });
+        campo.addEventListener('focus', function () { ultimaInteraccion = Date.now(); if (durmiendo) tocar(true, true); });
+    }
+    // Mensajes del chat de la IA (de la persona o de la mascota) cuentan como interacción.
+    document.addEventListener('osito:ia-message', function () {
+        ultimaInteraccion = Date.now();
+        if (durmiendo) tocar(true, true);
     });
-    document.addEventListener('pointermove', function () {
-        // No actualizamos en cada píxel; basta una vez por ~1 s.
-        var ahora = Date.now();
-        if (ahora - ultimaActividad > 900) registrarActividad();
-    }, { passive: true, capture: true });
+    ['pointerdown', 'keydown', 'touchstart'].forEach(function (evento) {
+        document.addEventListener(evento, function (ev) {
+            // Tocar OTRA cosa de la página no la despierta, pero si es dentro del panel de la IA sí cuenta.
+            var t = ev && ev.target;
+            if (t && t.closest && t.closest('#ai-section, .ia-toggle-bubble, .osito-face')) {
+                ultimaInteraccion = Date.now();
+                if (durmiendo && evento !== 'keydown') tocar(true, true);
+            }
+        }, { passive: true, capture: true });
+    });
 
-    // CINTURÓN DE SEGURIDAD: fuera de 00:30–06:00 ninguna otra rutina puede dejar
-    // la cara en 'sleeping'/'sleepy'. Esto también protege contra código antiguo en caché
-    // o una personalidad que intente lanzar una expresión de sueño durante el día.
+    // CINTURÓN DE SEGURIDAD: fuera de la ventana de sueño ninguna otra rutina puede dejar la cara en 'sleeping'/'sleepy'.
     function corregirSuenoFueraDeHorario() {
         if (document.hidden || esNoche()) return;
         var ahora = Date.now();
@@ -182,15 +239,13 @@
         ULTIMO_GUARDADO = ahora;
         caras.forEach(function (c) {
             var e = c.getAttribute('data-expr');
-            if (e === 'sleeping' || e === 'sleepy') {
-                F.poner(c, 'smile', 900);
-            }
+            if (e === 'sleeping' || e === 'sleepy') F.poner(c, 'smile', 900);
         });
-        if (durmiendo) { durmiendo = false; enSiesta = false; limpiarTimerSiesta(); }
+        if (durmiendo) { durmiendo = false; despertoSola = false; }
     }
     setInterval(corregirSuenoFueraDeHorario, 2200);
 
-    // Reacción extra de la mascota al hacer doble clic o abrir llamada
+    // Reacción extra de la mascota al hacer doble clic
     var ANIM_MASCOTA_EXTRA = ['of-spin-joy', 'of-wiggle', 'of-flip-3d', 'of-party-bounce'];
     var SONIDOS_MASCOTA_EXTRA = ['magic', 'party', 'jump', 'robot'];
     caras.forEach(function (c) {
@@ -229,10 +284,16 @@
 
     window.OsitoNight = {
         duerme: function () { return durmiendo; },
-        esNoche: esNoche,
-        tocar: tocar,
-        dormir: function () { ultimaConCara = 0; ultimaActividad = Date.now(); dormir(false); },
-        // Se conserva el nombre por compatibilidad, pero ya NO permite alterar el horario real.
+        esNoche: esNoche,                       // ¿estamos en la ventana en la que PUEDE tener sueño?
+        nivelSueno: nivelSueno,                 // 0 (nada) … 1 (muchísimo sueño)
+        ventana: function () { var v = ventanaDeHoy(new Date()); return { desde: v.ini, hasta: v.fin, pico: v.pico }; },
+        tocar: function (sinBostezo) { return tocar(!!sinBostezo, true); },
+        despertar: function (motivo) { return tocar(false, motivo !== 'sola'); },
+        dormir: function () { ultimaInteraccion = Date.now() - INACTIVIDAD_PARA_DORMIR - 1; seguiraDespiertaHasta = 0; return dormir(true); },
+        despertoSola: function () { return despertoSola; },
+        ultimaInteraccion: function () { return ultimaInteraccion; },
+        interactuar: function () { ultimaInteraccion = Date.now(); },
+        // Se conserva el nombre por compatibilidad, pero NO permite alterar el horario real.
         forzar: function () {
             try { localStorage.removeItem('osito_forzar_noche'); } catch (e) {}
             return esNoche();

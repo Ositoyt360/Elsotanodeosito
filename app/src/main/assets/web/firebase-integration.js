@@ -280,6 +280,9 @@
         state.mode = mode === 'register' ? 'register' : 'login';
         const { submit, registerOnly, modeButtons } = getAuthElements();
         if (registerOnly) registerOnly.style.display = state.mode === 'register' ? 'grid' : 'none';
+        document.querySelectorAll('#auth-legal-consent input[type="checkbox"]').forEach((input) => {
+            input.disabled = state.mode !== 'register';
+        });
         if (submit) submit.textContent = state.mode === 'register' ? 'Crear cuenta' : 'Entrar';
         modeButtons.forEach((btn) => {
             btn.classList.toggle('active', btn.dataset.mode === state.mode);
@@ -801,6 +804,11 @@
             return;
         }
 
+        if (state.mode === 'register' && typeof window.ositoConsentimientoRegistroValido === 'function' && !window.ositoConsentimientoRegistroValido()) {
+            setStatus('Debes aceptar los términos y la política de privacidad para crear tu cuenta.', 'error');
+            return;
+        }
+
         state.authSubmitting = true;
         if (submit) {
             submit.disabled = true;
@@ -821,6 +829,9 @@
             if (state.mode === 'register') {
                 const credential = await window.createUserWithEmailAndPasswordFirebase(auth, cleanEmail, cleanPassword);
                 const registeredProfile = await registerUser(credential.user, selectedGender, photoFile);
+                if (typeof window.guardarConsentimientosRegistro === 'function') {
+                    await window.guardarConsentimientosRegistro(credential.user);
+                }
                 // El callback de Auth puede ejecutarse antes de terminar la subida.
                 // Actualizamos el estado local con el perfil que ya contiene la foto.
                 state.profile = registeredProfile;

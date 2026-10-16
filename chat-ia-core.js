@@ -469,6 +469,12 @@
                 }
             }
 
+            // V99: canal para que la mascota hable por iniciativa propia usando el MISMO chat, historial y voz
+            window.OsitoChatAPI = {
+                decirBot: function (texto) { agregarMensajeIA(String(texto || ''), 'bot'); },
+                hablar: function (texto) { hablarIA(String(texto || '')); }
+            };
+
             window.OsitoChatHistory = {
                 iniciarNuevoChat: iniciarNuevoChatIA,
                 cambiarASesion: cambiarASesionChat,
@@ -600,6 +606,8 @@
 
             function agregarMensajeIA(texto, tipo, imagenAdjunta = '', guardarEnHistorial = true) {
                 if (!aiMessages) return;
+                // V99: red de seguridad: si llegara una etiqueta de cuerpo ([[expr:...]]) nunca se muestra ni se lee en voz alta
+                if (tipo === 'bot' && typeof texto === 'string' && texto.indexOf('[') >= 0 && window.OsitoMente && window.OsitoMente.limpiar) texto = window.OsitoMente.limpiar(texto) || texto;
                 const enLlamada = Boolean(window.ositoEnLlamadaIA);
                 const msg = document.createElement('div');
                 msg.className = enLlamada ? `msg ${tipo}` : `msg ${tipo} ia-msg-enter`;

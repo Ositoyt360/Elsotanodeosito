@@ -1,0 +1,10 @@
+V99.8
+- Fondo animado 3D del modo normal: ya se ve aunque NO esten activos "Quitar animaciones" ni el modo ultra.
+  Causas corregidas en gamer-fx.js:
+  1) La clase modo-normal solo se ponia cuando Firebase respondia; ahora, si aun no hay tema, se asume modo normal.
+  2) En equipos de gama baja (2 nucleos / 2 GB) el sitio pone "no-animations" solo; el fondo ya no lo toma como apagado manual.
+     Solo se apaga con: otro tema (Halloween, Navidad...), modo ultra, o "Quitar animaciones" elegido por el usuario.
+  3) Si Windows tiene las animaciones desactivadas (reducir movimiento), se dibuja un cuadro fijo en vez de ocultar el fondo.
+- Modo rendimiento / ultra: sin cambios (siguen apagando el fondo a proposito).
+- .gitignore: ahora ignora *.zip, *.rar, *.7z para que GitHub Desktop no vuelva a intentar subir el zip de mas de 100 MB.
+Modificados: gamer-fx.js, index.html (gamer-fx.js?v=998), sw.js (cache v99-8), .gitignore

@@ -1,0 +1,50 @@
+/* V99.6 — Modo normal: fondo gamer 3D de partículas (canvas), sin cuadrícula */
+.gamer-fx-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; display: none; }
+body.modo-normal > .gamer-fx-canvas#gamer-fx-bg { display: block; }
+#welcome-screen > .gamer-fx-welcome { position: absolute; z-index: 0; }
+body.modo-normal #welcome-screen > .gamer-fx-welcome { display: block; }
+
+/* Sin cuadrícula: se apagan las rejillas CSS antiguas */
+body.modo-normal::after { display: none !important; background: none !important; animation: none !important; }
+body.modo-normal .gamer-grid, body.modo-normal .gamer-grid::after { display: none !important; }
+
+/* Aurora de neón más viva (sin cuadros) */
+body.modo-normal::before {
+    background:
+        radial-gradient(ellipse 55% 45% at 15% 25%, rgba(46, 255, 128, .20), transparent 70%),
+        radial-gradient(ellipse 50% 42% at 85% 30%, rgba(0, 242, 254, .17), transparent 70%),
+        radial-gradient(ellipse 60% 48% at 55% 95%, rgba(124, 77, 255, .20), transparent 72%) !important;
+    background-size: 100% 100% !important;
+    animation: ositoGamerGlow 14s ease-in-out infinite alternate !important;
+}
+
+/* La pantalla principal deja ver el fondo animado */
+body.modo-normal #welcome-screen {
+    background:
+        radial-gradient(circle at 50% 22%, rgba(57, 255, 106, .16), transparent 48%),
+        radial-gradient(circle at 15% 80%, rgba(0, 242, 254, .12), transparent 42%),
+        radial-gradient(circle at 85% 75%, rgba(124, 77, 255, .14), transparent 42%),
+        linear-gradient(180deg, #07180f, #04050a) !important;
+}
+body.modo-normal .welcome-overlay { background: linear-gradient(to bottom, rgba(3, 5, 10, .55) 0%, transparent 45%, transparent 75%, rgba(3, 5, 10, .6) 100%) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    body.modo-normal::before { animation: none !important; }
+}
+body.no-animations.modo-normal::before, body.ultra-performance.modo-normal::before { animation: none !important; }
+
+/* Botón Descargar app */
+.btn-descargar-app {
+    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    margin: 14px auto 0; padding: 13px 26px; border-radius: 16px; text-decoration: none; cursor: pointer;
+    font: 800 15px/1 'Segoe UI', system-ui, sans-serif; letter-spacing: .4px; color: #04100a;
+    background: linear-gradient(120deg, #55ff9a, #00f2fe); box-shadow: 0 8px 26px rgba(0, 242, 254, .28);
+    transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s; -webkit-tap-highlight-color: transparent;
+}
+.btn-descargar-app::after { content: ""; position: absolute; top: 0; left: -80%; width: 55%; height: 100%; transform: skewX(-22deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: bdaShine 3.2s ease-in-out infinite; }
+.btn-descargar-app:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0, 242, 254, .4); }
+.btn-descargar-app:active { transform: scale(.96); }
+.btn-descargar-app .bda-ic { font-size: 20px; animation: bdaBob 1.6s ease-in-out infinite; }
+@keyframes bdaShine { 0%, 55% { left: -80%; } 100% { left: 140%; } }
+@keyframes bdaBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .btn-descargar-app::after, .btn-descargar-app .bda-ic { animation: none; } }

@@ -1,0 +1,4 @@
+V99.7
+- Fondo 3D de partículas mucho más visible: partículas más grandes y brillantes, el doble de cantidad, más rápidas y con estelas de profundidad (también en gama baja).
+- Gama baja: la mitad de partículas y 30 FPS.
+- Si no ves el fondo: revisa que no esté activado "Quitar animaciones" ni el modo ultra rendimiento (ambos apagan el fondo a propósito).

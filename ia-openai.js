@@ -99,6 +99,7 @@
 
     function mirarAlAzar() {
         if (document.hidden || sinAnimaciones() || Date.now() < punteroActivoHasta) return;
+        if (window.OsitoMente && window.OsitoMente.enEscena && window.OsitoMente.enEscena()) return; // V99: la mente dirige la mirada
         if (estadoActual === 'thinking') return; // la animación de "pensar" ya mueve los ojos
         caras.forEach(function (cara) {
             if (!cara.offsetParent) return; // oculta (panel cerrado)
@@ -378,8 +379,15 @@
      * Pregunta a la IA OpenAI en el servidor (/api/ia) enviando historial de conversación y memoria de chats.
      * Devuelve { texto } o { error }.
      */
+    // V99: etiquetas de cuerpo de la mascota ([[expr:laugh]]...) -> se ejecutan en osito-mente.js y se quitan del texto
+    function procesarMente(crudo, modo) {
+        var M = window.OsitoMente;
+        if (M && M.procesar) { var r = M.procesar(crudo); return { texto: r.limpio, crudo: crudo, silencio: r.silencio, cues: r.cues, modo: modo }; }
+        return { texto: String(crudo || '').replace(/\[\[[^\]]*\]\]?/g, '').replace(/\s{2,}/g, ' ').trim(), crudo: crudo, modo: modo };
+    }
     async function preguntar(pregunta, opciones) {
         var opts = opciones || {};
+        var modoIA = opts.modo || 'chat', silenciosa = modoIA !== 'chat';
         var imagen = typeof opts.imagen === 'string' && opts.imagen.startsWith('data:image/') ? opts.imagen : '';
         var textoPregunta = String(pregunta || '').trim() || (imagen ? '¿Qué ves en esta imagen? Descríbela y ayúdame con lo que aparece.' : '');
         if (!textoPregunta && !imagen) return { error: 'pregunta_vacia' };
@@ -387,21 +395,24 @@
         var nombre = opts.nombre || localStorage.getItem('osito_ai_nombre') || '';
         var genero = opts.genero || localStorage.getItem('osito_ai_genero') || '';
         var historial = Array.isArray(opts.historial) ? opts.historial : historialDesdePantalla(textoPregunta);
-        aprenderDeConversacion(textoPregunta);
+        if (!silenciosa) aprenderDeConversacion(textoPregunta);
         var memoriaGlobal = String(opts.memoriaGlobal || '').trim();
         var memoriaAprendida = obtenerMemoriaAprendidaTexto();
         var tituloChat = String(opts.tituloChat || '').trim();
 
         var esCharlaCorta = textoPregunta.length <= 22 || /^(vale|ok|okay|si|sii|no|claro|bueno|dale|jaja|jeje|ya|bien|genial|interesante|cuentame|dime|como|por que|porque|y luego|que mas)\b/i.test(textoPregunta);
         var claveCache = (!imagen && !esCharlaCorta) ? (nombre + '|' + genero + '|' + textoPregunta.toLowerCase()) : '';
-        if (!imagen && !esCharlaCorta && historial.length <= 1 && claveCache && cacheClienteIA[claveCache]) {
-            return { texto: cacheClienteIA[claveCache] };
+        if (!silenciosa && !imagen && !esCharlaCorta && historial.length <= 1 && claveCache && cacheClienteIA[claveCache]) {
+            return procesarMente(cacheClienteIA[claveCache], modoIA);
         }
 
-        pidiendoAIA = true;
-        flags.pensando = true;
-        recalcular();
-        var quitarEscribiendo = mostrarEscribiendo();
+        var quitarEscribiendo = function () {};
+        if (!silenciosa) {
+            pidiendoAIA = true;
+            flags.pensando = true;
+            recalcular();
+            quitarEscribiendo = mostrarEscribiendo();
+        }
 
         var endpoints = obtenerEndpointsIA();
         var ultimoError = 'ia_no_disponible';
@@ -421,6 +432,9 @@
                         memoriaAprendida: memoriaAprendida,
                         tituloChat: tituloChat
                     };
+                    // V99: el servidor conoce el estado real de la mascota y su vocabulario de gestos
+                    try { if (window.OsitoMente && window.OsitoMente.estado) payload.mascota = window.OsitoMente.estado(); } catch (_) {}
+                    if (silenciosa) { payload.modo = modoIA; payload.motivo = opts.motivo || ''; payload.ultimas = Array.isArray(opts.ultimas) ? opts.ultimas.slice(-5) : []; }
                     if (imagen) payload.imagen = imagen;
                     var res = await fetch(url, {
                         method: 'POST',
@@ -436,8 +450,8 @@
                     }
                     if (res.ok && data && data.texto) {
                         var limpio = String(data.texto).trim();
-                        if (!imagen && !esCharlaCorta && historial.length <= 1 && claveCache) cacheClienteIA[claveCache] = limpio;
-                        return { texto: limpio };
+                        if (!silenciosa && !imagen && !esCharlaCorta && historial.length <= 1 && claveCache) cacheClienteIA[claveCache] = limpio;
+                        return procesarMente(limpio, modoIA);
                     }
                     if (data && data.error) {
                         ultimoError = data.error;
@@ -449,6 +463,7 @@
                     ultimoError = (err && err.name === 'AbortError') ? 'ia_tiempo_agotado' : 'sin_conexion';
                 }
             }
+            if (silenciosa) return { error: ultimoError };
             if (imagen) {
                 return { texto: 'Vi tu imagen adjunta 🖼️, pero en este momento la conexión con el motor visual tardó en responder. Intenta enviarla de nuevo o dime qué aparece en ella y te ayudo enseguida. 😊' };
             }
@@ -457,9 +472,11 @@
             return { error: ultimoError };
         } finally {
             quitarEscribiendo();
-            pidiendoAIA = false;
-            flags.pensando = false;
-            recalcular();
+            if (!silenciosa) {
+                pidiendoAIA = false;
+                flags.pensando = false;
+                recalcular();
+            }
         }
     }
 
@@ -699,7 +716,9 @@
         if (quieta()) return;
         var rol = e && e.detail && e.detail.role;
         if (rol === 'bot') {
-            if (window.OsitoFace) window.OsitoFace.reaccionarTexto(e.detail.text);
+            // V99: si la IA decidió sus gestos (etiquetas), no se pisa con la reacción automática por palabras
+            var yaDecidio = window.OsitoMente && window.OsitoMente.enEscena && window.OsitoMente.enEscena();
+            if (window.OsitoFace && !yaDecidio) window.OsitoFace.reaccionarTexto(e.detail.text);
             if (window.OsitoFaceSound && window.OsitoFaceSound.reproducir) {
                 window.OsitoFaceSound.reproducir('msg_receive');
             }
@@ -815,6 +834,7 @@
     // incluso en móviles de gama baja.
     function microgesto() {
         if (document.hidden || quieta() || dormida) return;
+        if (window.OsitoMente && window.OsitoMente.enEscena && window.OsitoMente.enEscena()) return; // V99
         caras.forEach(function (cara) {
             if (!cara.offsetParent) return;
             if (cara.getAttribute('data-expr')) return; // no interrumpir una emoción en curso
@@ -862,7 +882,7 @@
     // Cada cierto tiempo hace un gesto distinto (sin repetir).
     (function ciclo() {
         setTimeout(function () {
-            if (!document.hidden && !quieta() && !esDeNoche() && !document.querySelector('.osito-face[data-boredom]')) { // de noche manda face-extra.js (dormir); si lee/juega manda osito-aburrimiento.js
+            if (!document.hidden && !quieta() && !esDeNoche() && !document.querySelector('.osito-face[data-boredom]') && !(window.OsitoMente && window.OsitoMente.enEscena && window.OsitoMente.enEscena())) { // de noche manda face-extra.js (dormir); si lee/juega manda osito-aburrimiento.js
                 var libre = caras.every(function (c) { var e = c.dataset.estado; return !e || e === 'idle'; });
                 /* El sueño lo controla exclusivamente face-extra.js; no duplicar temporizadores aquí. */
                 var conExpr = caras.some(function (c) { return c.offsetParent && c.getAttribute('data-expr'); });

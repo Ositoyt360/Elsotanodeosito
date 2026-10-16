@@ -210,7 +210,7 @@
   };
 
   function caras(){ return Array.prototype.slice.call(document.querySelectorAll('.osito-face')); }
-  function noche(){ return !!(window.OsitoNight && window.OsitoNight.esNoche && window.OsitoNight.esNoche()); }
+  function noche(){ return !!(window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme()); } /* V99: solo dormida bloquea objetos */
   function visible(c){ return !!(c.offsetParent || (c.getClientRects && c.getClientRects().length)); }
 
   /* ---------- Objetos 3D ---------- */
@@ -522,6 +522,7 @@
   }
   /* Giro 3D suave de la cabeza (rx = arriba/abajo, ry = izquierda/derecha, en grados) */
   function cabeza(rx,ry){
+    if(window.OsitoMente && window.OsitoMente.miradaOcupada && window.OsitoMente.miradaOcupada()) return;
     caras().forEach(function(c){
       if(!c.hasAttribute('data-boredom')) return;
       c.style.setProperty('--cx',rx+'deg'); c.style.setProperty('--cy',ry+'deg');
@@ -649,10 +650,14 @@
     if(noche()) { ocultar(); timer=setTimeout(ciclo,1500); return; }
     if(window.OsitoNight && window.OsitoNight.duerme && window.OsitoNight.duerme()){ ocultar(); timer=setTimeout(ciclo,1500); return; }
     var ahora=Date.now();
-    if(!aburrido && ahora-ultima>=ABURRIDO_MS){ activar(siguienteModo()); }
+    var M=window.OsitoMente, mandaMente=!!(M && M.activo && M.activo());
+    if(mandaMente && M.enEscena && M.enEscena()){ timer=setTimeout(ciclo,1400); return; }
+    if(!aburrido && ahora-ultima>=ABURRIDO_MS){
+      /* V99: la MENTE (IA) decide si saca un objeto y cuál; si no decide, queda el comportamiento de siempre */
+      if(!(mandaMente && M.alAburrirse && M.alAburrirse())) activar(siguienteModo());
+    }
     else if(aburrido && modo && ahora-ultimoCambio>=(CAMBIO_MS[modo]||OBJETO_MS)){
-      // Cambia de actividad mientras sigue solo: lee, juega o hace otras expresiones.
-      activar(siguienteModo());
+      if(!(mandaMente && M.alCambiarActividad && M.alCambiarActividad())) activar(siguienteModo());
     }
     timer=setTimeout(ciclo,1400);
   }
@@ -660,6 +665,26 @@
   // Mover el mouse también cuenta como estar presente (reinicia los 10 s) pero no interrumpe la actividad.
   document.addEventListener('pointermove',function(){ if(!aburrido) ultima=Date.now(); },{passive:true,capture:true});
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) ultima=Date.now(); });
-  window.OsitoAburrimiento={activar:function(m){activar(VALIDOS.indexOf(m)>=0?m:'diario');},detener:function(){ ultima=Date.now(); ocultar(); },estado:function(){return {aburrido:aburrido,modo:modo};}};
+  /* V99: API para que la IA dirija los objetos (mismas funciones de siempre, solo expuestas) */
+  function actoIA(nombre){
+    if(!aburrido || !modo) return false;
+    var lista=GUION[modo]||[], def=null;
+    for(var i=0;i<lista.length;i++){ if(lista[i].a===nombre){ def=lista[i]; break; } }
+    clearTimeout(timerActo);
+    ejecutar(def?Object.assign({},def):{a:nombre,ms:EXPRESION_MS},token);
+    return true;
+  }
+  function catalogo(){
+    var r={};
+    VALIDOS.forEach(function(m){ var a=[]; (GUION[m]||[]).forEach(function(x){ if(x.a && a.indexOf(x.a)<0) a.push(x.a); }); r[m]=a; });
+    return r;
+  }
+  window.OsitoAburrimiento={
+    activar:function(m){activar(VALIDOS.indexOf(m)>=0?m:'diario');},
+    detener:function(){ ultima=Date.now(); ocultar(); },
+    estado:function(){return {aburrido:aburrido,modo:modo};},
+    dirigir:function(m){ if(VALIDOS.indexOf(m)<0) return false; ultima=Date.now(); activar(m); return true; },
+    acto:actoIA, soltar:function(){ ultima=Date.now(); ocultar(); }, catalogo:catalogo, validos:VALIDOS.slice()
+  };
   ciclo();
 }());

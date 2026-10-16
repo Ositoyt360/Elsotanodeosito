@@ -1509,6 +1509,17 @@
             return pts;
         }
 
+        function vozPorMarcador(voces, marca) {
+            // Valores como "es-MX", "es-US", "es-MX-m" (opciones inmediatas del selector) → voz real que coincida
+            const m = /^(es(?:-[a-z0-9]+)?)(-m)?$/i.exec(marca || '');
+            if (!m) return null;
+            const lang = m[1].toLowerCase(), quiereHombre = !!m[2];
+            const cand = voces.filter(v => String(v.lang || '').toLowerCase().replace('_', '-').startsWith(lang));
+            if (!cand.length) return null;
+            cand.sort((a, b) => (puntuarVozEspanol(b) + (quiereHombre ? (esVozMasculina(b) ? 600 : 0) : 0)) - (puntuarVozEspanol(a) + (quiereHombre ? (esVozMasculina(a) ? 600 : 0) : 0)));
+            return cand[0];
+        }
+
         function obtenerMejorVoz() {
             if (!('speechSynthesis' in window)) return null;
             const voces = window.speechSynthesis.getVoices() || [];
@@ -1516,7 +1527,7 @@
 
             const voiceNameGuardada = localStorage.getItem('osito_ai_selected_voice_name') || '';
             if (voiceNameGuardada) {
-                const encontrada = voces.find(v => v.name === voiceNameGuardada);
+                const encontrada = voces.find(v => v.name === voiceNameGuardada) || vozPorMarcador(voces, voiceNameGuardada);
                 if (encontrada) {
                     mejorVozCache = encontrada;
                     return mejorVozCache;
@@ -1538,14 +1549,24 @@
             return mejorVozCache;
         }
 
-        if ('speechSynthesis' in window) {
-            obtenerMejorVoz();
-            if (typeof window.speechSynthesis.addEventListener === 'function') {
-                window.speechSynthesis.addEventListener('voiceschanged', obtenerMejorVoz);
-            } else {
-                window.speechSynthesis.onvoiceschanged = obtenerMejorVoz;
-            }
+        // V99: en muchos celulares/navegadores las voces tardan o no avisan (voiceschanged no llega).
+        // Se vuelve a preguntar varias veces y se avisa a quien esté mostrando el selector.
+        let sondeoVoces = null;
+        function sondearVoces() {
+            if (!('speechSynthesis' in window) || sondeoVoces) return;
+            let intentos = 0;
+            sondeoVoces = setInterval(() => {
+                intentos++;
+                const n = (window.speechSynthesis.getVoices() || []).length;
+                if (n > 0 || intentos > 60) {
+                    clearInterval(sondeoVoces); sondeoVoces = null;
+                    if (n > 0) { obtenerMejorVoz(); document.dispatchEvent(new CustomEvent('osito:voces-listas', { detail: { n } })); }
+                }
+            }, 500);
         }
+
+        // Mantiene referencias a las frases en curso (Chrome a veces las recoge la basura y nunca llega 'end')
+        const enCurso = [];
 
         function limpiarTextoParaAsistente(raw) {
             return String(raw || '')
@@ -1598,7 +1619,11 @@
                 }
 
                 const miToken = ++tokenHablaActual;
-                try { window.speechSynthesis.cancel(); } catch (e) {}
+                const synth = window.speechSynthesis;
+                try {
+                    if (synth.speaking || synth.pending) synth.cancel();
+                    if (synth.paused) synth.resume();
+                } catch (e) {}
 
                 const voz = obtenerMejorVoz();
                 const velBase = Number(opciones.rate) || obtenerVelocidadBase();
@@ -1613,71 +1638,61 @@
                     resolve();
                 };
 
-                const hablarSiguiente = () => {
-                    if (miToken !== tokenHablaActual) {
-                        resolve();
-                        return;
-                    }
-                    if (idx >= frases.length) {
-                        finalizarTodo();
-                        return;
-                    }
-                    const frase = frases[idx++];
+                const crearUtter = (frase, conVoz) => {
                     const u = new SpeechSynthesisUtterance(frase);
-                    if (voz) {
+                    if (conVoz && voz) {
                         u.voice = voz;
                         u.lang = voz.lang || 'es-MX';
                     } else {
                         u.lang = 'es-MX';
                     }
-
-                    // Entonación conversacional dinámica según el sentido de cada frase
                     const esPregunta = /[?¿]/.test(frase);
                     const esExclamacion = /[!¡]/.test(frase) || /^(hola|que onda|qué onda|buenas|claro|perfecto|genial|listo)/i.test(frase);
-
-                    if (esPregunta) {
-                        u.pitch = 1.09;
-                        u.rate = Math.min(1.22, velBase * 1.03);
-                    } else if (esExclamacion) {
-                        u.pitch = 1.07;
-                        u.rate = Math.min(1.22, velBase * 1.04);
-                    } else {
-                        u.pitch = 1.04;
-                        u.rate = Math.min(1.2, velBase * 1.02);
-                    }
+                    if (esPregunta) { u.pitch = 1.09; u.rate = Math.min(1.22, velBase * 1.03); }
+                    else if (esExclamacion) { u.pitch = 1.07; u.rate = Math.min(1.22, velBase * 1.04); }
+                    else { u.pitch = 1.04; u.rate = Math.min(1.2, velBase * 1.02); }
                     u.volume = 1;
-
-                    u.onend = () => {
-                        if (miToken !== tokenHablaActual) {
-                            resolve();
-                            return;
-                        }
-                        if (idx < frases.length) {
-                            setTimeout(hablarSiguiente, 55);
-                        } else {
-                            finalizarTodo();
-                        }
-                    };
-                    u.onerror = () => {
-                        if (miToken !== tokenHablaActual) {
-                            resolve();
-                            return;
-                        }
-                        if (idx < frases.length) {
-                            setTimeout(hablarSiguiente, 40);
-                        } else {
-                            finalizarTodo();
-                        }
-                    };
-
-                    try {
-                        window.speechSynthesis.speak(u);
-                    } catch (e) {
-                        finalizarTodo();
-                    }
+                    return u;
                 };
 
-                hablarSiguiente();
+                const hablarSiguiente = () => {
+                    if (miToken !== tokenHablaActual) { resolve(); return; }
+                    if (idx >= frases.length) { finalizarTodo(); return; }
+                    const frase = frases[idx++];
+                    let intento = 0, terminada = false, inicio = false, vigia = null;
+
+                    const avanzar = (ms) => {
+                        if (terminada) return;
+                        terminada = true; clearTimeout(vigia);
+                        if (miToken !== tokenHablaActual) { resolve(); return; }
+                        if (idx < frases.length) setTimeout(hablarSiguiente, ms); else finalizarTodo();
+                    };
+                    const lanzar = () => {
+                        // intento 0: voz elegida · intento 1: sin voz fija (la del sistema) · luego se da por perdida la frase
+                        const u = crearUtter(frase, intento === 0);
+                        enCurso.push(u); if (enCurso.length > 12) enCurso.shift();
+                        inicio = false;
+                        u.onstart = () => { inicio = true; clearTimeout(vigia); };
+                        u.onend = () => avanzar(55);
+                        u.onerror = (ev) => {
+                            const err = ev && ev.error;
+                            if (err === 'interrupted' || err === 'canceled') { avanzar(40); return; }
+                            if (intento === 0) { intento = 1; setTimeout(lanzar, 60); } else avanzar(40);
+                        };
+                        // Chrome a veces descarta la voz sin avisar: si en 3 s no empezó, se reintenta una vez
+                        vigia = setTimeout(() => {
+                            if (inicio || terminada || miToken !== tokenHablaActual) return;
+                            try { synth.cancel(); } catch (e) {}
+                            if (intento === 0) { intento = 1; setTimeout(lanzar, 120); } else avanzar(40);
+                        }, 3000);
+                        try { if (synth.paused) synth.resume(); synth.speak(u); }
+                        catch (e) { if (intento === 0) { intento = 1; setTimeout(lanzar, 60); } else avanzar(40); }
+                    };
+                    lanzar();
+                };
+
+                // Tras cancel() Chrome necesita un instante antes de aceptar otra frase (si no, la descarta en silencio)
+                setTimeout(hablarSiguiente, 70);
             });
         }
 
@@ -1689,8 +1704,33 @@
             document.dispatchEvent(new CustomEvent('osito:tts-end'));
         }
 
+        function asegurarBotonProbar(selectEl) {
+            if (!selectEl || selectEl.__probarListo) return;
+            selectEl.__probarListo = true;
+            const btn = document.createElement('button');
+            btn.type = 'button'; btn.id = 'ai-cfg-voice-test';
+            btn.textContent = '🔊 Probar esta voz';
+            btn.style.cssText = 'margin-top:6px;padding:6px 10px;border-radius:8px;border:1px solid rgba(0,242,254,.5);background:rgba(0,242,254,.12);color:#eaf8ff;font-weight:700;font-size:.78rem;cursor:pointer';
+            btn.addEventListener('click', () => {
+                localStorage.setItem('osito_ai_selected_voice_name', selectEl.value);
+                obtenerMejorVoz();
+                hablar('¡Hola! Así suena mi voz para platicar contigo en El Sótano de Osito.');
+            });
+            const info = document.createElement('small');
+            info.id = 'ai-cfg-voice-info'; info.style.cssText = 'display:block;margin-top:4px;opacity:.75;font-size:.72rem';
+            selectEl.insertAdjacentElement('afterend', btn);
+            btn.insertAdjacentElement('afterend', info);
+        }
         function poblarVocesDisponibles(selectEl) {
             if (!selectEl || !('speechSynthesis' in window)) return;
+            asegurarBotonProbar(selectEl);
+            sondearVoces();
+            if (!selectEl.__escuchaVoces) {
+                selectEl.__escuchaVoces = true;
+                document.addEventListener('osito:voces-listas', () => poblarVocesDisponibles(selectEl));
+            }
+            const infoEl = document.getElementById('ai-cfg-voice-info');
+            if (infoEl) infoEl.textContent = (window.speechSynthesis.getVoices() || []).length ? '' : 'Tu navegador todavía no entrega la lista de voces; usaré la voz del sistema en español.';
             const voces = window.speechSynthesis.getVoices() || [];
             const guardada = localStorage.getItem('osito_ai_selected_voice_name') || '';
 
@@ -1763,11 +1803,27 @@
             cancelar,
             obtenerMejorVoz,
             limpiarTextoParaAsistente,
-            poblarVocesDisponibles
+            poblarVocesDisponibles,
+            listarVoces: () => (window.speechSynthesis ? window.speechSynthesis.getVoices() : []).map(v => ({ name: v.name, lang: v.lang }))
         };
     }());
 
     window.OsitoVozHumana = OsitoVozHumana;
+
+    // V99: la voz elegida en el selector se aplica a TODA frase que nazca sin voz fija (sin tocar el modo llamada)
+    if ('speechSynthesis' in window && typeof window.speechSynthesis.speak === 'function' && !window.speechSynthesis.__ositoVozElegida) {
+        const speakBase = window.speechSynthesis.speak.bind(window.speechSynthesis);
+        window.speechSynthesis.speak = function (u) {
+            try {
+                if (u && !u.voice && u.volume !== 0 && String(u.text || '').trim()) {
+                    const v = OsitoVozHumana.obtenerMejorVoz();
+                    if (v) { u.voice = v; u.lang = v.lang || u.lang; }
+                }
+            } catch (e) {}
+            return speakBase(u);
+        };
+        window.speechSynthesis.__ositoVozElegida = true;
+    }
 
     function setupUI(assistant) {
         const mic = getEl('ai-mic-btn');

@@ -1152,6 +1152,10 @@ function guardarCacheIA(clave, texto) {
   iaCacheRespuestas.set(clave, { texto, ts: Date.now() });
 }
 
+// V99: vocabulario del cuerpo de la mascota (mismo archivo que usa el navegador)
+let vocabMascota = null;
+try { vocabMascota = require('./mascota-vocabulario.js'); } catch (e) { console.warn('[IA] No se pudo cargar mascota-vocabulario.js:', e.message); }
+
 let conocimientoOsito = null;
 try { conocimientoOsito = require('./base-conocimiento.js'); } catch (e) { console.warn('[IA] No se pudo cargar base-conocimiento.js:', e.message); }
 
@@ -1192,7 +1196,7 @@ DATOS OFICIALES
 - Años calculados del canal según la base local: ${anosCanal}.
 
 BASE DE CONOCIMIENTO OFICIAL
-${oficial.join('\n') || '- Sin datos adicionales.'}`;
+${oficial.join('\n') || '- Sin datos adicionales.'}${vocabMascota ? '\n\nCUERPO Y PERSONALIDAD (eres una sola persona: tu voz y tu cuerpo)\n' + vocabMascota.textoParaIA() : ''}`;
 }
 
 function extraerImagenBase64(rawImagen) {
@@ -1268,7 +1272,7 @@ function extraerTextoChat(data) {
   return '';
 }
 
-async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
+async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado, maxTokens) {
   if (!OPENAI_API_KEY) {
     const err = new Error('Falta OPENAI_API_KEY (o NVIDIA_API_KEY) en las variables de entorno.');
     err.status = 503;
@@ -1281,11 +1285,11 @@ async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
     const url = `${OPENAI_API_BASE}/${IA_ES_NVIDIA ? 'chat/completions' : 'responses'}`;
     const cuerpo = IA_ES_NVIDIA
       ? Object.assign(
-          { model: modelo, messages: inputAMensajesChat(input, instrucciones), max_tokens: 4096, temperature: 0.7, top_p: 1, stream: false },
+          { model: modelo, messages: inputAMensajesChat(input, instrucciones), max_tokens: maxTokens || 4096, temperature: 0.7, top_p: 1, stream: false },
           // gpt-oss es un modelo de razonamiento: con esfuerzo bajo responde rápido y no gasta los tokens "pensando".
           /gpt-oss/i.test(modelo) ? { reasoning_effort: 'low' } : {}
         )
-      : { model: modelo, instructions: instrucciones, input, max_output_tokens: conImagen ? 3500 : 3000 };
+      : { model: modelo, instructions: instrucciones, input, max_output_tokens: maxTokens || (conImagen ? 3500 : 3000) };
     const response = await fetch(url, {
       method: 'POST', signal: controlador.signal,
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
@@ -1299,7 +1303,7 @@ async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
       if (modeloInvalido && !modeloForzado && !conImagen && OPENAI_MODEL_RESPALDO && OPENAI_MODEL_RESPALDO !== modelo) {
         console.warn(`[IA] Modelo "${modelo}" no disponible; usando "${OPENAI_MODEL_RESPALDO}".`);
         clearTimeout(temporizador);
-        const r2 = await llamarOpenAI(input, instrucciones, conImagen, OPENAI_MODEL_RESPALDO);
+        const r2 = await llamarOpenAI(input, instrucciones, conImagen, OPENAI_MODEL_RESPALDO, maxTokens);
         OPENAI_MODEL = OPENAI_MODEL_RESPALDO;
         return r2;
       }
@@ -1312,15 +1316,15 @@ async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado) {
   }
 }
 
-async function llamarOpenAIConReintentos(input, instrucciones, conImagen) {
+async function llamarOpenAIConReintentos(input, instrucciones, conImagen, maxTokens, crudo) {
   let ultimoError = null;
   const maxIntentos = 2;
   for (let intento = 0; intento < maxIntentos; intento++) {
     try {
       // 2º intento: otro modelo (solo texto) por si el principal está saturado o devuelve vacío.
       const forzado = (intento > 0 && !conImagen && IA_ES_NVIDIA && OPENAI_MODEL_RESPALDO !== OPENAI_MODEL) ? OPENAI_MODEL_RESPALDO : undefined;
-      const r = await llamarOpenAI(input, instrucciones, conImagen, forzado);
-      const limpio = r && textoPlanoIA(r.texto);
+      const r = await llamarOpenAI(input, instrucciones, conImagen, forzado, maxTokens);
+      const limpio = r && (crudo ? textoCrudoMascota(r.texto) : textoPlanoIA(r.texto));
       if (limpio) return { ...r, texto: limpio };
       ultimoError = Object.assign(new Error('Respuesta vacía'), { status: 200 });
     } catch (err) {
@@ -1339,7 +1343,40 @@ function textoPlanoIA(texto) {
     .replace(/^\s*[-•]\s+/gm, '')
     .replace(/\n{2,}/g, '\n')
     .trim()
-    .slice(0, 1400);
+    .slice(0, 1800);
+}
+
+// V99: para el modo espontáneo no se borran bloques con ``` (podrían tapar etiquetas); solo se quitan marcas de formato
+function textoCrudoMascota(texto) {
+  return String(texto || '').replace(/```[a-z]*/gi, ' ').replace(/[*_`#>]+/g, '').replace(/\n{2,}/g, '\n').trim().slice(0, 900);
+}
+
+// V99: cuota APARTE para lo que la mascota dice por iniciativa propia (no gasta las preguntas del usuario)
+const iaEspont = { minuto: new Map(), dia: new Map(), diaClave: '', total: 0 };
+const IA_ESPONT_MIN = Number(process.env.IA_ESPONT_POR_MINUTO || 4), IA_ESPONT_DIA_IP = Number(process.env.IA_ESPONT_POR_DIA_IP || 40), IA_ESPONT_DIA_TOTAL = Number(process.env.IA_ESPONT_POR_DIA_TOTAL || 800);
+function iaEspontPermitida(ip) {
+  const t = Date.now(), hoy = new Date().toISOString().slice(0, 10);
+  if (iaEspont.diaClave !== hoy) { iaEspont.diaClave = hoy; iaEspont.dia.clear(); iaEspont.total = 0; }
+  const rec = (iaEspont.minuto.get(ip) || []).filter((x) => t - x < 60000);
+  if (rec.length >= IA_ESPONT_MIN) return false;
+  if ((iaEspont.dia.get(ip) || 0) >= IA_ESPONT_DIA_IP || iaEspont.total >= IA_ESPONT_DIA_TOTAL) return false;
+  rec.push(t); iaEspont.minuto.set(ip, rec); iaEspont.dia.set(ip, (iaEspont.dia.get(ip) || 0) + 1); iaEspont.total += 1;
+  return true;
+}
+function limpiarCampoMascota(v, max) { return String(v == null ? '' : v).replace(/[^\p{L}\p{N} .,:;()¿?¡!\-\/'"]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 80); }
+function contextoMascota(m) {
+  if (!m || typeof m !== 'object') return '';
+  const p = [];
+  if (m.hora) p.push(`hora local de la persona ${limpiarCampoMascota(m.hora, 6)}`);
+  if (typeof m.sueno === 'number') p.push(`nivel de sueño tuyo ${Math.max(0, Math.min(1, m.sueno))} (0 nada, 1 muchísimo; desde las 2:30 a. m. puede subir)`);
+  if (m.durmiendo) p.push('estabas dormida');
+  if (m.objeto) p.push(`tienes en la mano: ${limpiarCampoMascota(m.objeto, 20)}`);
+  if (m.expr) p.push(`tu expresión actual: ${limpiarCampoMascota(m.expr, 20)}`);
+  if (m.panel) p.push(`panel de chat ${limpiarCampoMascota(m.panel, 10)}`);
+  if (m.voz === false) p.push('la voz está apagada');
+  if (m.tema && m.tema !== 'normal') p.push(`tema del sitio: ${limpiarCampoMascota(m.tema, 20)}`);
+  if (m.video && typeof m.video === 'object') p.push(`video en pantalla: "${limpiarCampoMascota(m.video.titulo, 120)}"${m.video.canal ? ' de ' + limpiarCampoMascota(m.video.canal, 40) : ''} (${limpiarCampoMascota(m.video.estado, 14)}); solo conoces su título/canal, NO su contenido`);
+  return p.length ? 'ESTADO REAL DE TU CUERPO Y DE LA PÁGINA AHORA: ' + p.join('; ') + '.' : '';
 }
 
 app.get('/api/ia/estado', async (req, res) => {
@@ -1382,8 +1419,35 @@ function calcularOperacionIAExacta(texto) {
   return `${m[1]} ${op} ${m[3]} = ${fmt}. 🧮`;
 }
 
+// V99: la mascota habla/actúa por iniciativa propia (modo "espontaneo" o "video")
+async function manejarMascotaEspontanea(req, res) {
+  const modo = req.body?.modo === 'video' ? 'video' : 'espontaneo';
+  const pregunta = limpiarCampoMascota(req.body?.pregunta || req.body?.prompt || '', 500) || 'Decide si dices algo.';
+  if (!OPENAI_API_KEY) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'local' });
+  if (!iaEspontPermitida(ipDelCliente(req))) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'limite-espontaneo' });
+  const nombre = String(req.body?.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
+  const ultimas = (Array.isArray(req.body?.ultimas) ? req.body.ultimas : []).slice(-5).map((x) => limpiarCampoMascota(x, 100)).filter(Boolean);
+  const partes = [];
+  partes.push(nombre ? `La persona se llama ${nombre}.` : 'No sabes el nombre de la persona.');
+  const ctx = contextoMascota(req.body?.mascota); if (ctx) partes.push(ctx);
+  try { partes.push('Fecha y hora en El Salvador: ' + new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date()) + '.'); } catch (e) {}
+  if (ultimas.length) partes.push('Lo último que dijiste por tu cuenta (NO lo repitas ni digas algo parecido): ' + ultimas.join(' | '));
+  const reglas = `MODO INICIATIVA PROPIA: nadie te ha escrito; TÚ decides si hablas ahora. Responde SOLO con tu línea corta (máximo 2 frases, natural, en español, sin saludar de nuevo si ya hablaron) con etiquetas de cuerpo donde correspondan, o con gestos/objeto sin texto (solo etiquetas), o con [[silencio]] si lo mejor es no interrumpir (respeta el silencio: no abuses, no preguntes cosas obvias, no repitas). No inventes datos ni hables de proveedores o del sistema. Si es madrugada y tu sueño es alto, puedes mostrar sueño o decidir [[dormir]].`;
+  const sistema = textoSeguroIA(construirInstruccionIA() + '\n\n' + reglas + '\n\nCONTEXTO: ' + partes.join(' '));
+  try {
+    const input = [{ role: 'user', content: [{ type: 'input_text', text: pregunta }] }];
+    const r = await llamarOpenAIConReintentos(input, sistema, false, 500, true);
+    const texto = textoCrudoMascota(r.texto);
+    return res.json({ ok: true, texto: texto || '[[silencio]]', modo, modelo: OPENAI_MODEL, proveedor: 'openai' });
+  } catch (err) {
+    iaUltimoError = { proveedor: 'openai', status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300), cuando: new Date().toISOString() };
+    return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'error-conexion' });
+  }
+}
+
 async function manejarConsultaIA(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  if (req.body && (req.body.modo === 'espontaneo' || req.body.modo === 'video')) return manejarMascotaEspontanea(req, res);
   const imagenInfo = extraerImagenBase64(req.body?.imagen || req.body?.image || '');
   const preguntaRaw = String(req.body?.pregunta || req.body?.prompt || '').replace(/\s+/g, ' ').trim().slice(0, 700);
   const pregunta = preguntaRaw || (imagenInfo ? '¿Qué ves en esta imagen? Analízala con detalle, lee cualquier texto que tenga y explícamela en español.' : '');
@@ -1432,6 +1496,7 @@ async function manejarConsultaIA(req, res) {
   if (tituloChat) contexto.push(`Título de la conversación actual: "${tituloChat}".`);
   if (memoriaGlobal) contexto.push(`MEMORIA DE CONVERSACIONES ANTERIORES DEL USUARIO (recuérdalo si viene al caso): ${memoriaGlobal}`);
   if (memoriaAprendida) contexto.push(`MEMORIA APRENDIDA NO SENSIBLE (úsala solo cuando sea útil): ${memoriaAprendida}`);
+  { const cm = contextoMascota(req.body?.mascota); if (cm) contexto.push(cm); }
   try {
     const ahoraSV = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date());
     contexto.push(`Fecha y hora actual en El Salvador: ${ahoraSV}.`);

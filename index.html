@@ -26,34 +26,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <!-- V101: evita mostrar el tema normal antes de conocer el tema global guardado. -->
-    <script id="osito-theme-startup">
-    (function () {
-      var root = document.documentElement;
-      root.classList.add('osito-theme-pending');
-      window.__ositoThemeStartupRelease = function () {
-        root.classList.remove('osito-theme-pending');
-      };
-      // Último tema confirmado: se aplica antes de que el navegador pinte el body.
-      try {
-        var saved = localStorage.getItem('osito_site_theme_cache');
-        var valid = ['normal', 'halloween', 'navidad', 'san-valentin', 'cumpleanos'];
-        if (valid.indexOf(saved) !== -1) {
-          root.dataset.siteTheme = saved;
-          window.__ositoCachedSiteTheme = saved;
-        }
-      } catch (e) {}
-      // Protección si el servidor no responde: nunca dejar la página invisible indefinidamente.
-      window.setTimeout(function () {
-        if (root.classList.contains('osito-theme-pending')) {
-          root.classList.remove('osito-theme-pending');
-        }
-      }, 8000);
-    })();
-    </script>
-    <style id="osito-theme-startup-style">
-      html.osito-theme-pending body { visibility: hidden !important; }
-    </style>
     <link rel="stylesheet" href="styles.css?v=97b">
     <link rel="stylesheet" href="v49.css">
     <link rel="stylesheet" href="call-mode.css">
@@ -444,6 +416,7 @@
 
     function mirarLibre() {
         if (document.hidden) return;
+        if (window.OsitoMente && window.OsitoMente.enEscena && window.OsitoMente.enEscena()) { programarMirada(true); return; } // V99
         if (Date.now() < punteroHasta) return;
         var m = MIRADAS[Math.floor(Math.random() * MIRADAS.length)];
         var lento = modo() !== 'normal' || equipoLento();
@@ -480,6 +453,7 @@
         var F = window.OsitoFace;
         if (!F || !F.poner || document.hidden) return;
         var m = modo();
+        if (window.OsitoMente && window.OsitoMente.enEscena && window.OsitoMente.enEscena()) return; // V99
         var ahora = Date.now();
         var minimo = m === 'normal' ? 3600 : 6500;
         if (ahora - ultimaExpr < minimo) return;
@@ -900,26 +874,8 @@ accent-color:#00ff88;
 /* V76: mantenimiento independiente. Nunca mostrar el overlay antiguo en index. */
 #maintenance-overlay{display:none!important;visibility:hidden!important;pointer-events:none!important}
 </style>
-<style id="osito-normal-mode-fix">
-html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 18% 28%,rgba(0,190,255,.13),transparent 42%),radial-gradient(ellipse at 82% 72%,rgba(105,55,255,.14),transparent 43%),radial-gradient(ellipse at 55% 8%,rgba(0,255,190,.07),transparent 38%),linear-gradient(135deg,#050711 0%,#091326 48%,#080817 100%);background-size:140% 140%;animation:ositoNormalFondo 22s ease-in-out infinite alternate}
-@keyframes ositoNormalFondo{0%{transform:translate3d(-1.5%,0,0);background-position:0% 40%}100%{transform:translate3d(1.5%,0,0);background-position:100% 60%}}
-@media(prefers-reduced-motion:reduce){html[data-site-theme="normal"] body::before{animation:none}}
-@media(max-width:767px) and (orientation:landscape){.video-thumbnail:has(iframe){position:relative;width:100%;aspect-ratio:16/9}.video-thumbnail:has(iframe) iframe{display:block;position:absolute;inset:0;width:100%;height:100%;min-height:0}.video-card:has(.video-thumbnail iframe){grid-column:1/-1;width:100%;max-width:100%}}
-</style>
 </head>
-<body> 
-<script id="osito-theme-body-bootstrap">
-(function () {
-  try {
-    var theme = window.__ositoCachedSiteTheme;
-    if (theme && document.body) {
-      document.body.classList.remove('modo-normal','modo-halloween','modo-navidad','modo-san-valentin','modo-cumpleanos');
-      document.body.classList.add('modo-' + theme);
-      document.documentElement.dataset.siteTheme = theme;
-    }
-  } catch (e) {}
-})();
-</script>
+<body>
     <canvas id="space-canvas"></canvas>
     <div class="ambient-glow" id="glow-1"></div>
     <div class="ambient-glow" id="glow-2"></div>
@@ -976,7 +932,7 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
                         </div>
                     </div>
 
-                    <form id="auth-form" class="auth-form">
+                    <form id="auth-form" class="auth-form" novalidate>
                         <div class="auth-mode-switch" role="tablist" aria-label="Modo de acceso">
                             <button type="button" class="auth-mode-btn active" data-mode="login">Iniciar sesión</button>
                             <button type="button" class="auth-mode-btn" data-mode="register">Registrarse</button>
@@ -1014,6 +970,22 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
                                     <input id="auth-photo-input" type="file" accept="image/*" hidden>
                                 </div>
                                 <img id="auth-photo-thumb" class="auth-photo-thumb" src="" alt="Vista previa de la foto">
+                            </div>
+                            <div class="auth-legal-consents" id="auth-legal-consents" aria-label="Aceptaciones obligatorias">
+                                <div class="auth-consent-row">
+                                    <input id="auth-accept-terms" type="checkbox" hidden tabindex="-1" aria-hidden="true">
+                                    <input id="auth-accept-privacy" type="checkbox" hidden tabindex="-1" aria-hidden="true">
+                                    <input id="auth-accept-legal" type="checkbox">
+                                    <span><label for="auth-accept-legal">Acepto la</label> <button class="auth-legal-link" type="button" data-legal-open="terms">Política y privacidad</button></span>
+                                </div>
+                                <small>Debes leer el documento hasta el final para poder aceptar. Incluye términos y privacidad.</small>
+                            </div>
+                            <div class="auth-legal-dialog" id="auth-legal-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="auth-legal-title">
+                                <div class="auth-legal-dialog-card">
+                                    <button type="button" class="auth-legal-close" id="auth-legal-close" aria-label="Cerrar">×</button>
+                                    <h3 id="auth-legal-title">Información legal</h3>
+                                    <div id="auth-legal-content"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -2111,11 +2083,7 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
 
         function aplicarConfiguracionSitio(settings) {
             const data = settings || {};
-            const temaConfirmado = SITE_THEME_LABELS[data.theme] ? data.theme : 'normal';
-            aplicarModoSitio(temaConfirmado);
-            try { localStorage.setItem('osito_site_theme_cache', temaConfirmado); } catch (e) {}
-            // Revela la página después de aplicar tema, fondo y decoración en la misma operación.
-            if (window.__ositoThemeStartupRelease) window.__ositoThemeStartupRelease();
+            aplicarModoSitio(data.theme || 'normal');
             // Siempre renderizamos el valor de Firestore. Si está vacío, limpiamos
             // los placeholders para que no parezca que el conteo no se publicó.
             if (Array.isArray(data.countdowns)) {
@@ -3780,25 +3748,6 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
             return `https://i.ytimg.com/vi/${id}/${ligera ? 'mqdefault' : 'hqdefault'}.jpg`;
         }
 
-        // Sincroniza Snowfall con el estado del reproductor de YouTube.
-        window.addEventListener('message', function (event) {
-            try {
-                const host = new URL(event.origin).hostname;
-                if (!/(^|\.)youtube(-nocookie)?\.com$/.test(host)) return;
-                const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                if (!data || data.event !== 'onStateChange') return;
-                const audio = document.getElementById('bg-music');
-                if (!audio) return;
-                if (Number(data.info) === 1) {
-                    if (event.source && event.source.frameElement) event.source.frameElement.dataset.ytPlaying = 'true';
-                    audio.pause();
-                } else if ([0, 2, 5].includes(Number(data.info))) {
-                    if (event.source && event.source.frameElement) event.source.frameElement.dataset.ytPlaying = 'false';
-                    const hayOtro = Array.from(document.querySelectorAll('.video-thumbnail iframe')).some(f => f.dataset.ytPlaying === 'true');
-                    if (!hayOtro && !document.hidden && !document.body.classList.contains('site-maintenance-active')) audio.play().catch(() => {});
-                }
-            } catch (_) {}
-        });
         function reproducirVideo(id, boton) {
             const contenedor = boton.closest('.video-thumbnail');
             if (!contenedor || contenedor.dataset.playing === 'true') return;
@@ -3807,12 +3756,12 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
             contenedor.innerHTML = `
                 <div class="vp-loading"><span class="vp-spin"></span></div>
                 <iframe 
-                    src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
+                    src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1"
                     title="Reproductor de YouTube"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerpolicy="strict-origin-when-cross-origin"
                     allowfullscreen
-                    onload="var l=this.parentNode.querySelector('.vp-loading');if(l)l.remove();this.contentWindow.postMessage(JSON.stringify({event:'command',func:'addEventListener',args:['onStateChange']}),'*')">
+                    onload="var l=this.parentNode.querySelector('.vp-loading');if(l)l.remove()">
                 </iframe>
             `;
             if (window.OsitoV49) setTimeout(window.OsitoV49.revisarReproductor, 300);
@@ -4105,6 +4054,8 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
     <link rel="stylesheet" href="osito-actividades-3d.css?v=97">
     <link rel="stylesheet" href="v61.css">
     <link rel="stylesheet" href="v92.css?v=98">
+    <link rel="stylesheet" href="gamer-fx.css?v=996">
+    <link rel="stylesheet" href="legal-gate.css?v=995">
     <style id="v66-chat-buttons-style">
         .ai-sessions-bar {
             display: flex !important;
@@ -5679,9 +5630,14 @@ html[data-site-theme="normal"] body::before{content:"";position:fixed;inset:-18%
             });
         })();
     </script>
-    <script src="firebase-integration.js?v=97"></script>
+    <script src="legal-gate.js?v=995"></script>
+    <script src="gamer-fx.js?v=998"></script>
+    <script src="descargar-app.js?v=993"></script>
+    <script src="firebase-integration.js?v=994"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>
     <script src='call-mode-engine.js'></script>
+    <script src='mascota-vocabulario.js?v=99' defer></script>
+    <script src='osito-mente.js?v=99' defer></script>
     <script src="ia-maintenance.js?v=90"></script></body>
 </html>

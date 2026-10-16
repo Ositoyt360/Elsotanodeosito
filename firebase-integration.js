@@ -32,6 +32,8 @@
     let auth = null;
     let storage = null;
     const CREATOR_EMAIL = 'ositoyt360@elsotanodeosito.com';
+    // Incrementa estas versiones cuando cambie sustancialmente cada documento legal.
+    const LEGAL_VERSIONS = Object.freeze({ terms: '2026-10-15-v1', privacy: '2026-10-15-v1' });
 
     function isCreatorAccount(user) {
         return String(user?.email || '').trim().toLowerCase() === CREATOR_EMAIL || String(user?.displayName || '').trim().toLowerCase() === 'ositoyt360';
@@ -137,6 +139,8 @@
             rankPreview: el('profile-rank-preview'),
             registerOnly: el('auth-register-only'),
             gender: el('auth-gender'),
+            acceptTerms: el('auth-accept-terms'),
+            acceptPrivacy: el('auth-accept-privacy'),
             photoButton: el('auth-photo-button'),
             photoInput: el('auth-photo-input'),
             photoThumb: el('auth-photo-thumb'),
@@ -293,9 +297,11 @@
 
     function setMode(mode) {
         state.mode = mode === 'register' ? 'register' : 'login';
-        const { submit, registerOnly, modeButtons } = getAuthElements();
+        const { submit, registerOnly, modeButtons, acceptTerms, acceptPrivacy } = getAuthElements();
         if (registerOnly) registerOnly.style.display = state.mode === 'register' ? 'grid' : 'none';
         if (submit) submit.textContent = state.mode === 'register' ? 'Crear cuenta' : 'Entrar';
+        if (acceptTerms) acceptTerms.required = state.mode === 'register';
+        if (acceptPrivacy) acceptPrivacy.required = state.mode === 'register';
         modeButtons.forEach((btn) => {
             btn.classList.toggle('active', btn.dataset.mode === state.mode);
         });
@@ -846,7 +852,10 @@
         if (!document.hidden && !state.livechatUnsubscribe) startLiveChatListener(true);
     });
 
-    async function registerUser(user, gender, photoFile) {
+    async function registerUser(user, gender, photoFile, consents) {
+        if (!db || !window.docFirebase || !window.setDocFirebase) {
+            throw new Error('No se puede guardar el consentimiento legal en la base de datos. Intenta más tarde.');
+        }
         const photoURL = await uploadPhotoIfNeeded(user, photoFile);
         const displayName = safeEmailName(user.email);
 
@@ -867,10 +876,17 @@
                 rankLabel: '',
                 rankColor: '#00f2fe',
                 tutorialSeen: false,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                legalConsents: {
+                    terms: { accepted: consents?.terms === true, version: LEGAL_VERSIONS.terms, acceptedAt: new Date().toISOString() },
+                    privacy: { accepted: consents?.privacy === true, version: LEGAL_VERSIONS.privacy, acceptedAt: new Date().toISOString() }
+                }
             }, { merge: true });
+        } else {
+            throw new Error('No se pudo guardar tu aceptación legal. No es posible completar el registro ahora.');
         }
 
+        try { window.OsitoLegal && window.OsitoLegal.markAccepted(user.uid); } catch (_) {}
         return { displayName, gender, photoURL, rankLabel: '', rankColor: '#00f2fe', tutorialSeen: false };
     }
 
@@ -883,6 +899,18 @@
         const cleanPassword = escapeText(password?.value);
         const selectedGender = gender?.value === 'female' ? 'female' : 'male';
         const photoFile = state.selectedPhotoFile || photoInput?.files?.[0] || null;
+        const { acceptTerms, acceptPrivacy } = getAuthElements();
+
+        if (state.mode === 'register' && (!acceptTerms?.checked || !acceptPrivacy?.checked)) {
+            setStatus('Para crear tu cuenta, acepta los términos y condiciones y la política de privacidad.', 'error');
+            if (!acceptTerms?.checked) acceptTerms?.focus(); else acceptPrivacy?.focus();
+            return;
+        }
+
+        if (state.mode === 'register' && (!db || !window.docFirebase || !window.setDocFirebase)) {
+            setStatus('No se puede guardar la aceptación legal en este momento. Intenta más tarde.', 'error');
+            return;
+        }
 
         if (!cleanEmail || !cleanPassword) {
             setStatus('Escribe tu correo y tu contrasena.', 'error');
@@ -895,6 +923,7 @@
         }
 
         state.authSubmitting = true;
+        if (state.mode === 'register') window.__ositoRegistering = true;
         if (submit) {
             submit.disabled = true;
             submit.textContent = state.mode === 'register' ? 'Creando cuenta...' : 'Entrando...';
@@ -913,7 +942,20 @@
 
             if (state.mode === 'register') {
                 const credential = await window.createUserWithEmailAndPasswordFirebase(auth, cleanEmail, cleanPassword);
-                const registeredProfile = await registerUser(credential.user, selectedGender, photoFile);
+                let registeredProfile;
+                try {
+                    registeredProfile = await registerUser(credential.user, selectedGender, photoFile, {
+                        terms: acceptTerms.checked,
+                        privacy: acceptPrivacy.checked,
+                        versions: LEGAL_VERSIONS
+                    });
+                } catch (registrationError) {
+                    // Si no se guardó el consentimiento, intentamos retirar la cuenta recién creada
+                    // para no dejar un registro utilizable sin la aceptación persistida.
+                    try { if (credential.user && typeof credential.user.delete === 'function') await credential.user.delete(); } catch (cleanupError) { console.warn('[LegalConsent] No se pudo retirar la cuenta incompleta.', cleanupError?.code || cleanupError?.message); }
+                    try { await window.signOutFirebase(auth); } catch (_) {}
+                    throw registrationError;
+                }
                 // El callback de Auth puede ejecutarse antes de terminar la subida.
                 // Actualizamos el estado local con el perfil que ya contiene la foto.
                 state.profile = registeredProfile;
@@ -941,6 +983,7 @@
             setStatus(message, 'error');
         } finally {
             state.authSubmitting = false;
+            window.__ositoRegistering = false;
             if (submit) {
                 submit.disabled = false;
                 submit.textContent = state.mode === 'register' ? 'Crear cuenta' : 'Entrar';
@@ -1387,6 +1430,27 @@
         if (form) {
             form.addEventListener('submit', handleAuthSubmit);
         }
+        const legalDialog = el('auth-legal-dialog');
+        const legalTitle = el('auth-legal-title');
+        const legalContent = el('auth-legal-content');
+        const legalClose = el('auth-legal-close');
+        document.querySelectorAll('[data-legal-open]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const kind = button.dataset.legalOpen;
+                if (!legalDialog || !legalTitle || !legalContent) return;
+                if (kind === 'terms') {
+                    legalTitle.textContent = 'Términos y condiciones';
+                    legalContent.textContent = 'Al usar El Sótano de Osito, debes respetar a otras personas, no abusar de las funciones del sitio y no publicar contenido ilegal o que vulnere derechos ajenos. Las funciones pueden cambiar o dejar de estar disponibles por mantenimiento. Completa aquí, antes de publicar la versión definitiva, los datos de contacto del responsable y las condiciones específicas de uso.';
+                } else {
+                    legalTitle.textContent = 'Política de privacidad';
+                    legalContent.textContent = 'El sitio utiliza Firebase para las funciones de cuenta y almacenamiento configuradas en el proyecto. La información asociada a tu cuenta puede incluir correo electrónico, perfil y preferencias que decidas proporcionar. No introduzcas información sensible que no sea necesaria. Antes de publicar esta política, el responsable debe completar sus datos de contacto, los detalles exactos de tratamiento, conservación, solicitudes de privacidad y cualquier proveedor adicional realmente utilizado.';
+                }
+                legalDialog.hidden = false;
+                legalClose?.focus();
+            });
+        });
+        if (legalClose) legalClose.addEventListener('click', () => { if (legalDialog) legalDialog.hidden = true; });
+        if (legalDialog) legalDialog.addEventListener('click', (event) => { if (event.target === legalDialog) legalDialog.hidden = true; });
 
         if (passwordToggle) passwordToggle.addEventListener('click', () => togglePasswordVisibility(password, passwordToggle));
         if (newPasswordToggle) newPasswordToggle.addEventListener('click', () => togglePasswordVisibility(newPassword, newPasswordToggle));

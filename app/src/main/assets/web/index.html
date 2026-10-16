@@ -958,6 +958,13 @@ accent-color:#00ff88;
                                 </div>
                                 <img id="auth-photo-thumb" class="auth-photo-thumb" src="" alt="Vista previa de la foto">
                             </div>
+
+                            <fieldset class="auth-legal-consent" id="auth-legal-consent">
+                                <legend>Documentos obligatorios</legend>
+                                <label><input id="auth-terms-consent" type="checkbox" disabled> Acepto los términos y condiciones.</label>
+                                <label><input id="auth-privacy-consent" type="checkbox" disabled> Acepto la política de privacidad.</label>
+                                <button class="auth-legal-link" type="button" onclick="window.abrirPoliticas && window.abrirPoliticas()">Leer políticas y términos</button>
+                            </fieldset>
                         </div>
 
                         <button class="btn-action auth-guest" id="auth-guest" type="button" onclick="window.entrarComoInvitado?.()">Entrar como invitado</button>
@@ -1214,6 +1221,12 @@ accent-color:#00ff88;
                     <a class="btn-action header-channel-link" href="https://www.youtube.com/@OsitoYT360" target="_blank" rel="noopener noreferrer">
                         <span aria-hidden="true">▶</span> Ir al canal
                     </a>
+                    <button class="btn-action app-access-mobile" type="button" data-policies-open>
+                        <span aria-hidden="true">🛡️</span> Políticas y privacidad
+                    </button>
+                    <a class="btn-action app-access-mobile" data-app-download href="/descargar-apk" download>
+                        <span aria-hidden="true">📲</span> Descargar app Android
+                    </a>
                     <button class="btn-action btn-anim" id="btn-toggle-anim" onclick="toggleAnimaciones()">
                         <span>⚡</span> Mejorar Rendimiento
                     </button>
@@ -1366,6 +1379,18 @@ accent-color:#00ff88;
                             <p style="color: var(--text-muted); padding: 20px;">No tienes videos ni directos en favoritos todavía.</p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section class="app-access-desktop" aria-label="Aplicación y documentos legales">
+                <div>
+                    <p class="app-access-eyebrow">EL SÓTANO DE OSITO</p>
+                    <h2>Lleva el Sótano contigo</h2>
+                    <p>Descarga la aplicación para Android o consulta los documentos legales cuando lo necesites.</p>
+                </div>
+                <div class="app-access-actions">
+                    <a class="btn-action app-download-cta" data-app-download href="/descargar-apk" download>📲 Descargar app Android</a>
+                    <button class="btn-action app-policy-cta" type="button" data-policies-open>🛡️ Políticas y privacidad</button>
                 </div>
             </section>
 
@@ -5447,6 +5472,7 @@ accent-color:#00ff88;
             });
         })();
     </script>
+    <script src="app-access.js?v=1"></script>
     <script src="firebase-integration.js"></script>
     <script src='asistente-voz.js'></script>
     <script src='face-100.js' defer></script>

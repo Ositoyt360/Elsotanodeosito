@@ -1,0 +1,25 @@
+V99.2 — Legales profesionales (Actualización 1.9), fondo gamer sin cuadros, botón Descargar
+
+NUEVOS: legal-gate.js, legal-gate.css, gamer-fx.js, gamer-fx.css, descargar-app.js, El-Sotano-de-Osito.apk
+MODIFICADOS: index.html (links/scripts), firebase-integration.js (flag de registro + guardado), sw.js (cache v99-2)
+
+1) Política de privacidad / Términos
+ - Pantalla completa profesional (ya no es un cuadrito), con pestañas Términos / Privacidad, barra de progreso y mascota del cubo.
+ - Botón "Volver" (y el botón atrás del celular) regresa a la pestaña anterior.
+ - OBLIGATORIO LEER: el botón de aceptar se activa solo al llegar al final del documento.
+ - Botón de voz: lee SOLO el texto del documento (intro, títulos de sección y párrafos), no menús ni botones.
+ - Botones animados (brillo, rebote, pulso cuando están listos).
+ - Decoración por modo: normal (gamer neón), Halloween, Navidad, San Valentín, Cumpleaños.
+2) Registro: las casillas solo se marcan después de leer el documento (si las tocas sin leer, abre el lector).
+3) Actualización 1.9: cuentas existentes sin aceptación vigente ven una ventana obligatoria al entrar (hay que leer ambos documentos).
+   "No acepto" cierra la sesión. Se guarda users/{uid}.legalConsents con versión y fecha.
+4) Modo normal: fondo gamer animado profesional (auroras, haces de luz, partículas y anillos de energía). Sin cuadrícula ni cuadros,
+   tampoco el piso 3D de la pantalla principal. Se pausa con "Quitar animaciones", modo ultra o reducir movimiento.
+5) Botón "Descargar app" en la pantalla de entrada: abre el APK en MediaFire. Se oculta dentro de la app.
+NOTA: textos legales = base general; el responsable debe revisarlos y agregar su contacto real.
+
+V99.3
+- FIX: al tocar "términos y condiciones" / "política de privacidad" en el registro no se veía nada (el sitio oculta todo lo que no sea la pantalla de entrada). Corregido en legal-gate.css.
+- Casillas del registro con diseño nuevo (tarjetas, casilla animada, botones en forma de píldora).
+- Términos y Política siempre disponibles (también para cuentas que ya aceptaron): en el menú y al final de la página, PC y celular.
+- "Descargar app (solo móvil)": ya no sale en la entrada; sale en la página principal (tarjeta sobre el pie) y en el menú, también en modo invitado.

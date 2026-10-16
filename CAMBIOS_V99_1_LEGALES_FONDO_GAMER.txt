@@ -1,0 +1,25 @@
+CAMBIOS V99.1 — ACEPTACIÓN LEGAL OBLIGATORIA Y FONDO GAMER
+
+1. REGISTRO
+- El formulario de registro muestra dos casillas desmarcadas por defecto: términos y condiciones, y política de privacidad.
+- Ambas son obligatorias y la lógica de envío verifica que se hayan marcado explícitamente.
+- Se agregaron ventanas de lectura dentro del formulario para cada documento. Su contenido incluye notas que el propietario debe completar/verificar antes de publicación legal definitiva; no se presentan como asesoría legal.
+- El registro exige que Firestore esté disponible para guardar las aceptaciones.
+- En el documento users/{uid} se guarda legalConsents con aceptación independiente, versión y fecha/hora ISO para cada documento.
+- Si falla el guardado, se intenta eliminar la cuenta recién creada y se cierra la sesión para no continuar con un registro sin consentimiento persistido.
+
+2. FONDO MODO NORMAL
+- Se agregó movimiento sutil de iluminación neón verde/cian/violeta y desplazamiento de cuadrícula únicamente bajo body.modo-normal.
+- Se respeta prefers-reduced-motion y se desactivan las animaciones en los modos de rendimiento reducido existentes.
+- No se modificaron los fondos temáticos ni el código del chat en vivo.
+
+ARCHIVOS MODIFICADOS
+- index.html
+- firebase-integration.js
+- styles.css
+
+IMPORTANTE
+- Las versiones actuales son 2026-10-15-v1. Deben incrementarse cuando se cambien los documentos legales.
+- El texto legal es una base inicial y contiene indicaciones para completar/verificar información real del responsable y del tratamiento. Debe revisarse antes de considerarlo una política legal definitiva.
+- Se verificó sintaxis de JavaScript y se ejecutó npm run build (script de proyecto que solo confirma el build por mensaje; no compila la aplicación).
+- No se ejecutó una prueba real de registro contra Firebase ni una prueba visual en navegador/dispositivo.

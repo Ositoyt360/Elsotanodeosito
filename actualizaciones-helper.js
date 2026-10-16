@@ -16,7 +16,7 @@
     var GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/';
 
     var CHECK_INTERVAL_SERVER_MS = 25 * 1000; // Cada 25s en servidor local/producción
-    var CHECK_INTERVAL_GITHUB_MS = 45 * 1000; // Cada 45s directo a GitHub API para APK/Web
+    var CHECK_INTERVAL_GITHUB_MS = 5 * 60 * 1000; // V99.9: cada 5 min (a 45s se pasaba del limite de 60 consultas/hora de GitHub y quedaba bloqueado)
     var INITIAL_DELAY_MS = 3500;
 
     var STORAGE_VERSION_KEY = 'osito_app_build_version';
@@ -37,11 +37,16 @@
 
     function isApkEnvironment() {
         var proto = window.location.protocol || '';
+        var ua = navigator.userAgent || '';
+        var standalone = false;
+        try { standalone = !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches); } catch (_) {}
         return (
             proto === 'file:' ||
             proto === 'capacitor:' ||
             proto === 'app:' ||
-            !!window.Capacitor
+            !!window.Capacitor ||
+            /; wv\)/.test(ua) ||      // V99.9: APK que abre la web dentro de un WebView
+            standalone                  // V99.9: app instalada / TWA
         );
     }
 
@@ -95,7 +100,7 @@
     // Descarga y aplica en vivo los archivos CSS y JS actualizados directamente desde GitHub Raw para el APK
     async function syncFromGithubRaw(sha) {
         if (!sha) return false;
-        var cssFiles = ['styles.css', 'v49.css', 'v61.css', 'osito-cara3d.css', 'osito-actividades-3d.css'];
+        var cssFiles = ['styles.css', 'v49.css', 'v61.css', 'v92.css', 'gamer-fx.css', 'legal-gate.css', 'osito-cara3d.css', 'osito-actividades-3d.css'];
         var jsFiles = ['performance-lite.js', 'v49.js', 'osito-cara3d.js', 'firebase-integration.js'];
         var updatedCssMap = {};
         var anyUpdated = false;
@@ -275,7 +280,7 @@
         if (window.location.protocol === 'file:') return;
         isChecking = true;
         try {
-            var res = await fetch('/api/version?t=' + Date.now(), {
+            var res = await fetch('/api/github-version?t=' + Date.now(), {
                 cache: 'no-store',
                 headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
             });
@@ -298,6 +303,26 @@
         } finally {
             isChecking = false;
         }
+    }
+
+
+    // V99.9: huella de index.html. Compara las versiones (?v=...) de los scripts/estilos que pide la pagina.
+    // No depende de /api ni del limite de la API de GitHub: si cambia algo, limpia cache y recarga (web y APK).
+    var STORAGE_SIG_KEY = 'osito_index_signature';
+    async function checkIndexSignature() {
+        if (isChecking || isReloading || document.hidden) return;
+        if (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') return;
+        try {
+            var res = await fetch(window.location.pathname + '?_sig=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) return;
+            var html = await res.text();
+            var stamps = (html.match(/(?:src|href)="[^"]+\.(?:js|css)\?v=[^"]+"/g) || []).join('|');
+            if (!stamps) return;
+            var old = null;
+            try { old = localStorage.getItem(STORAGE_SIG_KEY); } catch (_) {}
+            try { localStorage.setItem(STORAGE_SIG_KEY, stamps); } catch (_) {}
+            if (old && old !== stamps) { await applySeamlessUpdate('sig-' + Date.now(), 'signature'); }
+        } catch (_) {}
     }
 
     function registerAutoServiceWorker() {
@@ -330,19 +355,23 @@
 
         setTimeout(function () {
             checkServerVersion();
+            checkIndexSignature();
             checkGithubRepoVersion();
+            setInterval(checkIndexSignature, CHECK_INTERVAL_SERVER_MS);
             checkTimer = setInterval(checkServerVersion, CHECK_INTERVAL_SERVER_MS);
             githubTimer = setInterval(checkGithubRepoVersion, CHECK_INTERVAL_GITHUB_MS);
         }, INITIAL_DELAY_MS);
 
         document.addEventListener('visibilitychange', function () {
             if (!document.hidden) {
+                checkIndexSignature();
                 checkServerVersion();
                 checkGithubRepoVersion();
             }
         });
 
         window.addEventListener('online', function () {
+            checkIndexSignature();
             checkServerVersion();
             checkGithubRepoVersion();
         });

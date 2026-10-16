@@ -1,4 +1,5 @@
-/* V99.8: fondo visible en modo normal aunque Firebase tarde, en equipos de gama baja o con animaciones del sistema desactivadas.
+/* V99.9: con 'reducir movimiento' del sistema (Android lo activa con ahorro de bateria / animaciones apagadas) el fondo ya NO se congela: se mueve lento y suave.
+ * V99.8: fondo visible en modo normal aunque Firebase tarde, en equipos de gama baja o con animaciones del sistema desactivadas.
  * ===================================================================== */
 /* =====================================================================
  * V99.6 — Fondo gamer 3D de PARTÍCULAS para el modo normal (sin cuadrícula).
@@ -16,7 +17,7 @@
     var lowEnd = document.documentElement.classList.contains('low-end-device') ||
         (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
         (navigator.deviceMemory && navigator.deviceMemory <= 4);
-    var FPS = lowEnd ? 30 : 50, STEP = 1000 / FPS - 2;
+    var FPS = reduce ? 24 : (lowEnd ? 30 : 50), STEP = 1000 / FPS - 2;
     var NEAR = 0.15, FAR = 1.0;
 
     function rnd(a, b) { return a + Math.random() * (b - a); }
@@ -62,7 +63,7 @@
     Fx.prototype.frame = function (dt) {
         var ctx = this.ctx, w = this.w, h = this.h, cx = w / 2, cy = h / 2;
         var f = Math.max(w, h) * .62;
-        var speed = .16, ang = Math.sin(this.t * .15) * .12 * dt; // giro suave
+        var speed = reduce ? .03 : .055, ang = Math.sin(this.t * .1) * .04 * dt; // V99.9b: avance y giro MUY lentos (antes mareaba)
         var ca = Math.cos(ang), sa = Math.sin(ang);
         this.t += dt;
         ctx.clearRect(0, 0, w, h);
@@ -152,7 +153,6 @@
     function start() {
         ensure();
         if (!active()) return;
-        if (reduce) { drawStatic(); return; }
         if (running) return;
         running = true; last = performance.now();
         requestAnimationFrame(loop);
@@ -161,7 +161,7 @@
     function init() {
         ensure();
         start();
-        window.addEventListener('resize', function () { fxs.forEach(function (f) { f.resize(); }); if (reduce) drawStatic(); });
+        window.addEventListener('resize', function () { fxs.forEach(function (f) { f.resize(); }); });
         document.addEventListener('visibilitychange', start);
         if (window.MutationObserver) {
             new MutationObserver(function () { ensure(); start(); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });

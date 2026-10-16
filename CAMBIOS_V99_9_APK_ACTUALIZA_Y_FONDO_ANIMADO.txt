@@ -1,0 +1,17 @@
+V99.9
+APK que no se actualizaba:
+- actualizaciones-helper.js consultaba /api/version, que NO existe en server.js (la ruta real es /api/github-version). Corregido.
+- El chequeo a la API de GitHub era cada 45 s (80 consultas/hora) y GitHub solo permite 60/hora sin token: se bloqueaba y fallaba en silencio. Ahora cada 5 min.
+- Nuevo chequeo por "huella" de index.html (versiones ?v=...): sin servidor ni API de GitHub; si cambia, limpia cache y recarga (web y APK).
+- El APK en WebView (; wv) o instalado ya cuenta como APK.
+- Lista OTA ahora incluye v92.css, gamer-fx.css y legal-gate.css.
+Fondo parado:
+- Android activa "reducir movimiento" con ahorro de bateria / animaciones apagadas y el fondo se dibujaba como cuadro fijo. Ahora se mueve lento y suave.
+Modificados: actualizaciones-helper.js, gamer-fx.js, index.html (?v=999), sw.js (cache v99-9)
+
+V99.9 (parte 2) - fondo al entrar
+- El tema ya no espera a Firebase: se recuerda el ultimo (localStorage osito_ultimo_tema) y se aplica al instante, con fondo oscuro desde el primer pixel.
+- El video de fondo (Halloween/Navidad/Cumple) ya NO se pausa por la deteccion automatica de equipo lento. Solo se congela con "Quitar animaciones" o modo ultra.
+Modificados: index.html, v49.js, sw.js (cache v99-10)
+
+V99.9b: fondo de particulas mucho mas lento (avance 0.16->0.055, giro 3x menor). Ajustable en gamer-fx.js: variable speed.

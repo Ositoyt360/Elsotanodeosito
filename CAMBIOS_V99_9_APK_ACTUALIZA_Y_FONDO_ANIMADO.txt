@@ -15,3 +15,8 @@ V99.9 (parte 2) - fondo al entrar
 Modificados: index.html, v49.js, sw.js (cache v99-10)
 
 V99.9b: fondo de particulas mucho mas lento (avance 0.16->0.055, giro 3x menor). Ajustable en gamer-fx.js: variable speed.
+
+V99.9 (parte 3) - voz de la IA en movil
+- Nuevo voz-respaldo.js (cargado en index.html e ia.html): si el dispositivo/APK NO trae speechSynthesis ("Tu dispositivo no permite leer en voz alta") se crea uno compatible con voz en linea (necesita internet). Tambien sirve de respaldo si la voz del sistema no suena.
+- asistente-voz.js: desbloqueo de la voz con el primer toque, mas tiempo de espera y 3 reintentos en movil, aviso en pantalla si no se pudo.
+Modificados: voz-respaldo.js (nuevo), asistente-voz.js, index.html, ia.html, sw.js (cache v99-12)

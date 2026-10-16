@@ -39,7 +39,7 @@
     function limpiarId(id) { return String(id || '').replace(/[^\w-]/g, ''); }
     function sinAnimaciones() {
         var c = document.body.classList;
-        return c.contains('no-animations') || c.contains('ultra-performance') || html.classList.contains('low-end-device');
+        return c.contains('anim-off-usuario') || c.contains('ultra-performance'); // V99.9: sin pausar por deteccion automatica de equipo lento
     }
     function equipoLimitado() {
         var n = navigator, con = n.connection || {};

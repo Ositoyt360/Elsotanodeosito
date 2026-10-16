@@ -1565,6 +1565,26 @@
             }, 500);
         }
 
+        // V99.9: en celulares (Android Chrome, WebView del APK, iPhone) la voz queda bloqueada hasta que una
+        // frase se pronuncia dentro de un toque real. Se "desbloquea" con el primer toque (frase muda).
+        let vozDesbloqueada = false;
+        function desbloquearVoz() {
+            if (vozDesbloqueada || !('speechSynthesis' in window)) return;
+            try {
+                const synth = window.speechSynthesis;
+                if (synth.paused) synth.resume();
+                const u = new SpeechSynthesisUtterance(' ');
+                u.volume = 0; u.rate = 1; u.lang = 'es-MX';
+                synth.speak(u);
+                vozDesbloqueada = true;
+                sondearVoces();
+            } catch (e) {}
+        }
+        ['touchstart', 'touchend', 'pointerdown', 'click', 'keydown'].forEach(ev =>
+            document.addEventListener(ev, desbloquearVoz, { capture: true, passive: true }));
+        window.ositoDesbloquearVoz = desbloquearVoz;
+        const ES_MOVIL = /Android|iPhone|iPad|iPod|; wv\)/i.test(navigator.userAgent || '');
+
         // Mantiene referencias a las frases en curso (Chrome a veces las recoge la basura y nunca llega 'end')
         const enCurso = [];
 
@@ -1667,9 +1687,17 @@
                         if (miToken !== tokenHablaActual) { resolve(); return; }
                         if (idx < frases.length) setTimeout(hablarSiguiente, ms); else finalizarTodo();
                     };
+                    // V99.9: la voz del sistema no sono -> voz en linea de respaldo (si hay internet)
+                    const usarRespaldo = () => {
+                        const R = window.OsitoTTSRespaldo;
+                        if (!R || miToken !== tokenHablaActual) { avisarVozFallo(); avanzar(40); return; }
+                        R.decir(frase, velBase).then((r) => { avanzar(r === 'cancelado' ? 40 : 55); })
+                            .catch(() => { avisarVozFallo(); avanzar(40); });
+                    };
                     const lanzar = () => {
-                        // intento 0: voz elegida · intento 1: sin voz fija (la del sistema) · luego se da por perdida la frase
+                        // intento 0: voz elegida · intento 1: sin voz fija (la del sistema) · intento 2: sin idioma · luego se da por perdida la frase
                         const u = crearUtter(frase, intento === 0);
+                        if (intento >= 2) { try { u.lang = ''; } catch (e) {} u.voice = null; }
                         enCurso.push(u); if (enCurso.length > 12) enCurso.shift();
                         inicio = false;
                         u.onstart = () => { inicio = true; clearTimeout(vigia); };
@@ -1677,27 +1705,37 @@
                         u.onerror = (ev) => {
                             const err = ev && ev.error;
                             if (err === 'interrupted' || err === 'canceled') { avanzar(40); return; }
-                            if (intento === 0) { intento = 1; setTimeout(lanzar, 60); } else avanzar(40);
+                            if (err === 'not-allowed') { vozDesbloqueada = false; }
+                            if (intento < 2) { intento++; setTimeout(lanzar, 120); } else { usarRespaldo(); }
                         };
                         // Chrome a veces descarta la voz sin avisar: si en 3 s no empezó, se reintenta una vez
                         vigia = setTimeout(() => {
                             if (inicio || terminada || miToken !== tokenHablaActual) return;
                             try { synth.cancel(); } catch (e) {}
-                            if (intento === 0) { intento = 1; setTimeout(lanzar, 120); } else avanzar(40);
-                        }, 3000);
+                            if (intento < 2) { intento++; setTimeout(lanzar, ES_MOVIL ? 250 : 120); } else { usarRespaldo(); }
+                        }, ES_MOVIL ? 6000 : 3000);
                         try { if (synth.paused) synth.resume(); synth.speak(u); }
-                        catch (e) { if (intento === 0) { intento = 1; setTimeout(lanzar, 60); } else avanzar(40); }
+                        catch (e) { if (intento < 2) { intento++; setTimeout(lanzar, 120); } else { usarRespaldo(); } }
                     };
                     lanzar();
                 };
 
                 // Tras cancel() Chrome necesita un instante antes de aceptar otra frase (si no, la descarta en silencio)
-                setTimeout(hablarSiguiente, 70);
+                // En celulares el motor tarda más en liberarse.
+                setTimeout(hablarSiguiente, ES_MOVIL ? 220 : 70);
             });
+        }
+
+        let ultimoAvisoVoz = 0;
+        function avisarVozFallo() {
+            if (Date.now() - ultimoAvisoVoz < 20000) return;
+            ultimoAvisoVoz = Date.now();
+            try { showToast('🔇 No pude reproducir la voz. Sube el volumen multimedia y revisa que tu celular tenga un motor de voz (Google Text-to-Speech) instalado.'); } catch (e) {}
         }
 
         function cancelar() {
             tokenHablaActual += 1;
+            try { if (window.OsitoTTSRespaldo) window.OsitoTTSRespaldo.parar(); } catch (e) {}
             if ('speechSynthesis' in window) {
                 try { window.speechSynthesis.cancel(); } catch (e) {}
             }

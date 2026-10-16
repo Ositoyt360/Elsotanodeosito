@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script src="voz-respaldo.js?v=9910"></script>
     <!-- URL de tu servidor de IA (Render). Ej: https://elsotanodeosito.onrender.com  — déjalo vacío si el sitio y el servidor están en la misma URL -->
     <meta name="osito-ia-url" content="https://elsotanodeosito.onrender.com">
     <meta charset="UTF-8">
@@ -874,8 +875,16 @@ accent-color:#00ff88;
 /* V76: mantenimiento independiente. Nunca mostrar el overlay antiguo en index. */
 #maintenance-overlay{display:none!important;visibility:hidden!important;pointer-events:none!important}
 </style>
+<style id="osito-pre-fondo">html{background:#05070c}body{background-color:#05070c}body{transition:none!important}</style>
 </head>
 <body>
+<script>
+/* V99.9: aplica al instante el ultimo tema conocido (antes se esperaba a Firebase y se veia otro fondo / blanco unos segundos) */
+(function(){var t='normal';try{t=localStorage.getItem('osito_ultimo_tema')||'normal';}catch(e){}
+if(!/^(normal|halloween|navidad|san-valentin|cumpleanos)$/.test(t))t='normal';
+document.body.classList.add('modo-'+t);document.documentElement.dataset.siteTheme=t;
+setTimeout(function(){var st=document.getElementById('osito-pre-fondo');if(st)st.textContent='html{background:#05070c}body{background-color:#05070c}';},1500);})();
+</script>
     <canvas id="space-canvas"></canvas>
     <div class="ambient-glow" id="glow-1"></div>
     <div class="ambient-glow" id="glow-2"></div>
@@ -1893,8 +1902,9 @@ accent-color:#00ff88;
             const video = layer.querySelector('video');
             if (!video) return;
 
+            // V99.9: solo se congela si la persona eligio "Quitar animaciones" o modo ultra (no por deteccion automatica)
             const reducido = document.body.classList.contains('ultra-performance')
-                || document.body.classList.contains('no-animations');
+                || document.body.classList.contains('anim-off-usuario');
             const themeActive = () => document.documentElement.dataset.siteTheme === theme;
 
             video.muted = true;
@@ -2060,6 +2070,7 @@ accent-color:#00ff88;
                 return;
             }
             window.__ositoTemaAplicado = t;
+            try { localStorage.setItem('osito_ultimo_tema', t); } catch (e) {}
             document.body.classList.remove('modo-normal','modo-halloween','modo-navidad','modo-san-valentin','modo-cumpleanos');
             document.body.classList.add('modo-' + t);
             document.documentElement.dataset.siteTheme = t;
@@ -2156,6 +2167,7 @@ accent-color:#00ff88;
             const p1 = localStorage.getItem('theme_primary') || '#58ff9a';
             const p2 = localStorage.getItem('theme_secondary') || '#13b85b';
             cambiarFondo(p1, p2);
+            try { aplicarModoSitio(localStorage.getItem('osito_ultimo_tema') || 'normal'); } catch (e) {}
             conectarModoSitio();
             bindCreatorCountdownEditor();
             bindCreatorUpdatesEditor();
@@ -5631,7 +5643,7 @@ accent-color:#00ff88;
         })();
     </script>
     <script src="legal-gate.js?v=995"></script>
-    <script src="gamer-fx.js?v=999"></script>
+    <script src="gamer-fx.js?v=9910"></script>
     <script src="descargar-app.js?v=993"></script>
     <script src="firebase-integration.js?v=994"></script>
     <script src='asistente-voz.js'></script>

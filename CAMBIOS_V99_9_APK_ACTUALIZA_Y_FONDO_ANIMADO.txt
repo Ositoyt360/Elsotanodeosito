@@ -20,3 +20,11 @@ V99.9 (parte 3) - voz de la IA en movil
 - Nuevo voz-respaldo.js (cargado en index.html e ia.html): si el dispositivo/APK NO trae speechSynthesis ("Tu dispositivo no permite leer en voz alta") se crea uno compatible con voz en linea (necesita internet). Tambien sirve de respaldo si la voz del sistema no suena.
 - asistente-voz.js: desbloqueo de la voz con el primer toque, mas tiempo de espera y 3 reintentos en movil, aviso en pantalla si no se pudo.
 Modificados: voz-respaldo.js (nuevo), asistente-voz.js, index.html, ia.html, sw.js (cache v99-12)
+
+V99.9 (parte 4): la IA ahora se llama "Cubit" (titulos, llamada, avisos, instrucciones del servidor y respuestas locales). Tambien responde si la llamas Cubit/Cubito.
+Modificados: ia.html, index.html, moderador.html, asistente-voz.js, call-mode-engine.js, ia-openai.js, ia-maintenance.js, base-conocimiento.js, chat-ia-core.js, server.js, sw.js
+
+V99.9 (parte 5) - voz generada en el servidor (como ChatGPT)
+- server.js: nuevo /api/ia/tts (voz neuronal es-MX-DaliaNeural con msedge-tts, cache y limite por IP). package.json: msedge-tts.
+- voz-respaldo.js: usa primero el servidor y, si falla, Google. asistente-voz.js: en el APK sin voces va directo al servidor.
+- IMPORTANTE: hay que volver a desplegar en Render (npm install baja msedge-tts).

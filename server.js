@@ -11,7 +11,7 @@ let WebSocket;
 let wss = null;
 try {
   WebSocket = require('ws');
-  wss = new WebSocket.Server({ server });
+  wss = new WebSocket.Server({ noServer: true });
 } catch (e) {
   console.log('Module "ws" not installed. Chat will fall back to HTTP polling.');
 }
@@ -1068,25 +1068,24 @@ if (wss) {
 
 
 // ============================================================
-// IA CON OPENAI RESPONSES API
-// La clave vive en process.env.OPENAI_API_KEY en el servidor.
+// IA CON GOOGLE GEMINI (chat + imágenes + voz en vivo)
+// La clave vive en process.env.GEMINI_API_KEY en el servidor.
 // El navegador conversa mediante /api/ia.
 // Texto + visión usan Responses API. El modo llamada existente usa
 // el micrófono y la voz del navegador, pero el cerebro es OpenAI.
 // ============================================================
 
-const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || process.env.NVIDIA_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
-// Si la clave empieza con "nvapi-" es de NVIDIA (NIM): usa su API compatible con OpenAI (chat/completions).
-// Con clave NVIDIA se ignoran OPENAI_API_BASE y OPENAI_MODEL si apuntan a OpenAI (restos de un .env viejo).
-const IA_ES_NVIDIA = /^nvapi-/i.test(OPENAI_API_KEY) || /nvidia\.com/i.test(String(process.env.OPENAI_API_BASE || ''));
-const _baseEnv = String(process.env.OPENAI_API_BASE || '').trim();
-const _modeloEnv = String(process.env.OPENAI_MODEL || '').trim();
-const OPENAI_API_BASE = (IA_ES_NVIDIA ? (/nvidia\.com/i.test(_baseEnv) ? _baseEnv : 'https://integrate.api.nvidia.com/v1') : (_baseEnv || 'https://api.openai.com/v1')).replace(/\/+$/, '');
-let OPENAI_MODEL = (IA_ES_NVIDIA ? (_modeloEnv && !/^(gpt-|o\d|chatgpt)/i.test(_modeloEnv) ? _modeloEnv : 'openai/gpt-oss-20b') : (_modeloEnv || 'gpt-5.4'));
-// Modelo con visión (solo NVIDIA; para imágenes) y modelo de respaldo si el principal no existe.
-const IA_MODELO_VISION = String(process.env.IA_MODELO_VISION || 'meta/llama-3.2-90b-vision-instruct').trim();
-const _respEnv = String(process.env.OPENAI_MODEL_RESPALDO || '').trim();
-const OPENAI_MODEL_RESPALDO = (IA_ES_NVIDIA ? (_respEnv && !/^(gpt-|o\d|chatgpt)/i.test(_respEnv) ? _respEnv : 'meta/llama-3.3-70b-instruct') : (_respEnv || 'gpt-5-mini'));
+const GEMINI_API_KEY = String(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+const GEMINI_API_BASE = (String(process.env.GEMINI_API_BASE || '').trim() || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/+$/, '');
+// Chat + lectura de imágenes (multimodal) + respaldo si el principal falla o está saturado.
+let GEMINI_MODEL = String(process.env.GEMINI_MODEL || '').trim() || 'gemini-3.5-flash-lite';
+const GEMINI_MODEL_RESPALDO = String(process.env.GEMINI_MODEL_RESPALDO || '').trim() || 'gemini-3.8-flash';
+// Voz en vivo (Gemini Live, audio nativo). Se conecta por /api/ia/live (el navegador nunca ve la clave).
+const GEMINI_LIVE_MODELO = String(process.env.GEMINI_LIVE_MODEL || '').trim() || 'gemini-3.8-live';
+const GEMINI_LIVE_VOZ = String(process.env.GEMINI_LIVE_VOZ || '').trim() || 'Aoede';   // voz de mujer
+const GEMINI_LIVE_VOZ_HOMBRE = String(process.env.GEMINI_LIVE_VOZ_HOMBRE || '').trim() || 'Charon';
+const GEMINI_LIVE_MAX_SESIONES = Number(process.env.GEMINI_LIVE_MAX_SESIONES || 8);
+const GEMINI_LIVE_MAX_SEG = Number(process.env.GEMINI_LIVE_MAX_SEG || 600);
 
 const IA_MAX_POR_MINUTO = Number(process.env.IA_MAX_POR_MINUTO || 20);
 const IA_MAX_POR_DIA_IP = Number(process.env.IA_MAX_POR_DIA_IP || 50);
@@ -1175,7 +1174,7 @@ function construirInstruccionIA() {
   const anosCanal = (conocimientoOsito && typeof conocimientoOsito.calcularAnosCanal === 'function')
     ? conocimientoOsito.calcularAnosCanal(new Date()) : 4;
 
-  return `Eres "La mascotita del Sótano", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoYT360 / Osito Gamer 360 YouTube).
+  return `Eres "Cubit", la inteligencia artificial oficial de "El Sótano de Osito" (canal OsitoYT360 / Osito Gamer 360 YouTube).
 
 CÓMO CONVERSAS
 - Responde exactamente a lo que el usuario acaba de decir y mantén el hilo de la conversación.
@@ -1224,7 +1223,7 @@ function limpiarHistorialIA(historial, pregunta) {
   return salida;
 }
 
-function construirInputOpenAI(historial, pregunta, imagenInfo) {
+function construirInputGemini(historial, pregunta, imagenInfo) {
   const mensajes = limpiarHistorialIA(historial, pregunta);
   const content = [{ type: 'input_text', text: textoSeguroIA(pregunta) || '¿Qué ves en esta imagen?' }];
   if (imagenInfo) {
@@ -1248,90 +1247,126 @@ function extraerTextoOpenAI(data) {
   return partes.join('\n').trim();
 }
 
-function inputAMensajesChat(input, instrucciones) {
-  const msgs = [{ role: 'system', content: instrucciones }];
+function inputAContenidosGemini(input) {
+  const contents = [];
   for (const m of Array.isArray(input) ? input : []) {
-    const partes = Array.isArray(m.content) ? m.content : [];
-    const texto = partes.filter((c) => c.type === 'input_text').map((c) => c.text).join('\n');
-    const imgs = partes.filter((c) => c.type === 'input_image' && c.image_url);
-    if (imgs.length) {
-      msgs.push({ role: m.role, content: [{ type: 'text', text: texto || '¿Qué ves?' }, ...imgs.map((i) => ({ type: 'image_url', image_url: { url: i.image_url } }))] });
-    } else {
-      msgs.push({ role: m.role, content: texto });
+    const partes = [];
+    for (const c of Array.isArray(m.content) ? m.content : []) {
+      if (c.type === 'input_text' && c.text) partes.push({ text: String(c.text) });
+      else if (c.type === 'input_image' && c.image_url) {
+        const mm = /^data:([^;]+);base64,(.+)$/s.exec(String(c.image_url));
+        if (mm) partes.push({ inlineData: { mimeType: mm[1], data: mm[2] } });
+      }
     }
+    if (typeof m.content === 'string' && m.content) partes.push({ text: m.content });
+    if (partes.length) contents.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: partes });
   }
-  return msgs;
+  // Gemini exige que la conversación empiece con un turno del usuario.
+  while (contents.length && contents[0].role !== 'user') contents.shift();
+  return contents;
 }
 
-function extraerTextoChat(data) {
-  const msg = data?.choices?.[0]?.message || {};
-  const c = msg.content;
-  if (typeof c === 'string') return c.trim();
-  if (Array.isArray(c)) return c.map((x) => (typeof x === 'string' ? x : (x?.text || ''))).join('\n').trim();
-  // content null = el modelo agotó los tokens razonando (reasoning_content no se muestra al usuario).
-  return '';
+function extraerTextoGemini(data) {
+  const partes = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(partes)) return '';
+  return partes.filter((p) => typeof p?.text === 'string' && !p.thought).map((p) => p.text).join('\n').trim();
 }
 
-async function llamarOpenAI(input, instrucciones, conImagen, modeloForzado, maxTokens) {
-  if (!OPENAI_API_KEY) {
-    const err = new Error('Falta OPENAI_API_KEY (o NVIDIA_API_KEY) en las variables de entorno.');
+const GEMINI_SEGURIDAD = ['HARM_CATEGORY_HARASSMENT', 'HARM_CATEGORY_HATE_SPEECH', 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'HARM_CATEGORY_DANGEROUS_CONTENT']
+  .map((category) => ({ category, threshold: 'BLOCK_ONLY_HIGH' }));
+
+async function llamarGemini(input, instrucciones, conImagen, modeloForzado, maxTokens) {
+  if (!GEMINI_API_KEY) {
+    const err = new Error('Falta GEMINI_API_KEY en las variables de entorno.');
     err.status = 503;
     throw err;
   }
-  const modelo = modeloForzado || ((IA_ES_NVIDIA && conImagen) ? IA_MODELO_VISION : OPENAI_MODEL);
+  const modelo = modeloForzado || GEMINI_MODEL;
   const controlador = new AbortController();
-  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 80000 : 40000);
+  const temporizador = setTimeout(() => controlador.abort(), conImagen ? 45000 : 20000);
   try {
-    const url = `${OPENAI_API_BASE}/${IA_ES_NVIDIA ? 'chat/completions' : 'responses'}`;
-    const cuerpo = IA_ES_NVIDIA
-      ? Object.assign(
-          { model: modelo, messages: inputAMensajesChat(input, instrucciones), max_tokens: maxTokens || 4096, temperature: 0.7, top_p: 1, stream: false },
-          // gpt-oss es un modelo de razonamiento: con esfuerzo bajo responde rápido y no gasta los tokens "pensando".
-          /gpt-oss/i.test(modelo) ? { reasoning_effort: 'low' } : {}
-        )
-      : { model: modelo, instructions: instrucciones, input, max_output_tokens: maxTokens || (conImagen ? 3500 : 3000) };
-    const response = await fetch(url, {
+    const cuerpo = {
+      systemInstruction: { parts: [{ text: instrucciones }] },
+      contents: inputAContenidosGemini(input),
+      generationConfig: { maxOutputTokens: maxTokens || (conImagen ? 3500 : 3000), temperature: 0.7 },
+      safetySettings: GEMINI_SEGURIDAD
+    };
+    const response = await fetch(`${GEMINI_API_BASE}/models/${encodeURIComponent(modelo)}:generateContent`, {
       method: 'POST', signal: controlador.signal,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
       body: JSON.stringify(cuerpo)
     });
     if (!response.ok) {
       const detalle = await response.text().catch(() => '');
       const err = new Error(detalle.slice(0, 700) || `HTTP ${response.status}`);
       err.status = response.status;
-      const modeloInvalido = [400, 404].includes(response.status) && /model|function/i.test(detalle) && /(not.?found|does not exist|access|invalid)/i.test(detalle);
-      if (modeloInvalido && !modeloForzado && !conImagen && OPENAI_MODEL_RESPALDO && OPENAI_MODEL_RESPALDO !== modelo) {
-        console.warn(`[IA] Modelo "${modelo}" no disponible; usando "${OPENAI_MODEL_RESPALDO}".`);
+      const modeloInvalido = response.status === 404 || (response.status === 400 && /model/i.test(detalle) && /(not.?found|not supported|invalid)/i.test(detalle));
+      if (modeloInvalido && !modeloForzado && GEMINI_MODEL_RESPALDO && GEMINI_MODEL_RESPALDO !== modelo) {
+        console.warn(`[IA] Modelo "${modelo}" no disponible; usando "${GEMINI_MODEL_RESPALDO}".`);
         clearTimeout(temporizador);
-        const r2 = await llamarOpenAI(input, instrucciones, conImagen, OPENAI_MODEL_RESPALDO, maxTokens);
-        OPENAI_MODEL = OPENAI_MODEL_RESPALDO;
+        const r2 = await llamarGemini(input, instrucciones, conImagen, GEMINI_MODEL_RESPALDO, maxTokens);
+        GEMINI_MODEL = GEMINI_MODEL_RESPALDO;
         return r2;
       }
       throw err;
     }
     const data = await response.json();
-    return { texto: IA_ES_NVIDIA ? extraerTextoChat(data) : extraerTextoOpenAI(data), responseId: data?.id || '' };
+    return { texto: extraerTextoGemini(data), responseId: data?.responseId || '' };
   } finally {
     clearTimeout(temporizador);
   }
 }
 
-async function llamarOpenAIConReintentos(input, instrucciones, conImagen, maxTokens, crudo) {
+// Pregunta a Google qué modelos de texto tiene disponibles esta clave (por si los nombres cambiaron).
+let modelosDescubiertos = null, descubrimientoTs = 0;
+async function descubrirModelosGemini() {
+  if (modelosDescubiertos && Date.now() - descubrimientoTs < 10 * 60 * 1000) return modelosDescubiertos;
+  try {
+    const r = await fetch(`${GEMINI_API_BASE}/models?pageSize=200`, { headers: { 'x-goog-api-key': GEMINI_API_KEY } });
+    if (!r.ok) return [];
+    const data = await r.json();
+    const lista = (data.models || [])
+      .filter((m) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map((m) => String(m.name || '').replace(/^models\//, ''))
+      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(live|audio|tts|image|embed|thinking|preview|exp|robotics|computer)/i.test(n));
+    // los más nuevos primero (3.8 > 3.6 > 2.5 ...), "lite" al final de cada versión
+    lista.sort((x, y) => y.localeCompare(x, undefined, { numeric: true }));
+    modelosDescubiertos = lista; descubrimientoTs = Date.now();
+    console.log('[IA] Modelos de texto disponibles con tu clave:', lista.slice(0, 8).join(', ') || '(ninguno)');
+    return lista;
+  } catch (e) { return []; }
+}
+
+async function llamarGeminiConReintentos(input, instrucciones, conImagen, maxTokens, crudo) {
   let ultimoError = null;
-  const maxIntentos = 2;
-  for (let intento = 0; intento < maxIntentos; intento++) {
+  const probados = new Set();
+  // Lista base; si todo falla se agregan los modelos que Google diga que existen para esta clave.
+  let modelos = [GEMINI_MODEL, GEMINI_MODEL_RESPALDO, 'gemini-3.6-flash', 'gemini-2.5-flash'].filter((m, i, arr) => m && arr.indexOf(m) === i);
+  let descubierto = false;
+  for (let intento = 0; intento < 8; intento++) {
+    if (intento >= modelos.length) {
+      if (descubierto) break;
+      descubierto = true;
+      const extra = (await descubrirModelosGemini()).filter((m) => !probados.has(m)).slice(0, 3);
+      if (!extra.length) break;
+      modelos = modelos.concat(extra);
+    }
+    const modelo = modelos[intento];
+    probados.add(modelo);
     try {
-      // 2º intento: otro modelo (solo texto) por si el principal está saturado o devuelve vacío.
-      const forzado = (intento > 0 && !conImagen && IA_ES_NVIDIA && OPENAI_MODEL_RESPALDO !== OPENAI_MODEL) ? OPENAI_MODEL_RESPALDO : undefined;
-      const r = await llamarOpenAI(input, instrucciones, conImagen, forzado, maxTokens);
+      const r = await llamarGemini(input, instrucciones, conImagen, intento > 0 ? modelo : undefined, maxTokens);
       const limpio = r && (crudo ? textoCrudoMascota(r.texto) : textoPlanoIA(r.texto));
-      if (limpio) return { ...r, texto: limpio };
+      if (limpio) {
+        if (intento > 0 && modelo !== GEMINI_MODEL) { console.log(`[IA] Uso "${modelo}" (el principal no respondió).`); }
+        return { ...r, texto: limpio };
+      }
       ultimoError = Object.assign(new Error('Respuesta vacía'), { status: 200 });
     } catch (err) {
       ultimoError = err;
-      if ([400, 401, 403].includes(err?.status)) break;
+      console.warn(`[IA] "${modelo}" falló (${err?.status || err?.name || ''}): ${String(err?.message || '').replace(/\s+/g, ' ').slice(0, 200)}`);
+      if ([401, 403].includes(err?.status)) break;            // clave mala o sin permiso: otro modelo no ayuda
     }
-    if (intento < maxIntentos - 1) await esperarMs(500);
+    await esperarMs(400);
   }
   throw ultimoError || new Error('ia_no_disponible');
 }
@@ -1379,24 +1414,129 @@ function contextoMascota(m) {
   return p.length ? 'ESTADO REAL DE TU CUERPO Y DE LA PÁGINA AHORA: ' + p.join('; ') + '.' : '';
 }
 
+// V99.9 — Voz de la IA generada en el SERVIDOR (como ChatGPT): se crea el audio y el celular solo lo reproduce.
+// No depende del lector de voz del telefono/APK. Usa voces neuronales gratuitas de Microsoft Edge (paquete msedge-tts).
+const TTS_VOZ = process.env.IA_TTS_VOZ || 'es-MX-DaliaNeural';
+// Catálogo de voces (neuronales de Microsoft Edge, gratis). id -> voz real. g = genero, lang = idioma que habla.
+const VOCES_CATALOGO = [
+  { id: 'es-sv-f', nombre: 'Salvadoreña', region: 'El Salvador', g: 'f', lang: 'es', voz: 'es-SV-LorenaNeural', acento: 'salvadoreño' },
+  { id: 'es-sv-m', nombre: 'Salvadoreño', region: 'El Salvador', g: 'm', lang: 'es', voz: 'es-SV-RodrigoNeural', acento: 'salvadoreño' },
+  { id: 'es-mx-f', nombre: 'Latinoamérica (México)', region: 'Latinoamérica', g: 'f', lang: 'es', voz: 'es-MX-DaliaNeural', acento: 'latinoamericano neutro' },
+  { id: 'es-mx-m', nombre: 'Latinoamérica (México)', region: 'Latinoamérica', g: 'm', lang: 'es', voz: 'es-MX-JorgeNeural', acento: 'latinoamericano neutro' },
+  { id: 'es-ar-f', nombre: 'Argentina', region: 'Argentina', g: 'f', lang: 'es', voz: 'es-AR-ElenaNeural', acento: 'argentino' },
+  { id: 'es-ar-m', nombre: 'Argentina', region: 'Argentina', g: 'm', lang: 'es', voz: 'es-AR-TomasNeural', acento: 'argentino' },
+  { id: 'es-gt-f', nombre: 'Guatemala', region: 'Centroamérica', g: 'f', lang: 'es', voz: 'es-GT-MartaNeural', acento: 'centroamericano' },
+  { id: 'es-gt-m', nombre: 'Guatemala', region: 'Centroamérica', g: 'm', lang: 'es', voz: 'es-GT-AndresNeural', acento: 'centroamericano' },
+  { id: 'es-hn-f', nombre: 'Honduras', region: 'Centroamérica', g: 'f', lang: 'es', voz: 'es-HN-KarlaNeural', acento: 'centroamericano' },
+  { id: 'es-hn-m', nombre: 'Honduras', region: 'Centroamérica', g: 'm', lang: 'es', voz: 'es-HN-CarlosNeural', acento: 'centroamericano' },
+  { id: 'es-ni-f', nombre: 'Nicaragua', region: 'Centroamérica', g: 'f', lang: 'es', voz: 'es-NI-YolandaNeural', acento: 'centroamericano' },
+  { id: 'es-ni-m', nombre: 'Nicaragua', region: 'Centroamérica', g: 'm', lang: 'es', voz: 'es-NI-FedericoNeural', acento: 'centroamericano' },
+  { id: 'es-cr-f', nombre: 'Costa Rica', region: 'Centroamérica', g: 'f', lang: 'es', voz: 'es-CR-MariaNeural', acento: 'centroamericano' },
+  { id: 'es-cr-m', nombre: 'Costa Rica', region: 'Centroamérica', g: 'm', lang: 'es', voz: 'es-CR-JuanNeural', acento: 'centroamericano' },
+  { id: 'es-pa-f', nombre: 'Panamá', region: 'Centroamérica', g: 'f', lang: 'es', voz: 'es-PA-MargaritaNeural', acento: 'centroamericano' },
+  { id: 'es-pa-m', nombre: 'Panamá', region: 'Centroamérica', g: 'm', lang: 'es', voz: 'es-PA-RobertoNeural', acento: 'centroamericano' },
+  { id: 'es-co-f', nombre: 'Colombia', region: 'Latinoamérica', g: 'f', lang: 'es', voz: 'es-CO-SalomeNeural', acento: 'colombiano' },
+  { id: 'es-co-m', nombre: 'Colombia', region: 'Latinoamérica', g: 'm', lang: 'es', voz: 'es-CO-GonzaloNeural', acento: 'colombiano' },
+  { id: 'es-es-f', nombre: 'España', region: 'España', g: 'f', lang: 'es', voz: 'es-ES-ElviraNeural', acento: 'de España' },
+  { id: 'es-es-m', nombre: 'España', region: 'España', g: 'm', lang: 'es', voz: 'es-ES-AlvaroNeural', acento: 'de España' },
+  { id: 'en-us-f', nombre: 'English (US)', region: 'Inglés', g: 'f', lang: 'en', voz: 'en-US-JennyNeural', acento: 'estadounidense' },
+  { id: 'en-us-m', nombre: 'English (US)', region: 'Inglés', g: 'm', lang: 'en', voz: 'en-US-GuyNeural', acento: 'estadounidense' },
+  { id: 'en-gb-f', nombre: 'English (UK)', region: 'Inglés', g: 'f', lang: 'en', voz: 'en-GB-SoniaNeural', acento: 'británico' },
+  { id: 'en-gb-m', nombre: 'English (UK)', region: 'Inglés', g: 'm', lang: 'en', voz: 'en-GB-RyanNeural', acento: 'británico' },
+  { id: 'fr-fr-f', nombre: 'Français', region: 'Francés', g: 'f', lang: 'fr', voz: 'fr-FR-DeniseNeural', acento: 'francés' },
+  { id: 'fr-fr-m', nombre: 'Français', region: 'Francés', g: 'm', lang: 'fr', voz: 'fr-FR-HenriNeural', acento: 'francés' },
+  { id: 'pt-br-f', nombre: 'Português (Brasil)', region: 'Portugués', g: 'f', lang: 'pt', voz: 'pt-BR-FranciscaNeural', acento: 'brasileño' },
+  { id: 'pt-br-m', nombre: 'Português (Brasil)', region: 'Portugués', g: 'm', lang: 'pt', voz: 'pt-BR-AntonioNeural', acento: 'brasileño' },
+  { id: 'pt-pt-f', nombre: 'Português (Portugal)', region: 'Portugués', g: 'f', lang: 'pt', voz: 'pt-PT-RaquelNeural', acento: 'de Portugal' },
+  { id: 'pt-pt-m', nombre: 'Português (Portugal)', region: 'Portugués', g: 'm', lang: 'pt', voz: 'pt-PT-DuarteNeural', acento: 'de Portugal' }
+];
+const VOZ_DEFECTO_ID = 'es-mx-f';
+function buscarVozCatalogo(id) { return VOCES_CATALOGO.find((v) => v.id === String(id || '')) || null; }
+const IDIOMAS_NOMBRE = { es: 'español', en: 'inglés', fr: 'francés', pt: 'portugués' };
+// Instrucción para que la IA conteste en el idioma/acento de la voz elegida (si no, una voz inglesa leería texto español).
+function instruccionVozElegida(id) {
+  const v = buscarVozCatalogo(id);
+  if (!v || v.lang === 'es') return v ? `La voz elegida por el usuario tiene acento ${v.acento}: puedes usar un español natural de esa región, sin exagerar.` : '';
+  return `IDIOMA OBLIGATORIO: el usuario eligió una voz en ${IDIOMAS_NOMBRE[v.lang]}. Responde SIEMPRE en ${IDIOMAS_NOMBRE[v.lang]} (aunque te escriba en otro idioma), salvo que te pida expresamente otro idioma.`;
+}
+app.get('/api/ia/voces', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.json({ ok: true, defecto: VOZ_DEFECTO_ID, voces: VOCES_CATALOGO.map(({ id, nombre, region, g, lang }) => ({ id, nombre, region, g, lang })) });
+});
+
+const ttsCache = new Map();           // texto -> Buffer mp3 (maximo 150 frases)
+const ttsLimite = new Map();          // ip -> { n, desde }
+async function sintetizarVozEdge(texto, voz) {
+  const lib = require('msedge-tts');
+  const MsEdgeTTS = lib.MsEdgeTTS || lib.default || lib;
+  const formato = (lib.OUTPUT_FORMAT && lib.OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3) || 'audio-24khz-48kbitrate-mono-mp3';
+  const tts = new MsEdgeTTS();
+  await tts.setMetadata(voz || TTS_VOZ, formato);
+  const r = tts.toStream(texto);
+  const stream = (r && r.audioStream) ? r.audioStream : r;
+  return await new Promise((resolve, reject) => {
+    const partes = [];
+    const t = setTimeout(() => reject(new Error('timeout')), 20000);
+    stream.on('data', (d) => partes.push(Buffer.from(d)));
+    stream.on('end', () => { clearTimeout(t); resolve(Buffer.concat(partes)); });
+    stream.on('close', () => { clearTimeout(t); if (partes.length) resolve(Buffer.concat(partes)); });
+    stream.on('error', (e) => { clearTimeout(t); reject(e); });
+  });
+}
+app.get('/api/ia/tts', async (req, res) => {
+  try {
+    const texto = String(req.query.t || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (!texto) return res.status(400).end();
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const ahora = Date.now();
+    const lim = ttsLimite.get(ip) || { n: 0, desde: ahora };
+    if (ahora - lim.desde > 60000) { lim.n = 0; lim.desde = ahora; }
+    lim.n += 1; ttsLimite.set(ip, lim);
+    if (lim.n > 40) return res.status(429).end();
+    const vozInfo = buscarVozCatalogo(req.query.v) || buscarVozCatalogo(VOZ_DEFECTO_ID);
+    const claveCache = vozInfo.id + '|' + texto;
+    let audio = ttsCache.get(claveCache);
+    if (!audio) {
+      try { audio = await sintetizarVozEdge(texto, vozInfo.voz); }
+      catch (e1) {
+        if (vozInfo.voz === TTS_VOZ) throw e1;
+        console.warn(`[TTS] "${vozInfo.voz}" falló (${e1 && e1.message}); uso la voz por defecto.`);
+        audio = await sintetizarVozEdge(texto, TTS_VOZ);
+      }
+      if (!audio || audio.length < 200) throw new Error('audio vacio');
+      if (ttsCache.size >= 150) ttsCache.delete(ttsCache.keys().next().value);
+      ttsCache.set(claveCache, audio);
+    }
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', String(audio.length));
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.status(200).end(audio);
+  } catch (e) {
+    console.warn('[TTS] fallo:', e && e.message);
+    res.status(503).json({ ok: false, error: 'tts_no_disponible' });
+  }
+});
+
 app.get('/api/ia/estado', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const activa = Boolean(OPENAI_API_KEY);
+  const activa = Boolean(GEMINI_API_KEY);
   const estado = {
     activa,
     configurada: activa,
-    proveedor: activa ? (IA_ES_NVIDIA ? 'nvidia' : 'openai') : 'local',
-    modelo: activa ? OPENAI_MODEL : null,
+    proveedor: activa ? 'gemini' : 'local',
+    modelo: activa ? GEMINI_MODEL : null,
     endpoint: '/api/ia',
+    modeloVoz: activa ? GEMINI_LIVE_MODELO : null,
+    vozEnVivo: activa ? '/api/ia/live' : null,
     ultimoError: iaUltimoError
   };
 
   if (req.query && req.query.probar) {
     if (!activa) {
-      estado.prueba = { ok: false, status: 503, mensaje: 'Falta OPENAI_API_KEY en las variables de entorno del servidor.' };
+      estado.prueba = { ok: false, status: 503, mensaje: 'Falta GEMINI_API_KEY en las variables de entorno del servidor.' };
     } else {
       try {
-        const r = await llamarOpenAI([{ role: 'user', content: [{ type: 'input_text', text: 'Responde solo: ok' }] }], 'Responde en una sola palabra.', false);
+        const r = await llamarGemini([{ role: 'user', content: [{ type: 'input_text', text: 'Responde solo: ok' }] }], 'Responde en una sola palabra.', false);
         estado.prueba = { ok: Boolean(r.texto), respuesta: String(r.texto || '').slice(0, 40) };
       } catch (err) {
         estado.prueba = { ok: false, status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300) };
@@ -1423,7 +1563,7 @@ function calcularOperacionIAExacta(texto) {
 async function manejarMascotaEspontanea(req, res) {
   const modo = req.body?.modo === 'video' ? 'video' : 'espontaneo';
   const pregunta = limpiarCampoMascota(req.body?.pregunta || req.body?.prompt || '', 500) || 'Decide si dices algo.';
-  if (!OPENAI_API_KEY) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'local' });
+  if (!GEMINI_API_KEY) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'local' });
   if (!iaEspontPermitida(ipDelCliente(req))) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'limite-espontaneo' });
   const nombre = String(req.body?.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
   const ultimas = (Array.isArray(req.body?.ultimas) ? req.body.ultimas : []).slice(-5).map((x) => limpiarCampoMascota(x, 100)).filter(Boolean);
@@ -1436,11 +1576,11 @@ async function manejarMascotaEspontanea(req, res) {
   const sistema = textoSeguroIA(construirInstruccionIA() + '\n\n' + reglas + '\n\nCONTEXTO: ' + partes.join(' '));
   try {
     const input = [{ role: 'user', content: [{ type: 'input_text', text: pregunta }] }];
-    const r = await llamarOpenAIConReintentos(input, sistema, false, 500, true);
+    const r = await llamarGeminiConReintentos(input, sistema, false, 500, true);
     const texto = textoCrudoMascota(r.texto);
-    return res.json({ ok: true, texto: texto || '[[silencio]]', modo, modelo: OPENAI_MODEL, proveedor: 'openai' });
+    return res.json({ ok: true, texto: texto || '[[silencio]]', modo, modelo: GEMINI_MODEL, proveedor: 'gemini' });
   } catch (err) {
-    iaUltimoError = { proveedor: 'openai', status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300), cuando: new Date().toISOString() };
+    iaUltimoError = { proveedor: 'gemini', status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300), cuando: new Date().toISOString() };
     return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'error-conexion' });
   }
 }
@@ -1481,7 +1621,7 @@ async function manejarConsultaIA(req, res) {
     ? `${nombre.toLowerCase()}|${historialArr.length ? String(historialArr[historialArr.length - 1]?.text || '').slice(0, 80) : ''}|${pregunta.toLowerCase()}`
     : '';
   const enCache = claveCache ? obtenerCacheIA(claveCache) : null;
-  if (enCache) return res.json({ ok: true, texto: textoSeguroIA(enCache), proveedor: 'openai-cache' });
+  if (enCache) return res.json({ ok: true, texto: textoSeguroIA(enCache), proveedor: 'gemini-cache' });
 
   const bloqueo = iaPermitida(ipDelCliente(req));
   if (bloqueo) {
@@ -1497,6 +1637,7 @@ async function manejarConsultaIA(req, res) {
   if (memoriaGlobal) contexto.push(`MEMORIA DE CONVERSACIONES ANTERIORES DEL USUARIO (recuérdalo si viene al caso): ${memoriaGlobal}`);
   if (memoriaAprendida) contexto.push(`MEMORIA APRENDIDA NO SENSIBLE (úsala solo cuando sea útil): ${memoriaAprendida}`);
   { const cm = contextoMascota(req.body?.mascota); if (cm) contexto.push(cm); }
+  { const iv = instruccionVozElegida(req.body?.vozId); if (iv) contexto.push(iv); }
   try {
     const ahoraSV = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date());
     contexto.push(`Fecha y hora actual en El Salvador: ${ahoraSV}.`);
@@ -1505,20 +1646,20 @@ async function manejarConsultaIA(req, res) {
   const instruccionBase = construirInstruccionIA();
   const sistemaSeguro = textoSeguroIA(contexto.length ? instruccionBase + '\n\nCONTEXTO DE ESTA SESIÓN Y MEMORIA:\n' + contexto.join(' ') : instruccionBase);
 
-  if (OPENAI_API_KEY) {
+  if (GEMINI_API_KEY) {
     try {
-      const input = construirInputOpenAI(req.body?.historial, pregunta, imagenInfo);
-      const r = await llamarOpenAIConReintentos(input, sistemaSeguro, Boolean(imagenInfo));
+      const input = construirInputGemini(req.body?.historial, pregunta, imagenInfo);
+      const r = await llamarGeminiConReintentos(input, sistemaSeguro, Boolean(imagenInfo));
       const texto = textoPlanoIA(r.texto);
       if (texto) {
         iaUltimoError = null;
         const seguro = textoSeguroIA(texto);
         if (claveCache) guardarCacheIA(claveCache, seguro);
-        return res.json({ ok: true, texto: seguro, modelo: OPENAI_MODEL, proveedor: 'openai' });
+        return res.json({ ok: true, texto: seguro, modelo: GEMINI_MODEL, proveedor: 'gemini' });
       }
     } catch (err) {
-      iaUltimoError = { proveedor: 'openai', status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300), cuando: new Date().toISOString() };
-      console.warn('[IA OpenAI] Error:', err?.status || err?.name || '', String(err?.message || '').slice(0, 300));
+      iaUltimoError = { proveedor: 'gemini', status: err?.status || 500, mensaje: String(err?.message || '').slice(0, 300), cuando: new Date().toISOString() };
+      console.warn('[IA Gemini] Error:', err?.status || err?.name || '', String(err?.message || '').slice(0, 300));
     }
   }
 
@@ -1527,7 +1668,7 @@ async function manejarConsultaIA(req, res) {
     if (respuestaLocal) return res.json({ ok: true, texto: textoSeguroIA(respuestaLocal), proveedor: 'local' });
   }
 
-  return res.json({ ok: true, texto: OPENAI_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta OPENAI_API_KEY).', proveedor: 'error-conexion' });
+  return res.json({ ok: true, texto: GEMINI_API_KEY ? 'No pude responder en este momento. Inténtalo de nuevo en unos segundos. 🙏' : 'La IA todavía no está activada en el servidor (falta GEMINI_API_KEY).', proveedor: 'error-conexion' });
 }
 
 app.post('/api/ia', manejarConsultaIA);
@@ -1833,11 +1974,144 @@ app.get('/descargar-apk', (req, res) => {
 </html>`);
 });
 
+
+// ============================================================
+// VOZ EN VIVO (Gemini Live) — puente WebSocket  /api/ia/live
+// El navegador manda audio PCM16 a 16 kHz y recibe audio PCM16 a 24 kHz.
+// La clave de Gemini se queda en el servidor (Render -> Environment -> GEMINI_API_KEY).
+// Mensajes navegador -> servidor: {type:'start',nombre,memoria} | {type:'audio',data(base64)} | {type:'text',text} | {type:'end'}
+// Mensajes servidor -> navegador: {type:'ready'} | {type:'audio',data,rate} | {type:'in_text',text} | {type:'out_text',text}
+//                                 | {type:'interrupted'} | {type:'turn_complete'} | {type:'error',mensaje} | {type:'closed'}
+// ============================================================
+let liveSesionesActivas = 0;
+if (WebSocket) {
+  const liveWss = new WebSocket.Server({ noServer: true });
+
+  server.on('upgrade', (req, socket, head) => {
+    const ruta = String(req.url || '').split('?')[0];
+    if (ruta === '/api/ia/live') {
+      const origen = String(req.headers.origin || '');
+      if (IA_ORIGENES.length && origen && !IA_ORIGENES.includes(origen)) { socket.destroy(); return; }
+      liveWss.handleUpgrade(req, socket, head, (ws) => liveWss.emit('connection', ws, req));
+    } else if (wss) {
+      wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+    } else {
+      socket.destroy();
+    }
+  });
+
+  liveWss.on('connection', (cli, req) => {
+    const enviar = (obj) => { try { if (cli.readyState === WebSocket.OPEN) cli.send(JSON.stringify(obj)); } catch (e) {} };
+    if (!GEMINI_API_KEY) { enviar({ type: 'error', mensaje: 'La IA no está activada en el servidor (falta GEMINI_API_KEY).' }); return cli.close(); }
+    if (liveSesionesActivas >= GEMINI_LIVE_MAX_SESIONES) { enviar({ type: 'error', mensaje: 'Hay muchas llamadas en este momento. Intenta en un minuto.' }); return cli.close(); }
+    const bloqueo = iaPermitida(ipDelCliente(req));
+    if (bloqueo) { enviar({ type: 'error', mensaje: 'Has alcanzado el límite de uso de la IA. Intenta más tarde.' }); return cli.close(); }
+
+    liveSesionesActivas += 1;
+    let up = null, listo = false, cerrada = false, temporizador = null;
+    const pendientes = [];
+
+    const cerrar = () => {
+      if (cerrada) return;
+      cerrada = true;
+      liveSesionesActivas = Math.max(0, liveSesionesActivas - 1);
+      if (temporizador) clearTimeout(temporizador);
+      try { if (up && up.readyState <= 1) up.close(); } catch (e) {}
+      try { if (cli.readyState <= 1) cli.close(); } catch (e) {}
+    };
+    temporizador = setTimeout(() => { enviar({ type: 'closed', motivo: 'tiempo' }); cerrar(); }, GEMINI_LIVE_MAX_SEG * 1000);
+
+    const subir = (obj) => {
+      const txt = JSON.stringify(obj);
+      if (up && up.readyState === WebSocket.OPEN && listo) up.send(txt); else if (pendientes.length < 200) pendientes.push(txt);
+    };
+
+    const abrirGemini = (nombre, memoria, vozId) => {
+      const url = (process.env.GEMINI_LIVE_URL || 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent') + '?key=' + encodeURIComponent(GEMINI_API_KEY);
+      up = new WebSocket(url);
+      up.on('open', () => {
+        const contexto = [];
+        if (nombre) contexto.push(`El usuario se llama ${nombre}. Llámalo por su nombre de forma natural.`);
+        if (memoria) contexto.push(`Memoria de conversaciones anteriores: ${memoria}`);
+        try { contexto.push('Fecha y hora en El Salvador: ' + new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date()) + '.'); } catch (e) {}
+        const sistema = textoSeguroIA(construirInstruccionIA() +
+          '\n\nESTÁS EN UNA LLAMADA DE VOZ EN VIVO. Habla siempre en español, natural y cercano, con frases cortas (1 a 3 frases). No uses listas, markdown, emojis ni etiquetas entre corchetes; solo di lo que se escucha. Si te interrumpen, para y escucha.' +
+          '\n\n' + (instruccionVozElegida(vozId) || '') + '\n\nCONTEXTO: ' + contexto.join(' '));
+        const vcat = buscarVozCatalogo(vozId);
+        const nombreVozLive = (vcat && vcat.g === 'm') ? GEMINI_LIVE_VOZ_HOMBRE : GEMINI_LIVE_VOZ;
+        up.send(JSON.stringify({ setup: {
+          model: 'models/' + GEMINI_LIVE_MODELO,
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: nombreVozLive } } }
+          },
+          systemInstruction: { parts: [{ text: sistema }] },
+          inputAudioTranscription: {},
+          outputAudioTranscription: {}
+        } }));
+      });
+      up.on('message', (raw) => {
+        let m; try { m = JSON.parse(raw.toString()); } catch (e) { return; }
+        if (m.setupComplete) {
+          listo = true;
+          while (pendientes.length) { try { up.send(pendientes.shift()); } catch (e) {} }
+          return enviar({ type: 'ready' });
+        }
+        const sc = m.serverContent;
+        if (!sc) return;
+        if (sc.interrupted) enviar({ type: 'interrupted' });
+        const partes = sc.modelTurn && Array.isArray(sc.modelTurn.parts) ? sc.modelTurn.parts : [];
+        for (const pt of partes) {
+          if (pt.inlineData && pt.inlineData.data) {
+            const mm = /rate=(\d+)/.exec(pt.inlineData.mimeType || '');
+            enviar({ type: 'audio', data: pt.inlineData.data, rate: mm ? Number(mm[1]) : 24000 });
+          }
+        }
+        if (sc.inputTranscription && sc.inputTranscription.text) enviar({ type: 'in_text', text: sc.inputTranscription.text });
+        if (sc.outputTranscription && sc.outputTranscription.text) enviar({ type: 'out_text', text: sc.outputTranscription.text });
+        if (sc.turnComplete) enviar({ type: 'turn_complete' });
+      });
+      up.on('error', (err) => {
+        iaUltimoError = { proveedor: 'gemini-live', status: 0, mensaje: String(err && err.message || '').slice(0, 300), cuando: new Date().toISOString() };
+        console.warn('[IA Live] Error:', String(err && err.message || '').slice(0, 200));
+        enviar({ type: 'error', mensaje: 'No se pudo conectar la voz en vivo.' });
+      });
+      up.on('close', (codigo, motivo) => {
+        if (!listo) {
+          const detalle = String(motivo || '').slice(0, 200);
+          console.warn('[IA Live] Cierre antes de iniciar:', codigo, detalle);
+          iaUltimoError = { proveedor: 'gemini-live', status: codigo, mensaje: detalle, cuando: new Date().toISOString() };
+          enviar({ type: 'error', mensaje: 'La voz en vivo no está disponible ahora.' });
+        }
+        enviar({ type: 'closed' });
+        cerrar();
+      });
+    };
+
+    cli.on('message', (raw) => {
+      let m; try { m = JSON.parse(raw.toString()); } catch (e) { return; }
+      if (m.type === 'start' && !up) {
+        const nombre = String(m.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
+        const memoria = textoSeguroIA(String(m.memoria || '').replace(/\s+/g, ' ').slice(0, 700));
+        abrirGemini(nombre, memoria, String(m.vozId || '').slice(0, 20));
+      } else if (m.type === 'audio' && typeof m.data === 'string' && m.data.length < 200000) {
+        subir({ realtimeInput: { audio: { data: m.data, mimeType: 'audio/pcm;rate=16000' } } });
+      } else if (m.type === 'text' && typeof m.text === 'string') {
+        subir({ realtimeInput: { text: m.text.slice(0, 700) } });
+      } else if (m.type === 'end') {
+        cerrar();
+      }
+    });
+    cli.on('close', cerrar);
+    cli.on('error', cerrar);
+  });
+}
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor iniciado en http://0.0.0.0:${PORT}`);
-  console.log(OPENAI_API_KEY ? `[IA] ${IA_ES_NVIDIA ? 'NVIDIA NIM' : 'OpenAI'} activo (modelo ${OPENAI_MODEL}).` : '[IA] Falta OPENAI_API_KEY: la IA responderá solo con su base de conocimiento local.');
-  if (OPENAI_API_KEY) {
-    llamarOpenAI([{ role: 'user', content: [{ type: 'input_text', text: 'Responde solo: ok' }] }], 'Responde en una sola palabra.', false)
+  console.log(GEMINI_API_KEY ? `[IA] Gemini activo (modelo ${GEMINI_MODEL}).` : '[IA] Falta GEMINI_API_KEY: la IA responderá solo con su base de conocimiento local.');
+  if (GEMINI_API_KEY) {
+    llamarGemini([{ role: 'user', content: [{ type: 'input_text', text: 'Responde solo: ok' }] }], 'Responde en una sola palabra.', false)
       .then((r) => console.log(`[IA] Prueba de conexión OK: "${String(r.texto || '').slice(0, 40)}"`))
       .catch((err) => console.log(`[IA] Prueba de conexión FALLÓ (${err?.status || 'sin estado'}): ${String(err?.message || '').slice(0, 250)}`));
   }

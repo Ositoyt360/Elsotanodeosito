@@ -718,7 +718,7 @@
 
         // Restablecer el badge
         if (stateBadgeEl) {
-            stateBadgeEl.textContent = '✨ Conectando con La mascotita del Sótano...';
+            stateBadgeEl.textContent = '✨ Conectando con Cubit...';
         }
     }
 

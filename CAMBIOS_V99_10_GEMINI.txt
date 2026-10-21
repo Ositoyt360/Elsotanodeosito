@@ -1,0 +1,18 @@
+V99.10 - IA cambiada a Google Gemini
+server.js
+- Chat y lectura de imagenes ahora usan Gemini (generateContent) en vez de NVIDIA/OpenAI. Reintento con modelo de respaldo.
+- Nuevo puente de voz en vivo /api/ia/live (Gemini Live): audio del microfono -> Gemini -> voz de Cubit, con interrupciones y subtitulos.
+- Variable de entorno: GEMINI_API_KEY (ya no OPENAI_API_KEY / NVIDIA_API_KEY).
+- El WebSocket del chat y el de voz comparten servidor (enrutado por ruta en el evento upgrade).
+gemini-live.js (nuevo, cargado en index.html e ia.html)
+- Se engancha al modo llamada. Si la voz en vivo no esta disponible, queda el modo llamada de antes.
+render.yaml: variables GEMINI_*.  sw.js: cache v99-15.
+IMPORTANTE: pon GEMINI_API_KEY en Render -> Environment. Si la clave se publico en algun sitio, genera otra en aistudio.google.com.
+
+V99.10b - Voces de Cubit (como ChatGPT)
+- Nuevo voces-ia.js: en Ajustes de voz (rueda del chat) aparece "Voz de Cubit": Mujer/Hombre + acento o idioma
+  (El Salvador, Latinoamerica, Argentina, Guatemala, Honduras, Nicaragua, Costa Rica, Panama, Colombia, Espana, ingles US/UK, frances, portugues Brasil/Portugal). 30 voces.
+- server.js: /api/ia/tts?v=ID genera la voz elegida (voces neuronales gratis); /api/ia/voces lista el catalogo.
+  Si eliges un idioma (ingles/frances/portugues) la IA contesta en ese idioma. La voz en vivo usa voz de mujer u hombre segun tu eleccion.
+- voz-respaldo.js: ahora se usa SIEMPRE el audio del servidor (misma voz en todos los celulares y en el APK).
+- index.html / ia.html / sw.js (cache v99-16): cargan voces-ia.js.

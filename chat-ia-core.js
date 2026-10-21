@@ -107,7 +107,7 @@
                     .trim();
                 if (!limpio) return 'Conversación con la IA';
                 const quitarPrefijo = limpio
-                    .replace(/^(hola|buenas|oye|osito|osita|mascotita|dime|cuentame|explicame|una pregunta|quiero saber|por favor)\s+/i, '')
+                    .replace(/^(hola|buenas|oye|osito|osita|mascotita|cubit|cubito|dime|cuentame|explicame|una pregunta|quiero saber|por favor)\s+/i, '')
                     .trim() || limpio;
                 const capitalizado = quitarPrefijo.charAt(0).toUpperCase() + quitarPrefijo.slice(1);
                 return capitalizado.length > 38 ? capitalizado.slice(0, 36).trim() + '…' : capitalizado;
@@ -967,7 +967,7 @@
                 }
 
                 // 1.1 Saludos naturales y amigables
-                if (/^(hola|buenas|que onda|qué onda|que tal|qué tal|buenos dias|buenas tardes|buenas noches|hey|holis|saludos)(\s+(osito|osita|mascota|mascotita|amigo|amiga|crack|bot|ia|a todos))?[!.]*$/.test(texto)) {
+                if (/^(hola|buenas|que onda|qué onda|que tal|qué tal|buenos dias|buenas tardes|buenas noches|hey|holis|saludos)(\s+(osito|osita|mascota|mascotita|cubit|cubito|amigo|amiga|crack|bot|ia|a todos))?[!.]*$/.test(texto)) {
                     const saludos = [
                         `¡Qué onda, ${nombre}! ¿Cómo estás? Me alegra mucho verte por El Sótano de Osito. ¿Qué cuentas o de qué tienes ganas de platicar hoy? 😊`,
                         `¡Hola, ${nombre}! Todo bien por acá. Dime qué necesitas o qué duda tienes y con gusto lo revisamos. 🐻✨`,

@@ -1,6 +1,16 @@
-Proveedor de IA: OpenAI
-- Texto: OpenAI Responses API
-- Análisis de imágenes: OpenAI Responses API con entrada de imagen
-- Modo llamada: voz del navegador + respuestas generadas por OpenAI mediante /api/ia
-- No se usa NVIDIA, OpenRouter, Gemini, Anthropic/Claude ni Render como proveedor o backend de IA.
-- La clave OPENAI_API_KEY debe mantenerse fuera del código público.
+Proveedor de IA: Google Gemini
+- Chat y lectura de imagenes: Gemini generateContent (gemini-3.8-flash, respaldo gemini-3.5-flash-lite)
+- Voz en vivo (modo llamada): Gemini Live (gemini-3.8-live) por el puente WebSocket /api/ia/live
+  Si la voz en vivo falla, el modo llamada usa el reconocimiento del navegador + /api/ia como antes.
+- Todo pasa por server.js: la clave NUNCA va en el navegador.
+
+Variables de entorno (Render -> Environment):
+  GEMINI_API_KEY          (obligatoria)  clave de Google AI Studio
+  GEMINI_MODEL            opcional, por defecto gemini-3.8-flash
+  GEMINI_MODEL_RESPALDO   opcional, por defecto gemini-3.5-flash-lite
+  GEMINI_LIVE_MODEL       opcional, por defecto gemini-3.8-live
+  GEMINI_LIVE_VOZ         opcional, por defecto Aoede
+  GEMINI_LIVE_MAX_SESIONES / GEMINI_LIVE_MAX_SEG  opcionales (8 llamadas a la vez / 600 s por llamada)
+  IA_MAX_POR_MINUTO / IA_MAX_POR_DIA_IP / IA_MAX_POR_DIA_TOTAL  limites de uso
+
+Comprobar: https://TU-RENDER.onrender.com/api/ia/estado?probar=1  -> prueba.ok debe ser true

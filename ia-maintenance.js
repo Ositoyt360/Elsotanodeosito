@@ -141,7 +141,7 @@
           '<span class="ia-maint-gear g1" aria-hidden="true">⚙️</span><span class="ia-maint-gear g2" aria-hidden="true">⚙️</span>' +
         '</div>' +
         '<h2>La IA está en mantenimiento</h2>' +
-        '<p>Estamos mejorando a la Mascotita del Sótano. Vuelve en un ratito. 🛠️</p>' +
+        '<p>Estamos mejorando a Cubit. Vuelve en un ratito. 🛠️</p>' +
         '<div class="ia-maint-bar" aria-hidden="true"></div>' +
         '<div class="ia-maint-actions">' +
           '<button type="button" id="ia-maint-back-btn">' + (ON_IA_PAGE ? '↩ Volver al Sótano' : '✕ Cerrar') + '</button>' +

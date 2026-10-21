@@ -10,7 +10,7 @@
     });
 
     const API_BASE = 'https://www.googleapis.com/youtube/v3';
-    const MASCOT_NAME = 'La mascotita del Sotano';
+    const MASCOT_NAME = 'Cubit';
     const DEFAULT_HINT = 'Pulsa el microfono para hablar';
     const CHANNEL_NAME = 'OsitoGamer360YT';
     const LIVE_URL = 'https://www.youtube.com/@OsitoYT360/live';
@@ -931,7 +931,7 @@
                 this.setState(State.ERROR, { label, error: event.error });
                 setStatusLabel(label);
                 if (event.error === 'not-allowed') {
-                    showToast('Concede permiso al microfono para usar La mascotita del Sotano.');
+                    showToast('Concede permiso al microfono para usar Cubit.');
                 }
             };
 
@@ -1717,6 +1717,9 @@
                         try { if (synth.paused) synth.resume(); synth.speak(u); }
                         catch (e) { if (intento < 2) { intento++; setTimeout(lanzar, 120); } else { usarRespaldo(); } }
                     };
+                    // V99.9: WebView del APK (o sin lector de voz) sin voces instaladas -> directo a la voz del servidor
+                    const sinVoces = synth.__respaldo || (/; wv\)/.test(navigator.userAgent || '') && !((synth.getVoices && synth.getVoices()) || []).length);
+                    if (sinVoces && window.OsitoTTSRespaldo) { usarRespaldo(); return; }
                     lanzar();
                 };
 
@@ -1906,7 +1909,7 @@
             if (status) status.textContent = detail.label || DEFAULT_HINT;
             badge?.classList.toggle('active', active);
             badge?.classList.toggle('listening', detail.state === State.LISTENING);
-            if (badgeLabel) badgeLabel.textContent = detail.state === State.LISTENING ? 'Escuchando...' : 'La mascotita del Sotano';
+            if (badgeLabel) badgeLabel.textContent = detail.state === State.LISTENING ? 'Escuchando...' : 'Cubit';
         });
 
         setStatusLabel(DEFAULT_HINT);

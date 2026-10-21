@@ -294,7 +294,7 @@
         if (!aiMessages) return function () {};
         var burbuja = document.createElement('div');
         burbuja.className = 'msg bot typing ia-thinking-bubble';
-        burbuja.setAttribute('aria-label', 'La mascotita del Sotano está respondiendo');
+        burbuja.setAttribute('aria-label', 'Cubit está respondiendo');
         burbuja.innerHTML =
             '<span class="ia-thinking-head"><span class="ia-thinking-orb" aria-hidden="true">🤖</span><span class="ia-thinking-label">Pensando respuesta</span></span>' +
             '<span class="ia-thinking-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>';
@@ -430,7 +430,8 @@
                         historial: historial,
                         memoriaGlobal: memoriaGlobal,
                         memoriaAprendida: memoriaAprendida,
-                        tituloChat: tituloChat
+                        tituloChat: tituloChat,
+                        vozId: (function () { try { return localStorage.getItem('osito_voz_id') || ''; } catch (e) { return ''; } })()
                     };
                     // V99: el servidor conoce el estado real de la mascota y su vocabulario de gestos
                     try { if (window.OsitoMente && window.OsitoMente.estado) payload.mascota = window.OsitoMente.estado(); } catch (_) {}

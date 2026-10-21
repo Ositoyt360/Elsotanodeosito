@@ -2,7 +2,7 @@
  * V99.9 — Voz de respaldo (para celulares / APK sin lector de voz del sistema)
  * Si el navegador o el WebView NO trae speechSynthesis (mensaje "Tu dispositivo no permite
  * leer en voz alta"), se crea uno compatible que reproduce la voz con un <audio> en linea
- * (Google Translate TTS, necesita internet). Asi la voz de la IA y "Escuchar texto" funcionan igual.
+ * (voz generada por el servidor de la IA; si falla, Google Translate TTS. Necesita internet). Asi la voz de la IA y "Escuchar texto" funcionan igual.
  * Tambien expone window.OsitoTTSRespaldo.decir(texto, rate) para usarlo cuando la voz del
  * sistema existe pero no suena.
  * ===================================================================== */
@@ -11,7 +11,15 @@
     if (window.__ositoVozRespaldo) return;
     window.__ositoVozRespaldo = true;
 
-    var URL_TTS = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=';
+    var URL_GOOGLE = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=';
+    // Voz elegida en Ajustes (la guarda voces-ia.js). Ej.: es-sv-f, es-ar-m, en-us-f, fr-fr-m, pt-br-f
+    function vozId() { try { return localStorage.getItem('osito_voz_id') || 'es-mx-f'; } catch (e) { return 'es-mx-f'; } }
+    function idiomaVoz() { return vozId().slice(0, 2); }
+    // Voz principal: la genera el servidor de la IA (Render) y el celular solo reproduce el audio.
+    var BASE = '';
+    try { var m = document.querySelector('meta[name="osito-ia-url"]'); if (m && m.content) BASE = m.content.replace(/\/+$/, ''); } catch (e) {}
+    function urlServidor(t) { return BASE + '/api/ia/tts?v=' + encodeURIComponent(vozId()) + '&t=' + encodeURIComponent(t); }
+    function urlGoogle(t) { return URL_GOOGLE + idiomaVoz() + '&q=' + encodeURIComponent(t); }
     var audio = null, desbloqueado = false, token = 0;
 
     function crearAudio() {
@@ -62,9 +70,18 @@
                 if (mi !== token) { resolve('cancelado'); return; }
                 if (i >= lista.length) { resolve('fin'); return; }
                 var t = lista[i++];
+                var usandoGoogle = false;
                 a.onended = siguiente;
-                a.onerror = function () { if (mi === token) reject(new Error('audio')); else resolve('cancelado'); };
-                a.src = URL_TTS + encodeURIComponent(t);
+                a.onerror = function () {
+                    if (mi !== token) { resolve('cancelado'); return; }
+                    if (!usandoGoogle) { // el servidor no pudo: se intenta con la voz en linea de Google
+                        usandoGoogle = true; a.src = urlGoogle(t);
+                        var q = a.play(); if (q && q.catch) q.catch(function () {});
+                        return;
+                    }
+                    reject(new Error('audio'));
+                };
+                a.src = urlServidor(t);
                 try { a.playbackRate = Math.max(0.6, Math.min(1.6, Number(rate) || 1)); } catch (e) {}
                 var p = a.play();
                 if (p && p.then) p.then(function () { if (alEmpezar && i === 1) { var f = alEmpezar; alEmpezar = null; f(); } })
@@ -80,8 +97,7 @@
     }
     window.OsitoTTSRespaldo = { decir: decir, parar: parar, desbloquear: desbloquear };
 
-    // ---- Si el sistema NO trae speechSynthesis, se crea uno compatible ----
-    if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis) return;
+    // ---- Se instala SIEMPRE un lector compatible que usa las voces del servidor (misma voz en todos los celulares) ----
 
     function Utterance(texto) {
         this.text = String(texto == null ? '' : texto);
@@ -99,6 +115,17 @@
     };
     if (typeof window.SpeechSynthesisUtterance === 'undefined') window.SpeechSynthesisUtterance = Utterance;
 
+    // Si el navegador trae su propio SpeechSynthesisUtterance (no tiene _emit), se le avisa con eventos normales.
+    function emitir(u, tipo, extra) {
+        if (u && typeof u._emit === 'function') { u._emit(tipo, extra); return; }
+        try {
+            var ev = new Event(tipo);
+            if (extra) for (var k in extra) { try { ev[k] = extra[k]; } catch (e) {} }
+            try { ev.utterance = u; ev.charIndex = 0; } catch (e) {}
+            u.dispatchEvent(ev);
+        } catch (e) {}
+    }
+
     var cola = [], actual = null;
     var synth = {
         __respaldo: true,
@@ -114,8 +141,8 @@
         cancel: function () {
             var viejas = cola.splice(0), act = actual;
             actual = null; parar();
-            if (act) act._emit('error', { error: 'canceled' });
-            viejas.forEach(function (u) { u._emit('error', { error: 'canceled' }); });
+            if (act) emitir(act, 'error', { error: 'canceled' });
+            viejas.forEach(function (u) { emitir(u, 'error', { error: 'canceled' }); });
         }
     };
     function siguienteU() {
@@ -123,13 +150,13 @@
         if (!u) { actual = null; return; }
         actual = u;
         var texto = u.text.trim();
-        if (!texto) { actual = null; u._emit('end'); siguienteU(); return; }
-        decir(texto, u.rate, function () { if (actual === u) u._emit('start'); }).then(function (r) {
+        if (!texto) { actual = null; emitir(u, 'end'); siguienteU(); return; }
+        decir(texto, u.rate, function () { if (actual === u) emitir(u, 'start'); }).then(function (r) {
             if (r === 'cancelado' || actual !== u) return;
-            actual = null; u._emit('end'); siguienteU();
+            actual = null; emitir(u, 'end'); siguienteU();
         }).catch(function (e) {
             if (actual !== u) return;
-            actual = null; u._emit('error', { error: (e && e.name === 'NotAllowedError') ? 'not-allowed' : 'network' }); siguienteU();
+            actual = null; emitir(u, 'error', { error: (e && e.name === 'NotAllowedError') ? 'not-allowed' : 'network' }); siguienteU();
         });
     }
     try { Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true, writable: true }); }

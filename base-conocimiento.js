@@ -431,7 +431,7 @@
         if (!textoNorm) return '';
         return textoNorm
             .replace(/^(hola|buenas|buenos dias|buenas tardes|buenas noches|que onda|que tal|hey|oye|disculpa|por favor|porfa)\s+/g, '')
-            .replace(/^(osito|osita|mascotita|bot|ia)\s+/g, '')
+            .replace(/^(osito|osita|mascotita|cubit|cubito|bot|ia)\s+/g, '')
             .replace(/^(dime|cuentame|respondeme|una pregunta|quiero saber|me dices|me puedes decir|sabes)\s+/g, '')
             .trim();
     }
@@ -531,7 +531,7 @@
 
         // 0.0a2 Nombre de la IA / Quién eres
         if (/(quien eres|como te llamas|cual es tu nombre|que eres|como te pusieron|tu nombre)/.test(normUsuario) && !/(canal|creador|editor|colaborador|sitio|pagina|app)/.test(normUsuario)) {
-            return 'Soy «La mascotita del Sótano», la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoYT360.';
+            return 'Soy «Cubit», la inteligencia artificial oficial de El Sótano de Osito y del canal OsitoYT360.';
         }
 
         // 0.0b Nombre actual del CANAL en YouTube (sin confundir con "primer canal" ni con "primer video")

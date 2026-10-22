@@ -1464,8 +1464,9 @@ app.get('/api/ia/voces', (req, res) => {
   res.json({ ok: true, defecto: VOZ_DEFECTO_ID, voces: VOCES_CATALOGO.map(({ id, nombre, region, g, lang }) => ({ id, nombre, region, g, lang })) });
 });
 
-const ttsCache = new Map();           // texto -> Buffer mp3 (maximo 150 frases)
+const ttsCache = new Map();           // clave -> { buf, tipo } (maximo 150 frases)
 const ttsLimite = new Map();          // ip -> { n, desde }
+let edgeCaidoHasta = 0;               // si la voz de Edge falla, se salta unos minutos (va directo a Gemini)
 async function sintetizarVozEdge(texto, voz) {
   const lib = require('msedge-tts');
   const MsEdgeTTS = lib.MsEdgeTTS || lib.default || lib;
@@ -1476,12 +1477,70 @@ async function sintetizarVozEdge(texto, voz) {
   const stream = (r && r.audioStream) ? r.audioStream : r;
   return await new Promise((resolve, reject) => {
     const partes = [];
-    const t = setTimeout(() => reject(new Error('timeout')), 20000);
+    const t = setTimeout(() => reject(new Error('timeout')), 15000);
     stream.on('data', (d) => partes.push(Buffer.from(d)));
     stream.on('end', () => { clearTimeout(t); resolve(Buffer.concat(partes)); });
     stream.on('close', () => { clearTimeout(t); if (partes.length) resolve(Buffer.concat(partes)); });
     stream.on('error', (e) => { clearTimeout(t); reject(e); });
   });
+}
+// V99.13: voz de respaldo con Gemini TTS (misma GEMINI_API_KEY, sale desde Google: no depende de Microsoft).
+// Devuelve un WAV (PCM 16 bit, 24 kHz, mono) que reproduce cualquier celular / WebView.
+const GEMINI_TTS_MODELOS = [String(process.env.GEMINI_TTS_MODEL || '').trim(), 'gemini-2.5-flash-preview-tts', 'gemini-2.5-pro-preview-tts'].filter((m, i, a) => m && a.indexOf(m) === i);
+function pcmAWav(pcm, rate) {
+  const h = Buffer.alloc(44);
+  h.write('RIFF', 0); h.writeUInt32LE(36 + pcm.length, 4); h.write('WAVE', 8); h.write('fmt ', 12);
+  h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(1, 22); h.writeUInt32LE(rate, 24);
+  h.writeUInt32LE(rate * 2, 28); h.writeUInt16LE(2, 32); h.writeUInt16LE(16, 34); h.write('data', 36); h.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([h, pcm]);
+}
+async function sintetizarVozGemini(texto, vozInfo) {
+  if (!GEMINI_API_KEY) throw new Error('sin GEMINI_API_KEY');
+  const nombreVoz = (vozInfo && vozInfo.g === 'm') ? GEMINI_LIVE_VOZ_HOMBRE : GEMINI_LIVE_VOZ;
+  const idioma = { es: 'español', en: 'inglés', fr: 'francés', pt: 'portugués' }[(vozInfo && vozInfo.lang) || 'es'] || 'español';
+  const estilo = (vozInfo && vozInfo.lang === 'es' && vozInfo.acento) ? `Di en ${idioma} con acento ${vozInfo.acento}, natural y amable` : `Di en ${idioma}, natural y amable`;
+  let ultimoError = null;
+  for (const modelo of GEMINI_TTS_MODELOS) {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 20000);
+    try {
+      const r = await fetch(`${GEMINI_API_BASE}/models/${encodeURIComponent(modelo)}:generateContent`, {
+        method: 'POST', signal: ctl.signal,
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${estilo}: ${texto}` }] }],
+          generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: nombreVoz } } } }
+        })
+      });
+      if (!r.ok) { const d = await r.text().catch(() => ''); throw new Error(`HTTP ${r.status} ${d.slice(0, 160)}`); }
+      const j = await r.json();
+      const partes = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+      const p = partes.find((x) => x.inlineData && x.inlineData.data);
+      if (!p) throw new Error('sin audio en la respuesta');
+      const mm = /rate=(\d+)/.exec(p.inlineData.mimeType || '');
+      return pcmAWav(Buffer.from(p.inlineData.data, 'base64'), mm ? Number(mm[1]) : 24000);
+    } catch (e) { ultimoError = e; } finally { clearTimeout(tm); }
+  }
+  throw ultimoError || new Error('sin modelo TTS');
+}
+// Devuelve { buf, tipo }. Orden: Edge (si no esta caido) -> Gemini TTS.
+async function sintetizarVoz(texto, vozInfo) {
+  let errEdge = null;
+  if (Date.now() > edgeCaidoHasta) {
+    try {
+      let audio;
+      try { audio = await sintetizarVozEdge(texto, vozInfo.voz); }
+      catch (e1) { if (vozInfo.voz === TTS_VOZ) throw e1; audio = await sintetizarVozEdge(texto, TTS_VOZ); }
+      if (audio && audio.length >= 200) return { buf: audio, tipo: 'audio/mpeg', motor: 'edge' };
+      throw new Error('audio vacio');
+    } catch (e) { errEdge = e; edgeCaidoHasta = Date.now() + 5 * 60000; console.warn('[TTS] Edge falló (' + (e && e.message) + '); uso Gemini TTS por 5 min.'); }
+  }
+  try {
+    const wav = await sintetizarVozGemini(texto, vozInfo);
+    return { buf: wav, tipo: 'audio/wav', motor: 'gemini' };
+  } catch (e2) {
+    console.warn('[TTS] Gemini TTS falló:', e2 && e2.message);
+    throw e2;
+  }
 }
 app.get('/api/ia/tts', async (req, res) => {
   try {
@@ -1492,29 +1551,32 @@ app.get('/api/ia/tts', async (req, res) => {
     const lim = ttsLimite.get(ip) || { n: 0, desde: ahora };
     if (ahora - lim.desde > 60000) { lim.n = 0; lim.desde = ahora; }
     lim.n += 1; ttsLimite.set(ip, lim);
-    if (lim.n > 40) return res.status(429).end();
+    if (lim.n > 60) return res.status(429).end();
     const vozInfo = buscarVozCatalogo(req.query.v) || buscarVozCatalogo(VOZ_DEFECTO_ID);
     const claveCache = vozInfo.id + '|' + texto;
-    let audio = ttsCache.get(claveCache);
-    if (!audio) {
-      try { audio = await sintetizarVozEdge(texto, vozInfo.voz); }
-      catch (e1) {
-        if (vozInfo.voz === TTS_VOZ) throw e1;
-        console.warn(`[TTS] "${vozInfo.voz}" falló (${e1 && e1.message}); uso la voz por defecto.`);
-        audio = await sintetizarVozEdge(texto, TTS_VOZ);
-      }
-      if (!audio || audio.length < 200) throw new Error('audio vacio');
+    let item = ttsCache.get(claveCache);
+    if (!item) {
+      item = await sintetizarVoz(texto, vozInfo);
       if (ttsCache.size >= 150) ttsCache.delete(ttsCache.keys().next().value);
-      ttsCache.set(claveCache, audio);
+      ttsCache.set(claveCache, item);
     }
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Content-Length', String(audio.length));
+    res.setHeader('Content-Type', item.tipo);
+    res.setHeader('Content-Length', String(item.buf.length));
     res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.status(200).end(audio);
+    res.status(200).end(item.buf);
   } catch (e) {
     console.warn('[TTS] fallo:', e && e.message);
     res.status(503).json({ ok: false, error: 'tts_no_disponible' });
   }
+});
+// Diagnóstico: abre https://TU-SERVIDOR/api/ia/tts-diag y dice qué motor de voz funciona.
+app.get('/api/ia/tts-diag', async (req, res) => {
+  const v = buscarVozCatalogo(VOZ_DEFECTO_ID);
+  const out = { ok: true, gemini_key: Boolean(GEMINI_API_KEY), modelos_tts: GEMINI_TTS_MODELOS, edge: {}, gemini: {} };
+  try { const a = await sintetizarVozEdge('Hola', v.voz); out.edge = { ok: a.length > 200, bytes: a.length }; } catch (e) { out.edge = { ok: false, error: String(e && e.message || e).slice(0, 200) }; }
+  try { const w = await sintetizarVozGemini('Hola', v); out.gemini = { ok: w.length > 200, bytes: w.length }; } catch (e) { out.gemini = { ok: false, error: String(e && e.message || e).slice(0, 300) }; }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(out);
 });
 
 app.get('/api/ia/estado', async (req, res) => {

@@ -13,6 +13,8 @@ services:
         value: gemini-3.5-flash-lite
       - key: GEMINI_MODEL_RESPALDO
         value: gemini-3.8-flash
+      - key: GEMINI_TTS_MODEL
+        value: gemini-2.5-flash-preview-tts
       - key: GEMINI_LIVE_MODEL
         value: gemini-3.8-live
       - key: IA_MAX_POR_DIA_TOTAL

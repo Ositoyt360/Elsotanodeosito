@@ -117,7 +117,7 @@
         var saltarServidor = Date.now() - servidorCaido < 120000;
         var intentoServidor = saltarServidor
             ? Promise.reject(new Error('servidor-caido'))
-            : tocar(urlServidor(t), rate, primera ? 25000 : 12000, alIniciar);
+            : tocar(urlServidor(t), rate, primera ? 40000 : 15000, alIniciar);
         return intentoServidor.catch(function (e) {
             if (e && e.name === 'NotAllowedError') throw e;
             if (!saltarServidor) servidorCaido = Date.now();

@@ -19,3 +19,11 @@ V99.12 - Cubit mueve su cara en la llamada de voz en vivo
 - gemini-live.js: recibe la accion y la ejecuta con OsitoMente.accion (maximo una cada 1.8 s).
 - Movimientos de cuerpo y objetos siguen bloqueados durante la llamada (decision de V99 para no romper el modo llamada); vuelven al terminar la llamada.
 - sw.js cache v99-18.
+
+V99.13 - Voz en el APK (celulares sin motor de voz)
+- El APK es un WebView sin lector de voz, asi que la voz depende 100% del servidor. Antes el servidor usaba solo las voces de Microsoft Edge (msedge-tts), que suelen fallar desde Render.
+- server.js: si Edge falla, usa Gemini TTS (misma GEMINI_API_KEY, sale desde Google) y devuelve WAV que reproduce cualquier celular. Si Edge falla, no lo reintenta durante 5 min (va directo a Gemini).
+- Nuevo diagnostico: abre https://elsotanodeosito.onrender.com/api/ia/tts-diag y dice si funciona Edge y/o Gemini (con el error exacto si falla).
+- Cliente: espera hasta 40 s la primera frase (Render gratis tarda en despertar) antes de rendirse.
+- render.yaml: GEMINI_TTS_MODEL (opcional). Limite TTS: 60 frases/min por IP.
+- sw.js cache v99-19.

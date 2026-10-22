@@ -20,7 +20,24 @@
     try { var m = document.querySelector('meta[name="osito-ia-url"]'); if (m && m.content) BASE = m.content.replace(/\/+$/, ''); } catch (e) {}
     function urlServidor(t) { return BASE + '/api/ia/tts?v=' + encodeURIComponent(vozId()) + '&t=' + encodeURIComponent(t); }
     function urlGoogle(t) { return URL_GOOGLE + idiomaVoz() + '&q=' + encodeURIComponent(t); }
-    var audio = null, desbloqueado = false, token = 0;
+    var audio = null, desbloqueado = false, token = 0, cancelarActual = null;
+    var servidorCaido = 0;          // marca de tiempo del ultimo fallo del servidor (para no esperarlo cada frase)
+    var NATIVO = (typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined') ? window.speechSynthesis : null;
+
+    // La voz del sistema (la del navegador/celular) es la MAS fiable: funciona sin internet ni servidor.
+    // La voz del servidor solo se prefiere si la persona eligio una "Voz de Cubit" en Ajustes.
+    function eligioVozCubit() { try { return !!localStorage.getItem('osito_voz_id'); } catch (e) { return false; } }
+    function preferirServidor() {
+        if (!NATIVO) return true;                 // sin lector del sistema: solo queda el servidor
+        if (!eligioVozCubit()) return false;      // nunca eligio voz: se usa la del sistema
+        return Date.now() - servidorCaido > 120000; // si el servidor fallo hace poco, no insistir
+    }
+
+    // Despierta el servidor gratuito de Render (se duerme y tarda ~50 s en el primer pedido).
+    function despertarServidor() {
+        try { if (BASE) fetch(BASE + '/api/ia/estado', { mode: 'no-cors', cache: 'no-store' }).catch(function () {}); } catch (e) {}
+    }
+    if (eligioVozCubit() || !NATIVO) despertarServidor();
 
     function crearAudio() {
         if (audio) return audio;
@@ -62,42 +79,82 @@
         return out;
     }
 
+    // Reproduce UNA url. Resuelve al terminar el audio. Rechaza si no carga, si no empieza a tiempo
+    // o si el navegador exige un toque del usuario (NotAllowedError).
+    function tocar(url, rate, msParaEmpezar, alIniciar) {
+        var a = crearAudio();
+        return new Promise(function (resolve, reject) {
+            var listo = false, empezo = false, tm = null;
+            function cerrar(ok, val) {
+                if (listo) return; listo = true; clearTimeout(tm);
+                a.onended = a.onerror = a.onplaying = null;
+                if (cancelarActual === cancelar) cancelarActual = null;
+                if (ok) resolve(val); else reject(val);
+            }
+            function cancelar() { cerrar(true, 'cancelado'); }
+            cancelarActual = cancelar;
+            a.onplaying = function () { if (!empezo) { empezo = true; clearTimeout(tm); if (alIniciar) alIniciar(); } };
+            a.onended = function () { cerrar(true, 'fin'); };
+            a.onerror = function () { cerrar(false, new Error('audio')); };
+            tm = setTimeout(function () {
+                if (empezo) return;
+                try { a.pause(); } catch (e) {}
+                cerrar(false, new Error('timeout'));
+            }, msParaEmpezar);
+            try { a.src = url; a.defaultPlaybackRate = a.playbackRate = Math.max(0.6, Math.min(1.6, Number(rate) || 1)); } catch (e) {}
+            var p = a.play();
+            if (p && p.catch) p.catch(function (e) {
+                // Si el origen no carga, play() rechaza con NotSupportedError y onerror tambien salta: se maneja una sola vez.
+                if (e && e.name === 'NotAllowedError') cerrar(false, e);
+                else if (e && e.name === 'NotSupportedError') cerrar(false, new Error('audio'));
+            });
+        });
+    }
+
+    // Una frase: voz del servidor -> (si falla) voz en linea de Google.
+    function tocarFrase(t, rate, alIniciar, primera) {
+        // Si el servidor fallo hace poco no se pierde tiempo esperandolo
+        var saltarServidor = Date.now() - servidorCaido < 120000;
+        var intentoServidor = saltarServidor
+            ? Promise.reject(new Error('servidor-caido'))
+            : tocar(urlServidor(t), rate, primera ? 25000 : 12000, alIniciar);
+        return intentoServidor.catch(function (e) {
+            if (e && e.name === 'NotAllowedError') throw e;
+            if (!saltarServidor) servidorCaido = Date.now();
+            return tocar(urlGoogle(t), rate, 10000, alIniciar);
+        });
+    }
+
     // Reproduce un texto. Devuelve una promesa que se resuelve al terminar (o rechaza si no se pudo).
     function decir(texto, rate, alEmpezar) {
-        var mi = ++token, lista = trozos(texto), i = 0, a = crearAudio();
+        var mi = ++token, lista = trozos(texto), i = 0;
         return new Promise(function (resolve, reject) {
             function siguiente() {
                 if (mi !== token) { resolve('cancelado'); return; }
                 if (i >= lista.length) { resolve('fin'); return; }
                 var t = lista[i++];
-                var usandoGoogle = false;
-                a.onended = siguiente;
-                a.onerror = function () {
-                    if (mi !== token) { resolve('cancelado'); return; }
-                    if (!usandoGoogle) { // el servidor no pudo: se intenta con la voz en linea de Google
-                        usandoGoogle = true; a.src = urlGoogle(t);
-                        var q = a.play(); if (q && q.catch) q.catch(function () {});
-                        return;
-                    }
-                    reject(new Error('audio'));
-                };
-                a.src = urlServidor(t);
-                try { a.playbackRate = Math.max(0.6, Math.min(1.6, Number(rate) || 1)); } catch (e) {}
-                var p = a.play();
-                if (p && p.then) p.then(function () { if (alEmpezar && i === 1) { var f = alEmpezar; alEmpezar = null; f(); } })
-                    .catch(function (e) { if (mi === token) reject(e); else resolve('cancelado'); });
-                else if (alEmpezar && i === 1) { var f2 = alEmpezar; alEmpezar = null; f2(); }
+                var primera = (i === 1);
+                tocarFrase(t, rate, function () {
+                    if (alEmpezar && primera) { var f = alEmpezar; alEmpezar = null; f(); }
+                }, primera).then(function (r) {
+                    if (r === 'cancelado' || mi !== token) { resolve('cancelado'); return; }
+                    siguiente();
+                }).catch(function (e) {
+                    if (mi !== token) resolve('cancelado'); else reject(e);
+                });
             }
             siguiente();
         });
     }
     function parar() {
         token++;
-        try { if (audio) { audio.onended = null; audio.onerror = null; audio.pause(); } } catch (e) {}
+        try { if (cancelarActual) cancelarActual(); } catch (e) {}
+        try { if (audio) { audio.onended = null; audio.onerror = null; audio.onplaying = null; audio.pause(); } } catch (e) {}
     }
-    window.OsitoTTSRespaldo = { decir: decir, parar: parar, desbloquear: desbloquear };
+    window.OsitoTTSRespaldo = { decir: decir, parar: parar, desbloquear: desbloquear, preferirServidor: preferirServidor, despertar: despertarServidor };
 
-    // ---- Se instala SIEMPRE un lector compatible que usa las voces del servidor (misma voz en todos los celulares) ----
+    // ---- Solo si el navegador/APK NO trae lector de voz propio se instala uno compatible (voces del servidor). ----
+    // Si ya existe uno, NO se reemplaza: la voz del sistema es la mas fiable y es la que se usa por defecto.
 
     function Utterance(texto) {
         this.text = String(texto == null ? '' : texto);
@@ -159,6 +216,8 @@
             actual = null; emitir(u, 'error', { error: (e && e.name === 'NotAllowedError') ? 'not-allowed' : 'network' }); siguienteU();
         });
     }
-    try { Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true, writable: true }); }
-    catch (e) { window.speechSynthesis = synth; }
+    if (!NATIVO) {
+        try { Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true, writable: true }); }
+        catch (e) { window.speechSynthesis = synth; }
+    }
 })();

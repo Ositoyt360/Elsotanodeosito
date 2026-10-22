@@ -1425,7 +1425,7 @@
 
         async speak(text) {
             const message = String(text || '').trim();
-            showToast(`Osito: ${message}`);
+            showToast(`Cubit: ${message}`);
 
             if (!this.voiceOutputEnabled || !('speechSynthesis' in window)) {
                 this.setState(State.IDLE, { label: DEFAULT_HINT, text: message });
@@ -1687,12 +1687,19 @@
                         if (miToken !== tokenHablaActual) { resolve(); return; }
                         if (idx < frases.length) setTimeout(hablarSiguiente, ms); else finalizarTodo();
                     };
-                    // V99.9: la voz del sistema no sono -> voz en linea de respaldo (si hay internet)
+                    // V99.11: voz del servidor / en linea. Si tambien falla, se prueba la voz del sistema antes de rendirse.
+                    let servidorProbado = false, nativoProbado = false;
                     const usarRespaldo = () => {
                         const R = window.OsitoTTSRespaldo;
-                        if (!R || miToken !== tokenHablaActual) { avisarVozFallo(); avanzar(40); return; }
+                        if (miToken !== tokenHablaActual) { avanzar(40); return; }
+                        if (!R || servidorProbado) { avisarVozFallo(); avanzar(40); return; }
+                        servidorProbado = true;
                         R.decir(frase, velBase).then((r) => { avanzar(r === 'cancelado' ? 40 : 55); })
-                            .catch(() => { avisarVozFallo(); avanzar(40); });
+                            .catch(() => {
+                                if (miToken !== tokenHablaActual) { avanzar(40); return; }
+                                if (!synth.__respaldo && !nativoProbado) { nativoProbado = true; intento = 0; lanzar(); return; }
+                                avisarVozFallo(); avanzar(40);
+                            });
                     };
                     const lanzar = () => {
                         // intento 0: voz elegida · intento 1: sin voz fija (la del sistema) · intento 2: sin idioma · luego se da por perdida la frase
@@ -1718,8 +1725,13 @@
                         catch (e) { if (intento < 2) { intento++; setTimeout(lanzar, 120); } else { usarRespaldo(); } }
                     };
                     // V99.9: WebView del APK (o sin lector de voz) sin voces instaladas -> directo a la voz del servidor
-                    const sinVoces = synth.__respaldo || (/; wv\)/.test(navigator.userAgent || '') && !((synth.getVoices && synth.getVoices()) || []).length);
-                    if (sinVoces && window.OsitoTTSRespaldo) { usarRespaldo(); return; }
+                    // V99.11: la voz del sistema es la de siempre (funciona sin servidor). Solo se va directo al servidor si:
+                    // no hay lector del sistema, el APK no tiene voces instaladas, o la persona eligio una "Voz de Cubit".
+                    const R0 = window.OsitoTTSRespaldo;
+                    const sinVoces = synth.__respaldo
+                        || (/; wv\)/.test(navigator.userAgent || '') && !((synth.getVoices && synth.getVoices()) || []).length)
+                        || !!(R0 && R0.preferirServidor && R0.preferirServidor());
+                    if (sinVoces && R0) { usarRespaldo(); return; }
                     lanzar();
                 };
 
@@ -1733,7 +1745,7 @@
         function avisarVozFallo() {
             if (Date.now() - ultimoAvisoVoz < 20000) return;
             ultimoAvisoVoz = Date.now();
-            try { showToast('🔇 No pude reproducir la voz. Sube el volumen multimedia y revisa que tu celular tenga un motor de voz (Google Text-to-Speech) instalado.'); } catch (e) {}
+            try { showToast('🔇 No pude reproducir la voz. Revisa tu internet y el volumen multimedia. Si estás en el celular, instala o actualiza «Servicios de voz de Google» (Google Text-to-Speech) y toca la pantalla una vez.'); } catch (e) {}
         }
 
         function cancelar() {

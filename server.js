@@ -1566,12 +1566,12 @@ async function manejarMascotaEspontanea(req, res) {
   if (!GEMINI_API_KEY) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'local' });
   if (!iaEspontPermitida(ipDelCliente(req))) return res.json({ ok: true, texto: '[[silencio]]', proveedor: 'limite-espontaneo' });
   const nombre = String(req.body?.nombre || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 24);
-  const ultimas = (Array.isArray(req.body?.ultimas) ? req.body.ultimas : []).slice(-5).map((x) => limpiarCampoMascota(x, 100)).filter(Boolean);
+  const ultimas = (Array.isArray(req.body?.ultimas) ? req.body.ultimas : []).slice(-10).map((x) => limpiarCampoMascota(x, 100)).filter(Boolean);
   const partes = [];
   partes.push(nombre ? `La persona se llama ${nombre}.` : 'No sabes el nombre de la persona.');
   const ctx = contextoMascota(req.body?.mascota); if (ctx) partes.push(ctx);
   try { partes.push('Fecha y hora en El Salvador: ' + new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date()) + '.'); } catch (e) {}
-  if (ultimas.length) partes.push('Lo último que dijiste por tu cuenta (NO lo repitas ni digas algo parecido): ' + ultimas.join(' | '));
+  if (ultimas.length) partes.push('Lo último que dijiste por tu cuenta (NO lo repitas ni digas algo parecido: cambia de tema, de tono y de forma de empezar cada vez; nunca abras dos veces con la misma palabra): ' + ultimas.join(' | '));
   const reglas = `MODO INICIATIVA PROPIA: nadie te ha escrito; TÚ decides si hablas ahora. Responde SOLO con tu línea corta (máximo 2 frases, natural, en español, sin saludar de nuevo si ya hablaron) con etiquetas de cuerpo donde correspondan, o con gestos/objeto sin texto (solo etiquetas), o con [[silencio]] si lo mejor es no interrumpir (respeta el silencio: no abuses, no preguntes cosas obvias, no repitas). No inventes datos ni hables de proveedores o del sistema. Si es madrugada y tu sueño es alto, puedes mostrar sueño o decidir [[dormir]].`;
   const sistema = textoSeguroIA(construirInstruccionIA() + '\n\n' + reglas + '\n\nCONTEXTO: ' + partes.join(' '));
   try {
@@ -2026,7 +2026,24 @@ if (WebSocket) {
       if (up && up.readyState === WebSocket.OPEN && listo) up.send(txt); else if (pendientes.length < 200) pendientes.push(txt);
     };
 
-    const abrirGemini = (nombre, memoria, vozId) => {
+    // V99.12: herramienta opcional "mascota" (Cubit cambia su cara/sonido durante la llamada).
+    // Si Gemini rechaza la configuración con herramientas, se reintenta SIN ellas: la llamada funciona igual que antes.
+    let reintentoSinHerramientas = false;
+    const herramientaMascota = () => {
+      if (!vocabMascota) return null;
+      const exprs = Object.keys(vocabMascota.EXPRESIONES || {});
+      const sonidos = (vocabMascota.SONIDOS || []).slice();
+      if (!exprs.length) return null;
+      return [{ functionDeclarations: [{
+        name: 'mascota',
+        description: 'Cambia la cara de tu cuerpo 3D y/o hace un sonido corto. Úsala de vez en cuando, cuando sientas una emoción (no en cada frase) y sin mencionarla en voz alta.',
+        parameters: { type: 'OBJECT', properties: {
+          expresion: { type: 'STRING', description: 'Expresión de la cara', enum: exprs },
+          sonido: { type: 'STRING', description: 'Sonido opcional', enum: sonidos }
+        } }
+      }] }];
+    };
+    const abrirGemini = (nombre, memoria, vozId, conHerramientas = true) => {
       const url = (process.env.GEMINI_LIVE_URL || 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent') + '?key=' + encodeURIComponent(GEMINI_API_KEY);
       up = new WebSocket(url);
       up.on('open', () => {
@@ -2035,7 +2052,7 @@ if (WebSocket) {
         if (memoria) contexto.push(`Memoria de conversaciones anteriores: ${memoria}`);
         try { contexto.push('Fecha y hora en El Salvador: ' + new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'full', timeStyle: 'short' }).format(new Date()) + '.'); } catch (e) {}
         const sistema = textoSeguroIA(construirInstruccionIA() +
-          '\n\nESTÁS EN UNA LLAMADA DE VOZ EN VIVO. Habla siempre en español, natural y cercano, con frases cortas (1 a 3 frases). No uses listas, markdown, emojis ni etiquetas entre corchetes; solo di lo que se escucha. Si te interrumpen, para y escucha.' +
+          '\n\nESTÁS EN UNA LLAMADA DE VOZ EN VIVO. Habla siempre en español, natural y cercano, con frases cortas (1 a 3 frases). No uses listas, markdown, emojis ni etiquetas entre corchetes; solo di lo que se escucha. Si te interrumpen, para y escucha. Si tienes la herramienta "mascota", úsala de vez en cuando para mostrar emociones con tu cara; nunca la menciones ni digas que la usas.' +
           '\n\n' + (instruccionVozElegida(vozId) || '') + '\n\nCONTEXTO: ' + contexto.join(' '));
         const vcat = buscarVozCatalogo(vozId);
         const nombreVozLive = (vcat && vcat.g === 'm') ? GEMINI_LIVE_VOZ_HOMBRE : GEMINI_LIVE_VOZ;
@@ -2046,6 +2063,7 @@ if (WebSocket) {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: nombreVozLive } } }
           },
           systemInstruction: { parts: [{ text: sistema }] },
+          ...((conHerramientas && herramientaMascota()) ? { tools: herramientaMascota() } : {}),
           inputAudioTranscription: {},
           outputAudioTranscription: {}
         } }));
@@ -2056,6 +2074,22 @@ if (WebSocket) {
           listo = true;
           while (pendientes.length) { try { up.send(pendientes.shift()); } catch (e) {} }
           return enviar({ type: 'ready' });
+        }
+        if (m.toolCall && Array.isArray(m.toolCall.functionCalls)) {
+          const respuestas = [];
+          for (const fc of m.toolCall.functionCalls) {
+            try {
+              if (fc && fc.name === 'mascota') {
+                const a = fc.args || {};
+                const expresion = vocabMascota && vocabMascota.EXPRESIONES && vocabMascota.EXPRESIONES[a.expresion] ? String(a.expresion) : '';
+                const sonido = vocabMascota && (vocabMascota.SONIDOS || []).indexOf(a.sonido) >= 0 ? String(a.sonido) : '';
+                if (expresion || sonido) enviar({ type: 'accion', expresion, sonido });
+              }
+            } catch (e) {}
+            respuestas.push({ id: fc && fc.id, name: fc && fc.name, response: { result: 'ok' } });
+          }
+          if (up && up.readyState === WebSocket.OPEN) { try { up.send(JSON.stringify({ toolResponse: { functionResponses: respuestas } })); } catch (e) {} }
+          return;
         }
         const sc = m.serverContent;
         if (!sc) return;
@@ -2072,11 +2106,18 @@ if (WebSocket) {
         if (sc.turnComplete) enviar({ type: 'turn_complete' });
       });
       up.on('error', (err) => {
+        if (!listo && conHerramientas && !reintentoSinHerramientas) return; // lo maneja 'close' (reintento sin herramientas)
         iaUltimoError = { proveedor: 'gemini-live', status: 0, mensaje: String(err && err.message || '').slice(0, 300), cuando: new Date().toISOString() };
         console.warn('[IA Live] Error:', String(err && err.message || '').slice(0, 200));
         enviar({ type: 'error', mensaje: 'No se pudo conectar la voz en vivo.' });
       });
       up.on('close', (codigo, motivo) => {
+        if (!listo && conHerramientas && !reintentoSinHerramientas && !cerrada && herramientaMascota()) {
+          reintentoSinHerramientas = true;
+          console.warn('[IA Live] Cierre antes de iniciar con herramientas (' + codigo + '); reintento sin ellas.');
+          try { abrirGemini(nombre, memoria, vozId, false); } catch (e) { enviar({ type: 'error', mensaje: 'La voz en vivo no está disponible ahora.' }); enviar({ type: 'closed' }); cerrar(); }
+          return;
+        }
         if (!listo) {
           const detalle = String(motivo || '').slice(0, 200);
           console.warn('[IA Live] Cierre antes de iniciar:', codigo, detalle);

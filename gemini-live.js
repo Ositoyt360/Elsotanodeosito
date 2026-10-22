@@ -160,6 +160,16 @@
             if (textoUsuario) { textoUsuario = ''; }
             textoIA += m.text;
             if (eng && eng.mostrarRespuestaTexto) eng.mostrarRespuestaTexto(textoIA.trim());
+        } else if (m.type === 'accion') {
+            // V99.12: Cubit cambia su cara / hace un sonido durante la llamada (con límite para no saturar)
+            try {
+                var tA = Date.now();
+                if (tA - (alMensaje._ultAccion || 0) > 1800 && global.OsitoMente && global.OsitoMente.accion) {
+                    alMensaje._ultAccion = tA;
+                    if (m.expresion) global.OsitoMente.accion('expr', String(m.expresion).slice(0, 20));
+                    if (m.sonido) global.OsitoMente.accion('sonido', String(m.sonido).slice(0, 20));
+                }
+            } catch (e) {}
         } else if (m.type === 'turn_complete') {
             textoUsuario = ''; textoIA = '';
         } else if (m.type === 'error') {

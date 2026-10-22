@@ -1,0 +1,21 @@
+V99.11 - Voz que no falla + Cubit mas natural
+
+VOZ (PC, pagina web y APK)
+- Causa del aviso "No pude reproducir la voz": voz-respaldo.js reemplazaba SIEMPRE la voz del navegador/telefono por audio generado en el servidor de Render (que se duerme y a veces falla). Si fallaba, no habia nada mas.
+- Ahora la voz del sistema (navegador / Google Text-to-Speech) se usa por defecto y NO se reemplaza. Solo se usa el servidor si: no hay lector del sistema, el APK no tiene voces instaladas, o elegiste una "Voz de Cubit" en Ajustes.
+- Cadena de respaldo: voz elegida -> servidor -> Google en linea -> voz del sistema. El aviso solo sale si fallan todas.
+- Se arreglo un error: si el servidor fallaba, no se probaba la voz de Google. Ahora hay tiempos de espera y se despierta el servidor al cargar.
+- En el telefono: instala/actualiza "Servicios de voz de Google" y sube el volumen multimedia.
+
+CUBIT
+- La llamada ahora dice "CUBIT:" (antes "OSITO:").
+- Mas variedad: 4-6 veces mas frases locales, sin repetir hasta agotarlas (se recuerdan entre visitas). La IA recibe sus ultimas 10 frases para no repetirse.
+- Habla menos: pausas de 4 a 9 minutos, maximo 4 charlas espontaneas por hora, y 1 de cada 3 veces solo se mueve o saca un objeto sin hablar.
+- sw.js cache v99-17.
+
+V99.12 - Cubit mueve su cara en la llamada de voz en vivo
+- server.js: Gemini Live recibe la herramienta opcional "mascota" (expresion + sonido, solo valores del vocabulario real). Cubit la usa de vez en cuando, sin decirlo en voz alta.
+- SEGURIDAD: si Gemini rechaza la configuracion con la herramienta, el servidor reintenta SIN ella y la llamada funciona exactamente como antes.
+- gemini-live.js: recibe la accion y la ejecuta con OsitoMente.accion (maximo una cada 1.8 s).
+- Movimientos de cuerpo y objetos siguen bloqueados durante la llamada (decision de V99 para no romper el modo llamada); vuelven al terminar la llamada.
+- sw.js cache v99-18.

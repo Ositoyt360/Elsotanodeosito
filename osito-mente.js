@@ -363,7 +363,7 @@
 
     /* ============================ 4) PRESENCIA ============================= */
     var ultimoInput = ahora(), ultimoMensajeUsuario = 0, ultimoBot = 0, silenciadoHasta = parseInt(lsGet(LS_SILENCIO, '0'), 10) || 0;
-    var ignorados = 0, ultimoEspontaneo = 0, proximoHabla = ahora() + azar(40, 90) * 1000, hablaPendiente = false;
+    var ignorados = 0, ultimoEspontaneo = 0, proximoHabla = ahora() + azar(150, 300) * 1000, hablaPendiente = false;
     ['pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) { document.addEventListener(ev, function () { ultimoInput = ahora(); }, { passive: true, capture: true }); });
     document.addEventListener('pointermove', function () { if (ahora() - ultimoInput > 3000) ultimoInput = ahora() - 2000; }, { passive: true, capture: true });
     function alUsuarioEscribe(txt) {
@@ -384,7 +384,7 @@
         if (document.querySelector('.osito-face[data-estado="thinking"]:not([data-ia-pensando])')) return false;
         return true;
     }
-    function programarHabla(rapido) { proximoHabla = ahora() + azar(80, 190) * 1000 * Math.pow(1.7, Math.min(ignorados, 4)) * (rapido ? 0.5 : 1); }
+    function programarHabla(rapido) { proximoHabla = ahora() + azar(240, 540) * 1000 * Math.pow(1.7, Math.min(ignorados, 4)) * (rapido ? 0.5 : 1); }
 
     /* ============================== 5) CONTEXTO ============================ */
     function horaTxt() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
@@ -408,14 +408,83 @@
 
     /* ============================ 6) DIRECTOR / IA ========================= */
     var LINEAS = {
-        idle: ['[[expr:curious|mirar:curioso]] ¿Sigues por aquí? Me quedé pensando en qué video ver después.', '[[expr:wink]] Oye, ¿quieres que te cuente un dato curioso?', '[[mov:estirar|expr:yawn]] Uf, estaba aquí tranquila. ¿Qué andas viendo hoy?', '[[expr:smile|obj:cafe]] Me preparé un cafecito mientras platicamos. ¿Te sirvo uno virtual?'],
-        regreso: ['[[expr:joy|mov:saltar]] ¡Volviste! Te estaba esperando.', '[[expr:love|mov:latido]] ¡Qué bueno verte de nuevo por el Sótano!'],
-        tarde: ['[[expr:yawn|mov:cabeceo]] Ya es tardísimo... me está dando mucho sueño. ¿Tú no tienes sueño?', '[[expr:sleepy]] Ay, se me cierran los ojitos. Si me quedo dormida, tócame para despertarme, ¿sí?'],
-        videoFin: ['[[expr:joy|mov:fiesta]] ¡Qué buen video! ¿Viste algo que te gustó?', '[[expr:wink]] Ese estuvo bueno. ¿Vemos otro?'],
-        videoIni: ['[[expr:watch|mirar:abajo]] ¡Vamos a ver ese video!', '[[expr:excited]] Uy, este se ve interesante.'],
-        despierta: ['[[mov:susto|expr:wow]] ¡Ay! ¿Qué pasó? Estaba soñando con pizza... [[expr:yawn]] Ya desperté.', '[[expr:yawn|mov:estirar]] Mmm... ¿me tocaste? Ya estoy despierta.', '[[expr:shy|mov:negar]] ¡Eh! Me asustaste, estaba bien dormidita.'],
-        sola: ['[[expr:yawn|mov:estirar]] Mmm... me desperté solita. [[expr:curious|mirar:furtivo]] ¿Sigues ahí?', '[[expr:sleepy|mirar:izquierda]] Ay... tenía sueño pero me desperté un ratito.']
+        idle: [
+            '[[expr:curious|mirar:curioso]] ¿Sigues por aquí? Me quedé pensando en qué video ver después.',
+            '[[expr:wink]] Oye, ¿quieres que te cuente un dato curioso?',
+            '[[mov:estirar|expr:yawn]] Uf, estaba aquí tranquilo. ¿Qué andas viendo hoy?',
+            '[[expr:smile|obj:cafe]] Me preparé un cafecito mientras estás por aquí. ¿Te sirvo uno virtual?',
+            '[[expr:curious|mirar:izquierda]] Hay un montón de videos en el Sótano. ¿Ya viste el de Minecraft?',
+            '[[expr:smile|mov:latido]] Qué tranquilo está todo. Me gusta cuando solo estamos tú y yo.',
+            '[[expr:wow]] Dato rápido: los cubos como yo tenemos seis caras y ninguna es mi mejor ángulo.',
+            '[[expr:joy|obj:balon]] Me dieron ganas de jugar un ratito. ¿Tú qué juegas últimamente?',
+            '[[expr:curious]] Si pudieras meterte en cualquier videojuego, ¿a cuál irías?',
+            '[[expr:wink|mov:negar]] No es que me aburra, pero mis ojitos ya dieron tres vueltas al sitio.',
+            '[[expr:smile|obj:audifonos]] Estoy escuchando música imaginaria. Suena genial.',
+            '[[expr:excited]] ¿Sabías que puedes llamarme por voz? Solo toca el botón de llamada.',
+            '[[expr:shy|mirar:furtivo]] Te estoy viendo navegar y me da curiosidad qué buscas.',
+            '[[expr:curious|obj:diario]] Estaba anotando en mi diario las cosas buenas del día. Hoy vas ganando tú.',
+            '[[expr:joy]] Cuando quieras platicar, aquí estoy. Sin presión.',
+            '[[expr:smile|mov:cabeceo]] ¿Y si descubres un video nuevo hoy? Yo te acompaño.',
+            '[[expr:wow|obj:pizza]] Se me antojó una pizza de pixeles. ¿De qué la pedirías tú?',
+            '[[expr:curious|mirar:arriba]] Pensaba: ¿cuál fue el primer videojuego que jugaste en tu vida?',
+            '[[expr:wink|obj:peluche]] Mi peluche dice que ya es hora de hacer una pausa y estirarse.',
+            '[[expr:smile]] Oye, gracias por pasar por el Sótano. Se siente bonito tener visita.'
+        ],
+        regreso: [
+            '[[expr:joy|mov:saltar]] ¡Volviste! Te estaba esperando.',
+            '[[expr:love|mov:latido]] ¡Qué bueno verte de nuevo por el Sótano!',
+            '[[expr:wow]] ¡Ahí estás! Ya pensaba que se te había perdido el camino.',
+            '[[expr:smile|mov:cabeceo]] Bienvenido de vuelta. Todo sigue en su lugar.',
+            '[[expr:excited]] ¡Regresaste! ¿Seguimos donde nos quedamos?',
+            '[[expr:wink]] Mira quién apareció. Justo estaba pensando en ti.'
+        ],
+        tarde: [
+            '[[expr:yawn|mov:cabeceo]] Ya es tardísimo... me está dando mucho sueño. ¿Tú no tienes sueño?',
+            '[[expr:sleepy]] Ay, se me cierran los ojitos. Si me quedo dormido, tócame para despertarme, ¿sí?',
+            '[[expr:yawn|obj:cafe]] Necesito otro cafecito. Es de madrugada y mis pixeles se apagan solos.',
+            '[[expr:sleepy|mirar:abajo]] ¿No deberías descansar un poco? Mañana los videos siguen aquí.',
+            '[[expr:yawn]] Qué silencio tan rico a esta hora. Casi me duermo.',
+            '[[expr:sleepy|obj:peluche]] Mi peluche ya se durmió. Yo estoy a medio camino.'
+        ],
+        videoFin: [
+            '[[expr:joy|mov:fiesta]] ¡Qué buen video! ¿Viste algo que te gustó?',
+            '[[expr:wink]] Ese estuvo bueno. ¿Vemos otro?',
+            '[[expr:excited|mov:saltar]] ¡Se acabó! Yo me reí en la mejor parte.',
+            '[[expr:smile]] Buen video. Si te quedaste con ganas, hay más abajo.',
+            '[[expr:wow]] Uf, ese final me gustó. ¿Cuál era tu parte favorita?',
+            '[[expr:joy]] Gracias por verlo conmigo. Fue de lo mejor del rato.'
+        ],
+        videoIni: [
+            '[[expr:watch|mirar:abajo]] ¡Vamos a ver ese video!',
+            '[[expr:excited]] Uy, este se ve interesante.',
+            '[[expr:curious|mirar:abajo]] A ver, a ver... ya me puse cómodo.',
+            '[[expr:smile|obj:pizza]] Con este video me va a caer perfecta una pizza.',
+            '[[expr:wow]] Ese lo tenía pendiente. Buena elección.',
+            '[[expr:watch]] Shhh, que empieza lo bueno.'
+        ],
+        despierta: [
+            '[[mov:susto|expr:wow]] ¡Ay! ¿Qué pasó? Estaba soñando con pizza... [[expr:yawn]] Ya desperté.',
+            '[[expr:yawn|mov:estirar]] Mmm... ¿me tocaste? Ya estoy despierto.',
+            '[[expr:shy|mov:negar]] ¡Eh! Me asustaste, estaba bien dormidito.',
+            '[[expr:yawn|mirar:izquierda]] ¿Eh? ¿Ya es de día? Dame un segundito.',
+            '[[mov:susto]] ¡Presente! Estaba descansando la vista, lo juro.'
+        ],
+        sola: [
+            '[[expr:yawn|mov:estirar]] Mmm... me desperté solito. [[expr:curious|mirar:furtivo]] ¿Sigues ahí?',
+            '[[expr:sleepy|mirar:izquierda]] Ay... tenía sueño pero me desperté un ratito.',
+            '[[expr:yawn]] Tuve un sueño raro con cubos voladores. ¿Qué me perdí?',
+            '[[expr:curious|mov:cabeceo]] Escuché algo y abrí un ojo. Todo bien, creo.'
+        ]
     };
+    // Bolsa barajada: cada frase sale una vez antes de que alguna se repita, y se recuerda entre visitas.
+    var LS_USADAS = 'osito_mente_usadas_v2';
+    function usadas() { try { return JSON.parse(lsGet(LS_USADAS, '{}')) || {}; } catch (e) { return {}; } }
+    function marcarUsada(motivo, idx) {
+        var u = usadas(); u[motivo] = (u[motivo] || []); u[motivo].push(idx);
+        var pool = LINEAS[motivo] || [];
+        if (u[motivo].length >= pool.length) u[motivo] = [idx];   // se agotaron: se reinicia, sin repetir la última
+        lsSet(LS_USADAS, JSON.stringify(u));
+    }
     function presupuesto() {
         var hoy = new Date().toISOString().slice(0, 10), o; try { o = JSON.parse(lsGet(LS_BUDGET, '{}')) || {}; } catch (e) { o = {}; }
         if (o.d !== hoy) o = { d: hoy, n: 0 };
@@ -443,9 +512,13 @@
         return true;
     }
     function lineaLocal(motivo) {
-        var pool = LINEAS[motivo] || LINEAS.idle, t = elige(pool), i = 0;
-        while (ultimasLineas.indexOf(soloLimpiar(t).slice(0, 100)) >= 0 && i++ < 6) t = elige(pool);
-        return t;
+        var pool = LINEAS[motivo] || LINEAS.idle, key = LINEAS[motivo] ? motivo : 'idle';
+        var u = (usadas()[key] || []), libres = [];
+        pool.forEach(function (t, i) { if (u.indexOf(i) < 0 && ultimasLineas.indexOf(soloLimpiar(t).slice(0, 100)) < 0) libres.push(i); });
+        if (!libres.length) pool.forEach(function (t, i) { if (u[u.length - 1] !== i) libres.push(i); });
+        var idx = elige(libres);
+        marcarUsada(key, idx);
+        return pool[idx];
     }
     var pidiendo = false;
     /* Pregunta a la MISMA IA (modo espontáneo): decide si habla, qué dice, qué gestos hace u objeto usa. */
@@ -463,9 +536,18 @@
                 return decirComoMascota(res.crudo || res.texto);
             }).catch(function () { pidiendo = false; return local(); });
     }
+    // Tope de charlas por iniciativa propia: como maximo 4 por hora; el resto de veces solo hace un gesto u objeto (sin hablar).
+    var habladasEspont = [];
+    function topeHorario() { var h = ahora() - 3600000; habladasEspont = habladasEspont.filter(function (t) { return t > h; }); return habladasEspont.length >= 4; }
     function hablarEspontaneo(motivo, detalle) {
         ultimoEspontaneo = ahora(); ignorados++; // se "perdona" a cero cuando la persona responde
         programarHabla(false);
+        var libre = (motivo === 'idle' || motivo === 'tarde');
+        if (libre && (topeHorario() || Math.random() < 0.35)) {    // no habla: solo se mueve o saca un objeto
+            if (!enEscena() && !dormida()) objeto(elegirObjetoLocal());
+            return Promise.resolve(false);
+        }
+        habladasEspont.push(ahora());
         return pedirAIA(motivo, detalle);
     }
 

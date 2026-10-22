@@ -1466,6 +1466,7 @@ app.get('/api/ia/voces', (req, res) => {
 
 const ttsCache = new Map();           // clave -> { buf, tipo } (maximo 150 frases)
 const ttsLimite = new Map();          // ip -> { n, desde }
+let ultimoErrorTTS = '';
 let edgeCaidoHasta = 0;               // si la voz de Edge falla, se salta unos minutos (va directo a Gemini)
 async function sintetizarVozEdge(texto, voz) {
   const lib = require('msedge-tts');
@@ -1487,6 +1488,27 @@ async function sintetizarVozEdge(texto, voz) {
 // V99.13: voz de respaldo con Gemini TTS (misma GEMINI_API_KEY, sale desde Google: no depende de Microsoft).
 // Devuelve un WAV (PCM 16 bit, 24 kHz, mono) que reproduce cualquier celular / WebView.
 const GEMINI_TTS_MODELOS = [String(process.env.GEMINI_TTS_MODEL || '').trim(), 'gemini-2.5-flash-preview-tts', 'gemini-2.5-pro-preview-tts'].filter((m, i, a) => m && a.indexOf(m) === i);
+let ttsModelosDescubiertos = { t: 0, lista: [] };
+async function modelosTTS() {
+  const fijos = GEMINI_TTS_MODELOS.slice();
+  if (!GEMINI_API_KEY) return fijos;
+  if (Date.now() - ttsModelosDescubiertos.t > 3600000) {
+    try {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 10000);
+      const r = await fetch(`${GEMINI_API_BASE}/models?pageSize=200`, { signal: ctl.signal, headers: { 'x-goog-api-key': GEMINI_API_KEY } });
+      clearTimeout(tm);
+      if (r.ok) {
+        const j = await r.json();
+        const lista = (j.models || [])
+          .filter((m) => /tts/i.test(m.name || '') && Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+          .map((m) => String(m.name).replace(/^models\//, ''))
+          .sort((a, b) => (/flash/.test(b) - /flash/.test(a)) || (b > a ? 1 : -1)); // primero flash, y los más nuevos
+        ttsModelosDescubiertos = { t: Date.now(), lista };
+      } else { ttsModelosDescubiertos = { t: Date.now() - 3000000, lista: ttsModelosDescubiertos.lista }; }
+    } catch (e) { ttsModelosDescubiertos = { t: Date.now() - 3000000, lista: ttsModelosDescubiertos.lista }; }
+  }
+  return fijos.concat(ttsModelosDescubiertos.lista).filter((m, i, a) => m && a.indexOf(m) === i);
+}
 function pcmAWav(pcm, rate) {
   const h = Buffer.alloc(44);
   h.write('RIFF', 0); h.writeUInt32LE(36 + pcm.length, 4); h.write('WAVE', 8); h.write('fmt ', 12);
@@ -1499,8 +1521,10 @@ async function sintetizarVozGemini(texto, vozInfo) {
   const nombreVoz = (vozInfo && vozInfo.g === 'm') ? GEMINI_LIVE_VOZ_HOMBRE : GEMINI_LIVE_VOZ;
   const idioma = { es: 'español', en: 'inglés', fr: 'francés', pt: 'portugués' }[(vozInfo && vozInfo.lang) || 'es'] || 'español';
   const estilo = (vozInfo && vozInfo.lang === 'es' && vozInfo.acento) ? `Di en ${idioma} con acento ${vozInfo.acento}, natural y amable` : `Di en ${idioma}, natural y amable`;
-  let ultimoError = null;
-  for (const modelo of GEMINI_TTS_MODELOS) {
+  const errores = [];
+  const orden = await modelosTTS();
+  // si el modelo fijo no existe, se prueban los descubiertos; se limita para no tardar demasiado
+  for (const modelo of orden.slice(0, 4)) {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 20000);
     try {
       const r = await fetch(`${GEMINI_API_BASE}/models/${encodeURIComponent(modelo)}:generateContent`, {
@@ -1518,11 +1542,11 @@ async function sintetizarVozGemini(texto, vozInfo) {
       if (!p) throw new Error('sin audio en la respuesta');
       const mm = /rate=(\d+)/.exec(p.inlineData.mimeType || '');
       return pcmAWav(Buffer.from(p.inlineData.data, 'base64'), mm ? Number(mm[1]) : 24000);
-    } catch (e) { ultimoError = e; } finally { clearTimeout(tm); }
+    } catch (e) { errores.push(`${modelo}: ${String(e && e.message || e).slice(0, 140)}`); } finally { clearTimeout(tm); }
   }
-  throw ultimoError || new Error('sin modelo TTS');
+  throw new Error(errores.join(' | ') || 'sin modelo TTS');
 }
-// Devuelve { buf, tipo }. Orden: Edge (si no esta caido) -> Gemini TTS.
+// Devuelve { buf, tipo }. Orden: Edge (si no esta caido) -> Gemini TTS. Si ambas fallan, el error dice por que.
 async function sintetizarVoz(texto, vozInfo) {
   let errEdge = null;
   if (Date.now() > edgeCaidoHasta) {
@@ -1532,14 +1556,20 @@ async function sintetizarVoz(texto, vozInfo) {
       catch (e1) { if (vozInfo.voz === TTS_VOZ) throw e1; audio = await sintetizarVozEdge(texto, TTS_VOZ); }
       if (audio && audio.length >= 200) return { buf: audio, tipo: 'audio/mpeg', motor: 'edge' };
       throw new Error('audio vacio');
-    } catch (e) { errEdge = e; edgeCaidoHasta = Date.now() + 5 * 60000; console.warn('[TTS] Edge falló (' + (e && e.message) + '); uso Gemini TTS por 5 min.'); }
+    } catch (e) {
+      errEdge = e; edgeCaidoHasta = Date.now() + 5 * 60000;
+      console.warn('[TTS] Edge falló (' + (e && e.message) + '); uso Gemini TTS por 5 min.');
+    }
+  } else {
+    errEdge = new Error('Edge saltado (falló hace poco)');
   }
   try {
     const wav = await sintetizarVozGemini(texto, vozInfo);
     return { buf: wav, tipo: 'audio/wav', motor: 'gemini' };
   } catch (e2) {
     console.warn('[TTS] Gemini TTS falló:', e2 && e2.message);
-    throw e2;
+    ultimoErrorTTS = 'Edge: ' + String((errEdge && errEdge.message) || 'sin error').slice(0, 100) + ' · Gemini: ' + String((e2 && e2.message) || e2).slice(0, 260);
+    throw new Error(ultimoErrorTTS);
   }
 }
 app.get('/api/ia/tts', async (req, res) => {
@@ -1566,13 +1596,13 @@ app.get('/api/ia/tts', async (req, res) => {
     res.status(200).end(item.buf);
   } catch (e) {
     console.warn('[TTS] fallo:', e && e.message);
-    res.status(503).json({ ok: false, error: 'tts_no_disponible' });
+    res.status(503).json({ ok: false, error: 'tts_no_disponible', detalle: String((e && e.message) || '').slice(0, 400) });
   }
 });
 // Diagnóstico: abre https://TU-SERVIDOR/api/ia/tts-diag y dice qué motor de voz funciona.
 app.get('/api/ia/tts-diag', async (req, res) => {
   const v = buscarVozCatalogo(VOZ_DEFECTO_ID);
-  const out = { ok: true, gemini_key: Boolean(GEMINI_API_KEY), modelos_tts: GEMINI_TTS_MODELOS, edge: {}, gemini: {} };
+  const out = { ok: true, gemini_key: Boolean(GEMINI_API_KEY), modelos_tts: await modelosTTS(), edge: {}, gemini: {} };
   try { const a = await sintetizarVozEdge('Hola', v.voz); out.edge = { ok: a.length > 200, bytes: a.length }; } catch (e) { out.edge = { ok: false, error: String(e && e.message || e).slice(0, 200) }; }
   try { const w = await sintetizarVozGemini('Hola', v); out.gemini = { ok: w.length > 200, bytes: w.length }; } catch (e) { out.gemini = { ok: false, error: String(e && e.message || e).slice(0, 300) }; }
   res.setHeader('Cache-Control', 'no-store');

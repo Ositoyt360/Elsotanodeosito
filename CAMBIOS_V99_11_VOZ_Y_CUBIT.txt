@@ -27,3 +27,10 @@ V99.13 - Voz en el APK (celulares sin motor de voz)
 - Cliente: espera hasta 40 s la primera frase (Render gratis tarda en despertar) antes de rendirse.
 - render.yaml: GEMINI_TTS_MODEL (opcional). Limite TTS: 60 frases/min por IP.
 - sw.js cache v99-19.
+
+V99.14 - Voz del APK: modelo automatico y motivo visible
+- server.js: el modelo de voz de Gemini se descubre solo (lista de modelos de tu clave que tengan "tts"); si el fijo no existe, prueba los demas. Probado con simulacion: Edge caido + primer modelo 404 -> igual genera audio WAV.
+- Si todo falla, el servidor responde con el motivo exacto (503 + detalle).
+- voz-respaldo.js / asistente-voz.js: el aviso ahora dice "Motivo: ..." (servidor sin version nueva, sin internet, modelo no disponible, o audio bloqueado en el telefono).
+- Desbloqueo de audio con un WAV silencioso real (el anterior estaba vacio y algunos WebView lo ignoran).
+- sw.js cache v99-20.

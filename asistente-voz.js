@@ -1745,7 +1745,8 @@
         function avisarVozFallo() {
             if (Date.now() - ultimoAvisoVoz < 20000) return;
             ultimoAvisoVoz = Date.now();
-            try { showToast('🔇 No pude reproducir la voz. Revisa tu internet y el volumen multimedia. Si estás en el celular, instala o actualiza «Servicios de voz de Google» (Google Text-to-Speech) y toca la pantalla una vez.'); } catch (e) {}
+            let motivo = ''; try { motivo = (window.OsitoTTSRespaldo && window.OsitoTTSRespaldo.motivo && window.OsitoTTSRespaldo.motivo()) || ''; } catch (e) {}
+            try { showToast('🔇 No pude reproducir la voz. ' + (motivo ? 'Motivo: ' + motivo + '. ' : '') + 'Revisa internet y volumen multimedia.'); } catch (e) {}
         }
 
         function cancelar() {

@@ -21,6 +21,7 @@
     function urlServidor(t) { return BASE + '/api/ia/tts?v=' + encodeURIComponent(vozId()) + '&t=' + encodeURIComponent(t); }
     function urlGoogle(t) { return URL_GOOGLE + idiomaVoz() + '&q=' + encodeURIComponent(t); }
     var audio = null, desbloqueado = false, token = 0, cancelarActual = null;
+    var ultimoMotivo = '';
     var servidorCaido = 0;          // marca de tiempo del ultimo fallo del servidor (para no esperarlo cada frase)
     var NATIVO = (typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined') ? window.speechSynthesis : null;
 
@@ -52,7 +53,7 @@
         if (desbloqueado) return;
         try {
             var a = crearAudio();
-            a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+            a.src = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YSADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==';
             var p = a.play();
             if (p && p.then) p.then(function () { desbloqueado = true; a.pause(); }).catch(function () {});
             else desbloqueado = true;
@@ -111,6 +112,18 @@
         });
     }
 
+    function averiguarMotivo(t) {
+        try {
+            return fetch(urlServidor(t), { cache: 'no-store' }).then(function (r) {
+                if (r.ok) { ultimoMotivo = 'el servidor sí generó la voz, pero el teléfono no pudo reproducirla (sube el volumen multimedia y toca la pantalla)'; return; }
+                return r.text().then(function (txt) {
+                    var d = ''; try { var j = JSON.parse(txt); d = j.detalle || j.error || ''; } catch (e) {}
+                    ultimoMotivo = 'servidor ' + r.status + (d ? ': ' + d : (r.status === 404 ? ' (Render no tiene la versión nueva del servidor)' : ''));
+                });
+            }).catch(function () { ultimoMotivo = 'no se pudo contactar al servidor (revisa internet; Render gratis tarda ~1 min en despertar)'; });
+        } catch (e) { return Promise.resolve(); }
+    }
+
     // Una frase: voz del servidor -> (si falla) voz en linea de Google.
     function tocarFrase(t, rate, alIniciar, primera) {
         // Si el servidor fallo hace poco no se pierde tiempo esperandolo
@@ -121,7 +134,10 @@
         return intentoServidor.catch(function (e) {
             if (e && e.name === 'NotAllowedError') throw e;
             if (!saltarServidor) servidorCaido = Date.now();
-            return tocar(urlGoogle(t), rate, 10000, alIniciar);
+            return tocar(urlGoogle(t), rate, 10000, alIniciar).catch(function (e2) {
+                // Todo fallo: se pregunta al servidor por que (para mostrarlo en el aviso)
+                return averiguarMotivo(t).then(function () { throw e2; });
+            });
         });
     }
 
@@ -151,7 +167,7 @@
         try { if (cancelarActual) cancelarActual(); } catch (e) {}
         try { if (audio) { audio.onended = null; audio.onerror = null; audio.onplaying = null; audio.pause(); } } catch (e) {}
     }
-    window.OsitoTTSRespaldo = { decir: decir, parar: parar, desbloquear: desbloquear, preferirServidor: preferirServidor, despertar: despertarServidor };
+    window.OsitoTTSRespaldo = { decir: decir, parar: parar, desbloquear: desbloquear, preferirServidor: preferirServidor, despertar: despertarServidor, motivo: function () { return ultimoMotivo; } };
 
     // ---- Solo si el navegador/APK NO trae lector de voz propio se instala uno compatible (voces del servidor). ----
     // Si ya existe uno, NO se reemplaza: la voz del sistema es la mas fiable y es la que se usa por defecto.
